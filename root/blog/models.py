@@ -1,5 +1,4 @@
 from django.db import models
-from django.utils.timezone import now
 from tinymce.models import HTMLField
 
 class Theme(models.Model):
@@ -11,7 +10,7 @@ class Theme(models.Model):
 class BlogPost(models.Model):
     title = models.CharField('Заголовок', max_length=200)
     content = HTMLField('Содержание')
-    published = models.DateField('Дата публикации', default=now())
+    published = models.DateTimeField('Дата публикации', auto_now_add=True)
     theme = models.ManyToManyField(Theme, blank=True)
     slug = models.SlugField(max_length=200, blank=True)
 

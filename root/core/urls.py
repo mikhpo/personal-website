@@ -18,12 +18,16 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic.base import TemplateView
+from filebrowser.sites import site
 
 urlpatterns = [
     path("", include('home.urls')),
+    path('admin/filebrowser/', site.urls),
+    path('grappelli/', include('grappelli.urls')),
+    path('admin/tinymce/', include('tinymce.urls')),
+    path('tinymce/', include('tinymce.urls')),
     path("blog/", include('blog.urls')),
     path('admin/', admin.site.urls),
-    path('gallery/', include('gallery.urls')),
     path(
         "robots.txt",
         TemplateView.as_view(template_name="robots.txt", content_type="text/plain"),

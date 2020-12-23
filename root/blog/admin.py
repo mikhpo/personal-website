@@ -5,7 +5,7 @@ class BlogPostAdmin(admin.ModelAdmin):
     fieldsets = [
         ("Заголовок", {'fields': ["title"]}),
         ("Содержание", {"fields": ["content"]}),
-        ('Мета', {'fields': ['theme','published','slug']}),
+        ('Мета', {'fields': ['theme', 'slug']}),
     ]
 
 class ThemeAdmin(admin.ModelAdmin):
