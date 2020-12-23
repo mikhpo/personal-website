@@ -128,4 +128,34 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 
 MEDIA_URL = '/media/'
 
-MEDIA_ROOT = [os.path.join(BASE_DIR, 'media')]
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# Path to the header logo within the static directory. If you do not wish to use a logo, override with a blank string
+GALLERY_LOGO_PATH = ""
+
+# The title of the Gallery shown in the header on the main page and image feed
+GALLERY_TITLE = "Gallery"
+
+# Information text in the footer
+GALLERY_FOOTER_INFO = "Mikhail Polyakov"
+
+# Contact email address in the footer. Override with a blank string to hide
+GALLERY_FOOTER_EMAIL = ""
+
+# Use a predefined theme color scheme. Options are black, white, or grey
+GALLERY_THEME_COLOR = "black"
+
+# The target thumbnail height in px. This will vary slightly in rendering due to the justified layout
+GALLERY_THUMBNAIL_SIZE = 200
+
+# The preview size in px - width or height, whichever is largest. The rendered image size will depend on the size of the browser window, so this should be set high enough to not cause a deterioration in quality
+GALLERY_PREVIEW_SIZE = 1000
+
+# JPEG quality (0-100) of the preview and thumbnail images
+GALLERY_RESIZE_QUALITY = 100
+
+# The actual preview and thumbnail sizes are multiplied by this number, but rendered according to the quoted value. This enables high dpi displays, such as many mobile devices to show more detail and take advantage of their extra resolution. Some go up to 4x now, so recommended values are 1-4
+GALLERY_HDPI_FACTOR = 4
+
+# Margin between thumbnails in px. Some may prefer a less condensed look, so increase this value if your template requires it
+GALLERY_IMAGE_MARGIN = 6
