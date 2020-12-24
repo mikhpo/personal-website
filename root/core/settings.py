@@ -9,9 +9,8 @@ https://docs.djangoproject.com/en/3.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.1/ref/settings/
 """
-
-from pathlib import Path
 import os
+from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -142,3 +141,7 @@ TINYMCE_DEFAULT_CONFIG = {
     "a11ycheck ltr rtl | showcomments addcomment code",
     "custom_undo_redo_levels": 10,
 }
+
+
+# Максимальный размер загружаемого файла в байтах.
+FILEBROWSER_MAX_UPLOAD_SIZE = 52428800

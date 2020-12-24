@@ -13,7 +13,9 @@
     <ul>
     {% for post in latest_blogposts_list %}
         {{ post.title }}
-        {{ post.content|safe }}
+        {{ post.content | safe }}
+        {% include "image.html" %}
+        {{ post.document }}
         {{ post.published }}
         <br></br>
         <br></br>
