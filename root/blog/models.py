@@ -1,4 +1,5 @@
 from django.db import models
+from tinymce.models import HTMLField
 
 # Create your models here.
 
@@ -13,7 +14,7 @@ class Theme(models.Model):
 
 class Article(models.Model):
     article_title = models.CharField('Заголовок', max_length=200)
-    article_content = models.TextField('Содержание')
+    article_content = HTMLField('Содержание')
     article_published = models.DateTimeField('Дата публикации', auto_now_add=True)
     article_modified = models.DateTimeField('Дата последнего изменения', auto_now=True)
     article_slug = models.SlugField('Ссылка')
