@@ -1,19 +1,35 @@
 {% include "bootstrap.html" %}
 
-<ul class="nav nav-tabs">
-  <li class="nav-item">
-    <a class="nav-link active" aria-current="page" href="#">Главная</a>
-  </li>
-  <li class="nav-item">
-    <a class="nav-link" href="#">Блог</a>
-  </li>
-  <li class="nav-item">
-    <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">Галерея</a>
-  </li>
-  <li class="nav-item dropdown">
-    <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">Сервисы</a>
-    <ul class="dropdown-menu">
-      <li><a class="dropdown-item" href="#">Портфельная оптимизация</a></li>
-    </ul>
-  </li>
-</ul>
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">Mikhail Polyakov</a>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        
+        <li class="nav-item">
+          <a class="nav-link active" aria-current="page" href="http://127.0.0.1:8000/">Главная</a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link" href="http://127.0.0.1:8000/blog">Блог</a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">Галерея</a>
+        </li>
+
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Сервисы
+          </a>
+
+          <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+            <li><a class="dropdown-item" href="http://127.0.0.1:8000/optimisation">Портфельная оптимизация</a></li>
+          </ul>
+
+        </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>

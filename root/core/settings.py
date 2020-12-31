@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'tinymce',
     'main.apps.MainConfig',
     'blog.apps.BlogConfig',
+    'optimisation.apps.OptimisationConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
