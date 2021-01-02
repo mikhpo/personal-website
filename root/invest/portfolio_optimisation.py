@@ -2,8 +2,6 @@ import os # для работы с файловой системой
 import pandas as pd # для создания датафреймов
 import numpy as np # для математических преобразований
 import datetime as dt # для работы с датами
-import matplotlib.pyplot as plt # для посроения графиков
-from matplotlib import style # для настройки стиля графиков
 import pandas_datareader.data as web # для загрузки данных из веба
 from dateutil.relativedelta import relativedelta # для математических вычислений с датами
 from scipy.optimize import minimize # для оптимизационной функции
@@ -36,26 +34,10 @@ def stock_data(tickers):
 
     stock_data.drop(columns='USDRUB=X', inplace=True) # удалим курс доллара к рублю
     stock_data.columns = stock_data.columns.str.rstrip('.ME') # удалим окончание .ME для российских тикеров
+    
     return stock_data
 
-def compare_returns(returns, period):
-    """Функция для вывода результатов сравнения доходности активов / портфелей в виде графика и в виде матрицы."""
-
-    # отображение возврата на инвестиции в виде графика
-    returns.plot()
-    plt.title(f"Кумулятивная доходность за последний {period}")
-    plt.legend()
-    plt.ylabel('Доходность')
-    plt.xlabel('Период')
-    plt.show()
-    
-    # отображение возврата на инвестиции в виде матрицы
-    returns = returns.tail(1).transpose()
-    returns.sort_values(by=returns.columns[0], ascending=False, inplace=True)
-    returns = returns.apply(lambda row:"{:.2%}".format(row[0]),  axis=1)
-    print(f'Кумулятивная доходность за последний {period}:\n{returns.to_string()}')
-
-def cumulative_return(period, stock_data, show_output):
+def cumulative_return(period, stock_data):
     """
     Определение функции для вычисления кумулятивного возврата на инвестиции. 
     Функция принимает один аргумент: строкое обозначение временного периода, за который нужно проанализировать возврат на инвестиции.
@@ -66,15 +48,29 @@ def cumulative_return(period, stock_data, show_output):
         time_interval = today - relativedelta(years=1)
     elif period == "квартал":
         time_interval = today - relativedelta(months=3)
-    else: 
-        print("Указан недопустимый период")
-        return
+    else:
+        raise Exception('Указан недопустимый период')
 
     # ограничим набор данных в соответствии с заданным периодом
     last_period_stock_data = stock_data[stock_data.index >= time_interval]
     cumulative_return = (last_period_stock_data.pct_change() + 1).cumprod() - 1
+
+    return cumulative_return
+
+def compare_returns(tickers, period):
+    """Функция для вывода результатов сравнения доходности активов / портфелей в виде графика и в виде матрицы."""
+
+    stocks = stock_data(tickers)
+    returns = cumulative_return(period, stocks)
     
-    if show_output == True:
-        compare_returns(cumulative_return, period)
-    else:
-        return cumulative_return
+    # отображение возврата на инвестиции в виде матрицы
+    total_returns = returns.tail(1).transpose()
+    total_returns.sort_values(by=returns.columns[0], ascending=False, inplace=True)
+    total_returns = returns.apply(lambda row:"{:.2%}".format(row[0]),  axis=1)
+    stocks_comparison = {
+        'tickers': ", ".join(tickers),
+        'period': period,
+        'stock_data': stocks,
+        'returns': returns.to_string(),
+    }
+    return stocks_comparison

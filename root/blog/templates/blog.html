@@ -1,24 +1,20 @@
+.center {
+    margin: auto;
+}
+
 <head>
-
-    {% include "blog_header.html" %}
-    
+    {% include "blog/header.html" %}
 </head>
-
-<body>
-
 <br><br>
-
+<body>
 {% for article in articles %}
-
-    <center>
-    <h3>
-    <p>{{article.article_title}}</p>
-    </h3>
-    <p>{{article.article_content|safe}}</p>
-    <p>{{article.article_published}}</p>
-    </center>
+    <div class="center">
+        <h3>
+            <title>{{article.article_title}}</title>
+        </h3>
+            <p>{{article.article_content|safe}}</p>
+            <p>{{article.article_published}}</p>
+    </div>
     <br><br>
-
 {% endfor %}
-
 </body>
