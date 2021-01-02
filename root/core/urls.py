@@ -21,5 +21,5 @@ urlpatterns = [
     path('tinymce/', include('tinymce.urls')),
     path("blog/", include('blog.urls')),
     path('admin/', admin.site.urls),
-    path("optimisation/", include('optimisation.urls')),
+    path("invest/", include('invest.urls')),
 ]
