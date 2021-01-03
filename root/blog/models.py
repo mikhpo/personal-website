@@ -41,3 +41,6 @@ class Article(models.Model):
     def __str__(self):
         return self.article_title
 
+class Author(models.Model):
+    author_name=
+
