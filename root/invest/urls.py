@@ -5,5 +5,5 @@ from . import views
 app_name = 'invest'  # here for namespacing of urls.
 
 urlpatterns = [
-    path("", views.investpage, name="investpage"),
+    path("", views.invest, name="invest"),
 ]

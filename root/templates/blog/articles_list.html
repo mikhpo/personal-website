@@ -1,0 +1,35 @@
+{% include "header.html" %}
+
+<br><br>
+{% block content %}
+    {% for article in page_obj %}  
+        <div style="margin: 0 auto; text-align: center">
+            <h4>
+            <a href="{{ article.slug }}" style="color: black; text-decoration: none;">{{article.title}}</a>
+            </h4>
+            <p>{{article.content|safe}}</p>
+        </div>
+        <br><br>
+    {% endfor %}
+{% endblock %}
+<br><br>
+
+<div class="pagination" style="justify-content: center">
+    <span class="step-links">
+        {% if page_obj.has_previous %}
+            <a href="?page=1">&laquo; первая</a>
+            <a href="?page={{ page_obj.previous_page_number }}">предыдущая</a>
+        {% endif %}
+
+        {% if page_obj and page_obj.paginator.num_pages > 1 %}
+            <span class="current">
+                Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}.
+            </span>
+        {% endif %}
+
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}">следующая</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}">последняя &raquo;</a>
+        {% endif %}
+    </span>
+</div>

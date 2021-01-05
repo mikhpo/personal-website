@@ -1,46 +1,47 @@
 from django.db import models
 from tinymce.models import HTMLField
+from django.urls import reverse  # To generate URLS by reversing URL patterns
 
 # Create your models here.
 
 class Topic(models.Model):
-    topic_name = models.CharField('Тема', max_length=200)
-    topic_slug = models.SlugField('Ссылка')
+    name = models.CharField('Тема', max_length=200, unique=True)
+    slug = models.SlugField('Ссылка', unique=True)
 
     class Meta:
-        ordering = ['topic_name']
+        ordering = ['name']
         verbose_name_plural = "Темы"
 
     def __str__(self):
-        return self.topic_name
+        return self.name
 
 class Series(models.Model):
-    series_name = models.CharField('Серия', max_length=200)
-    series_slug = models.SlugField('Ссылка')
+    name = models.CharField('Серия', max_length=200, unique=True)
+    slug = models.SlugField('Ссылка', unique=True)
 
     class Meta:
-        ordering = ['series_name']
+        ordering = ['name']
         verbose_name_plural = "Серии"
 
     def __str__(self):
-        return self.series_name
+        return self.name
 
 class Article(models.Model):
-    article_title = models.CharField('Заголовок', max_length=200)
-    article_content = HTMLField('Содержание')
-    article_published = models.DateTimeField('Дата публикации', auto_now_add=True)
-    article_modified = models.DateTimeField('Дата последнего изменения', auto_now=True)
-    article_slug = models.SlugField('Ссылка')
-    article_theme = models.ManyToManyField(Topic)
-    article_series = models.ManyToManyField(Series, blank=True)
+    title = models.CharField('Заголовок', max_length=200, unique=True)
+    content = HTMLField('Содержание')
+    published = models.DateTimeField('Дата публикации', auto_now_add=True)
+    modified = models.DateTimeField('Дата последнего изменения', auto_now=True)
+    slug = models.SlugField('Ссылка', unique=True)
+    topic = models.ManyToManyField(Topic, blank=True)
+    series = models.ManyToManyField(Series, blank=True)
+    visible = models.BooleanField("Статья видима", default=True)
 
     class Meta:
-        ordering = ['-article_published']
+        ordering = ['-published']
         verbose_name_plural = "Статьи"
 
+    def get_absolute_url(self):
+        return reverse('article', args=[str(self.slug)])
+
     def __str__(self):
-        return self.article_title
-
-class Author(models.Model):
-    author_name=
-
+        return self.title

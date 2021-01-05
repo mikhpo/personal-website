@@ -1,0 +1,57 @@
+{% include "header.html" %}
+
+<br><br>
+<h4 ALIGN='center'>Вход на сайт</h4>
+
+<style>
+  .center {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  td {
+  padding-top:5px;
+  padding-bottom:5px;
+  padding-right:5px;   
+}
+
+</style>
+
+{% block content %}
+
+<div style="margin: 0 auto; text-align:center">
+  {% if form.errors %}
+    <p>Имя пользователя или пароль введены неверно. Попробуйте ещё раз.</p>
+  {% endif %}
+
+  {% if next %}
+    {% if user.is_authenticated %}
+      <p>У данной учетной записи нет доступа к данной странице.</p>
+    {% else %}
+      <p>Войдите для просмотра этой страницы.</p>
+    {% endif %}
+  {% endif %}
+</div>
+
+  <form method="post" action="{% url 'login' %}" ALIGN='center'>
+    {% csrf_token %}
+    <table class="center">
+      <tr>
+        <td>{{ form.username.label_tag }}</td>
+        <td>{{ form.username }}</td>
+      </tr>
+      <tr>
+        <td>{{ form.password.label_tag }}</td>
+        <td>{{ form.password }}</td>
+      </tr>
+    </table>
+    <br>
+    <input type="submit" value="Войти" />
+    <input type="hidden" name="next" value="{{ next }}" />
+  </form>
+  <br>
+  <div style="margin: 0 auto; text-align:center">
+    <a href="{% url 'password_reset' %}">Забыли пароль?</a>
+  </div>
+
+{% endblock %}

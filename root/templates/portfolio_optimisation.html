@@ -1,0 +1,16 @@
+{% include "header.html" %}
+  <br><br>
+  <form style="margin: 0 auto; text-align:center">
+      <div class="form-group" style="margin: 0 auto; text-align:center">
+        <label for="tickers">Тикеры</label>
+        <input type="text" class="form-control" id="tickers" aria-describedby="tickersHelp" placeholder="Укажите тикеры">
+        <small id="tickersHelp" class="form-text text-muted">Введите тикеры через пробелы. Тикеры российских компаний необходимо указывать с суффиксом .ME (например: YNDX.ME). Оптимальное количество тикеров: 5-7</small>
+      </div>
+      <div class="form-group" style="margin: 0 auto; text-align:center">
+        <label for="period">Период</label>
+        <input type="text" class="form-control" id="period" aria-describedby="periodHelp" placeholder="Укажите период">
+        <small id="periodHelp" class="form-text text-muted">Укажите период: "год" или "квартал"</small>
+      </div>
+      <br>
+      <button type="submit" class="btn btn-primary">Сравнить</button>
+  </form>

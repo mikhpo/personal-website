@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.http import HttpResponse
 
 # Create your views here.
-def investpage(request):
+def invest(request):
     return render(request = request,
-                  template_name='invest/invest.html',
+                  template_name='portfolio_optimisation.html',
                   )

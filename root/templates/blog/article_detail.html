@@ -1,0 +1,11 @@
+{% extends "blog/articles_list.html" %}
+
+{% block content %}
+<div style="margin: 0 auto; text-align:center">
+    <h4>
+    <p>{{article.title}}</p>
+    </h4>
+    <p>{{article.content|safe}}</p>
+    <p>{{article.published}}</p>
+</div>
+{% endblock %}
