@@ -1,11 +1,17 @@
 {% extends "blog/articles_list.html" %}
 
 {% block content %}
-<div style="margin: 0 auto; text-align:center">
-    <h4>
-    <p>{{article.title}}</p>
-    </h4>
-    <p>{{article.content|safe}}</p>
-    <p>{{article.published}}</p>
+<div class="card shadow-sm p-3 mb-5 bg-white rounded center d-flex align-items-center align-self-center justify-content-center w-50">
+    <div class="card-body" >
+        <h4 class="card-title" style="margin: 0 auto; text-align:center">
+            <a style="color: black; text-decoration: none;">{{article.title}}</a>
+        </h4>
+        <p class="card-text">{{article.content|safe}}</p>
+        <div class="card-footer">
+            <small class="text-muted" style="margin: 0 auto; text-align:center">Опубликовано {{article.published}}</small>
+            <br>
+            <small class="text-muted" style="margin: 0 auto; text-align:center">Обновлено {{article.modified}}</small>
+        </div>
+    </div>
 </div>
 {% endblock %}

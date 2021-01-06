@@ -1,15 +1,18 @@
-{% include "header.html" %}
+{% include "base.html" %}
 
 <br><br>
 {% block content %}
     {% for article in page_obj %}  
-        <div style="margin: 0 auto; text-align: center">
-            <h4>
-            <a href="{{ article.slug }}" style="color: black; text-decoration: none;">{{article.title}}</a>
-            </h4>
-            <p>{{article.content|safe}}</p>
+        <div class="card shadow-sm p-3 mb-5 bg-white rounded center d-flex align-items-center align-self-center justify-content-center w-50">
+            <div class="card-body" >
+                <h4 class="card-title" style="margin: 0 auto; text-align:center">
+                    <a href="{{ article.slug }}" style="color: black; text-decoration: none;">{{article.title}}</a>
+                </h4>
+                <p class="card-text">{{article.content|safe}}</p>
+            </div>
+            <br><br>
+            </div>
         </div>
-        <br><br>
     {% endfor %}
 {% endblock %}
 <br><br>
