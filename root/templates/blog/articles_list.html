@@ -3,12 +3,19 @@
 <br><br>
 {% block content %}
     {% for article in page_obj %}  
-        <div class="card shadow-sm p-3 mb-5 bg-white rounded center d-flex align-items-center align-self-center justify-content-center w-50">
+        <div class="card shadow-sm p-3 mb-5 bg-white rounded center d-flex w-75">
             <div class="card-body" >
                 <h4 class="card-title" style="margin: 0 auto; text-align:center">
                     <a href="{{ article.slug }}" style="color: black; text-decoration: none;">{{article.title}}</a>
                 </h4>
+                <td><img src="{{article.image.url}}" /></td>
+                {% if article.content|wordcount > 200 %}
+                <p class="card-text">{{article.content|safe|truncatewords:200|linebreaks}}
+                    <a href="{{ article.slug }}">Читать дальше</a>
+                </p>
+                {% else %}
                 <p class="card-text">{{article.content|safe}}</p>
+                {% endif %}
             </div>
             <br><br>
             </div>

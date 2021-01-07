@@ -8,4 +8,5 @@ app_name = 'blog'  # here for namespacing of urls.
 urlpatterns = [
     path("", views.blog, name="blog"),
     path("<slug:slug>/", ArticleDetailView.as_view(), name="article"),
+    path("<int:pk>/", ArticleDetailView.as_view(), name="article"),
 ]

@@ -5,7 +5,6 @@ from django.core.paginator import Paginator
 from .models import Article
 
 class ArticleDetailView(DetailView):
-
     model = Article
 
     def get_context_data(self, **kwargs):
@@ -14,7 +13,7 @@ class ArticleDetailView(DetailView):
 
 # Create your views here.
 def blog(request):
-    content = Article.objects.filter(visible=True)
+    content = Article.objects.filter(draft=False)
     paginator = Paginator(content, 5)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
