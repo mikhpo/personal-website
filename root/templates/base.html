@@ -7,7 +7,7 @@
 
   <style>
     html body {
-      background-color: rgb(250, 250, 250);
+      background-color: lightgrey;
     }
     .navbar-dark .navbar-nav .nav-link {
     color: lightgrey;
@@ -29,7 +29,7 @@
 
   <head>
     
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm p-1 mb-5 bg-dark">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow p-1 mb-5 bg-dark">
       <div class="container-fluid">
         <a class="navbar-brand">Mikhail Polyakov</a>
         <div class="collapse navbar-collapse" id="navbarNavDropdown">
@@ -49,6 +49,7 @@
           </span>
           <a href='/accounts/logout/' class="btn btn-outline-light" role="button">Выйти</a>
         {% else %}
+          <a href='/accounts/signup/' class="navbar-text text-nowrap" style="margin-right:10px">Зарегистрироваться</a>
           <a href='/accounts/login/' class="btn btn-outline-light" role="button">Войти</a>
         {% endif %}
       </div>

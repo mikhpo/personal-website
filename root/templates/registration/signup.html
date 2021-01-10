@@ -1,0 +1,18 @@
+{% extends 'registration/login.html' %}
+
+{% load crispy_forms_tags %}
+
+{% block content %}
+
+    <form action="" method="POST">
+        {% csrf_token %}
+        {{form|crispy}}
+        <br>
+        <input type="submit" class="btn btn-outline-dark" value="Зарегистрироваться"/>
+        <br><br>
+    </form>
+
+
+    Если вы уже зарегистрированы, то можете <a href="{% url 'login' %}" target="blank"><strong>войти</strong></a>.
+
+{% endblock %}

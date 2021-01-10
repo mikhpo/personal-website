@@ -1,4 +1,6 @@
-{% extends "blog/articles_list.html" %}
+{% extends "blog/index.html" %}
+
+{% load crispy_forms_tags %}
 
 {% block content %}
 <div class="card shadow-sm p-3 mb-5 bg-white rounded center d-flex w-75">
@@ -12,6 +14,45 @@
             <br>
             <small class="text-muted">Обновлено {{article.modified}}</small>
         </div>
+    </div>
+    <h5>Оставить комментарий</h5>
+    <div id="comments_section">
+
+        {% if user.is_authenticated %}
+        <form method="POST">
+            {% csrf_token %}
+            <div class="form-group">
+                {{ comment_form|crispy }}
+                <br>
+                <button class="btn btn-info" type="submit">Добавить комментарий<i class="fas fa-comments"></i></button>
+            </div>
+        </form>
+        {% else %}
+            <a class="btn btn-outline-info" href="{% url 'login' %}?next={{request.path}}">Войдите, чтобы оставить комментарий</a><br>
+        {% endif %}
+
+        {% if comments %}
+            {% if object.number_of_comments > 1 %}
+                <strong class="text-secondary">{{ object.number_of_comments }} комментариев</strong>
+            {% endif %}
+            <hr>
+            <ul>
+                {% for comment in comments %}
+                <li>           
+                <div>
+                    <span>
+                    <strong class="text-info">{{ comment.author }} </strong>
+                    <small class="text-muted">{{ comment.posted }}</small>
+                    </span>
+                    <p>
+                    {{ comment.content|safe }}
+                    </p>
+                </div>
+                </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
     </div>
 </div>
 {% endblock %}

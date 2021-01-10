@@ -1,6 +1,6 @@
 from django.contrib import admin
-from django.utils.safestring import mark_safe 
 from .models import *
+from tinymce.widgets import TinyMCE
 
 # Register your models here.
 
@@ -8,18 +8,23 @@ from .models import *
 class ArticleAdmin(admin.ModelAdmin):
     model = Article
     
-    list_display = ('title', 'published', 'modified', 'draft')
-    list_filter = ('topic', 'series', 'draft')
+    list_display = ('title', 'published', 'modified', 'visible')
+    list_filter = ('series', 'visible')
 
     fieldsets = (
         ("Содержание", {'fields': ["title", "description", "content"]}),
-        ("Метаданные", {"fields": [("topic", "series")]}),
-        ("Служебные", {"fields": ["slug", "draft"]}),
+        ("Метаданные", {"fields": ["series"]}),
         ("Картинка", {'fields': ["image"]}),
-        ("Дата", {'fields': ["published"]}),
+        ("Служебные", {"fields": ["slug", "visible", "published"]}),
     )
 
+    formfield_overrides = {
+        models.TextField: {'widget': TinyMCE()},
+        }
+
     readonly_fields=('published',)
+
+    exclude = ('author',)
 
     def get_readonly_fields(self, request, obj=None):
         if obj:
@@ -27,5 +32,13 @@ class ArticleAdmin(admin.ModelAdmin):
         else:
             return []
 
-admin.site.register(Topic)
+    def save_model(self, request, obj, form, change):
+        if not obj.pk:
+            # Only set added_by during the first save.
+            obj.added_by = request.user
+        super().save_model(request, obj, form, change)
+
+admin.site.register(Comment)
 admin.site.register(Series)
+admin.site.register(Topic)
+admin.site.register(Category)

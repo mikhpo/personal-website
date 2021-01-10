@@ -26,6 +26,7 @@ urlpatterns = [
     path("blog/", include('blog.urls')),
     path('admin/', admin.site.urls),
     path('accounts/', include('django.contrib.auth.urls')),
+    path('accounts/', include('accounts.urls')),
     path('favicon.ico', RedirectView.as_view(url=staticfiles_storage.url('apple-touch-icon.png'))),
     path('favicon-32x32.png', RedirectView.as_view(url=staticfiles_storage.url('favicon-32x32.png'))),
     path('favicon-16x16.png', RedirectView.as_view(url=staticfiles_storage.url('favicon-16x16.png'))),
