@@ -18,7 +18,7 @@ SECRET_KEY = get_secret('SECRET_KEY')
 
 DEBUG = False
 
-ALLOWED_HOSTS = [".mikhailpolyakov.com"]
+ALLOWED_HOSTS = ['.mikhailpolyakov.com', '192.168.1.68', 'localhost']
 
 INSTALLED_APPS = [
     'tinymce',
