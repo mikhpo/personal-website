@@ -2,8 +2,6 @@ from django.contrib import admin
 from .models import *
 from tinymce.widgets import TinyMCE
 
-# Register your models here.
-
 @admin.register(Article)
 class ArticleAdmin(admin.ModelAdmin):
     model = Article
@@ -34,7 +32,6 @@ class ArticleAdmin(admin.ModelAdmin):
 
     def save_model(self, request, obj, form, change):
         if not obj.pk:
-            # Only set added_by during the first save.
             obj.added_by = request.user
         super().save_model(request, obj, form, change)
 

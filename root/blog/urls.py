@@ -3,7 +3,7 @@ from . import views
 from .views import ArticleDetailView
 
 
-app_name = 'blog'  # here for namespacing of urls.
+app_name = 'blog' 
 
 urlpatterns = [
     path("", views.blog, name="blog"),

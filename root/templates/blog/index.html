@@ -3,7 +3,7 @@
 <br><br>
 {% block content %}
     {% for article in page_obj %}  
-        <div class="card shadow-sm p-3 mb-5 bg-white rounded center d-flex w-75">
+        <div class="card shadow p-3 mb-5 bg-white rounded center d-flex w-50">
             <div class="card-body" >
                 <h4 class="card-title" style="margin: 0 auto; text-align:center">
                     <a href="{{ article.slug }}" style="color: black; text-decoration: none;">{{article.title}}</a>

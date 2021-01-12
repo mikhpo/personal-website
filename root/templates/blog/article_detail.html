@@ -3,8 +3,8 @@
 {% load crispy_forms_tags %}
 
 {% block content %}
-<div class="card shadow-sm p-3 mb-5 bg-white rounded center d-flex w-75">
-    <div class="card-body" >
+<div class="card shadow p-3 mb-5 bg-white rounded center d-flex w-50">
+    <div class="card-body">
         <h4 class="card-title" style="margin: 0 auto; text-align:center">
             <a style="color: black; text-decoration: none;">{{article.title}}</a>
         </h4>
@@ -15,7 +15,6 @@
             <small class="text-muted">Обновлено {{article.modified}}</small>
         </div>
     </div>
-    <h5>Оставить комментарий</h5>
     <div id="comments_section">
 
         {% if user.is_authenticated %}
@@ -24,24 +23,21 @@
             <div class="form-group">
                 {{ comment_form|crispy }}
                 <br>
-                <button class="btn btn-info" type="submit">Добавить комментарий<i class="fas fa-comments"></i></button>
+                <button class="btn btn-outline-dark" type="submit">Добавить комментарий<i class="fas fa-comments"></i></button>
             </div>
         </form>
         {% else %}
-            <a class="btn btn-outline-info" href="{% url 'login' %}?next={{request.path}}">Войдите, чтобы оставить комментарий</a><br>
+            <a class="btn btn-outline-dark" href="{% url 'login' %}?next={{request.path}}">Войдите, чтобы оставить комментарий</a><br>
         {% endif %}
 
         {% if comments %}
-            {% if object.number_of_comments > 1 %}
-                <strong class="text-secondary">{{ object.number_of_comments }} комментариев</strong>
-            {% endif %}
-            <hr>
+            <br>
             <ul>
                 {% for comment in comments %}
                 <li>           
                 <div>
                     <span>
-                    <strong class="text-info">{{ comment.author }} </strong>
+                    <strong class="fw-bolder">{{ comment.author }} </strong>
                     <small class="text-muted">{{ comment.posted }}</small>
                     </span>
                     <p>

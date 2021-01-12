@@ -1,9 +1,7 @@
 from django.db import models
-from django.urls import reverse  # To generate URLS by reversing URL patterns
+from django.urls import reverse
 from django.utils.timezone import now
 from django.contrib.auth.models import User
-
-# Create your models here.
 
 class Category(models.Model):
     name = models.CharField('Категория', max_length=100, unique=True)
@@ -80,7 +78,7 @@ class Comment(models.Model):
     posted = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ['-posted']
+        ordering = ['posted']
         verbose_name_plural = "Комментарии"
 
     def __str__(self):
