@@ -13,10 +13,4 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('django.contrib.auth.urls')),
     path('accounts/', include('accounts.urls')),
-    path('favicon.ico', RedirectView.as_view(url=staticfiles_storage.url('apple-touch-icon.png'))),
-    path('favicon-32x32.png', RedirectView.as_view(url=staticfiles_storage.url('favicon-32x32.png'))),
-    path('favicon-16x16.png', RedirectView.as_view(url=staticfiles_storage.url('favicon-16x16.png'))),
-    path('site.webmanifest', RedirectView.as_view(url=staticfiles_storage.url('site.webmanifest'))),
-    path("robots.txt", TemplateView.as_view(template_name="robots.txt", content_type="text/plain"),
-    ),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
