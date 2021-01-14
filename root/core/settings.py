@@ -18,7 +18,7 @@ SECRET_KEY = get_secret('SECRET_KEY')
 
 DEBUG = False
 
-ALLOWED_HOSTS = ['.mikhailpolyakov.com', '192.168.1.68', 'localhost']
+ALLOWED_HOSTS = ['.mikhailpolyakov.com', '192.168.1.68', '46.138.246.69']
 
 INSTALLED_APPS = [
     'whitenoise.runserver_nostatic',

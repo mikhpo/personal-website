@@ -1,3 +1,6 @@
 /.venv/
 /.vscode/
 secrets.json
+robots.txt
+mikhailpolyakov.crt
+mikhailpolyakov.key
