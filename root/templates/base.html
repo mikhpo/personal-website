@@ -27,13 +27,14 @@
   <head>
   {% load static %}
     <title>Михаил Поляков</title>
+    <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <link rel="stylesheet" href="{% static 'node_modules/bootstrap/dist/css/bootstrap.min.css' %}">
     <script src="{% static 'node_modules/bootstrap/dist/js/bootstrap.bundle.min.js' %}"></script>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm p-0 mb-5 bg-dark">
       <link rel="shortcut icon" href="{% static 'favicon.ico' %}" />
-      <div class="container-fluid">
+      <div class="container">
         <a class="navbar-brand">Mikhail Polyakov</a>
-        <div class="collapse navbar-collapse" id="navbarNavDropdown">
+        <div class="navbar-collapse" id="navbarNavDropdown">
           <ul class="navbar-nav me-auto mb-2 mb-lg-0">
             <li class="nav-item">
               {% if "blog" in request.path %}
@@ -48,10 +49,10 @@
           <span class="navbar-text text-nowrap" style="margin-right:10px">
             <small>Вы вошли как {{ user.get_username }}</small>
           </span>
-          <a href='/accounts/logout/' class="btn btn-outline-light" role="button">Выйти</a>
+          <a href='/accounts/logout/' class="btn btn-outline-light btn-sm" role="button">Выйти</a>
         {% else %}
           <a href='/accounts/signup/' class="navbar-text text-nowrap" style="margin-right:10px">Регистрация</a>
-          <a href='/accounts/login/' class="btn btn-outline-light" role="button">Войти</a>
+          <a href='/accounts/login/' class="btn btn-outline-light btn-sm" role="button">Войти</a>
         {% endif %}
       </div>
     </nav>

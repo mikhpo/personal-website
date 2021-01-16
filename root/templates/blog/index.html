@@ -1,44 +1,46 @@
 {% include "base.html" %}
 
 <br><br>
-{% block content %}
-    {% for article in page_obj %}  
-        <div class="card shadow p-3 mb-5 bg-white rounded center d-flex w-50">
-            <div class="card-body" >
-                <h4 class="card-title" style="margin: 0 auto; text-align:center">
-                    <a href="{{ article.slug }}" style="color: black; text-decoration: none;">{{article.title}}</a>
-                </h4>
-                {% if article.content|wordcount > 200 %}
-                <p class="card-text">{{article.content|safe|truncatewords:200|linebreaks}}
-                    <a href="{{ article.slug }}">Читать дальше</a>
-                </p>
-                {% else %}
-                <p class="card-text">{{article.content|safe}}</p>
-                {% endif %}
+<div class = "container">
+    {% block content %}
+        {% for article in page_obj %}  
+            <div class="card shadow p-3 mb-5 bg-white rounded">
+                <div class="card-body" >
+                    <h4 class="card-title" style="margin: 0 auto; text-align:center">
+                        <a href="{{ article.slug }}" style="color: black; text-decoration: none;">{{article.title}}</a>
+                    </h4>
+                    {% if article.content|wordcount > 200 %}
+                    <p class="card-text">{{article.content|safe|truncatewords:200|linebreaks}}
+                        <a href="{{ article.slug }}">Читать дальше</a>
+                    </p>
+                    {% else %}
+                    <p class="card-text">{{article.content|safe}}</p>
+                    {% endif %}
+                </div>
+                <br><br>
+                </div>
             </div>
-            <br><br>
-            </div>
-        </div>
-    {% endfor %}
-{% endblock %}
-<br><br>
+        {% endfor %}
+    {% endblock %}
+    <br><br>
+    <div class="pagination" style="justify-content: center">
+        <span class="step-links">
+            {% if page_obj.has_previous %}
+                <a href="?page=1">&laquo; первая</a>
+                <a href="?page={{ page_obj.previous_page_number }}">предыдущая</a>
+            {% endif %}
 
-<div class="pagination" style="justify-content: center">
-    <span class="step-links">
-        {% if page_obj.has_previous %}
-            <a href="?page=1">&laquo; первая</a>
-            <a href="?page={{ page_obj.previous_page_number }}">предыдущая</a>
-        {% endif %}
+            {% if page_obj and page_obj.paginator.num_pages > 1 %}
+                <span class="current">
+                    Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}.
+                </span>
+            {% endif %}
 
-        {% if page_obj and page_obj.paginator.num_pages > 1 %}
-            <span class="current">
-                Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}.
-            </span>
-        {% endif %}
-
-        {% if page_obj.has_next %}
-            <a href="?page={{ page_obj.next_page_number }}">следующая</a>
-            <a href="?page={{ page_obj.paginator.num_pages }}">последняя &raquo;</a>
-        {% endif %}
-    </span>
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}">следующая</a>
+                <a href="?page={{ page_obj.paginator.num_pages }}">последняя &raquo;</a>
+            {% endif %}
+        </span>
+    </div>
 </div>
+
