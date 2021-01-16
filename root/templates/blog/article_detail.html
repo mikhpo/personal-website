@@ -1,9 +1,8 @@
 {% extends "blog/index.html" %}
-
 {% load crispy_forms_tags %}
-
 {% block content %}
-    <div class="card shadow p-3 mb-5 bg-white rounded">
+<div class = "container">
+    <div class="card shadow p-3 mb-5 bg-white rounded justify-content">
         <div class="card-body">
             <h4 class="card-title" style="margin: 0 auto; text-align:center">
                 <a style="color: black; text-decoration: none;">{{article.title}}</a>
@@ -48,7 +47,7 @@
                     {% endfor %}
                 </ul>
             {% endif %}
-
         </div>
     </div>
+</div>
 {% endblock %}
