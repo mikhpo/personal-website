@@ -1,5 +1,4 @@
 {% include "base.html" %}
-<br><br>
 {% block content %}
     {% for article in page_obj %}
     <div class = "container">
@@ -9,7 +8,7 @@
                     <a href="{{ article.slug }}" style="color: black; text-decoration: none;">{{article.title}}</a>
                 </h4>
                 {% if article.content|wordcount > 200 %}
-                <p class="card-text">{{article.content|safe|truncatewords:200|linebreaks}}
+                <p class="card-text">{{article.content|safe|truncatewords_html:50|linebreaks}}
                     <a href="{{ article.slug }}">Читать дальше</a>
                 </p>
                 {% else %}
@@ -22,26 +21,28 @@
     </div>  
     {% endfor %}
 {% endblock %}
-<br><br>
 <div class = "container">
     <div class="pagination" style="justify-content: center">
         <span class="step-links">
             {% if page_obj.has_previous %}
-                <a href="?page=1">&laquo; первая</a>
-                <a href="?page={{ page_obj.previous_page_number }}">предыдущая</a>
+            <div class="d-grid gap-2 d-md-block">
+                <a href="?page=1" class="btn btn-outline-dark">&laquo; первая</a>
+                <a href="?page={{ page_obj.previous_page_number }}" class="btn btn-outline-dark">предыдущая</a>
             {% endif %}
 
             {% if page_obj and page_obj.paginator.num_pages > 1 %}
                 <span class="current">
-                    Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}.
+                    страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}
                 </span>
             {% endif %}
 
             {% if page_obj.has_next %}
-                <a href="?page={{ page_obj.next_page_number }}">следующая</a>
-                <a href="?page={{ page_obj.paginator.num_pages }}">последняя &raquo;</a>
+                <a href="?page={{ page_obj.next_page_number }}" class="btn btn-outline-dark">следующая</a>
+                <a href="?page={{ page_obj.paginator.num_pages }}" class="btn btn-outline-dark">последняя &raquo;</a>
+            </div>
             {% endif %}
         </span>
     </div>
+    <br>
 </div>
 
