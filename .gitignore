@@ -1,7 +1,6 @@
 /.venv/
 /.vscode/
 secrets.json
-robots.txt
 mikhailpolyakov.crt
 mikhailpolyakov.key
-/staticfiles/node_modules/
+/root/staticfiles/node_modules/
