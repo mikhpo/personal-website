@@ -1,4 +1,6 @@
-{% include "base.html" %}
+{% extends "base.html" %}
+<!-- Шаблон корневой страницы блога, наследует от базового шаблона -->
+
 {% block content %}
     {% for article in page_obj %}
     <div class = "container">
@@ -20,29 +22,29 @@
         </div>
     </div>  
     {% endfor %}
-{% endblock %}
-<div class = "container">
-    <div class="pagination" style="justify-content: center">
-        <span class="step-links">
-            {% if page_obj.has_previous %}
-            <div class="d-grid gap-2 d-md-block">
-                <a href="?page=1" class="btn btn-outline-dark">&laquo; первая</a>
-                <a href="?page={{ page_obj.previous_page_number }}" class="btn btn-outline-dark">предыдущая</a>
-            {% endif %}
 
-            {% if page_obj and page_obj.paginator.num_pages > 1 %}
-                <span class="current">
-                    страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}
-                </span>
-            {% endif %}
-
-            {% if page_obj.has_next %}
-                <a href="?page={{ page_obj.next_page_number }}" class="btn btn-outline-dark">следующая</a>
-                <a href="?page={{ page_obj.paginator.num_pages }}" class="btn btn-outline-dark">последняя &raquo;</a>
-            </div>
-            {% endif %}
-        </span>
+    <div class = "container">
+        <div class="pagination" style="justify-content: center">
+            <span class="step-links">
+                {% if page_obj.has_previous %}
+                <div class="d-grid gap-2 d-md-block">
+                    <a href="?page=1" class="btn btn-outline-dark">&laquo; первая</a>
+                    <a href="?page={{ page_obj.previous_page_number }}" class="btn btn-outline-dark">предыдущая</a>
+                {% endif %}
+    
+                {% if page_obj and page_obj.paginator.num_pages > 1 %}
+                    <span class="current">
+                        страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}
+                    </span>
+                {% endif %}
+    
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}" class="btn btn-outline-dark">следующая</a>
+                    <a href="?page={{ page_obj.paginator.num_pages }}" class="btn btn-outline-dark">последняя &raquo;</a>
+                </div>
+                {% endif %}
+            </span>
+        </div>
+        <br>
     </div>
-    <br>
-</div>
-
+{% endblock %}

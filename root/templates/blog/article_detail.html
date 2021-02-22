@@ -1,5 +1,11 @@
-{% extends "blog/index.html" %}
+{% extends "base.html" %}
 {% load crispy_forms_tags %}
+
+<!-- Шаблон для статьи и комментариев, наследует от базового шаблона -->
+{% block title %}
+    <title>{{article.title}}</title>
+{% endblock title %}
+
 {% block content %}
 <div class = "container">
     <div class="card shadow p-3 mb-5 bg-white rounded justify-content">

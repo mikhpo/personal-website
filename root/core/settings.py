@@ -1,25 +1,55 @@
+# Модуль настроек Django-проекта.
+
 import os
 import json
 from pathlib import Path
 from django.core.exceptions import ImproperlyConfigured
 
+# Определяется абсолютный путь до текущей директории для того, чтобы далее в проекте везде использовались относительные пути.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Секреты (коды, пароли, логины, ip-адреса) спрятаны в отдельном JSON-файле.
 with open(os.path.join(BASE_DIR, 'secrets.json')) as secrets_file:
     secrets = json.load(secrets_file)
 
 def get_secret(setting, secrets=secrets):
+    '''
+    Функция для получения значения по ключю из JSON файла с секретными данными.
+    '''
     try:
         return secrets[setting]
     except KeyError:
-        raise ImproperlyConfigured("Set the {} setting".format(setting))
+        raise ImproperlyConfigured("Необходимо установить значение настройки {}".format(setting))
 
-SECRET_KEY = get_secret('SECRET_KEY')
+SECRET_KEY = get_secret('SECRET_KEY') # ключ проекта Django (генерируется автоматически)
 
-DEBUG = False
+'''
+Вклюение (True) и отключение (False) режима отладки. Включать необходимо на этапе разработки и отладки. 
+При запуске сайта в производство необходимо режим отладки отключать, так как он выдает пользователю много деталей о структурной организации проекта.
+'''
+DEBUG = False 
 
-ALLOWED_HOSTS = ['.mikhailpolyakov.com', '192.168.1.68', '46.138.246.69']
+''' 
+Список адресов, которые будет обслуживать Django проект. 
+Если не добавлять адрес в этот список, то запросы по данному адресу обрабатываться не будут.
+В данном случае добавлены три адреса:
+1. Доменное имя.
+2. IP адрес в локальной сети.
+3. IP адрес в глобальной сети.
+'''
+ALLOWED_HOSTS = [
+    '.mikhailpolyakov.com', 
+    get_secret('IP_ADDRESS_LOCAL'), 
+    get_secret('IP_ADDRESS_PUBLIC')
+]
 
+'''
+Список установленных программ. После добавления программы в список Django будет автоматически искать их модули в виртуальном окружении и в каталоге проекта.
+Программы в список нужно добавлять в следующем порядке:
+1. Дополнительные Python модули.
+2. Встроенные модули Django.
+3. Приложения пользователя.
+'''
 INSTALLED_APPS = [
     'whitenoise.runserver_nostatic',
     'tinymce',
@@ -35,6 +65,7 @@ INSTALLED_APPS = [
     'blog.apps.BlogConfig',
 ]
 
+# Список промежуточного ПО. Порядок добавления ПО в список необходимо изучать в документации этого ПО.
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
@@ -46,8 +77,10 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+# Относительный путь до urls.py основного модуля Django.
 ROOT_URLCONF = 'core.urls'
 
+# Настройки используемого шаблонизатора. Здесь также указан относительный путь до папки с шаблонами проекта.
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -67,7 +100,10 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'core.wsgi.application'
 
-
+'''
+Настройки подключения к базам данных. Проект автоматически создается со встроенной базой данных SQLite.
+В данном случае было настроено подключение к БД PostgreSQL, которая установлена на том же сервере.
+'''
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
@@ -94,31 +130,40 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# Устанавливается язык проекта. В Django встроена русская локализация, которая дает перевод панели администрирования, стандартных форм и рассылки писем.
 LANGUAGE_CODE = 'ru'
 
+# Устанавливается временная зона.
 TIME_ZONE = 'Europe/Moscow'
 
 USE_I18N = True
 
 USE_L10N = True
 
+# Да, если мы хотим использовать настройку временной зоны.
 USE_TZ = True
 
+# Статические файлы - это фавиконы, CSS, модули JavaScript, библиотеки Node. 
+STATIC_URL = '/static/' # веб-адрес, по которому будут доступны статические файлы
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles') # абсолютный путь до папки, в которой собраны статические файлы.
+WHITENOISE_ROOT = STATIC_ROOT # путь до папки ПО WhiteNoise, который радикально упрощает использование статических файлов в Django-проекте. 
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage' # настройка, необходимая для WhiteNoise
 
-STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-WHITENOISE_ROOT = STATIC_ROOT
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+# Медиа файлы - это загружаемые файлы (фото, видео, документы).
+MEDIA_URL = '/media/' # Относительный url до медиа-файлов.
+MEDIA_ROOT = os.path.join(BASE_DIR,'media') # абсолютный путь до папки с медиа-файлами.
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR,'media')
+LOGIN_REDIRECT_URL = '/' # адрес, на который будет перенаправлен пользователь после авторизации.
+LOGIN_URL = '/accounts/login/' # Веб-адрес формы авторизации на сайте.
 
-LOGIN_REDIRECT_URL = '/'
-LOGIN_URL = '/accounts/login/'
+LOGOUT_REDIRECT_URL = '/' # адрес, на который будет перенаправлен пользователь после выхода.
+LOGOUT_URL = '/accounts/logout/' # Веб-адрес для выхода с сайта.
 
-LOGOUT_REDIRECT_URL = '/'
-LOGOUT_URL = '/accounts/logout/'
-
+''' 
+Настройки ПО TinyMCE. TinyMCE - это WYSIWYG текстовый редактор. 
+В данном Django проекте он используется при создании записей в блог. (через административную панель)
+В данном конфиге определены подключаемые плагины TinyMCE и меню редактора.
+'''
 TINYMCE_DEFAULT_CONFIG = {
     'cleanup_on_startup': True,
     'custom_undo_redo_levels': 20,
@@ -146,8 +191,13 @@ TINYMCE_DEFAULT_CONFIG = {
     'statusbar': True,
     }
 
-CRISPY_TEMPLATE_PACK = 'bootstrap4'
+CRISPY_TEMPLATE_PACK = 'bootstrap4' # настройки модуля Django Crispy Forms, улучшающего отображение стандартных форм Django.
 
+'''
+Настройки почтовой службы, используемой для почтовых рассылок. 
+В данном проекте используется стандартный функционал Django по восстановлению забытых паролей через почту. 
+В связи с этим почтовый адрес является обязательным полем при регистрации нового пользователя.
+'''
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
@@ -157,4 +207,4 @@ DEFAULT_FROM_EMAIL = get_secret('EMAIL_HOST_USER')
 EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False
 
-DATA_UPLOAD_MAX_MEMORY_SIZE = None
+DATA_UPLOAD_MAX_MEMORY_SIZE = None # лимит на размер загружаемых файлов.

@@ -4,6 +4,9 @@ from tinymce.widgets import TinyMCE
 
 @admin.register(Article)
 class ArticleAdmin(admin.ModelAdmin):
+    '''
+    Настройки отображения модели статьи в панели администрирования Django.
+    '''
     model = Article
     
     list_display = ('title', 'published', 'modified', 'visible')
@@ -16,12 +19,15 @@ class ArticleAdmin(admin.ModelAdmin):
         ("Служебные", {"fields": ["slug", "visible", "published"]}),
     )
 
+    # Стандартная форма тектового поля заменена на HTML форму TinyMCE.
     formfield_overrides = {
         models.TextField: {'widget': TinyMCE()},
         }
 
+    # Дату публикации можно изменить только при создании статьи, но не при редактировании.
     readonly_fields=('published',)
 
+    # Автор фиксируется, но не редактируется.
     exclude = ('author',)
 
     def get_readonly_fields(self, request, obj=None):

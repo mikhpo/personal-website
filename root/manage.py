@@ -1,6 +1,10 @@
+'''
+Стандартный модуль Django. Роль данного модуля - запуск Django.
+В данном модуле также указан относительный путь до модуля настроек settings.py.
+'''
+
 import os
 import sys
-
 
 def main():
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')

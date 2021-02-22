@@ -4,6 +4,9 @@ from django.shortcuts import render, redirect
 from .forms import SignUpForm
 
 def signup(request):
+    '''
+    Вид для регистрации нового пользователя.
+    '''
     if request.method == 'POST':
         form = SignUpForm(request.POST)
         if form.is_valid():

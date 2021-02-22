@@ -3,6 +3,9 @@ from .models import Comment
 from tinymce.widgets import TinyMCE
 
 class NewCommentForm(forms.ModelForm):
+    '''
+    Форма создания нового комментария к статье.
+    '''
     content = forms.CharField(label ="", widget = forms.Textarea( 
         attrs ={ 
             'class':'form-control', 

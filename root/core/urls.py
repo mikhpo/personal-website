@@ -1,3 +1,5 @@
+# Стандартный модуль, в котором зарегистрированы используемые в проекте веб-адреса.
+
 from django.contrib import admin
 from django.urls import path, include
 from django.contrib.staticfiles.storage import staticfiles_storage

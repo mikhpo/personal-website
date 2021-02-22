@@ -4,6 +4,9 @@ from django.utils.timezone import now
 from django.contrib.auth.models import User
 
 class Category(models.Model):
+    '''
+    Модель тематической категории.
+    '''
     name = models.CharField('Категория', max_length=100, unique=True)
     description = models.CharField("Описание", max_length=200, blank=True)
     slug = models.SlugField('Ссылка', unique=True)
@@ -17,6 +20,10 @@ class Category(models.Model):
         return self.name
 
 class Topic(models.Model):
+    '''
+    Модель темы.
+    Тема может относиться к нескольким категориям.
+    '''
     name = models.CharField('Тема', max_length=100, unique=True)
     description = models.CharField("Описание", max_length=200, blank=True)
     slug = models.SlugField('Ссылка', unique=True)
@@ -31,6 +38,10 @@ class Topic(models.Model):
         return self.name
 
 class Series(models.Model):
+    '''
+    Модель серии.
+    Серия может быть на несколько тем.
+    '''
     name = models.CharField('Серия', max_length=100, unique=True)
     description = models.CharField("Описание", max_length=200, blank=True)
     slug = models.SlugField('Ссылка', unique=True)
@@ -46,6 +57,11 @@ class Series(models.Model):
 
 
 class Article(models.Model):
+    '''
+    Модель статьи.
+    Статья может быть частью серии.
+    Статья связана с одним пользователем.
+    '''
     title = models.CharField('Заголовок', max_length=100, unique=True)
     description = models.CharField("Описание", max_length=200, blank=True)
     content = models.TextField('Содержание')
@@ -72,6 +88,11 @@ class Article(models.Model):
         return Comment.objects.filter(article=self).count()
 
 class Comment(models.Model):
+    '''
+    Модель комментария к статье. 
+    Комментарий связан с одной статьей и с одним пользователем. 
+    У одной статьи может быть много комментариев.
+    '''
     article = models.ForeignKey(Article, related_name='comments', on_delete=models.CASCADE)
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     content = models.TextField()
