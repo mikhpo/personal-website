@@ -65,6 +65,7 @@ INSTALLED_APPS = [
     'accounts.apps.AccountsConfig',
     'main.apps.MainConfig',
     'blog.apps.BlogConfig',
+    'scripts.apps.ScriptsConfig',
 ]
 
 # Список промежуточного ПО. Порядок добавления ПО в список необходимо изучать в документации этого ПО.
@@ -205,10 +206,11 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_HOST_USER = get_secret('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = get_secret('EMAIL_HOST_PASSWORD')
-DEFAULT_FROM_EMAIL = get_secret('EMAIL_HOST_USER')
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False
 
 DATA_UPLOAD_MAX_MEMORY_SIZE = None # лимит на размер загружаемых файлов.
 
+# С версии Django 3.2 по умолчанию используется новый тип авто-поля для первичного ключа.
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
