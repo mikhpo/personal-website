@@ -9,6 +9,6 @@
   "author": "Mikhail Polyakov",
   "license": "ISC",
   "dependencies": {
-    "bootstrap": "^5.0.0-beta1"
+    "bootstrap": "^5.0.2"
   }
 }

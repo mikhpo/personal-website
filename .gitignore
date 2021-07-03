@@ -3,4 +3,4 @@
 secrets.json
 mikhailpolyakov.crt
 mikhailpolyakov.key
-/root/staticfiles/node_modules/
+root/staticfiles/node_modules/

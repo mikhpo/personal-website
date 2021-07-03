@@ -27,7 +27,7 @@ SECRET_KEY = get_secret('SECRET_KEY') # ключ проекта Django (гене
 Включение (True) и отключение (False) режима отладки. Включать необходимо на этапе разработки и отладки. 
 При запуске сайта в производство необходимо режим отладки отключать, так как он выдает пользователю много деталей о структурной организации проекта.
 '''
-DEBUG = False 
+DEBUG = True 
 
 ''' 
 Список адресов, которые будет обслуживать Django проект. 
@@ -40,7 +40,9 @@ DEBUG = False
 ALLOWED_HOSTS = [
     '.mikhailpolyakov.com', 
     get_secret('IP_ADDRESS_LOCAL'), 
-    get_secret('IP_ADDRESS_PUBLIC')
+    get_secret('IP_ADDRESS_PUBLIC'),
+    'localhost',
+    '127.0.0.1'
 ]
 
 '''
@@ -110,8 +112,8 @@ DATABASES = {
         'NAME': get_secret('DB_NAME'),
         'USER': get_secret('DB_USER'),
         'PASSWORD': get_secret('DB_PASSWORD'),
-        'HOST': 'localhost',
-        'PORT': '',
+        'HOST': get_secret('IP_ADDRESS_LOCAL'),
+        'PORT': '5432',
     }
 }
 
@@ -208,3 +210,5 @@ EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False
 
 DATA_UPLOAD_MAX_MEMORY_SIZE = None # лимит на размер загружаемых файлов.
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
