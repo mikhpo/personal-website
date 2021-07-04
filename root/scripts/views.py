@@ -36,6 +36,4 @@ def database_dump(request):
     )
     email.attach_file(dump_path)
     email.send()
-    return HttpResponse(f"Бэкап базы данных создан и отправлен на {', '.join(admin_emails)}")
-
-
+    return HttpResponse(f"Бэкап базы данных создан и отправлен на {', '.join(admin_emails)}\n")
