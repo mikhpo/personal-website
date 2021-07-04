@@ -1,6 +1,5 @@
 from django import forms
 from .models import Comment
-from tinymce.widgets import TinyMCE
 
 class NewCommentForm(forms.ModelForm):
     '''

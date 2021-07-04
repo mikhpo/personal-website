@@ -1,46 +1,44 @@
 import os
 import subprocess
-import traceback
 from django.conf import settings
 from django.http import HttpResponse
 from django.core.mail import EmailMessage
 from django.contrib.auth.models import User
 from django.utils.timezone import now
-from django.forms.models import model_to_dict
 from .models import Script, Run
 from loguru import logger
 
-
-# Журнал выполнения скриптов будем записывать в лог-файл, который ротируется еженедельно.
-logger.add("logs/scripts.log", rotation="1 week") 
 
 @logger.catch
 def database_dump(request):
     '''Функция создает дамп базы данных сайта и отправляет по электронной почте.'''
     log = [] # создаем пустой список, куда будем поэтапно записывать журнал
+    # Журнал выполнения скриптов будем записывать в лог-файл, который ротируется еженедельно.
+    logger.add("scripts/logs/database_dump.log", rotation="12:00") 
 
-
-    url = request.build_absolute_uri() # определяем путь
-    text = f'Поступил запрос: {url}'
-    log.append(text)
-    logger.debug(text)
-
-    script = Script.objects.get(command = url) # найдем скрипт по пути
-    text = f'Запускаю скрипт: {script.name}'
-    log.append(text)
-    logger.debug(text)
-
-    # Создадим объект модели Run, в котором будет зафиксировано название скрипта, статус "Выполняется" и автоматически добавлена дата создания
+    # Создадим объект запущенного скрипта.
     run = Run.objects.create(
-        script = script,
         status = 0
         )
     run.save()
-    text = f'Создан объект запущенного скрипта с параметрами: {model_to_dict(run)}'
-    log.append(text)
-    logger.debug(text)
     
     try:
+        text = f'Создан объект запущенного скрипта'
+        log.append(text)
+        logger.debug(text)
+
+        url = request.build_absolute_uri() # определяем путь
+        text = f'Поступил запрос: {url}'
+        log.append(text)
+        logger.debug(text)
+
+        script = Script.objects.get(command = url) # найдем скрипт по пути
+        run.script = script
+        run.save()
+        text = f'Запускаю скрипт: {script.name}'
+        log.append(text)
+        logger.debug(text)
+    
         # Сначала создадим дамп базы данных. Для этого используем вызов bash скрипта, использующего команду pg_dump.
         backup_dir = f'/home/{settings.SERVER_USER}/backups' # директория, куда сохраняется дамп
         dump_name = 'personal_website_backup.sql' # имя дампа
@@ -86,8 +84,8 @@ def database_dump(request):
         run.success = True
 
     except Exception as e:
-        # Если при выполнении скрипта получили ошибку, то направив ответ с трэйсбэком.
-        message = traceback.print_exc()
+        # Если при выполнении скрипта получили ошибку, то результатом будет текст ошибки.
+        message = e
         run.success = False
 
     run.status = 1

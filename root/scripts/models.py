@@ -30,7 +30,7 @@ class Run(models.Model):
         RUNNING = 0, 'Выполняется'
         COMPLETED = 1, 'Завершено'
 
-    script = models.ForeignKey(Script, on_delete=models.CASCADE)
+    script = models.ForeignKey(Script, on_delete=models.CASCADE, blank=True, null=True)
     start = models.DateTimeField('Время запуска', auto_now_add=True)
     status = models.IntegerField('Статус', choices=Status.choices)
     end = models.DateTimeField('Время завершения', blank=True, null=True)
