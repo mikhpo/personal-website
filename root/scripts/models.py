@@ -33,8 +33,8 @@ class Run(models.Model):
     script = models.ForeignKey(Script, on_delete=models.CASCADE)
     start = models.DateTimeField('Время запуска', auto_now_add=True)
     status = models.IntegerField('Статус', choices=Status.choices)
-    end = models.DateTimeField('Время завершения', blank=True)
-    success = models.BooleanField('Успешный', blank=True)
+    end = models.DateTimeField('Время завершения', blank=True, null=True)
+    success = models.BooleanField('Успешный', blank=True, null=True)
     result = models.TextField('Результат', blank=True)
     log = models.TextField('Журнал', blank=True)
 

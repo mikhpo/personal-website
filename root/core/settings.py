@@ -214,3 +214,6 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = None # лимит на размер загружа
 
 # С версии Django 3.2 по умолчанию используется новый тип авто-поля для первичного ключа.
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Имя пользователя системы, в которой развернуто приложение.
+SERVER_USER = get_secret('SERVER_USER')
