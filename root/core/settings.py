@@ -38,7 +38,7 @@ DEBUG = True
 3. IP адрес в глобальной сети.
 '''
 ALLOWED_HOSTS = [
-    '.mikhailpolyakov.com', 
+    get_secret('DOMAIN_NAME'),
     get_secret('IP_ADDRESS_LOCAL'), 
     get_secret('IP_ADDRESS_PUBLIC'),
     'localhost',
@@ -114,7 +114,7 @@ DATABASES = {
         'USER': get_secret('DB_USER'),
         'PASSWORD': get_secret('DB_PASSWORD'),
         'HOST': get_secret('IP_ADDRESS_LOCAL'),
-        'PORT': '5432',
+        'PORT': get_secret('DB_PORT'),
     }
 }
 

@@ -3,9 +3,6 @@ name = "personal website"
 version = "0.0.3"
 description = "My personal website"
 authors = ["Mikhail Polyakov <m.y.polyakov@gmail.com>"]
-packages = [
-    { include="scripts", from="." },
-]
 
 [tool.poetry.dependencies]
 python = "^3.9"
