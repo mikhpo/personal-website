@@ -6,6 +6,7 @@ from .forms import SignUpForm
 def signup(request):
     '''
     Вид для регистрации нового пользователя.
+    После завершения регистрации автоматически происходит авторизация.
     '''
     if request.method == 'POST':
         form = SignUpForm(request.POST)

@@ -8,7 +8,7 @@ class Script(models.Model):
     description = models.TextField('Описание', blank=True)
     schedule = models.CharField('Расписание', max_length=255, blank=True)
     active = models.BooleanField('Активный', default=True)
-    command = models.URLField('Запуск', blank=True)
+    slug = models.SlugField('Команда для запуска', blank=True)
 
     class Meta:
         verbose_name = 'Скрипт'
@@ -16,6 +16,10 @@ class Script(models.Model):
 
     def __str__(self):
         return self.name
+
+    def get_absolute_url(self):
+        '''Построение полной ссылки для запуска скрипта.'''
+        return f"/scripts/{self.slug}/"
 
     def run_script(self):
         '''Преобразует ссылку как текст в кликабельную ссылку.'''
