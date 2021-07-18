@@ -4,6 +4,7 @@ import os
 import json
 from pathlib import Path
 from django.core.exceptions import ImproperlyConfigured
+from loguru import logger
 
 # Определяется абсолютный путь до текущей директории для того, чтобы далее в проекте везде использовались относительные пути.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -36,6 +37,7 @@ DEBUG = True
 1. Доменное имя.
 2. IP адрес в локальной сети.
 3. IP адрес в глобальной сети.
+Для корректного запуска скриптов необходимо доменное имя указывать первым элементом списка.
 '''
 ALLOWED_HOSTS = [
     get_secret('DOMAIN_NAME'),
@@ -217,3 +219,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Имя пользователя системы, в которой развернуто приложение.
 SERVER_USER = get_secret('SERVER_USER')
+
+LOG_FOLDER = os.path.join(BASE_DIR, 'logs') # папка для сохранения логов
+logger.add(f'{LOG_FOLDER}/debug.log', filter=lambda record: record["level"].name == "DEBUG", retention='7 days')
+logger.add(f'{LOG_FOLDER}/error.log', filter=lambda record: record["level"].name == "ERROR", retention='7 days', backtrace=True, diagnose=True)

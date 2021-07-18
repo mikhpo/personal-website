@@ -42,6 +42,8 @@ class ScriptAdmin(admin.ModelAdmin):
     list_display = ('name', 'description', 'schedule', 'active', 'run_script')
     list_filter = ('active', )
 
+    exclude = ('command',)
+
     inlines = [
         RunInline,
     ]

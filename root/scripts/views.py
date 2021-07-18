@@ -23,10 +23,6 @@ def database_dump(request):
     run.save()
     
     try:
-        text = f'Создан объект запущенного скрипта'
-        log.append(text)
-        logger.debug(text)
-
         url = request.build_absolute_uri() # определяем путь
         text = f'Поступил запрос: {url}'
         log.append(text)
@@ -86,6 +82,7 @@ def database_dump(request):
     except Exception as e:
         # Если при выполнении скрипта получили ошибку, то результатом будет текст ошибки.
         message = e
+        logger.exception(message)
         run.success = False
 
     run.status = 1

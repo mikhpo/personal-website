@@ -1,5 +1,9 @@
 from django.db import models
+from django.conf import settings
 from django.utils.html import format_html
+
+domain = settings.ALLOWED_HOSTS[0]
+app = 'scripts'
 
 class Script(models.Model):
     '''Описание скрипта: наименование, предназначение, раписание запуска.'''
@@ -8,7 +12,8 @@ class Script(models.Model):
     description = models.TextField('Описание', blank=True)
     schedule = models.CharField('Расписание', max_length=255, blank=True)
     active = models.BooleanField('Активный', default=True)
-    slug = models.SlugField('Команда для запуска', blank=True)
+    slug = models.SlugField('Слаг для запуска', blank=True)
+    command = models.URLField('Полный путь для запуска', blank=True)
 
     class Meta:
         verbose_name = 'Скрипт'
@@ -17,13 +22,17 @@ class Script(models.Model):
     def __str__(self):
         return self.name
 
-    def get_absolute_url(self):
-        '''Построение полной ссылки для запуска скрипта.'''
-        return f"/scripts/{self.slug}/"
+    def save(self, *args, **kwargs):
+        '''
+        При сохранении объекта автоматически вычисляется 
+        значение поля на основании значения из другого поля.
+        '''
+        self.command = f'https://{domain}/{app}/{self.slug}'
+        super(Script, self).save(*args, **kwargs)
 
     def run_script(self):
         '''Преобразует ссылку как текст в кликабельную ссылку.'''
-        return format_html("<a href='%s'>Запустить</a>" % (self.command))
+        return format_html(f"<a href='{self.command}'>Запустить</a>")
     run_script.short_description = 'Запуск' 
 
 class Run(models.Model):
