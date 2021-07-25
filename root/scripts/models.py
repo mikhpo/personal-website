@@ -27,7 +27,7 @@ class Script(models.Model):
         При сохранении объекта автоматически вычисляется 
         значение поля на основании значения из другого поля.
         '''
-        self.command = f'https://{domain}/{app}/{self.slug}'
+        self.command = f'https://{domain}/{app}/{self.slug}/'
         super(Script, self).save(*args, **kwargs)
 
     def run_script(self):
