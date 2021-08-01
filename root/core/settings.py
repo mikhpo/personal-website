@@ -115,7 +115,7 @@ DATABASES = {
         'NAME': get_secret('DB_NAME'),
         'USER': get_secret('DB_USER'),
         'PASSWORD': get_secret('DB_PASSWORD'),
-        'HOST': get_secret('IP_ADDRESS_LOCAL'),
+        'HOST': 'localhost',
         'PORT': get_secret('DB_PORT'),
     }
 }
