@@ -1,5 +1,5 @@
-/.venv/
-/.vscode/
+.venv
+.vscode
 __pycache__/
 secrets.json
 mikhailpolyakov.crt

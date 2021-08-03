@@ -56,14 +56,23 @@
         </button>   
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
           <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <!-- Активным является тот элемент навигационной панели, которому соответствует открытый раздел сайта -->
             <li class="nav-item">
-              <!-- Активным является тот элемент навигационной панели, которому соответствует открытый раздел сайта -->
               {% if "blog" in request.path %}
                 <a class="nav-link lead active" aria-current="page" href="{% url 'blog:blog' %}">Блог</a>
               {% else %}
                 <a class="nav-link lead" aria-current="page" href="{% url 'blog:blog' %}">Блог</a>
               {% endif %}
             </li>
+            {% if request.user.is_staff %}
+              <li class="nav-item">
+                {% if "scripts" in request.path %}
+                  <a class="nav-link lead active" aria-current="page" href="{% url 'scripts:scripts' %}">Скрипты</a>
+                {% else %}
+                  <a class="nav-link lead" aria-current="page" href="{% url 'scripts:scripts' %}">Скрипты</a>
+                {% endif %}
+              </li>
+            {% endif %}
           </ul>
           {% if user.is_authenticated %}
             <span class="navbar-text text-nowrap" style="margin-right:10px">

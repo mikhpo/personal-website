@@ -1,30 +1,30 @@
 from django.contrib import admin
-from .models import Script, Run
+from .models import Job, Execution
 
-class RunInline(admin.TabularInline):
-    model = Run
-    readonly_fields = ("script", "start", "status", "end", "success", "result", "log")
+class ExecutionInline(admin.TabularInline):
+    model = Execution
+    readonly_fields = ("job", "start", "status", "end", "success", "result")
     can_delete = False
     
     def has_add_permission(self, request, obj=None):
         '''Объекты запусков нельзя добавлять вручную.'''
         return False
 
-@admin.register(Run)
-class RunAdmin(admin.ModelAdmin):
+@admin.register(Execution)
+class ExecutionAdmin(admin.ModelAdmin):
     '''
     Настройки отображения модели запуска скрипта в панели администрирования Django.
     '''
-    model = Run
+    model = Execution
     
-    list_display = ('script', 'start', 'status', 'end', 'success', 'result')
+    list_display = ('job', 'start', 'status', 'end', 'success', 'result')
     list_filter = ('status', 'success')
 
-    readonly_fields = ("script", "start", "status", "end", "success", "result", "log")
+    readonly_fields = ("job", "start", "status", "end", "success", "result")
 
     fieldsets = (
-        ("Метаданные", {'fields': ["script", "start", "status", "end"]}),
-        ("Результат", {"fields": ["success", "result", "log"]}),
+        ("Метаданные", {'fields': ["job", "start", "status", "end"]}),
+        ("Результат", {"fields": ["success", "result"]}),
     )
 
     def has_add_permission(self, request, obj=None):
@@ -32,19 +32,19 @@ class RunAdmin(admin.ModelAdmin):
         return False
     
 
-@admin.register(Script)
-class ScriptAdmin(admin.ModelAdmin):
+@admin.register(Job)
+class JobAdmin(admin.ModelAdmin):
     '''
     Настройки отображения модели скрипта в панели администрирования Django.
     '''
-    model = Script
+    model = Job
     
-    list_display = ('name', 'description', 'schedule', 'active', 'run_script')
-    list_filter = ('active', )
+    list_display = ('name', 'description', 'schedule', 'last_run', 'active', 'scheduled', 'manual', 'next_run', 'run_script')
+    list_filter = ('active', 'scheduled', 'manual')
 
     exclude = ('command',)
 
     inlines = [
-        RunInline,
+        ExecutionInline,
     ]
 

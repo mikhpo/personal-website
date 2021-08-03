@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+<!-- Шаблон для отображения списка скриптов, наследует от базового шаблона -->
+
+{% block content %}
+    <div class = "container">
+        <div class="card shadow p-3 mb-5 bg-white rounded justify-content">
+            <div class="card-body">
+                <br>
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-success">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                    <br>
+                {% endif %}
+                <table class="table w-auto small table-sm table-hover table-bordered">
+                    <caption>Скрипты</caption>
+                    <thead class="table-light">
+                        <tr>
+                            <th>Наименование</th>
+                            <th>Описание</th>
+                            <th>Расписание</th>
+                            <th>Последний запуск</th>
+                            <th>Следующий запуск по расписанию</th>
+                            <th>Ручной запуск</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for job in jobs %}
+                            <tr>
+                                <td><a href="/scripts/job/{{ job.pk }}/">{{ job.name }}</a></td>
+                                <td>{{ job.description|default_if_none:"" }}</td>
+                                <td>{{ job.schedule|default_if_none:"" }}</td>
+                                <td>{{ job.last_run|default_if_none:"" }}</td>
+                                <td>{{ job.next_run|default_if_none:"" }}</td>
+                                {% if job.manual %}
+                                    <td class="d-print-none">
+                                        <a class="btn btn-sm btn-outline-dark" href="/scripts/command/{{ job.slug }}/">
+                                            Запустить
+                                        </a>
+                                    </td>
+                                {% else %}
+                                    <td></td>
+                                {% endif %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <br>
+            </div>
+        </div>
+    </div>  
+{% endblock %}

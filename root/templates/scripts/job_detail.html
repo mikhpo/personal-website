@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+<!-- Шаблон для отображения детального описания скрипта с историей выполнений, наследует от базового шаблона -->
+
+{% block content %}
+    <div class = "container">
+        <div class="card shadow p-3 mb-5 bg-white rounded justify-content">
+            <div class="card-body">
+                <br>
+                <table class="table w-auto small table-sm table-hover table-bordered">
+                    <tr>
+                        <th>Наименование</th>
+                        <td>{{ job.name|default_if_none:"" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Описание</th>
+                        <td>{{ job.description|default_if_none:"" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Расписание</th>
+                        <td>{{ job.schedule|default_if_none:"" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Последний запуск</th>
+                        <td>{{ job.last_run|default_if_none:"" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Следующий запуск по расписанию</th>
+                        <td>{{ job.next_run|default_if_none:"" }}</td>
+                    </tr>
+                    {% if job.manual %}
+                        <tr>
+                            <th>Ручной запуск</th>
+                            <td>
+                                <a class="btn btn-sm btn-outline-dark" href="/scripts/command/{{ job.slug }}/">
+                                Запустить
+                                </a>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </table>
+                {% if messages %}
+                    <br>
+                    {% for message in messages %}
+                        <div class="alert alert-success">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                    <br>
+                {% endif %}
+                <table class="table w-auto small table-sm table-hover table-bordered">
+                    <caption>История выполнений скрипта</caption>
+                    <thead class="table-light">
+                        <tr>
+                            <th>Время запуска</th>
+                            <th>Статус</th>
+                            <th>Время завершения</th>
+                            <th>Успешный</th>
+                            <th>Результат</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for execution in executions %}
+                            <tr>
+                                <td>{{ execution.start|default_if_none:"" }}</td>
+                                <td>{{ execution.get_status_display|default_if_none:"" }}</td>
+                                <td>{{ execution.end|default_if_none:"" }}</td>
+                                <td>{{ execution.get_success_display|default_if_none:"" }}</td>
+                                <td>{{ execution.result|default_if_none:"" }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <br>
+            </div>
+        </div>
+    </div>  
+{% endblock %}

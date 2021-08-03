@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 from django.core.exceptions import ImproperlyConfigured
 from loguru import logger
+from platform import uname
 
 # Определяется абсолютный путь до текущей директории для того, чтобы далее в проекте везде использовались относительные пути.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -24,12 +25,6 @@ def get_secret(setting, secrets=secrets):
 
 SECRET_KEY = get_secret('SECRET_KEY') # ключ проекта Django (генерируется автоматически)
 
-'''
-Включение (True) и отключение (False) режима отладки. Включать необходимо на этапе разработки и отладки. 
-При запуске сайта в производство необходимо режим отладки отключать, так как он выдает пользователю много деталей о структурной организации проекта.
-'''
-DEBUG = True 
-
 ''' 
 Список адресов, которые будет обслуживать Django проект. 
 Если не добавлять адрес в этот список, то запросы по данному адресу обрабатываться не будут.
@@ -46,6 +41,22 @@ ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1'
 ]
+
+'''
+Включение (True) и отключение (False) режима отладки. Включать необходимо на этапе разработки и отладки. 
+При запуске сайта в производство необходимо режим отладки отключать, так как он выдает пользователю много деталей о структурной организации проекта.
+Режим отладки включен, если приложение развернуто на системе для разработки (WSL), и выключен, если приложение развернуто на целевой системе (Raspberry PI).
+'''
+SYSTEM = uname().release
+if 'microsoft' in SYSTEM:
+    DEBUG = True
+    DOMAIN = '127.0.0.1:8000'
+elif 'raspi' in SYSTEM:
+    DEBUG = False
+    DOMAIN = ALLOWED_HOSTS[0]
+else:
+    DEBUG = True
+    DOMAIN = ALLOWED_HOSTS[0]
 
 '''
 Список установленных программ. После добавления программы в список Django будет автоматически искать их модули в виртуальном окружении и в каталоге проекта.
@@ -220,6 +231,17 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Имя пользователя системы, в которой развернуто приложение.
 SERVER_USER = get_secret('SERVER_USER')
 
+# Настройки логирования.
 LOG_FOLDER = os.path.join(BASE_DIR, 'logs') # папка для сохранения логов
+logger.add(f'{LOG_FOLDER}/info.log', filter=lambda record: record["level"].name == "INFO", retention='7 days')
 logger.add(f'{LOG_FOLDER}/debug.log', filter=lambda record: record["level"].name == "DEBUG", retention='7 days')
 logger.add(f'{LOG_FOLDER}/error.log', filter=lambda record: record["level"].name == "ERROR", retention='7 days', backtrace=True, diagnose=True)
+
+# Путь до интерпретатора Python.
+PYTHON_PATH = os.path.join(BASE_DIR, '..', '.venv', 'bin', 'python3.9')
+
+# Путь до модуля manage.py.
+MANAGE_PATH = os.path.join(BASE_DIR, 'manage.py')
+
+# Настройка, определяющая, следует ли запускать планировщик скриптов.
+START_SCHEDULER = True

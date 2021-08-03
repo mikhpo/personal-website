@@ -14,6 +14,8 @@ Pillow = "^8.3.0"
 loguru = "^0.5.3"
 django-crispy-forms = "^1.12.0"
 django-tinymce = "^3.3.0"
+croniter = "^1.0.15"
+APScheduler = "^3.7.0"
 
 [tool.poetry.dev-dependencies]
 
