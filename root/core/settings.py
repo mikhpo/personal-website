@@ -52,7 +52,7 @@ if 'microsoft' in SYSTEM:
     DEBUG = True
     DOMAIN = '127.0.0.1:8000'
 elif 'raspi' in SYSTEM:
-    DEBUG = False
+    DEBUG = True
     DOMAIN = ALLOWED_HOSTS[0]
 else:
     DEBUG = True

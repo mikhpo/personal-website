@@ -13,6 +13,14 @@ def cron_validator(value):
     if not croniter.is_valid(value):
         raise ValidationError("Некорректное крон-выражение")
 
+def calculate_command_path(slug):
+    '''Определяет полный путь для запуска скрипта.'''
+    debug = settings.DEBUG
+    if debug: protocol = 'http'
+    else: protocol = 'https'
+    domain = settings.DOMAIN
+    return f'{protocol}://{domain}/scripts/command/{slug}/'
+
 class Job(models.Model):
     '''Описание скрипта: наименование, предназначение, раписание запуска.'''
 
@@ -39,23 +47,20 @@ class Job(models.Model):
         При сохранении объекта автоматически вычисляется значение поля на основании значения из другого поля. 
         Если крон-выражение было изменено, то раписание скрипта изменяется автоматически.
         '''
-        old = Job.objects.get(pk=self.pk)
-
-        # Если старый и новый слаг отличаются, то необходимо переопределить полный путь для команды.
-        if self.slug != old.slug:
-            debug = settings.DEBUG
-            if debug: protocol = 'http'
-            else: protocol = 'https'
-            domain = settings.DOMAIN
-            self.command = f'{protocol}://{domain}/scripts/command/{self.slug}/'
-
-        # Если старое и новое крон-выражения отличаются, то необходимо перезапустить планировщик.
-        if self.cron != old.cron: 
-            from .scheduler import scheduler
-            from apscheduler.triggers.cron import CronTrigger
-            trigger = CronTrigger.from_crontab(self.cron)
-            scheduler.reschedule_job(job_id=self.slug, trigger=trigger)
-
+        from .scheduler import add_job, reschedule_job
+        # Если у объекта уже есть первичный ключ, т.е. он был создан ранее.
+        if self.pk:
+            old = Job.objects.get(pk=self.pk)
+            # Если старый и новый слаг отличаются, то необходимо переопределить полный путь для команды.
+            if self.slug != old.slug:
+                self.command = calculate_command_path(self.slug)
+            # Если старое и новое крон-выражения отличаются, то необходимо перезапустить планировщик.
+            if self.cron != old.cron: 
+                reschedule_job(self.slug, self.cron)
+        # Если это вновь созданный объект.            
+        else: 
+            add_job(self.slug, self.cron)
+            self.command = calculate_command_path(self.slug)
         super(Job, self).save(*args, **kwargs)
 
     def run_script(self):
