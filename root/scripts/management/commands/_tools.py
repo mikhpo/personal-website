@@ -9,7 +9,7 @@ from loguru import logger
 python = settings.PYTHON_PATH
 manage = settings.MANAGE_PATH
 
-script_dit = {
+script_dict = {
     "backup_database": backup_database.main
 }
 
@@ -28,7 +28,7 @@ def command_handler(script):
         logger.debug(str(execution))
         job.last_run = timezone.localtime(timezone.now())
         job.save()
-        result = script_dit[script]()
+        result = script_dict[script]()
         logger.info(result)
         execution.success = 1
     except Exception as e:
