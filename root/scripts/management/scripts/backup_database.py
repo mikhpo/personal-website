@@ -1,13 +1,18 @@
 import os
+import time
 import subprocess
 from loguru import logger
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.mail import EmailMessage
 from pathlib import Path
+from .tools import format_time
 
 def main():
     '''Функция создает дамп базы данных сайта и отправляет по электронной почте.'''
+
+    # Фиксируем точку отсчета времени выполнения скрипта.
+    start_time = time.time()
     
     # Сначала создадим дамп базы данных. Для этого используем вызов bash скрипта, использующего команду pg_dump.
     backup_dir = f'/home/{settings.SERVER_USER}/backups' # директория, куда сохраняется дамп
@@ -42,6 +47,9 @@ def main():
     email.send()
     logger.debug(f'Письмо отправлено на {", ".join(admin_emails)}')
 
+    # Определяем продолжительность выполнения скрипта
+    overall_time = time.time() - start_time
+
     # Если выполнение скрипта успешно завершено, то направим ответ с указанием адресов получателей бэкапа.
-    result = f"Бэкап базы данных создан и отправлен на {', '.join(admin_emails)}"
+    result = f"Бэкап базы данных создан и отправлен на {', '.join(admin_emails)} за {format_time(overall_time)} минут."
     return result

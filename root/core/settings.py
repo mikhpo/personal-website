@@ -36,6 +36,7 @@ SECRET_KEY = get_secret('SECRET_KEY') # ключ проекта Django (гене
 '''
 ALLOWED_HOSTS = [
     get_secret('DOMAIN_NAME'),
+    get_secret('WWW_DOMAIN_NAME'),
     get_secret('IP_ADDRESS_LOCAL'), 
     get_secret('IP_ADDRESS_PUBLIC'),
     'localhost',
@@ -79,6 +80,8 @@ INSTALLED_APPS = [
     'main.apps.MainConfig',
     'blog.apps.BlogConfig',
     'scripts.apps.ScriptsConfig',
+    'django.contrib.sites',
+    'django.contrib.sitemaps',
 ]
 
 # Список промежуточного ПО. Порядок добавления ПО в список необходимо изучать в документации этого ПО.
@@ -145,6 +148,8 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+SITE_ID = 1
 
 # Устанавливается язык проекта. В Django встроена русская локализация, которая дает перевод панели администрирования, стандартных форм и рассылки писем.
 LANGUAGE_CODE = 'ru'
