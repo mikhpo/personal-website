@@ -5,11 +5,14 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.sitemaps.views import sitemap
-from blog.sitemaps import ArticleSitemap
+from blog.sitemaps import ArticleSitemap, CategorySitemap, SeriesSitemap, Topic, Category, TopicSitemap
 from django.views.generic import RedirectView
 
 sitemaps = {
-    'articles': ArticleSitemap
+    'articles': ArticleSitemap,
+    'series': SeriesSitemap,
+    'topics': TopicSitemap,
+    'categories': CategorySitemap,
 }
 
 urlpatterns = [
