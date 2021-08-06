@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.views.generic.detail import DetailView
 from django.core.paginator import Paginator
-from .models import Article, Comment
+from .models import Article, Comment, Category, Topic, Series
 from .forms import NewCommentForm
 
 class ArticleDetailView(DetailView):
@@ -12,10 +12,12 @@ class ArticleDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         data = super().get_context_data(**kwargs)
+
         # Добавляются комментарии к статье, отсортированные в порядке от старых к новым.
         comments_connected = Comment.objects.filter(
             article=self.get_object()).order_by('-posted')
         data['comments'] = comments_connected
+        
         # Если пользователь авторизован, то появляется форма добавления комментария.
         if self.request.user.is_authenticated:
             data['comment_form'] = NewCommentForm(instance=self.request.user)
@@ -32,16 +34,55 @@ class ArticleDetailView(DetailView):
         new_comment.save()
         return self.get(self, request, *args, **kwargs)
 
+def paginate(request, objects):
+    '''Фукнция для разбивки отображения списка объектов по страницам.'''
+    paginator = Paginator(objects, 5)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    return page_obj
+
 def blog(request):
     '''
     Функция, определяющая порядок отображения статей на главной странице блога.
     Добавлена разбивка по страницам. Здесь указано количество статей на страницу.
     Отображаются только те статьи, для которых не была установлена невидимость (черновики).
     '''
-    content = Article.objects.filter(visible=True)
+    content = Article.objects.filter(public=True)
     paginator = Paginator(content, 5)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    return render(request,
-                  'blog/index.html',
-                  {'page_obj': page_obj})
+    return render(
+        request,
+        'blog/index.html',
+        {'page_obj': page_obj}
+        )
+
+def category(request, slug):
+    '''Вывод всех статей, соответствующих определенной категории.'''
+    category = Category.objects.get(slug=slug)
+    articles = category.article_set.filter(public=True)
+    return render(
+        request,
+        'blog/index.html',
+        {'page_obj': paginate(request, articles)}
+        )
+
+def series(request, slug):
+    '''Вывод всех статей, соответствующих определенной серии.'''
+    series = Series.objects.get(slug=slug)
+    articles = series.article_set.filter(public=True)
+    return render(
+        request,
+        'blog/index.html',
+        {'page_obj': paginate(request, articles)}
+        )
+
+def topic(request, slug):
+    '''Вывод всех статей, соответствующих определенной теме.'''
+    topic = Topic.objects.get(slug=slug)
+    articles = topic.article_set.filter(public=True)
+    return render(
+        request,
+        'blog/index.html',
+        {'page_obj': paginate(request, articles)}
+        )

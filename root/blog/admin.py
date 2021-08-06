@@ -1,6 +1,7 @@
 from django.contrib import admin
 from .models import *
 from tinymce.widgets import TinyMCE
+from django.utils.html import format_html
 
 @admin.register(Article)
 class ArticleAdmin(admin.ModelAdmin):
@@ -9,14 +10,14 @@ class ArticleAdmin(admin.ModelAdmin):
     '''
     model = Article
     
-    list_display = ('title', 'published', 'modified', 'visible')
-    list_filter = ('series', 'visible')
+    list_display = ('title', 'published', 'modified', 'public')
+    list_filter = ('series', 'topic', 'category', 'public')
 
     fieldsets = (
         ("Содержание", {'fields': ["title", "description", "content"]}),
-        ("Метаданные", {"fields": ["series"]}),
+        ("Метаданные", {"fields": ["series", "topic", "category"]}),
         ("Картинка", {'fields': ["image"]}),
-        ("Служебные", {"fields": ["slug", "visible", "published"]}),
+        ("Служебные", {"fields": ["slug", "public", "published"]}),
     )
 
     # Стандартная форма тектового поля заменена на HTML форму TinyMCE.
@@ -41,7 +42,38 @@ class ArticleAdmin(admin.ModelAdmin):
             obj.added_by = request.user
         super().save_model(request, obj, form, change)
 
-admin.site.register(Comment)
-admin.site.register(Series)
-admin.site.register(Topic)
-admin.site.register(Category)
+@admin.register(Category)
+class CategoryAdmin(admin.ModelAdmin):
+    '''
+    Настройки отображения модели категории в панели администрирования Django.
+    '''
+    model = Category
+    list_display = ('name', 'public', 'slug', 'image')
+    list_filter = ('public',)
+
+@admin.register(Series)
+class SeriesAdmin(admin.ModelAdmin):
+    '''
+    Настройки отображения модели серии в панели администрирования Django.
+    '''
+    model = Series
+    list_display = ('name', 'public', 'slug', 'image')
+    list_filter = ('public',)
+
+@admin.register(Topic)
+class TopicAdmin(admin.ModelAdmin):
+    '''
+    Настройки отображения модели тем в панели администрирования Django.
+    '''
+    model = Topic
+    list_display = ('name', 'public', 'slug', 'image')
+    list_filter = ('public',)
+
+@admin.register(Comment)
+class CommentAdmin(admin.ModelAdmin):
+    '''
+    Настройки отображения модели комментариев в панели администрирования Django.
+    '''
+    model = Comment
+    list_display = ('article', 'author', 'posted')
+    list_filter = ('article', 'author')

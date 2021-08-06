@@ -6,13 +6,15 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.sitemaps.views import sitemap
 from blog.sitemaps import ArticleSitemap
+from django.views.generic import RedirectView
 
 sitemaps = {
     'articles': ArticleSitemap
 }
 
 urlpatterns = [
-    path("", include('main.urls')),
+    path("", RedirectView.as_view(url='main/', permanent=True)),
+    path("main/", include('main.urls')),
     path('tinymce/', include('tinymce.urls')),
     path("blog/", include('blog.urls')),
     path('admin/', admin.site.urls),

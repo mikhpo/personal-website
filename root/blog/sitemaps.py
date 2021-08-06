@@ -6,7 +6,7 @@ class ArticleSitemap(Sitemap):
     protocol = 'https'
     
     def items(self):
-        return Article.objects.filter(visible=True)
+        return Article.objects.filter(public=True)
 
     def lastmod(self, obj):
         return obj.modified
