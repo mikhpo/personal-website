@@ -36,5 +36,5 @@ def start():
         scheduler.start()
         logger.info("Планировщик скриптов запущен")
     else:
-        logger.ingo("Планировщик скриптов не запущен")
+        logger.info("Планировщик скриптов не запущен")
 

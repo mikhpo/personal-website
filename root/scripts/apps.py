@@ -14,7 +14,7 @@ class ScriptsConfig(AppConfig):
         то инициализуруется запуск планировщика скриптов.
         '''
         from . import scheduler
-        if sys.argv[1] == 'runserver':
+        if 'runserver' or 'unix:/run/gunicorn.sock' in sys.argv:
             try:
                 scheduler.start()
             except:
