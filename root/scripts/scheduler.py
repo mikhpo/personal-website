@@ -34,7 +34,6 @@ def start():
         for job in jobs:
             add_job(job.slug, job.cron)
         scheduler.start()
-        logger.info("Планировщик скриптов запущен")
     else:
         logger.info("Планировщик скриптов не запущен")
 
