@@ -55,11 +55,12 @@ class Job(models.Model):
             if self.slug != old.slug:
                 self.command = calculate_command_path(self.slug)
             # Если старое и новое крон-выражения отличаются, то необходимо перезапустить планировщик.
-            if self.cron != old.cron: 
+            if (self.cron != old.cron) and settings.START_SCHEDULER:
                 reschedule_job(self.slug, self.cron)
         # Если это вновь созданный объект.            
-        else: 
-            add_job(self.slug, self.cron)
+        else:
+            if settings.START_SCHEDULER: 
+                add_job(self.slug, self.cron)
             self.command = calculate_command_path(self.slug)
         super(Job, self).save(*args, **kwargs)
 
