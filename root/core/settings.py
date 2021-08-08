@@ -249,4 +249,4 @@ PYTHON_PATH = os.path.join(BASE_DIR, '..', '.venv', 'bin', 'python3.9')
 MANAGE_PATH = os.path.join(BASE_DIR, 'manage.py')
 
 # Настройка, определяющая, следует ли запускать планировщик скриптов.
-START_SCHEDULER = True
+START_SCHEDULER = False
