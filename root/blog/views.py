@@ -48,13 +48,10 @@ def blog(request):
     Отображаются только те статьи, для которых не была установлена невидимость (черновики).
     '''
     content = Article.objects.filter(public=True)
-    paginator = Paginator(content, 5)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
     return render(
         request,
         'blog/index.html',
-        {'page_obj': page_obj}
+        {'page_obj': paginate(request, content)}
         )
 
 def category(request, slug):
