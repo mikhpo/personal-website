@@ -1,3 +1,7 @@
+'''
+В этом модуле определены настройки отображения моделей 
+приложения в административном интерфейсе Django.
+'''
 from django.contrib import admin
 from .models import Job, Execution
 

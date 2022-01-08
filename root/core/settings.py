@@ -243,7 +243,7 @@ logger.add(f'{LOG_FOLDER}/debug.log', filter=lambda record: record["level"].name
 logger.add(f'{LOG_FOLDER}/error.log', filter=lambda record: record["level"].name == "ERROR", retention='7 days', backtrace=True, diagnose=True)
 
 # Путь до интерпретатора Python.
-PYTHON_PATH = os.path.join(BASE_DIR, '..', '.venv', 'bin', 'python3.9')
+PYTHON_PATH = os.path.join(BASE_DIR, '..', '.venv', 'bin', 'python')
 
 # Путь до модуля manage.py.
 MANAGE_PATH = os.path.join(BASE_DIR, 'manage.py')

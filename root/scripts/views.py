@@ -2,7 +2,7 @@ from django.shortcuts import redirect, render
 from .models import Job, Execution
 from loguru import logger
 from django.contrib import messages
-from .management.commands._tools import run_command
+from scripts.tools import run_command
 from django.contrib.admin.views.decorators import staff_member_required
 
 @logger.catch

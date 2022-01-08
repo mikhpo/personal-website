@@ -1,3 +1,9 @@
+'''
+Модуль для моделей планировщика скриптов. 
+Приложение использует две модели: 
+- Скрипт (описание и параметры запуска скрипта).
+- Выполнение (статус и история выполнения скрипта).
+'''
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
@@ -43,25 +49,8 @@ class Job(models.Model):
         return self.name
 
     def save(self, *args, **kwargs):
-        '''
-        При сохранении объекта автоматически вычисляется значение поля на основании значения из другого поля. 
-        Если крон-выражение было изменено, то раписание скрипта изменяется автоматически.
-        '''
-        from .scheduler import add_job, reschedule_job
-        # Если у объекта уже есть первичный ключ, т.е. он был создан ранее.
-        if self.pk:
-            old = Job.objects.get(pk=self.pk)
-            # Если старый и новый слаг отличаются, то необходимо переопределить полный путь для команды.
-            if self.slug != old.slug:
-                self.command = calculate_command_path(self.slug)
-            # Если старое и новое крон-выражения отличаются, то необходимо перезапустить планировщик.
-            if (self.cron != old.cron) and settings.START_SCHEDULER:
-                reschedule_job(self.slug, self.cron)
-        # Если это вновь созданный объект.            
-        else:
-            if settings.START_SCHEDULER: 
-                add_job(self.slug, self.cron)
-            self.command = calculate_command_path(self.slug)
+        '''При сохранении объекта автоматически вычисляется значение URL для запуска команды.'''
+        self.command = calculate_command_path(self.slug)
         super(Job, self).save(*args, **kwargs)
 
     def run_script(self):
