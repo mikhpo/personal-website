@@ -7,7 +7,11 @@
 #   3. Если задачи ещё не добавлены, то добавляет задачи в crontab.
 
 # Получение содержимого текущего crontab файла.
-cron=`crontab -l`
+cron=`crontab -l 2> /dev/null`
+
+if [[ -z "$cron" ]]; then
+    echo "У пользователя не создан crontab"
+fi
 
 # Массив задач на добавление.
 cron_jobs=(
