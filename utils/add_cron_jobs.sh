@@ -11,7 +11,7 @@ cron=`crontab -l 2> /dev/null`
 
 # Массив задач на добавление.
 cron_jobs=(
-    "@reboot (cd /home/mikhpo/personal-website/ && source .venv/bin/activate && python3 root/manage.py run_scheduler)"
+    "@reboot sh /home/mikhpo/personal-website/utils/run_scheduler.sh"
 )
 
 # Определение символа перехода на новую строку. 
@@ -21,10 +21,8 @@ NEWLINE=$'\n'
 for job in "${cron_jobs[@]}"
     do
         # Проверка на то, добавлена ли уже задача в crontab.
-        if [[ "$cron" == *"$job"* ]]; then
+        if [[ "$cron" != *"$job"* ]]; then
             # Если задача уже в crontab, то ничего не надо делать.
-            echo "Задача \""$job"\" уже в crontab"
-        else
             # Если задача не найдена в crontab, то она добавляется
             # к текущему crontab в новой строке.
             if [[ -z "$cron" ]]; then
@@ -34,8 +32,7 @@ for job in "${cron_jobs[@]}"
             else
                 # Если файл не пуст, то задача добавляется с новой строки.
                 cron="${cron}${NEWLINE}${job}"
-            fi
-            echo "Задача \""$job"\" добавлена в crontab"           
+            fi            
         fi
     done
 
