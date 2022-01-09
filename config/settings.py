@@ -1,11 +1,11 @@
-# Модуль настроек Django-проекта.
+'''Модуль настроек Django-проекта.'''
 
 import os
 import json
 from pathlib import Path
-from django.core.exceptions import ImproperlyConfigured
-from loguru import logger
 from platform import uname
+from loguru import logger
+from django.core.exceptions import ImproperlyConfigured
 
 # Определяется абсолютный путь до текущей директории для того, чтобы далее в проекте везде использовались относительные пути.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -140,18 +140,10 @@ DATABASES = {
 }
 
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',},
 ]
 
 SITE_ID = 1
@@ -171,7 +163,7 @@ USE_TZ = True
 
 # Статические файлы - это фавиконы, CSS, модули JavaScript, библиотеки Node. 
 STATIC_URL = '/static/' # веб-адрес, по которому будут доступны статические файлы
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles') # абсолютный путь до папки, в которой собраны статические файлы.
+STATIC_ROOT = os.path.join(BASE_DIR, 'static') # абсолютный путь до папки, в которой собраны статические файлы.
 WHITENOISE_ROOT = STATIC_ROOT # путь до папки ПО WhiteNoise, который радикально упрощает использование статических файлов в Django-проекте. 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage' # настройка, необходимая для WhiteNoise
 

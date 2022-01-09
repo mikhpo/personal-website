@@ -27,7 +27,7 @@ def jobs(request):
     jobs = Job.objects.filter(active = True).order_by('-last_run')
     return render(
         request,
-        'scripts/jobs.html',
+        'jobs.html',
         {'jobs': jobs}
     )
 
@@ -38,7 +38,7 @@ def executions(request):
     executions = Execution.objects.all().order_by('-start')
     return render(
         request,
-        'scripts/executions.html',
+        'executions.html',
         {'executions': executions}
     )
 
@@ -50,7 +50,7 @@ def job_detail(request, pk):
     executions = Execution.objects.filter(job = job.pk)
     return render(
         request,
-        'scripts/job_detail.html',
+        'job_detail.html',
         {
             'job': job,
             'executions': executions

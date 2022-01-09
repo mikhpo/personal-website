@@ -7,9 +7,9 @@ __pycache__/
 secrets.json
 mikhailpolyakov.crt
 mikhailpolyakov.key
-root/staticfiles/node_modules/
-root/staticfiles/admin/
-root/staticfiles/tinymce/
-root/staticfiles/django_tinymce/
+static/node_modules/
+static/admin/
+static/tinymce/
+static/django_tinymce/
 *.log
 *.pyc

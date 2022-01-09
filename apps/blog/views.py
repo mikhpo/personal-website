@@ -28,9 +28,11 @@ class ArticleDetailView(DetailView):
         '''
         Функция для добавления комментариев к статьям.
         '''
-        new_comment = Comment(content=request.POST.get('content'),
-                                  author=self.request.user,
-                                  article=self.get_object())
+        new_comment = Comment(
+            content=request.POST.get('content'),
+            author=self.request.user,
+            article=self.get_object()
+        )
         new_comment.save()
         return self.get(self, request, *args, **kwargs)
 
@@ -50,9 +52,9 @@ def blog(request):
     content = Article.objects.filter(public=True)
     return render(
         request,
-        'blog/index.html',
+        'blog_index.html',
         {'page_obj': paginate(request, content)}
-        )
+    )
 
 def category(request, slug):
     '''Вывод всех статей, соответствующих определенной категории.'''
@@ -60,9 +62,9 @@ def category(request, slug):
     articles = category.article_set.filter(public=True)
     return render(
         request,
-        'blog/index.html',
+        'blog_index.html',
         {'page_obj': paginate(request, articles)}
-        )
+    )
 
 def series(request, slug):
     '''Вывод всех статей, соответствующих определенной серии.'''
@@ -70,9 +72,9 @@ def series(request, slug):
     articles = series.article_set.filter(public=True)
     return render(
         request,
-        'blog/index.html',
+        'blog_index.html',
         {'page_obj': paginate(request, articles)}
-        )
+    )
 
 def topic(request, slug):
     '''Вывод всех статей, соответствующих определенной теме.'''
@@ -80,6 +82,6 @@ def topic(request, slug):
     articles = topic.article_set.filter(public=True)
     return render(
         request,
-        'blog/index.html',
+        'blog_index.html',
         {'page_obj': paginate(request, articles)}
-        )
+     )
