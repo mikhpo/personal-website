@@ -97,7 +97,7 @@ MIDDLEWARE = [
 ]
 
 # Относительный путь до urls.py основного модуля Django.
-ROOT_URLCONF = 'core.urls'
+ROOT_URLCONF = 'config.urls'
 
 # Настройки используемого шаблонизатора. Здесь также указан относительный путь до папки с шаблонами проекта.
 TEMPLATES = [
@@ -117,7 +117,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'core.wsgi.application'
+WSGI_APPLICATION = 'config.wsgi.application'
 
 '''
 Настройки подключения к базам данных. Проект автоматически создается со встроенной базой данных SQLite.
