@@ -62,27 +62,32 @@ else:
 '''
 Список установленных программ. После добавления программы в список Django будет автоматически искать их модули в виртуальном окружении и в каталоге проекта.
 Программы в список нужно добавлять в следующем порядке:
-1. Дополнительные Python модули.
-2. Встроенные модули Django.
-3. Приложения пользователя.
+2. Модули от проекта Django.
+1. Модули для Django от сообщества.
+3. Локальные приложения автора.
 '''
-INSTALLED_APPS = [
-    'whitenoise.runserver_nostatic',
-    'tinymce',
-    'crispy_forms',
+DJANGO_PACKAGES = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'accounts.apps.AccountsConfig',
-    'main.apps.MainConfig',
-    'blog.apps.BlogConfig',
-    'scripts.apps.ScriptsConfig',
     'django.contrib.sites',
     'django.contrib.sitemaps',
 ]
+COMMUNITY_PACKAGES = [
+    'whitenoise.runserver_nostatic',
+    'tinymce',
+    'crispy_forms',
+]
+PROJECT_APPS = [
+    'apps.accounts.apps.AccountsConfig',
+    'apps.main.apps.MainConfig',
+    'apps.blog.apps.BlogConfig',
+    'apps.scripts.apps.ScriptsConfig',
+]
+INSTALLED_APPS = DJANGO_PACKAGES + COMMUNITY_PACKAGES + PROJECT_APPS
 
 # Список промежуточного ПО. Порядок добавления ПО в список необходимо изучать в документации этого ПО.
 MIDDLEWARE = [

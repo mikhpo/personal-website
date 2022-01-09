@@ -2,7 +2,7 @@
 Модуль для построения карты сайта по объектам приложения.
 '''
 from django.contrib.sitemaps import Sitemap
-from blog.models import Article, Series, Topic, Category
+from .models import Article, Series, Topic, Category
 
 class ArticleSitemap(Sitemap):
     protocol = 'https'
