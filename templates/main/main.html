@@ -7,7 +7,10 @@
 {% block content %}
     <style>
         .card:hover {
-        transform: scale(1.05);
+            transform: scale(1.025);
+        }
+        .card {
+            height: 90%; 
         }
     </style>
     <!-- Категории -->
@@ -16,7 +19,7 @@
         <div class="row row-cols-1 row-cols-md-3 g-4 justify-content-center">
             {% for category in categories %}
                 <div class="col">
-                    <div class="card shadow p-3 mb-5 bg-white rounded h-100 text-center">
+                    <div class="card shadow p-2 mb-5 bg-white rounded text-center">
                         {% if category.image %}
                             <a href="{{ category.get_absolute_url }}">
                                 <img src="{{ category.image.url }}" class="card-img-top">
@@ -47,7 +50,7 @@
         <div class="row row-cols-1 row-cols-md-3 g-4 justify-content-center">
             {% for serial in series %}
                 <div class="col">
-                    <div class="card shadow p-3 mb-5 bg-white rounded h-100 text-center">
+                    <div class="card shadow p-2 mb-5 bg-white rounded text-center">
                         {% if serial.image %}
                             <a href="{{ serial.get_absolute_url }}">
                                 <img src="{{ serial.image.url }}" class="card-img-top">
