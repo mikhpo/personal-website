@@ -1,9 +1,10 @@
-from django.shortcuts import redirect, render
-from .models import Job, Execution
 from loguru import logger
+from django.shortcuts import redirect, render
 from django.contrib import messages
-from .tools import run_command
 from django.contrib.admin.views.decorators import staff_member_required
+from .models import Job, Execution
+from .tools import run_command
+
 
 @logger.catch
 @staff_member_required
@@ -27,7 +28,7 @@ def jobs(request):
     jobs = Job.objects.filter(active = True).order_by('-last_run')
     return render(
         request,
-        'jobs.html',
+        'scripts/jobs.html',
         {'jobs': jobs}
     )
 
@@ -38,7 +39,7 @@ def executions(request):
     executions = Execution.objects.all().order_by('-start')
     return render(
         request,
-        'executions.html',
+        'scripts/executions.html',
         {'executions': executions}
     )
 
@@ -50,7 +51,7 @@ def job_detail(request, pk):
     executions = Execution.objects.filter(job = job.pk)
     return render(
         request,
-        'job_detail.html',
+        'scripts/job_detail.html',
         {
             'job': job,
             'executions': executions

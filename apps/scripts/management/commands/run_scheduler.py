@@ -13,8 +13,8 @@ from apscheduler.schedulers.background import BlockingScheduler
 from apscheduler.triggers.cron import CronTrigger
 from django.conf import settings
 from django.core.management.base import BaseCommand
-from scripts.models import Job
-from scripts.tools import run_command
+from apps.scripts.models import Job
+from apps.scripts.tools import run_command
 
 class Command(BaseCommand):
     help = 'Запуск планировщика скриптов'
