@@ -6,7 +6,7 @@ def main(request):
     series = Series.objects.filter(public=True).exclude(image='')
     return render(
         request,
-        'main.html',
+        'main/main.html',
         {
             "categories": categories,
             "series": series

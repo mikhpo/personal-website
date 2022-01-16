@@ -4,7 +4,7 @@ import sys
 from loguru import logger
 from django.utils import timezone
 from django.conf import settings
-from scripts.models import Job, Execution
+from apps.scripts.models import Job, Execution
 
 def log_script(func):
     '''

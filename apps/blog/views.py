@@ -52,7 +52,7 @@ def blog(request):
     content = Article.objects.filter(public=True)
     return render(
         request,
-        'blog_index.html',
+        'blog/blog_index.html',
         {'page_obj': paginate(request, content)}
     )
 
@@ -62,7 +62,7 @@ def category(request, slug):
     articles = category.article_set.filter(public=True)
     return render(
         request,
-        'blog_index.html',
+        'blog/blog_index.html',
         {'page_obj': paginate(request, articles)}
     )
 
@@ -72,7 +72,7 @@ def series(request, slug):
     articles = series.article_set.filter(public=True)
     return render(
         request,
-        'blog_index.html',
+        'blog/blog_index.html',
         {'page_obj': paginate(request, articles)}
     )
 
@@ -82,6 +82,6 @@ def topic(request, slug):
     articles = topic.article_set.filter(public=True)
     return render(
         request,
-        'blog_index.html',
+        'blog/blog_index.html',
         {'page_obj': paginate(request, articles)}
      )

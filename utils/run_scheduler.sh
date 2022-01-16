@@ -1,11 +1,9 @@
 #!/bin/bash
-
+#
 # Запуск планировщика скриптов. 
 
-# Смена текущей директории на корень проекта Django.
-cd /home/mikhpo/personal-website && 
+# Адрес корневого каталога проекта определяется автоматически.
+project_root="$(dirname "$(dirname "$(readlink -fm "$0")")")"
 
-# Абсолютный путь до интерпретатора Python в виртуальном окружении, 
-# абсолютный путь до модуля manage.py в корневом каталоге проекта
-# и название аргумента - наименование административной команды для запуска планировщика скриптов.
-/home/mikhpo/personal-website/.venv/bin/python /home/mikhpo/personal-website/manage.py run_scheduler
+# Выполнение административной команды Django.
+$project_root/.venv/bin/python $project_root/manage.py run_scheduler

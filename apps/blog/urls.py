@@ -9,6 +9,6 @@ urlpatterns = [
     path("category/<slug:slug>/", views.category, name="category"),
     path("topic/<slug:slug>/", views.topic, name="topic"),
     path("series/<slug:slug>/", views.series, name="series"),
-    path("article/<slug:slug>/", ArticleDetailView.as_view(template_name="article_detail.html"), name="article"),
-    path("<slug:slug>/", ArticleDetailView.as_view(template_name="article_detail.html"), name="article_shortcut"),
+    path("article/<slug:slug>/", ArticleDetailView.as_view(), name="article"),
+    path("<slug:slug>/", ArticleDetailView.as_view(), name="article_shortcut"),
 ]

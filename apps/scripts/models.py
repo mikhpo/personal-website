@@ -4,12 +4,12 @@
 - Скрипт (описание и параметры запуска скрипта).
 - Выполнение (статус и история выполнения скрипта).
 '''
+import datetime
+from croniter import croniter
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
 from django.utils.html import format_html
-from croniter import croniter
-import datetime
 from django.core.exceptions import ValidationError
 
 def cron_validator(value):

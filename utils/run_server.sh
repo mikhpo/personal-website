@@ -1,11 +1,9 @@
 #!/bin/bash
+#
+# Запуск веб-сервера в режиме разработки.
 
-# Запуск планировщика скриптов. 
+# Адрес корневого каталога проекта определяется автоматически.
+project_root="$(dirname "$(dirname "$(readlink -fm "$0")")")"
 
-# Смена текущей директории на корень проекта Django.
-cd /home/mikhpo/personal-website && 
-
-# Абсолютный путь до интерпретатора Python в виртуальном окружении, 
-# абсолютный путь до модуля manage.py в корневом каталоге проекта
-# и аргумент - наименование административной команды для запуска сервера со стандартными параметрами.
-/home/mikhpo/personal-website/.venv/bin/python /home/mikhpo/personal-website/manage.py runserver
+# Выполнение административной команды Django.
+$project_root/.venv/bin/python $project_root/manage.py runserver
