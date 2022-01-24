@@ -1,0 +1,48 @@
+<!-- Шаблон таблицы с выводом реультатов выполнения скриптов. -->
+    <br>
+    <!-- Вывод сообщений о результате запуска скрипта. -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-success">
+                {{ message }}
+            </div>
+        {% endfor %}
+        <br>
+    {% endif %}
+    <div class="table-responsive">
+        <table class="table small table-hover table-bordered">
+            <caption>История выполнений скриптов</caption>
+            <thead class="table-light">
+                <tr>
+                    <th>Скрипт</th>
+                    <th>Время запуска</th>
+                    <th>Статус</th>
+                    <th>Время завершения</th>
+                    <th>Успешный</th>
+                    <th>Результат</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for execution in executions %}
+                    {% if execution.success == 1 %}
+                        <!-- Успешные выполнения выделяются бледно-зеленым цветом. -->
+                        <tr style="background-color:HoneyDew"> 
+                    {% elif execution.success == 0 %}
+                        <!-- Неуспешные выполнения выделяются бледно-красным цветом. -->
+                        <tr style="background-color:SeaShell">
+                    {% else %}
+                        <!-- Незавершенные выполнения не выделяются никаким цветом. -->
+                        <tr>
+                    {% endif %}
+                        <!-- Ссылка на детальное описание скрипта. -->
+                        <td><a href="/scripts/job/{{ execution.job.pk }}/">{{ execution.job }}</a></td>
+                        <td>{{ execution.start|default_if_none:"" }}</td>
+                        <td>{{ execution.get_status_display|default_if_none:"" }}</td>
+                        <td>{{ execution.end|default_if_none:"" }}</td>
+                        <td>{{ execution.get_success_display|default_if_none:"" }}</td>
+                        <td>{{ execution.result|default_if_none:"" }}</td> 
+                        </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
