@@ -1,6 +1,21 @@
-<div align="center"><img src="../static/android-chrome-192x192.png" width="10%"></img></div>
-
 # Персональный сайт
+
+<div align="center">
+    <img src="../static/android-chrome-192x192.png" width="5%" style="border:10px;margin:10px"></img>
+</div>
+<div align="center">
+    <img src="./logos/Python-logo-notext.svg" width="5%" style="border:10px;margin:10px"></img>
+    <img src="./logos/Postgresql_elephant.svg" width="5%" style="border:10px;margin:10px"></img>
+    <img src="./logos/Bootstrap_logo.svg" width="5%" style="border:10px;margin:10px"></img>
+</div>
+<div align="center">
+    <img src="./logos/Django_logo.svg" width="10%" style="border:10px;margin:10px"></img>
+</div>
+<div align="center">
+    <img src="./logos/Gunicorn_logo_2010.svg" width="10%" style="border:10px;margin:10px"></img>
+    <img src="./logos/Nginx_logo.svg" width="10%" style="border:10px;margin:10px"></img>
+    <img src="./logos/Logo-ubuntu_no(r)-black_orange-hex.svg" width="10%" style="border:10px;margin:10px"></img>
+</div>
 
 Проект по созданию персонального сайта. Конфигурация, функции, классы и шаблоны максимально абстрактными - так, чтобы можно было использовать проект в качестве шаблона для другого сайта.
 
