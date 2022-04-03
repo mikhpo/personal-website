@@ -31,6 +31,9 @@ if 'microsoft' in SYSTEM:
 elif 'raspi' in SYSTEM:
     DEBUG = False
     DOMAIN = ALLOWED_HOSTS[0]
+elif 'generic' in SYSTEM:
+    DEBUG = False
+    DOMAIN = ALLOWED_HOSTS[0]
 else:
     DEBUG = True
     DOMAIN = ALLOWED_HOSTS[0]
