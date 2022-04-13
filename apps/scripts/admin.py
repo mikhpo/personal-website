@@ -43,7 +43,7 @@ class JobAdmin(admin.ModelAdmin):
     '''
     model = Job
     
-    list_display = ('name', 'description', 'schedule', 'last_run', 'active', 'scheduled', 'manual', 'next_run', 'run_script')
+    list_display = ('name', 'description', 'schedule', 'last_run', 'active', 'scheduled', 'manual', 'next_run', 'url')
     list_filter = ('active', 'scheduled', 'manual')
 
     exclude = ('command',)

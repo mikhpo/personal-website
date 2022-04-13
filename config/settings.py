@@ -1,0 +1,238 @@
+'''Базовый модуль настроек Django-проекта.'''
+import os
+import json
+from platform import uname
+from pathlib import Path
+from loguru import logger
+from django.core.exceptions import ImproperlyConfigured
+
+# Определение среды запуска, от которой зависят переменные окружения и конфигурационные параметры.
+# Определяем систему по параметрам хоста. Для разных сред используются разные значения секретов.
+# Имя секрета включает в себя указание на среду: PROD, DEV, TEST.
+SYSTEM = uname().release
+if 'microsoft' in SYSTEM:
+    ENV = 'DEV'
+    DEBUG = True
+    DOMAIN = '127.0.0.1:8000'
+elif 'raspi' in SYSTEM:
+    ENV = 'DEV'
+    DEBUG = True
+elif 'generic' in SYSTEM:
+    ENV = 'PROD'
+    DEBUG = False
+else:
+    DEBUG = True
+
+# Определяется абсолютный путь до текущей директории для того, чтобы далее в проекте везде использовались относительные пути.
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Секреты (коды, пароли, логины, IP-адреса) спрятаны в отдельных JSON-файлах.
+# Для разных сред используются разные JSON-файлы.
+with open(os.path.join(BASE_DIR, 'secrets.json')) as secrets_file:
+    SECRETS = json.load(secrets_file)
+
+def GET_SECRET(setting: str, secrets: dict = SECRETS) -> str:
+    '''Функция для получения значения по ключю из JSON файлов с секретными данными.'''
+    try:
+        return secrets[setting]
+    except KeyError:
+        raise ImproperlyConfigured("Необходимо установить значение настройки {}".format(setting))
+
+# Ключ проекта Django (генерируется автоматически).
+SECRET_KEY = GET_SECRET('SECRET_KEY') 
+
+# Имя пользователя системы, в которой развернуто приложение.
+SERVER_USER = GET_SECRET(f'SERVER_USER_{ENV}')
+
+# Путь до интерпретатора Python.
+PYTHON_PATH = os.path.join(BASE_DIR, '..', '.venv', 'bin', 'python')
+
+# Путь до модуля manage.py.
+MANAGE_PATH = os.path.join(BASE_DIR, 'manage.py')
+
+# Список адресов, которые будет обслуживать Django проект. 
+# Если не добавлять адрес в этот список, то запросы по данному адресу обрабатываться не будут.
+# В данном случае добавлены три адреса:
+# 1. Доменное имя.
+# 2. IP адрес в локальной сети.
+# 3. IP адрес в глобальной сети.
+# Для корректного запуска скриптов необходимо доменное имя указывать первым элементом списка.
+ALLOWED_HOSTS = [
+    GET_SECRET('DOMAIN_NAME'),
+    GET_SECRET('WWW_DOMAIN_NAME'),
+    GET_SECRET('IP_ADDRESS_LOCAL'), 
+    GET_SECRET(f'IP_ADDRESS_PUBLIC_{ENV}'),
+    'localhost',
+    '127.0.0.1'
+]
+
+# Модули проекта Django.
+DJANGO_PACKAGES = [
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'django.contrib.sites',
+    'django.contrib.sitemaps',
+]
+
+# Модули для Django от сообщества.
+COMMUNITY_PACKAGES = [
+    'whitenoise.runserver_nostatic',
+    'tinymce',
+    'crispy_forms',
+]
+
+# Локальные приложения проекта.
+PROJECT_APPS = [
+    'apps.accounts.apps.AccountsConfig',
+    'apps.main.apps.MainConfig',
+    'apps.blog.apps.BlogConfig',
+    'apps.scripts.apps.ScriptsConfig',
+]
+
+# Итоговый список приложений - объединение предыдущих трёх.
+INSTALLED_APPS = DJANGO_PACKAGES + COMMUNITY_PACKAGES + PROJECT_APPS
+
+# Список промежуточного ПО. Порядок добавления ПО в список необходимо изучать в документации этого ПО.
+MIDDLEWARE = [
+    'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+
+# Относительный путь до urls.py основного модуля Django.
+ROOT_URLCONF = 'config.urls'
+
+WSGI_APPLICATION = 'config.wsgi.application'
+
+AUTH_PASSWORD_VALIDATORS = [
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',},
+]
+
+SITE_ID = 1
+
+# Устанавливается язык проекта. В Django встроена русская локализация, которая дает перевод панели администрирования, стандартных форм и рассылки писем.
+LANGUAGE_CODE = 'ru'
+
+# Устанавливается временная зона.
+TIME_ZONE = 'Europe/Moscow'
+
+USE_I18N = True
+
+USE_L10N = True
+
+# Да, если мы хотим использовать настройку временной зоны.
+USE_TZ = True
+
+# Статические файлы - это фавиконы, CSS, модули JavaScript, библиотеки Node. 
+STATIC_URL = '/static/' # веб-адрес, по которому будут доступны статические файлы
+STATIC_ROOT = os.path.join(BASE_DIR, 'static') # абсолютный путь до папки, в которой собраны статические файлы.
+STATICFILES_DIRS = (os.path.join(BASE_DIR, 'node_modules'),) # npm-зависимости в корневом каталоге проекта
+WHITENOISE_ROOT = STATIC_ROOT # путь до папки ПО WhiteNoise, который радикально упрощает использование статических файлов в Django-проекте. 
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage' # настройка, необходимая для WhiteNoise
+
+# Медиа файлы - это загружаемые файлы (фото, видео, документы).
+MEDIA_URL = '/media/' # Относительный url до медиа-файлов.
+MEDIA_ROOT = os.path.join(BASE_DIR,'media') # абсолютный путь до папки с медиа-файлами.
+
+LOGIN_REDIRECT_URL = '/' # адрес, на который будет перенаправлен пользователь после авторизации.
+LOGIN_URL = '/accounts/login/' # Веб-адрес формы авторизации на сайте.
+
+LOGOUT_REDIRECT_URL = '/' # адрес, на который будет перенаправлен пользователь после выхода.
+LOGOUT_URL = '/accounts/logout/' # Веб-адрес для выхода с сайта.
+
+DATA_UPLOAD_MAX_MEMORY_SIZE = None # лимит на размер загружаемых файлов.
+
+# С версии Django 3.2 по умолчанию используется новый тип авто-поля для первичного ключа.
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Настройки подключения к базам данных.
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': GET_SECRET(f'DB_NAME_{ENV}'),
+        'USER': GET_SECRET('DB_USER'),
+        'PASSWORD': GET_SECRET('DB_PASSWORD'),
+        'HOST': GET_SECRET(f'DB_HOST_{ENV}'),
+        'PORT': GET_SECRET(f'DB_PORT_{ENV}'),
+    }
+}
+
+# Настройки используемого шаблонизатора. Здесь также указан относительный путь до папки с шаблонами проекта.
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [os.path.join(BASE_DIR, "templates"),],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+                'django.template.context_processors.i18n',
+            ],
+        },
+    },
+]
+
+# Настройки почтовой службы, используемой для почтовых рассылок. 
+# В данном проекте используется стандартный функционал Django по восстановлению забытых паролей через почту. 
+# В связи с этим почтовый адрес является обязательным полем при регистрации нового пользователя.
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_HOST_USER = GET_SECRET('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = GET_SECRET('EMAIL_HOST_PASSWORD')
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False
+
+CRISPY_TEMPLATE_PACK = 'bootstrap4' # настройки модуля Django Crispy Forms, улучшающего отображение стандартных форм Django.
+
+# Настройки TinyMCE - WYSIWYG текстовый редактор. 
+# В данном Django проекте он используется при создании записей в блог. (через административную панель)
+# В данном конфиге определены подключаемые плагины TinyMCE и меню редактора.
+TINYMCE_DEFAULT_CONFIG = {
+    'cleanup_on_startup': True,
+    'custom_undo_redo_levels': 20,
+    'selector': 'textarea',
+    'branding': False,
+    'plugins': '''
+            textcolor save link image media preview codesample contextmenu
+            table code lists fullscreen  insertdatetime  nonbreaking
+            contextmenu directionality searchreplace wordcount visualblocks
+            visualchars code fullscreen autolink lists  charmap print  hr
+            anchor pagebreak autoresize
+            ''',
+    'toolbar1': '''
+            fullscreen preview bold italic underline | fontselect,
+            fontsizeselect  | forecolor backcolor | alignleft alignright |
+            aligncenter alignjustify | indent outdent | bullist numlist table |
+            | link image media | codesample |
+            ''',
+    'toolbar2': '''
+            visualblocks visualchars |
+            charmap hr pagebreak nonbreaking anchor | code |
+            ''',
+    'contextmenu': 'formats | link image',
+    'menubar': True,
+    'statusbar': True,
+}
+
+# Настройки логирования.
+LOG_FOLDER = os.path.join(BASE_DIR, 'logs') # папка для сохранения логов
+logger.add(f'{LOG_FOLDER}/info.log', filter=lambda record: record["level"].name == "INFO", retention='7 days')
+logger.add(f'{LOG_FOLDER}/debug.log', filter=lambda record: record["level"].name == "DEBUG", retention='7 days')
+logger.add(f'{LOG_FOLDER}/error.log', filter=lambda record: record["level"].name == "ERROR", retention='7 days', backtrace=True, diagnose=True)

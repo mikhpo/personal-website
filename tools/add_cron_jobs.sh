@@ -10,9 +10,7 @@
 cron=`crontab -l 2> /dev/null`
 
 # Массив задач на добавление.
-cron_jobs=(
-    "@reboot sh /home/mikhpo/personal-website/utils/run_scheduler.sh"
-)
+cron_jobs=("")
 
 # Определение символа перехода на новую строку. 
 NEWLINE=$'\n'

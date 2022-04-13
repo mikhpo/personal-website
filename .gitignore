@@ -3,13 +3,14 @@
 # файлы кэша Python, логи и SSL сертификаты.
 .venv
 .vscode
-__pycache__/
+__pycache__
 secrets.json
 mikhailpolyakov.crt
 mikhailpolyakov.key
-static/node_modules/
-static/admin/
-static/tinymce/
-static/django_tinymce/
+node_modules
+static/node_modules
+static/admin
+static/tinymce
+static/django_tinymce
 *.log
 *.pyc

@@ -1,7 +1,7 @@
 {
-  "name": "staticfiles",
+  "name": "javascript",
   "version": "1.0.0",
-  "description": "Static files for my personal website",
+  "description": "JavaScript dependencies for my personal website",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

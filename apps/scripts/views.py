@@ -3,8 +3,6 @@ from django.shortcuts import redirect, render
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from .models import Job, Execution
-from .tools import run_command
-
 
 @logger.catch
 @staff_member_required
@@ -14,11 +12,12 @@ def command(request, slug):
     Запускает административную команду, которая соответствует данному слагу.
     Не дожидается окончания выполнения команды.
     '''
-    run_command(slug)
     job = Job.objects.get(slug = slug)
+    job.run()
     script = job.name
-    messages.add_message(request, messages.SUCCESS, f'Скрипт "{script}" успешно запущен')
-    logger.info(f'Запущен скрипт "{script}"')
+    result = f'Запущено выполнение скрипта "{script}"'
+    messages.add_message(request, messages.SUCCESS, result)
+    logger.info(result)
     return redirect("scripts:executions")
     
 @logger.catch
