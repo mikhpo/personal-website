@@ -4,6 +4,7 @@
 - Скрипт (описание и параметры запуска скрипта).
 - Выполнение (статус и история выполнения скрипта).
 '''
+import subprocess
 import datetime
 from croniter import croniter
 from django.db import models
@@ -12,23 +13,15 @@ from django.utils import timezone
 from django.utils.html import format_html
 from django.core.exceptions import ValidationError
 
-def cron_validator(value):
-    '''Функция для проверки корректности крон-выражения.'''
-    if not value:
-        return
-    if not croniter.is_valid(value):
-        raise ValidationError("Некорректное крон-выражение")
-
-def calculate_command_path(slug):
-    '''Определяет полный путь для запуска скрипта.'''
-    debug = settings.DEBUG
-    if debug: protocol = 'http'
-    else: protocol = 'https'
-    domain = settings.DOMAIN
-    return f'{protocol}://{domain}/scripts/command/{slug}/'
-
 class Job(models.Model):
     '''Описание скрипта: наименование, предназначение, раписание запуска.'''
+
+    def cron_validator(value: str):
+        '''Функция для проверки корректности крон-выражения.'''
+        if not value:
+            return
+        if not croniter.is_valid(value):
+            raise ValidationError("Некорректное крон-выражение")
 
     name = models.CharField('Наименование', max_length=255, blank=False)
     description = models.TextField('Описание', blank=True)
@@ -39,7 +32,6 @@ class Job(models.Model):
     scheduled = models.BooleanField('Автоматический', default=False)
     manual = models.BooleanField('Ручной', default=False)
     slug = models.SlugField('Слаг для запуска', blank=True)
-    command = models.URLField('Полный путь для запуска', blank=True)
 
     class Meta:
         verbose_name = 'Скрипт'
@@ -48,15 +40,14 @@ class Job(models.Model):
     def __str__(self):
         return self.name
 
-    def save(self, *args, **kwargs):
-        '''При сохранении объекта автоматически вычисляется значение URL для запуска команды.'''
-        self.command = calculate_command_path(self.slug)
-        super(Job, self).save(*args, **kwargs)
-
-    def run_script(self):
-        '''Преобразует ссылку как текст в кликабельную ссылку.'''
+    def url(self):
+        '''Формирует кликабельную ссылку для запуска команды.'''
         if self.manual:
-            return format_html(f"<a href='{self.command}'>Запустить</a>")
+            env = settings.ENV # протокол зависит от среды запуска
+            if env == "PROD": protocol = 'https'
+            else: protocol = 'http'
+            domain = settings.DOMAIN
+            return format_html(f"<a href='{protocol}://{domain}/scripts/command/{self.slug}/'>Запустить</a>")
         else:
             return None
 
@@ -67,7 +58,20 @@ class Job(models.Model):
         return next_datetime
 
     next_run.short_description = 'Следующий запуск'
-    run_script.short_description = 'Запустить' 
+    url.short_description = 'Запустить' 
+
+    def run(self):
+        '''
+        Функция для запуска административной команды Django.
+        Запускает команду в отдельном процессе, используя контекст Django.
+        Не дожидается окончания выполнения команды.
+        '''
+        arguments = [
+            settings.PYTHON_PATH, 
+            settings.MANAGE_PATH, 
+            self.slug
+        ]
+        return subprocess.Popen(arguments)
 
 class Execution(models.Model):
     '''Запуск скрипта: время, результат.'''
@@ -97,3 +101,4 @@ class Execution(models.Model):
     def __str__(self):
         start_time = timezone.localtime(self.start)
         return f'{self.job}: {start_time.strftime("%d.%m.%Y %H:%M")}'
+        

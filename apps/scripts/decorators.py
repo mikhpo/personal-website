@@ -64,6 +64,7 @@ def log_script(func):
             execution.status = 1
             end_time = timezone.localtime(timezone.now())
             execution.end = end_time
+            
             # Вычислим общее время выполнения скрипта.
             total_time = end_time - start_time
             total_time = "{:.2f}".format(total_time.total_seconds())
