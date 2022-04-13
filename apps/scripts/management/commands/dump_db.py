@@ -23,7 +23,7 @@ class Command(BaseCommand):
             dump_path = os.path.join(dump_dir, dump_name) # полный путь до файла дампа
 
             # Вызовем bash скрипт для создания дампа базы данных. Аргументы для скрипта считываются из модуля settings.
-            bash_script = f'pg_dump "host={get_secret("DB_ID_PROD")} port={get_secret("DB_PORT_PROD")} sslmode=verify-full dbname={get_secret("DB_NAME_PROD")} user={get_secret("DB_USER")}" -Fd -f {dump_path}'
+            bash_script = f'pg_dump "host={get_secret("DB_ID_PROD")} port={get_secret("DB_PORT_PROD")} sslmode=verify-full dbname={get_secret("DB_NAME_PROD")} user={get_secret("DB_USER")}" --no-privileges --no-subscriptions --no-publications -Fd -f {dump_path}'
             self.stdout.write(f"Выполняю команду: {bash_script}")
 
             # Bash-команда из строки токенизируется в список аргументов.
@@ -44,9 +44,7 @@ class Command(BaseCommand):
             # которые необходимо преобразовать в строку для лучшего форматирования.
             if stderr:
                 raise CommandError(stderr.decode(encoding='UTF-8'))
-            else:
-                self.stdout.write(stdout.decode(encoding='UTF-8'))
-
+                
             # Если выполнение скрипта успешно завершено, то направим в stdout 
             # строку с результатом и указанием адресов получателей бэкапа.
             self.stdout.write(self.style.SUCCESS(f"Дамп базы данных PostgreSQL сохранен по адресу {dump_path}"))
