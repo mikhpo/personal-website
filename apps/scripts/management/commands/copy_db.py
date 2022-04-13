@@ -12,7 +12,7 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         try:
             self.stdout.write('Запущен скрипт для переноса базы данных из продуктивной среды')
-            dump = call_command('dump_db') # создание дампа базы данных
-            call_command('copy_db', dump) # восстановление базы данных из дампа
+            dump_path = call_command('dump_db') # создание дампа базы данных
+            call_command('restore_db', dump_path) # восстановление базы данных из дампа
         except Exception as error:
             raise CommandError(error)
