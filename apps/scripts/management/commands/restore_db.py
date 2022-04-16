@@ -2,6 +2,7 @@
 import shlex
 import locale
 import subprocess
+from pathlib import Path
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from apps.scripts.utils import get_folder_size
