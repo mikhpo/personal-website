@@ -2,6 +2,7 @@
 import shlex
 import locale
 import subprocess
+from pathlib import Path
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 
@@ -16,7 +17,10 @@ class Command(BaseCommand):
             self.stdout.write("Запущен скрипт для восстановления базы данных из дампа") 
 
             # Адрес дампа передается скрипту в качестве аргумента командной строки. 
-            dump = options['dump'] 
+            dump = options['dump']
+            dump_size = sum([f.stat().st_size for f in Path(dump).glob("**/*")]) # размер дампа в байтах
+            kilo_dump_size = int(dump_size/1024) # размер дампа в килобайтах (1 килобайт = 1024 байт)
+            self.stdout.write(f"Адрес дампа: {dump}. Размер дампа: {kilo_dump_size} КБ")
 
             # Параметры базы данных по умолчанию из конфигурационного модуля Django.
             database = settings.DATABASES["default"]
