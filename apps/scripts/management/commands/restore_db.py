@@ -1,6 +1,7 @@
 '''Скрипт для восстановления базы данных PostgreSQL из резервной копии.'''
-import subprocess
 import shlex
+import locale
+import subprocess
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 
@@ -37,10 +38,17 @@ class Command(BaseCommand):
             # Ожидаем результата выполнения bash-команды. 
             stdout, stderr = process.communicate()
 
+            # Определение кодировки по умолчанию.
+            encoding = locale.getdefaultlocale()[1]
+
             # Стандартный вывод и стандартная ошибка являются байтами, 
             # которые необходимо преобразовать в строку для лучшего форматирования.
             if stderr:
-                raise CommandError(stderr.decode(encoding='UTF-8'))
+                raise CommandError(stderr.decode(encoding=encoding))
+            elif len(stdout)>0:
+                self.stdout.write(stderr.decode(encoding=encoding))
+            else:
+                self.stdout.write("Выполнение команды завершено")
 
             # Если выполнение скрипта успешно завершено, то направим в stdout сообщение о результате.
             self.stdout.write(self.style.SUCCESS("База данных PostgreSQL восстановлена из дампа"))
