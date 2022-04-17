@@ -8,6 +8,7 @@ from pathlib import Path
 from datetime import datetime
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
+from scripts.utils import get_folder_size
 
 class Command(BaseCommand):
     help = 'Создание дампа базы данных PostgreSQL'
@@ -63,9 +64,8 @@ class Command(BaseCommand):
             # Если выполнение скрипта успешно завершено, то направим в stdout 
             # строку с результатом и указанием адресов получателей бэкапа.
             if Path(dump_path).exists():
-                dump_size = sum([f.stat().st_size for f in Path(dump_path).glob("**/*")]) # размер дампа в байтах
-                kilo_dump_size = int(dump_size/1024) # размер дампа в килобайтах (1 килобайт = 1024 байт)
-                self.stdout.write(self.style.SUCCESS(f"Дамп базы данных PostgreSQL сохранен по адресу {dump_path}. Размер дампа: {kilo_dump_size} КБ"))
+                size = get_folder_size(dump_path, "КБ")
+                self.stdout.write(self.style.SUCCESS(f"Дамп базы данных PostgreSQL сохранен по адресу {dump_path}. Размер дампа: {size}"))
                 return dump_path
             else:
                 raise CommandError('Дамп базы данных PostgreSQL не был сохранен')

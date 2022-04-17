@@ -5,6 +5,7 @@ import subprocess
 from pathlib import Path
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
+from scripts.utils import get_folder_size
 
 class Command(BaseCommand):
     help = '''Восстановление базы данных PostgreSQL из дампа'''
@@ -18,9 +19,8 @@ class Command(BaseCommand):
 
             # Адрес дампа передается скрипту в качестве аргумента командной строки. 
             dump = options['dump']
-            dump_size = sum([f.stat().st_size for f in Path(dump).glob("**/*")]) # размер дампа в байтах
-            kilo_dump_size = int(dump_size/1024) # размер дампа в килобайтах (1 килобайт = 1024 байт)
-            self.stdout.write(f"Адрес дампа: {dump}. Размер дампа: {kilo_dump_size} КБ")
+            size = get_folder_size(dump, "КБ")
+            self.stdout.write(f"Адрес дампа: {dump}. Размер дампа: {size}")
 
             # Параметры базы данных по умолчанию из конфигурационного модуля Django.
             database = settings.DATABASES["default"]
