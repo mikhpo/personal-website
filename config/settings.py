@@ -65,6 +65,12 @@ ALLOWED_HOSTS = [
     '127.0.0.1'
 ]
 
+INTERNAL_IPS = [
+    '127.0.0.1',
+    GET_SECRET('IP_ADDRESS_LOCAL'),
+    GET_SECRET('IP_ADDRESS_PUBLIC_DEV'),
+]
+
 # Модули проекта Django.
 DJANGO_PACKAGES = [
     'django.contrib.admin',
