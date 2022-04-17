@@ -8,7 +8,6 @@ secrets.json
 mikhailpolyakov.crt
 mikhailpolyakov.key
 node_modules
-static/node_modules
 static/admin
 static/tinymce
 static/django_tinymce
