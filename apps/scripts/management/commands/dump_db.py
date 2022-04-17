@@ -8,7 +8,7 @@ from pathlib import Path
 from datetime import datetime
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
-from scripts.utils import get_folder_size
+from apps.scripts.utils import get_folder_size
 
 class Command(BaseCommand):
     help = 'Создание дампа базы данных PostgreSQL'

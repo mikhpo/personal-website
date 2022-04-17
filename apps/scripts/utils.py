@@ -11,7 +11,7 @@ def get_folder_size(folder_path: str, unit: str) -> str:
     - ГБ - гигабайты.
     '''
     units = ("Б", "КБ", "МБ", "ГБ")
-    assert unit in units
+    assert unit in units, f'Единица измерения должна быть {", ".join(units)}. Получено значение: {unit}'
 
     # Определение суммы размеров файлов в папке.
     bytes_size = sum([f.stat().st_size for f in Path(folder_path).glob("**/*")]) 
