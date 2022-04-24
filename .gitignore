@@ -11,5 +11,6 @@ mikhailpolyakov.key
 static/admin
 static/tinymce
 static/django_tinymce
+static/bootstrap
 *.log
 *.pyc

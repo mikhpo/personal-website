@@ -1,7 +1,8 @@
 #!/bin/bash
 #
-# Запуск веб-сервера в режиме разработки.
+# Создает символическую ссылку на зависимость Node.js - Bootstrap - в папке static.
 # Адрес корневого каталога проекта определяется автоматически.
 
 project_root="$(dirname "$(dirname "$(readlink -fm "$0")")")"
-$project_root/.venv/bin/python $project_root/manage.py runserver
+cd $project_root
+ln -s ../node_modules static/node_modules
