@@ -1,10 +1,8 @@
-from loguru import logger
 from django.shortcuts import redirect, render
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from .models import Job, Execution
 
-@logger.catch
 @staff_member_required
 def command(request, slug):
     '''
@@ -17,10 +15,8 @@ def command(request, slug):
     script = job.name
     result = f'Запущено выполнение скрипта "{script}"'
     messages.add_message(request, messages.SUCCESS, result)
-    logger.info(result)
     return redirect("scripts:executions")
     
-@logger.catch
 @staff_member_required
 def jobs(request):
     '''Отображает список всех доступных скриптов и их описание.'''
@@ -31,7 +27,6 @@ def jobs(request):
         {'jobs': jobs}
     )
 
-@logger.catch
 @staff_member_required
 def executions(request):
     '''Отображает список всех выполнений всех скриптов.'''
@@ -42,7 +37,6 @@ def executions(request):
         {'executions': executions}
     )
 
-@logger.catch
 @staff_member_required
 def job_detail(request, pk):
     '''Отображает детализированный вид скрипта и историю его выполнений.'''

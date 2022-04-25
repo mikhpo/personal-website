@@ -3,7 +3,6 @@ import os
 import json
 from platform import uname
 from pathlib import Path
-from loguru import logger
 from django.core.exceptions import ImproperlyConfigured
 
 # Определение среды запуска, от которой зависят переменные окружения и конфигурационные параметры.
@@ -238,7 +237,27 @@ TINYMCE_DEFAULT_CONFIG = {
 }
 
 # Настройки логирования.
-LOG_FOLDER = os.path.join(BASE_DIR, 'logs') # папка для сохранения логов
-logger.add(f'{LOG_FOLDER}/info.log', filter=lambda record: record["level"].name == "INFO", retention='7 days')
-logger.add(f'{LOG_FOLDER}/debug.log', filter=lambda record: record["level"].name == "DEBUG", retention='7 days')
-logger.add(f'{LOG_FOLDER}/error.log', filter=lambda record: record["level"].name == "ERROR", retention='7 days', backtrace=True, diagnose=True)
+LOG_DIR = os.path.join(BASE_DIR, 'logs') # папка для сохранения логов
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(LOG_DIR, 'debug.log')
+        },
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console', 'file'],
+            'level': 'WARNING',
+            'propagate': True,
+        },
+    },
+}

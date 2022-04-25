@@ -1,7 +1,6 @@
 '''Декоратор планировщика скриптов.'''
 import os
 import sys
-from loguru import logger
 from django.utils import timezone
 from django.conf import settings
 from apps.scripts.models import Job, Execution
@@ -14,20 +13,6 @@ def log_script(func):
     def handle(*args, **kwargs):
         # Определим наименование запускаемой команды.
         script = sys.argv[-1] # последний аргумент = наименование команды
-
-        # Добавление лог-файла и определение параметров логирования. 
-        # Название лог-файла = название команды.
-        logger.add(
-            os.path.join(
-                settings.BASE_DIR,
-                'logs', 'scripts',
-                f'{script}.log'
-            ),
-            rotation="1 month",
-            backtrace=False,
-            diagnose=True,
-            format="{time:DD-MM-YYYY HH:mm:ss} | {level} | {message}" 
-        )
 
         # Определим в базе данных объект скрипта, выполнение которого инициировано.
         job = Job.objects.get(slug=script) # наименование команды = слаг скрипта в базе данных
@@ -56,7 +41,7 @@ def log_script(func):
             # Если получаем исключение при выполнении скрипта, то в качестве
             # результата выполнения будет сохранен текст исключения.
             output = f'Ошибка: {str(error)}.'
-            logger.exception(output)
+            print(output)
             execution.success = 0
         finally:
             # В базу данных записывается результат со временем выполнения.
@@ -72,6 +57,6 @@ def log_script(func):
             result = " ".join(results)
             execution.result = result
             execution.save()
-            logger.info(result)
+            print(result)
 
     return handle
