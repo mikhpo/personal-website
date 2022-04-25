@@ -8,6 +8,7 @@
 # Адрес корневого каталога проекта определяется автоматически.
 
 project_root="$(dirname "$(dirname "$(readlink -fm "$0")")")"
-cd $project_root && git pull 
+cd $project_root
+git pull 
 sudo systemctl restart gunicorn
 sudo nginx -t && sudo systemctl restart nginx
