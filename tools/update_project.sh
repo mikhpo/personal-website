@@ -11,7 +11,9 @@
 project_root="$(dirname "$(dirname "$(readlink -fm "$0")")")"
 cd $project_root
 git pull
-sh ./install_dependencies.sh 
+sh ./tools/install_dependencies.sh 
 sudo systemctl restart gunicorn
+echo "Gunicorn перезапущен"
 sudo nginx -t
 sudo systemctl restart nginx
+echo "Nginx перезапущен"
