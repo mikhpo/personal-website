@@ -3,12 +3,15 @@
 # Обновление проекта из Git и перезапуск сервера.
 # Выполнение bash команд:
 # 1. Вытягивание изменений из Git.
-# 2. Перезапуск Gunicorn.
-# 3. Перезапуск Nginx. 
+# 2. Обновление зависимостей.
+# 3. Перезапуск Gunicorn.
+# 4. Перезапуск Nginx. 
 # Адрес корневого каталога проекта определяется автоматически.
 
 project_root="$(dirname "$(dirname "$(readlink -fm "$0")")")"
 cd $project_root
-git pull 
+git pull
+sh ./install_dependencies.sh 
 sudo systemctl restart gunicorn
-sudo nginx -t && sudo systemctl restart nginx
+sudo nginx -t
+sudo systemctl restart nginx
