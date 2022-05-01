@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from .models import Job, Execution
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('scripts_logger')
 
 @staff_member_required
 def command(request, slug):
