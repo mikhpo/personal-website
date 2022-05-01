@@ -5,12 +5,17 @@ import logging
 from .base import BASE_DIR
 
 LOGS_DIR = os.path.join(BASE_DIR, 'logs') # общая папка для сохранения логов
-REQUESTS_LOGS_DIR = os.path.join(LOGS_DIR, 'requests')
-USERS_LOGS_DIR = os.path.join(LOGS_DIR, 'users')
-BLOG_LOGS_DIR = os.path.join(LOGS_DIR, 'blog')
-SCRIPTS_LOGS_DIR = os.path.join(LOGS_DIR, 'scripts')
-LOG_DIRS = [LOGS_DIR, REQUESTS_LOGS_DIR, USERS_LOGS_DIR, BLOG_LOGS_DIR, SCRIPTS_LOGS_DIR]
-# Cоздать папкb для логов, если они не существуют.
+
+# Список директорий для ведения логов.
+LOG_DIRS = [
+    LOGS_DIR, 
+    os.path.join(LOGS_DIR, 'requests'), 
+    os.path.join(LOGS_DIR, 'users'), 
+    os.path.join(LOGS_DIR, 'blog'), 
+    os.path.join(LOGS_DIR, 'scripts'),
+]
+
+# Cоздать директории для логов, если они не существуют.
 for dir in LOG_DIRS:
     os.makedirs(dir, exist_ok=True)
 
