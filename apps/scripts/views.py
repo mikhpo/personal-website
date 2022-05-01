@@ -1,7 +1,10 @@
+import logging
 from django.shortcuts import redirect, render
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from .models import Job, Execution
+
+logger = logging.getLogger(__name__)
 
 @staff_member_required
 def command(request, slug):
@@ -14,6 +17,7 @@ def command(request, slug):
     job.run()
     script = job.name
     result = f'Запущено выполнение скрипта "{script}"'
+    logger.info(result)
     messages.add_message(request, messages.SUCCESS, result)
     return redirect("scripts:executions")
     

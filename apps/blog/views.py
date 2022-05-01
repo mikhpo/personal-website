@@ -1,8 +1,11 @@
+import logging
 from django.shortcuts import render
 from django.views.generic.detail import DetailView
 from django.core.paginator import Paginator
 from .models import Article, Comment, Category, Topic, Series
 from .forms import NewCommentForm
+
+logger = logging.getLogger(__name__)
 
 class ArticleDetailView(DetailView):
     '''
@@ -34,6 +37,7 @@ class ArticleDetailView(DetailView):
             article=self.get_object()
         )
         new_comment.save()
+        logger.info(f"Пользователь {self.request.user} оставил комментарий к статье {self.get_object()}")
         return self.get(self, request, *args, **kwargs)
 
 def paginate(request, objects):

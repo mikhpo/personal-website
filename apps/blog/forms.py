@@ -9,7 +9,7 @@ class NewCommentForm(forms.ModelForm):
         attrs ={ 
             'class':'form-control', 
             'placeholder':'Оставить комментарий', 
-            'rows':4,
+            'rows': 4,
         })) 
 
     class Meta:

@@ -1,8 +1,6 @@
 '''Декоратор планировщика скриптов.'''
-import os
 import sys
 from django.utils import timezone
-from django.conf import settings
 from apps.scripts.models import Job, Execution
 
 def log_script(func):

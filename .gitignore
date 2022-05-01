@@ -2,15 +2,12 @@
 # CSS и JS файлы для административного интерфейса и батареек Django,
 # файлы кэша Python, логи и SSL сертификаты.
 .venv
-node_modules/
+node_modules
 .vscode
 __pycache__
 secrets.json
 mikhailpolyakov.crt
 mikhailpolyakov.key
-static/admin
-static/tinymce
-static/django_tinymce
-static/bootstrap
+static/
 *.log
 *.pyc
