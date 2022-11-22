@@ -1,8 +1,6 @@
 '''Базовый модуль настроек Django-проекта.'''
 import os
-import re
 import json
-import logging
 from pathlib import Path
 from platform import uname
 from django.core.exceptions import ImproperlyConfigured
@@ -25,7 +23,7 @@ else:
     DEBUG = True
 
 # Определяется абсолютный путь до текущей директории для того, чтобы далее в проекте везде использовались относительные пути.
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 # Секреты (коды, пароли, логины, IP-адреса) спрятаны в отдельных JSON-файлах.
 # Для разных сред используются разные JSON-файлы.
@@ -238,172 +236,4 @@ TINYMCE_DEFAULT_CONFIG = {
     'contextmenu': 'formats | link image',
     'menubar': True,
     'statusbar': True,
-}
-
-# Настройки логирования.
-LOGS_DIR = os.path.join(BASE_DIR, 'logs') # папка для сохранения логов
-os.makedirs(LOGS_DIR, exist_ok=True) # создать папку для логов, если она не существует
-
-class ColoredVerboseFormatter(logging.Formatter):
-    """Цветное форматирование детализированных сообщений."""
-
-    # Список цветов в соответствии с кодировкой ANSI.
-    grey = "\x1b[38;20m"
-    cyan = "\x1b[36;20m"
-    yellow = "\x1b[33;20m"
-    red = "\x1b[31;20m"
-    bold_red = "\x1b[31;1m"
-    reset = "\x1b[0m"
-
-    # Формат записи.
-    format = "[%(server_time)s] [%(levelname)s] [%(filename)s -> %(funcName)s -> %(lineno)s] %(message)s"
-
-    # Карта соответствия уровню сообщения и формату записи с цветовой кодировкой.
-    FORMATS = {
-        logging.DEBUG: grey + format + reset,
-        logging.INFO: cyan + format + reset,
-        logging.WARNING: yellow + format + reset,
-        logging.ERROR: red + format + reset,
-        logging.CRITICAL: bold_red + format + reset
-    }
-
-    def format(self, record):
-        log_fmt = self.FORMATS.get(record.levelno)
-        formatter = logging.Formatter(log_fmt)
-        return formatter.format(record)
-
-class NonColoredSimpleFormatter(logging.Formatter):
-    """Бесцветное сокращенное форматирование для сохранения в лог-файлы."""
-
-    # Регулярное выражение, соответствующее спец-символам ANSI-кодировки.
-    ansi_re = re.compile(r"\x1b\[[0-9;]*m")
-
-    def format(self, record):
-        '''Подстановка атрибутов лог-сообщения в указанный формат и удаление ANSI-кодировки регулярным выражением.'''
-        try:
-            return "[%s] [%s] %s" % (
-                record.server_time,
-                record.levelname,
-                re.sub(self.ansi_re, "", record.msg % record.args),
-            )
-        except: 
-            return re.sub(self.ansi_re, "", record.msg % record.args)
-
-class NonColoredVerboseFormatter(logging.Formatter):
-    """Бесцветное детализированное форматирование для сохранения в лог-файлы."""
-
-    # Регулярное выражение, соответствующее спец-символам ANSI-кодировки.
-    ansi_re = re.compile(r"\x1b\[[0-9;]*m")
-
-    def format(self, record):
-        '''Подстановка атрибутов лог-сообщения в указанный формат и удаление ANSI-кодировки регулярным выражением.'''
-        try:
-            return "[%s] [%s] [%s -> %s -> %s] %s" % (
-                record.server_time,
-                record.levelname,
-                record.filename,
-                record.funcName,
-                record.lineno,
-                re.sub(self.ansi_re, "", record.msg % record.args),
-            )
-        except: 
-            return re.sub(self.ansi_re, "", record.msg % record.args)
-             
-
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'filters': {
-        'require_debug_false': {
-            '()': 'django.utils.log.RequireDebugFalse',
-        },
-        'require_debug_true': {
-            '()': 'django.utils.log.RequireDebugTrue',
-        },
-    },
-    'formatters': {
-        'django.server': {
-            '()': 'django.utils.log.ServerFormatter',
-            'format': '[{server_time}] [{levelname}] {message}',
-            'style': '{',
-        },
-        'non_colored_simple': {
-            '()': NonColoredSimpleFormatter
-        },
-        'non_colored_verbose': {
-            '()': NonColoredVerboseFormatter
-        },
-    },
-    'handlers': {
-        'console': {
-            'level': 'INFO',
-            'filters': ['require_debug_true'],
-            'class': 'logging.StreamHandler',
-        },
-        'mail_admins': {
-            'level': 'ERROR',
-            'filters': ['require_debug_false'],
-            'class': 'django.utils.log.AdminEmailHandler'
-        },
-        'django.server': {
-            'level': 'INFO',
-            'class': 'logging.StreamHandler',
-            'formatter': 'django.server',
-        },
-        'requests_log': {
-            'level': 'INFO',
-            'class': 'logging.FileHandler',
-            'filename': os.path.join(LOGS_DIR, 'requests.log'),
-            'formatter': 'non_colored_simple'
-        },
-        'users_log': {
-            'level': 'INFO',
-            'class': 'logging.FileHandler',
-            'filename': os.path.join(LOGS_DIR, 'users.log'),
-            'formatter': 'non_colored_simple'
-        },
-        'blog_log': {
-            'level': 'INFO',
-            'class': 'logging.FileHandler',
-            'filename': os.path.join(LOGS_DIR, 'blog.log'),
-            'formatter': 'non_colored_verbose'
-        },
-        'scripts_log': {
-            'level': 'INFO',
-            'class': 'logging.FileHandler',
-            'filename': os.path.join(LOGS_DIR, 'scripts.log'),
-            'formatter': 'non_colored_verbose'
-        }
-    },
-    'loggers': {
-        'django': {
-            'handlers': ['console', 'mail_admins'],
-            'level': 'INFO',
-        },
-        'django.server': {
-            'handlers': ['django.server', 'requests_log'],
-            'level': 'INFO',
-            'propagate': False,
-        },
-        'django.request': {
-            'handlers': ['requests_log'],
-            'level': 'INFO',
-            'propagate': False,
-        },
-        'django.contrib.auth': {
-            'handlers': ['console', 'users_log'],
-            'level': 'INFO',
-            'propagate': False,
-        },
-        'apps.blog': {
-            'handlers': ['console', 'blog_log'],
-            'level': 'INFO',
-            'propagate': False,
-        },
-        'apps.scripts': {
-            'handlers': ['console', 'scripts_log'],
-            'level': 'INFO',
-            'propagate': False,
-        }
-    }
 }

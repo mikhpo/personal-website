@@ -9,5 +9,6 @@ secrets.json
 mikhailpolyakov.crt
 mikhailpolyakov.key
 static/
+logs
 *.log
 *.pyc
