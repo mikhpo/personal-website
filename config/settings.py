@@ -1,49 +1,27 @@
 '''Базовый модуль настроек Django-проекта.'''
 import os
 import re
-import json
 import logging
 from pathlib import Path
-from platform import uname
-from django.core.exceptions import ImproperlyConfigured
+import environ
 
-# Определение среды запуска, от которой зависят переменные окружения и конфигурационные параметры.
-# Определяем систему по параметрам хоста. Для разных сред используются разные значения секретов.
-# Имя секрета включает в себя указание на среду: PROD, DEV, TEST.
-SYSTEM = uname().release
-if 'microsoft' in SYSTEM:
-    ENV = 'DEV'
-    DEBUG = True
-    DOMAIN = '127.0.0.1:8000'
-elif 'raspi' in SYSTEM:
-    ENV = 'DEV'
-    DEBUG = True
-elif 'generic' in SYSTEM:
-    ENV = 'PROD'
-    DEBUG = False
-else:
-    DEBUG = True
+env = environ.Env(
+    # Значение режима запуска сервера по умолчанию.
+    # В целях безопасности должно быть False.
+    DEBUG = (bool, False)
+)
 
 # Определяется абсолютный путь до текущей директории для того, чтобы далее в проекте везде использовались относительные пути.
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Секреты (коды, пароли, логины, IP-адреса) спрятаны в отдельных JSON-файлах.
-# Для разных сред используются разные JSON-файлы.
-with open(os.path.join(BASE_DIR, 'secrets.json')) as secrets_file:
-    SECRETS = json.load(secrets_file)
+# Прочитать переменные окружения из .env файла.
+environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
-def GET_SECRET(setting: str, secrets: dict = SECRETS) -> str:
-    '''Функция для получения значения по ключю из JSON файлов с секретными данными.'''
-    try:
-        return secrets[setting]
-    except KeyError:
-        raise ImproperlyConfigured("Необходимо установить значение настройки {}".format(setting))
+# Режим запуска сервера.
+DEBUG = env('DEBUG')
 
 # Ключ проекта Django (генерируется автоматически).
-SECRET_KEY = GET_SECRET('SECRET_KEY') 
-
-# Имя пользователя системы, в которой развернуто приложение.
-SERVER_USER = GET_SECRET(f'SERVER_USER_{ENV}')
+SECRET_KEY = env('SECRET_KEY')
 
 # Путь до интерпретатора Python.
 PYTHON_PATH = os.path.join(BASE_DIR, '..', '.venv', 'bin', 'python')
@@ -53,28 +31,18 @@ MANAGE_PATH = os.path.join(BASE_DIR, 'manage.py')
 
 # Список адресов, которые будет обслуживать Django проект. 
 # Если не добавлять адрес в этот список, то запросы по данному адресу обрабатываться не будут.
-# В данном случае добавлены три адреса:
-# 1. Доменное имя.
-# 2. IP адрес в локальной сети.
-# 3. IP адрес в глобальной сети.
-# Для корректного запуска скриптов необходимо доменное имя указывать первым элементом списка.
+# Для корректного запуска скриптов необходимо основное доменное имя указывать первым элементом списка.
 ALLOWED_HOSTS = [
-    GET_SECRET('DOMAIN_NAME'),
-    GET_SECRET('WWW_DOMAIN_NAME'),
-    GET_SECRET('IP_ADDRESS_LOCAL'), 
-    GET_SECRET(f'IP_ADDRESS_PUBLIC_{ENV}'),
+    "mikhailpolyakov.com",
+    "www.mikhailpolyakov.com",
     'localhost',
-    '127.0.0.1'
-]
-
-INTERNAL_IPS = [
     '127.0.0.1',
-    GET_SECRET('IP_ADDRESS_LOCAL'),
-    GET_SECRET('IP_ADDRESS_PUBLIC_DEV'),
+    '192.168.1.68',
+    '46.138.246.69',
 ]
 
-# Модули проекта Django.
-DJANGO_PACKAGES = [
+# Список приложений = модули Django + модули сообщества + приложения проекта.
+INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -83,25 +51,14 @@ DJANGO_PACKAGES = [
     'django.contrib.staticfiles',
     'django.contrib.sites',
     'django.contrib.sitemaps',
-]
-
-# Модули для Django от сообщества.
-COMMUNITY_PACKAGES = [
     'whitenoise.runserver_nostatic',
     'tinymce',
     'crispy_forms',
-]
-
-# Локальные приложения проекта.
-PROJECT_APPS = [
     'apps.accounts.apps.AccountsConfig',
     'apps.main.apps.MainConfig',
     'apps.blog.apps.BlogConfig',
     'apps.scripts.apps.ScriptsConfig',
 ]
-
-# Итоговый список приложений - объединение предыдущих трёх.
-INSTALLED_APPS = DJANGO_PACKAGES + COMMUNITY_PACKAGES + PROJECT_APPS
 
 # Список промежуточного ПО. Порядок добавления ПО в список необходимо изучать в документации этого ПО.
 MIDDLEWARE = [
@@ -170,11 +127,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': GET_SECRET(f'DB_NAME_{ENV}'),
-        'USER': GET_SECRET('DB_USER'),
-        'PASSWORD': GET_SECRET('DB_PASSWORD'),
-        'HOST': GET_SECRET(f'DB_HOST_{ENV}'),
-        'PORT': GET_SECRET(f'DB_PORT_{ENV}'),
+        'NAME': env('PG_NAME'),
+        'USER': env('PG_USER'),
+        'PASSWORD': env('PG_PASSWORD'),
+        'HOST': env('PG_HOST'),
+        'PORT': env('PG_PORT'),
     }
 }
 
@@ -202,8 +159,8 @@ TEMPLATES = [
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
-EMAIL_HOST_USER = GET_SECRET('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = GET_SECRET('EMAIL_HOST_PASSWORD')
+EMAIL_HOST_USER = env('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False

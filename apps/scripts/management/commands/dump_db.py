@@ -21,7 +21,7 @@ class Command(BaseCommand):
             get_secret = settings.GET_SECRET # функция для получения секретов
 
             # Сначала создадим дамп базы данных. Для этого используем вызов bash скрипта, использующего команду pg_dump.
-            dump_dir = f'/home/{settings.SERVER_USER}/backups/' # директория, куда сохраняется дамп
+            dump_dir = f'~/Backups/' # директория, куда сохраняется дамп
             Path(dump_dir).mkdir(parents=True, exist_ok=True) # убедимся, что директория создана
             dump_name = f'pw_db_dump_{datetime.today().date()}' # имя дампа
             dump_path = os.path.join(dump_dir, dump_name) # полный путь до файла дампа
