@@ -1,9 +1,8 @@
 # Из репозитория исключаем виртуальное окружение Python, модули Node.js, 
-# CSS и JS файлы для административного интерфейса и батареек Django,
+# CSS и JS файлы для административного интерфейса Django,
 # файлы кэша Python, логи и SSL сертификаты.
 .venv
 node_modules
-.vscode
 __pycache__
 secrets.json
 mikhailpolyakov.crt
