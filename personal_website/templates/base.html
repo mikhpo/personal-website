@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ru">
+<!-- Основной (базовый) шаблон сайта, от которого наследуют все другие шаблоны -->
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+  <style>
+    html body {
+      background-color: whitesmoke;
+    }
+
+    .navbar-dark .navbar-nav .nav-link {
+      color: whitesmoke;
+    }
+
+    .navbar-dark .navbar-nav .nav-link:focus,
+    .navbar-dark .navbar-nav .nav-link:hover {
+      color: white;
+    }
+    
+    .center {
+      margin-left: auto;
+      margin-right: auto;
+    }
+    
+    td {
+      padding-top:5px;
+      padding-bottom:5px;
+      padding-right:5px;   
+    }
+
+    img {
+      display: block;
+      max-width: 100%;
+      height: auto;
+    }
+  </style>
+
+  <head>
+  {% load static %}
+    <!-- Заголовок зависит от того, какой раздел сайта открыт -->
+    {% block title %}
+      {% if "blog" in request.path %}
+        <title>Михаил Поляков - Блог</title>
+      {% else %}
+        <title>Михаил Поляков</title>
+      {% endif %}
+    {% endblock %}
+    <!-- Используются стили Bootstrap 5 -->
+    <link rel="stylesheet" href="{% static 'bootstrap/dist/css/bootstrap.min.css' %}">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm mb-5">
+      <link rel="shortcut icon" href="{% static 'favicon.ico' %}" />
+      <div class="container">
+        <a class="navbar-brand">Mikhail Polyakov</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>   
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <!-- Активным является тот элемент навигационной панели, которому соответствует открытый раздел сайта -->
+          <li class="nav-item">
+              {% if "main" in request.path %}
+                <a class="nav-link lead active" aria-current="page" href="{% url 'main:main' %}">Главная</a>
+              {% else %}
+                <a class="nav-link lead" aria-current="page" href="{% url 'main:main' %}">Главная</a>
+              {% endif %}
+            </li>
+            <li class="nav-item">
+              {% if "blog" in request.path %}
+                <a class="nav-link lead active" aria-current="page" href="{% url 'blog:blog' %}">Блог</a>
+              {% else %}
+                <a class="nav-link lead" aria-current="page" href="{% url 'blog:blog' %}">Блог</a>
+              {% endif %}
+            </li>
+          </ul>
+          {% if user.is_authenticated %}
+            <span class="navbar-text text-nowrap" style="margin-right:10px">
+              <small>Вы вошли как {{ user.get_username }}</small>
+            </span>
+            {% if request.user.is_staff %}
+              <a href='/admin/' class="navbar-text text-nowrap" style="margin-right:10px">Администрирование</a>
+            {% endif %}
+            <a href='/accounts/logout/' class="btn btn-outline-light" role="button">Выйти</a>
+          {% else %}
+            <a href='/accounts/signup/' class="navbar-text text-nowrap" style="margin-right:10px">Регистрация</a>
+            <a href='/accounts/login/' class="btn btn-outline-light" role="button">Войти</a>
+          {% endif %}
+        </div>
+      </div>
+    </nav>
+  </head>
+
+  <body>
+    {% block content %}
+    {% endblock %}
+    <script src="{% static 'bootstrap/dist/js/bootstrap.bundle.min.js' %}"></script>  
+  </body>
+
+</html>

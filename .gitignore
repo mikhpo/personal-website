@@ -6,7 +6,6 @@
 node_modules
 secrets.json
 .env
-static/
 logs
 __pycache__
 *.log
