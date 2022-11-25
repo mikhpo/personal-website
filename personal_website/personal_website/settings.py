@@ -274,7 +274,8 @@ LOGGING = {
             'class': 'logging.handlers.TimedRotatingFileHandler',
             'filename': os.path.join(LOGS_DIR, 'personal_website', 'personal_website.log'),
             'formatter': 'simple',
-            'when': 'midnight'
+            'when': 'midnight',
+            'backupCount': 7
         },
     },
     'loggers': {

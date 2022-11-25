@@ -12,3 +12,4 @@ __pycache__
 *.pyc
 mikhailpolyakov.crt
 mikhailpolyakov.key
+.DS_Store
