@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+<!-- Шаблон корневой страницы блога, наследует от базового шаблона -->
+
+{% block content %}
+    <!-- Цикл для всех статей в подборке -->
+    {% for article in page_obj %}
+    <div class = "container">
+        <div class="card shadow p-1 mb-5 bg-white rounded justify-content">
+            <div class="card-body" >
+                <h4 class="card-title" style="margin: 0 auto; text-align:center">
+                    <a href="{{ article.get_absolute_url }}" style="color: black; text-decoration: none;">{{article.title}}</a>
+                </h4>
+                {% if article.content|wordcount > 200 %}
+                    <p class="card-text">{{article.content|safe|truncatewords_html:50|linebreaks}}
+                        <a href="{{ article.get_absolute_url }}">Читать дальше</a>
+                    </p>
+                {% else %}
+                    <p class="card-text">{{article.content|safe}}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>  
+    {% endfor %}
+    <!-- Разбивка по страницам -->
+    <div class = "container">
+        <div class="pagination" style="justify-content: center">
+            <span class="step-links">
+                {% if page_obj.has_previous %}
+                <div class="d-grid gap-2 d-md-block">
+                    <a href="?page=1" class="btn btn-outline-dark">&laquo; первая</a>
+                    <a href="?page={{ page_obj.previous_page_number }}" class="btn btn-outline-dark">предыдущая</a>
+                {% endif %}
+                {% if page_obj and page_obj.paginator.num_pages > 1 %}
+                    <span class="current">
+                        страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}
+                    </span>
+                {% endif %}
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}" class="btn btn-outline-dark">следующая</a>
+                    <a href="?page={{ page_obj.paginator.num_pages }}" class="btn btn-outline-dark">последняя &raquo;</a>
+                </div>
+                {% endif %}
+            </span>
+        </div>
+        <br>
+    </div>
+{% endblock %}

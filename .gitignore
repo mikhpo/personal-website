@@ -6,10 +6,10 @@
 node_modules
 secrets.json
 .env
-static/
 logs
 __pycache__
 *.log
 *.pyc
 mikhailpolyakov.crt
 mikhailpolyakov.key
+.DS_Store
