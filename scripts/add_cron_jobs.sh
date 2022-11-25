@@ -6,22 +6,25 @@
 #   2. Проверяет наличие целевых задач cron.
 #   3. Если задачи ещё не добавлены, то добавляет задачи в crontab.
 
+# Определение символа перехода на новую строку. 
+newline=$'\n'
+
 # Определение корневой директории проекта.
 project_root="$(dirname "$(dirname "$(readlink -fm "$0")")")"
+echo "Корневая директория проекта: ${project_root}"
 
 # Определение пути исполняемого файла Python.
 python="$project_root/.venv/bin/python"
+echo "Путь до интерпретатора Python: ${python}"
 
 # Массив задач на добавление.
 cron_jobs=(
-    "$python $project_root/scripts/backup_database.sh"
+    "0 23 * * * $python $project_root/scripts/backup_database.py"
 )
 
 # Получение содержимого текущего crontab файла.
 cron=`crontab -l 2> /dev/null`
-
-# Определение символа перехода на новую строку. 
-newline=$'\n'
+echo "Текущее содержание crontab:${newline}${cron}"
 
 # Цикл для каждого элемента из массива задач на добавление.
 for job in "${cron_jobs[@]}"
@@ -47,3 +50,4 @@ cron="${cron}${newline}"
 
 # Сохранение результата в crontab.
 echo "$cron" | crontab -
+echo "Новое содержание crontab:${newline}${cron}"
