@@ -1,7 +1,7 @@
 # Персональный сайт
 
 <div align="center">
-    <img src="../static/android-chrome-192x192.png" width="10%" style="border:10px;margin:10px"></img>
+    <img src="../personal_website/static/android-chrome-192x192.png" width="10%" style="border:10px;margin:10px"></img>
 </div>
 <div align="center">
     <img src="./logos/Python-logo-notext.svg" width="10%" style="border:10px;margin:10px"></img>
