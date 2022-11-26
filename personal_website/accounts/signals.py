@@ -3,7 +3,7 @@ import logging
 from django.dispatch import receiver
 from django.contrib.auth.signals import user_logged_in, user_login_failed, user_logged_out
 
-logger = logging.getLogger('users_logger')
+logger = logging.getLogger('personal_website')
 
 @receiver(user_logged_in)
 def post_login(sender, request, user, **kwargs):

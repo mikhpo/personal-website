@@ -5,7 +5,7 @@ from django.core.paginator import Paginator
 from .models import Article, Comment, Category, Topic, Series
 from .forms import NewCommentForm
 
-logger = logging.getLogger('blog_logger')
+logger = logging.getLogger('personal_website')
 
 class ArticleDetailView(DetailView):
     '''
