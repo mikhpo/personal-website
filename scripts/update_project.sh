@@ -9,14 +9,13 @@
 # 5. Перезапуск Nginx. 
 # Адрес корневого каталога проекта определяется автоматически.
 
-repository_root="$(dirname "$(dirname "$(readlink -fm "$0")")")"
 project_name="personal_website"
+repository_root="$(dirname "$(dirname "$(readlink -fm "$0")")")"
+python="$project_root/.venv/bin/python"
 cd $repository_root
+git fetch origin
 git pull
-sh ./scripts/install_dependencies.sh
-$repository_root/.venv/bin/python $repository_root/$project_name/manage.py migrate 
-sudo systemctl restart gunicorn
-echo "Gunicorn перезапущен"
-sudo nginx -t
-sudo systemctl restart nginx
-echo "Nginx перезапущен"
+bash ./scripts/install_dependencies.sh
+$python $repository_root/$project_name/manage.py migrate 
+bash ./scripts/add_cron_jobs.sh
+bash ./scripts/restart_services.sh
