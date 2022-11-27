@@ -14,65 +14,69 @@
         }
     </style>
     <!-- Категории -->
-    <div class="container">
-        <h4><p align="center">Выберите категорию</p></h4>
-        <div class="row row-cols-1 row-cols-md-3 g-4 justify-content-center">
-            {% for category in categories %}
-                <div class="col">
-                    <div class="card shadow p-2 mb-5 bg-white rounded text-center">
-                        {% if category.image %}
-                            <a href="{{ category.get_absolute_url }}">
-                                <img src="{{ category.image.url }}" class="card-img-top">
-                            </a>
-                        {% endif %}
-                        <div class="card-body">
-                            <h5 class="card-title">
-                                <a href="{{ category.get_absolute_url }}" style="color: black; text-decoration: none;">
-                                    {{category.name}}
+    {% if categories %}
+        <div class="container">
+            <h4><p align="center">Выберите категорию</p></h4>
+            <div class="row row-cols-1 row-cols-md-3 g-4 justify-content-center">
+                {% for category in categories %}
+                    <div class="col">
+                        <div class="card shadow p-2 mb-5 bg-white rounded text-center">
+                            {% if category.image %}
+                                <a href="{{ category.get_absolute_url }}">
+                                    <img src="{{ category.image.url }}" class="card-img-top">
                                 </a>
-                            </h5>
-                            <p class="card-text">
-                                <a href="{{ category.get_absolute_url }}" style="color: black; text-decoration: none;">
-                                    {{category.description}}
-                                </a>
-                            </p>
+                            {% endif %}
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <a href="{{ category.get_absolute_url }}" style="color: black; text-decoration: none;">
+                                        {{category.name}}
+                                    </a>
+                                </h5>
+                                <p class="card-text">
+                                    <a href="{{ category.get_absolute_url }}" style="color: black; text-decoration: none;">
+                                        {{category.description}}
+                                    </a>
+                                </p>
+                            </div>
                         </div>
                     </div>
-                </div>
-            {% endfor %}
+                {% endfor %}
+            </div>
         </div>
-    </div>
-    <br>
-    <br>
+        <br>
+        <br>
+    {% endif %}
     <!-- Серии -->
-    <div class="container">
-        <h4><p align="center">Или серию</p></h4>
-        <div class="row row-cols-1 row-cols-md-3 g-4 justify-content-center">
-            {% for serial in series %}
-                <div class="col">
-                    <div class="card shadow p-2 mb-5 bg-white rounded text-center">
-                        {% if serial.image %}
-                            <a href="{{ serial.get_absolute_url }}">
-                                <img src="{{ serial.image.url }}" class="card-img-top">
-                            </a>
-                        {% endif %}
-                        <div class="card-body">
-                            <h6 class="card-title">
-                                <a href="{{ serial.get_absolute_url }}" style="color: black; text-decoration: none;">
-                                    {{serial.name}}
+    {% if series %}
+        <div class="container">
+            <h4><p align="center">Или серию</p></h4>
+            <div class="row row-cols-1 row-cols-md-3 g-4 justify-content-center">
+                {% for serial in series %}
+                    <div class="col">
+                        <div class="card shadow p-2 mb-5 bg-white rounded text-center">
+                            {% if serial.image %}
+                                <a href="{{ serial.get_absolute_url }}">
+                                    <img src="{{ serial.image.url }}" class="card-img-top">
                                 </a>
-                            </h6>
-                            <p class="card-text">
-                                <a href="{{ serial.get_absolute_url }}" style="color: black; text-decoration: none;">
-                                    {{serial.description}}
-                                </a>
-                            </p>
+                            {% endif %}
+                            <div class="card-body">
+                                <h6 class="card-title">
+                                    <a href="{{ serial.get_absolute_url }}" style="color: black; text-decoration: none;">
+                                        {{serial.name}}
+                                    </a>
+                                </h6>
+                                <p class="card-text">
+                                    <a href="{{ serial.get_absolute_url }}" style="color: black; text-decoration: none;">
+                                        {{serial.description}}
+                                    </a>
+                                </p>
+                            </div>
                         </div>
                     </div>
-                </div>
-            {% endfor %}
+                {% endfor %}
+            </div>
         </div>
-    </div>
-    <br>
-    <br>
+        <br>
+        <br>
+    {% endif %}
 {% endblock %}

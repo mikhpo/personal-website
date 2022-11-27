@@ -1,6 +1,7 @@
 '''Базовый модуль настроек Django-проекта.'''
 import os
 import re
+import sys
 import logging
 from pathlib import Path
 import environ
@@ -44,17 +45,19 @@ INSTALLED_APPS = [
     'django.contrib.sites',
     'django.contrib.sitemaps',
     'whitenoise.runserver_nostatic',
-    'tinymce',
     'crispy_forms',
+    'tinymce',
     'accounts.apps.AccountsConfig',
     'main.apps.MainConfig',
     'blog.apps.BlogConfig',
 ]
 
+whitenoise_middleware = 'whitenoise.middleware.WhiteNoiseMiddleware'
+
 # Список промежуточного ПО. Порядок добавления ПО в список необходимо изучать в документации этого ПО.
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
+    whitenoise_middleware,
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -62,6 +65,10 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+# При запуске тестов нужно отключить WhiteNoise, так как при запуске тестов режим дебага отключен.
+if 'test' in sys.argv:
+    MIDDLEWARE.remove(whitenoise_middleware)
 
 # Относительный путь до urls.py основного модуля Django.
 ROOT_URLCONF = 'personal_website.urls'

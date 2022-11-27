@@ -1,7 +1,8 @@
 # Из репозитория исключаем виртуальное окружение Python, модули Node.js, 
 # CSS и JS файлы для административного интерфейса Django,
 # файлы кэша Python, логи и SSL сертификаты,
-# файл с переменными окружения.
+# файл с переменными окружения,
+# отчеты по тестированию.
 .venv
 node_modules
 secrets.json
@@ -13,3 +14,5 @@ __pycache__
 mikhailpolyakov.crt
 mikhailpolyakov.key
 .DS_Store
+.coverage
+htmlcov

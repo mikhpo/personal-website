@@ -24,7 +24,6 @@ cron_jobs=(
 
 # Получение содержимого текущего crontab файла.
 cron=`crontab -l 2> /dev/null`
-echo "Текущее содержание crontab:${newline}${cron}"
 
 # Цикл для каждого элемента из массива задач на добавление.
 for job in "${cron_jobs[@]}"
@@ -50,4 +49,4 @@ cron="${cron}${newline}"
 
 # Сохранение результата в crontab.
 echo "$cron" | crontab -
-echo "Новое содержание crontab:${newline}${cron}"
+echo "Актуальное содержание crontab:${newline}${cron}"
