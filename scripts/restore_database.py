@@ -10,7 +10,7 @@ import subprocess
 from pathlib import Path
 from dotenv import load_dotenv
 
-def verify_command() -> None:
+def verify_command():
     '''
     Предлагает пользователю убедиться в намерениях выполнить скрипт.
     '''
@@ -18,7 +18,7 @@ def verify_command() -> None:
     if answer.lower() == 'n':
         sys.exit('Выполнение скрипта было отменено')
 
-def check_dump(dump_path: str) -> None:
+def check_dump(dump_path: str):
     '''
     Проверяет, указан ли путь к дампу в аргументах скрипта и, если указан, то корректный ли.
     '''
