@@ -17,8 +17,7 @@ class ArticleDetailView(DetailView):
         data = super().get_context_data(**kwargs)
 
         # Добавляются комментарии к статье, отсортированные в порядке от старых к новым.
-        comments_connected = Comment.objects.filter(
-            article=self.get_object()).order_by('-posted')
+        comments_connected = Comment.objects.filter(article=self.get_object())
         data['comments'] = comments_connected
         
         # Если пользователь авторизован, то появляется форма добавления комментария.

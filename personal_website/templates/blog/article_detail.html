@@ -4,7 +4,7 @@
 <!-- Шаблон для статьи и комментариев, наследует от базового шаблона -->
 {% block title %}
     <title>
-        {{article.title}}
+        {{ article.title }}
     </title>
 {% endblock title %}
 
@@ -13,17 +13,16 @@
     <div class="card shadow p-1 mb-5 bg-white rounded justify-content">
         <div class="card-body">
             <h4 class="card-title" style="margin: 0 auto; text-align:center">
-                <a style="color: black; text-decoration: none;">{{article.title}}</a>
+                <a style="color: black; text-decoration: none;">{{ article.title }}</a>
             </h4>
-            <p class="card-text">{{article.content|safe}}</p>
+            <p class="card-text">{{ article.content|safe }}</p>
             <div class="card-footer">
-                <small class="text-muted">Опубликовано {{article.published}}</small>
+                <small class="text-muted">Опубликовано {{ article.published }}</small>
                 <br>
-                <small class="text-muted">Обновлено {{article.modified}}</small>
+                <small class="text-muted">Обновлено {{ article.modified }}</small>
             </div>
         </div>
         <div id="comments_section">
-
             {% if user.is_authenticated %}
             <form method="POST">
                 {% csrf_token %}
@@ -36,7 +35,6 @@
             {% else %}
                 <a class="btn btn-outline-dark" href="{% url 'login' %}?next={{request.path}}">Войдите, чтобы оставить комментарий</a><br>
             {% endif %}
-
             {% if comments %}
                 <br>
                 <ul>
@@ -44,12 +42,10 @@
                     <li>           
                     <div>
                         <span>
-                        <strong class="fw-bolder">{{ comment.author }} </strong>
-                        <small class="text-muted">{{ comment.posted }}</small>
+                            <strong class="fw-bolder">{{ comment.author }} </strong>
+                            <small class="text-muted">{{ comment.posted }}</small>
                         </span>
-                        <p>
-                        {{ comment.content|safe }}
-                        </p>
+                        <p>{{ comment.content|safe }}</p>
                     </div>
                     </li>
                     {% endfor %}

@@ -1,0 +1,181 @@
+import random
+from django.test import TestCase
+from django.urls import resolve, reverse
+from django.utils.crypto import get_random_string
+from django.contrib.auth import get_user
+from django.contrib.auth.models import User
+from blog.models import Article, Comment
+from blog.views import blog, ArticleDetailView
+
+class BlogIndexPageTest(TestCase):
+    '''Тесты главной страницы блога.'''
+
+    blog_index_url = '/blog/'
+    reverse_blog_index_url = 'blog:blog'
+    article_list_template = 'blog/blog_index.html'
+    base_template = 'base.html'
+
+    @classmethod
+    def setUpTestData(cls):
+        for n in range(42):
+            Article.objects.create(title=f'Article {n}', slug=f'article-{n}', public=random.choice([True, False]))
+
+    def test_blog_index_url(self):
+        '''Тестирование ссылки на главную страницу блога.'''
+        resolver = resolve(self.blog_index_url)
+        response = self.client.get(self.blog_index_url)
+        self.assertEqual(resolver.func, blog)
+        self.assertEqual(response.status_code, 200)
+
+    def test_blog_index_reverse_url(self):
+        '''Тестирование именной ссылки на главную страницу блога.'''
+        response = self.client.get(self.blog_index_url)
+        url = reverse(self.reverse_blog_index_url)
+        resolver = resolve(url)
+        reverse_response = self.client.get(url)
+        self.assertEqual(resolver.func, blog)
+        self.assertEqual(reverse_response.status_code, 200)
+        self.assertEqual(response.templates, reverse_response.templates)
+    
+    def test_blog_index_template(self):
+        '''Тестирование корректности загрузки шаблона для списка статей.'''
+        response = self.client.get(self.blog_index_url)
+        self.assertTemplateUsed(response, self.article_list_template)
+        self.assertTemplateUsed(response, self.base_template)
+
+    def test_blog_index_template_elements(self):
+        '''Тестирование наличия в шаблоне главной страницы блога HTML-элементов для карточки статьи и паджинации.'''
+        response = self.client.get(self.blog_index_url)
+        self.assertContains(response, 'class="card-body"')
+        self.assertContains(response, 'class="card-title"')
+        self.assertContains(response, 'class="card-text"')
+        self.assertContains(response, 'class="pagination"')
+
+    def test_blog_index_pagination(self):
+        '''Проверка на корректность паджинации статей блога на главной странице блога.'''
+        response = self.client.get(self.blog_index_url)
+        self.assertTrue('page_obj' in response.context)
+        self.assertLessEqual(len(response.context['page_obj']), 5)
+    
+    def test_blog_index_content_filter(self):
+        '''Тест на фильтрацию контента на главной странице блога.'''
+        response = self.client.get(self.blog_index_url)
+        all([self.assertTrue(article.public) for article in response.context['page_obj']])
+
+    def test_blog_index_text_truncation(self):
+        '''Проверяет, что длина отображаемого текста не более 50 слов, если длина текста более 200 слов.''' 
+        pass # TODO
+
+class ArticleDetailPageTest(TestCase):
+    '''Тесты детального просмотра статей.'''
+
+    article_detail_url = '/blog/article/'
+    reverse_article_detail_url = 'blog:article'
+    article_detail_template = 'blog/article_detail.html'
+    base_template = 'base.html'
+    logger = 'personal_website'
+
+    @classmethod
+    def setUpTestData(cls):
+        User.objects.create_user(username='testuser', email='testuser@example.com', password='12345')
+        Article.objects.create(title='Test article', slug='article-test', content=get_random_string(250))        
+    
+    def test_article_detail_url(self):
+        '''Тестирование ссылки на детальный просмотр статьи блога.'''
+        article = Article.objects.get(title='Test article')
+        url = self.article_detail_url + article.slug + '/'
+        resolver = resolve(url)
+        response = self.client.get(url)
+        self.assertEqual(resolver.func.view_class, ArticleDetailView)
+        self.assertEqual(response.status_code, 200) 
+
+    def test_article_detail_reverse_url(self):
+        '''Тестирование обратной ссылки на детальный просмотр статьи блога.'''
+        article = Article.objects.get(title='Test article')
+        url = self.article_detail_url + article.slug + '/'
+        response = self.client.get(url)
+        reverse_url = reverse(self.reverse_article_detail_url, args=(article.slug,))
+        resolver = resolve(reverse_url)
+        reverse_response = self.client.get(reverse_url)
+        self.assertEqual(resolver.func.view_class, ArticleDetailView)
+        self.assertEqual(reverse_response.status_code, 200)
+        self.assertEqual(response.templates, reverse_response.templates)
+
+    def test_article_detail_template(self):
+        '''Тестирование корректности загрузки шаблона для просмотра статьи.'''
+        article = Article.objects.get(title='Test article')
+        url = self.article_detail_url + article.slug + '/'
+        response = self.client.get(url)
+        self.assertTemplateUsed(response, self.article_detail_template)
+        self.assertTemplateUsed(response, self.base_template)
+
+    def test_article_detail_template_elements(self):
+        '''Тестирование наличия в шаблоне просмотра статьи HTML-элементов для атрибутов статьи и паджинации.'''
+        article = Article.objects.get(title='Test article')
+        url = reverse(self.reverse_article_detail_url, args=(article.slug,))
+        response = self.client.get(url)
+        self.assertContains(response, 'class="card-body"')
+        self.assertContains(response, 'class="card-title"')
+        self.assertContains(response, 'class="card-text"')
+        self.assertContains(response, 'class="card-footer"')
+        self.assertContains(response, 'id="comments_section"')
+
+    def test_article_page_content(self):
+        '''Тестирование соответствия содержания статьи контексту, переданному в шаблон.'''
+        article = Article.objects.get(title='Test article')
+        url = reverse(self.reverse_article_detail_url, args=(article.slug,))
+        response = self.client.get(url)
+        context: Article = response.context['article']
+        self.assertEqual(article.title, context.title)
+        self.assertEqual(article.content, context.content)
+        self.assertEqual(article.published, context.published)
+        self.assertEqual(article.modified, context.modified)
+
+    def test_article_comment_button_access(self):
+        '''Тестирование добавления и вывода комментариев к статьям в блоге.'''
+        article = Article.objects.get(title='Test article')
+        url = reverse(self.reverse_article_detail_url, args=(article.slug,))
+        self.assertFalse(get_user(self.client).is_authenticated)
+        response = self.client.get(url)
+        self.assertNotContains(response, "Добавить комментарий")
+        self.client.login(username='testuser', password='12345')
+        self.assertTrue(get_user(self.client).is_authenticated)
+        response = self.client.get(url)
+        self.assertContains(response, "Добавить комментарий")
+
+    def test_comments_login_required(self):
+        '''Проверка на обязательность авторизации перед созданием комментария.'''
+        article = Article.objects.get(title='Test article')
+        url = reverse(self.reverse_article_detail_url, args=(article.slug,))
+        with self.assertRaises(ValueError):
+            response = self.client.post(url, data={'content': 'test comment'})
+        self.client.login(username='testuser', password='12345')
+        response = self.client.post(url, data={'content': 'test comment'})
+        self.assertEqual(response.status_code, 200)
+
+    def test_comments_logging(self):
+        '''Проверка на запись в лог факта создания нового комментария.'''
+        article = Article.objects.get(title='Test article')
+        url = reverse(self.reverse_article_detail_url, args=(article.slug,))
+        self.client.login(username='testuser', password='12345')
+        with self.assertLogs(logger=self.logger, level='INFO') as cm:
+            response = self.client.post(url, data={'content': 'test comment'})
+            user = response.context['user']
+            self.assertIn(f'INFO:{self.logger}:Пользователь {user} оставил комментарий к статье "{article}"', cm.output)
+        
+    def test_comments_ordered_by_posted(self):
+        '''Проверка порядка показа комментариев.'''
+        article = Article.objects.get(title='Test article')
+        user = User.objects.get(username='testuser')
+        for i in range(1, 6):
+            Comment.objects.create(article=article, author=user, content=f'test comment {i}')
+        url = reverse(self.reverse_article_detail_url, args=(article.slug,))
+        response = self.client.get(url)
+        target_comments = Comment.objects.filter(article=article).order_by('posted')
+        response_comments = response.context['comments']
+        self.assertQuerysetEqual(target_comments, response_comments)
+        self.assertEqual(response_comments[0].content, 'test comment 1')
+        
+    def test_article_content_safe(self):
+        '''Тестирование отображения содержани статьи без HTML разметки.'''
+        # TODO

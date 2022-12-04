@@ -65,7 +65,7 @@ class Series(models.Model):
     def get_absolute_url(self):
         return reverse('blog:series', args=[str(self.slug)])
 
-class Article(models.Model):
+class  Article(models.Model):
     '''
     Модель статьи.
     Статья может быть частью серии.
