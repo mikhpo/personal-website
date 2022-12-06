@@ -1,3 +1,4 @@
+import os
 import random
 from django.test import TestCase
 from django.urls import resolve, reverse
@@ -6,6 +7,14 @@ from django.contrib.auth import get_user
 from django.contrib.auth.models import User
 from blog.models import Article, Comment
 from blog.views import blog, ArticleDetailView
+from personal_website.settings import TEMPLATES
+
+def _generate_random_text(word_count: int):
+    '''Генерирует случайный текст, состоящий из заданного количества слов.'''
+    random_length = random.randint(5, 50)
+    random_word = get_random_string(random_length)
+    random_text = (random_word + ' ') * word_count
+    return random_text
 
 class BlogIndexPageTest(TestCase):
     '''Тесты главной страницы блога.'''
@@ -17,7 +26,7 @@ class BlogIndexPageTest(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        for n in range(42):
+        for n in range(20):
             Article.objects.create(title=f'Article {n}', slug=f'article-{n}', public=random.choice([True, False]))
 
     def test_blog_index_url(self):
@@ -62,9 +71,19 @@ class BlogIndexPageTest(TestCase):
         response = self.client.get(self.blog_index_url)
         all([self.assertTrue(article.public) for article in response.context['page_obj']])
 
-    def test_blog_index_text_truncation(self):
-        '''Проверяет, что длина отображаемого текста не более 50 слов, если длина текста более 200 слов.''' 
-        pass # TODO
+    def test_blog_index_text_truncated(self):
+        '''Проверяет, что текст статьи скрыт за катом, если длина текста более 200 слов.'''
+        Article.objects.filter(public=True).update(public=False)
+        Article.objects.create(title='Long article', slug='long-article', public=True, content=_generate_random_text(201)) 
+        response = self.client.get(self.blog_index_url)
+        self.assertContains(response, '>Читать дальше<')
+
+    def test_blog_index_text_not_truncated(self):
+        '''Проверяет, что текст статьи не скрыт за катом, если длина текста менее 200 слов.'''
+        Article.objects.filter(public=True).update(public=False)
+        Article.objects.create(title='Short article', slug='short-article', public=True, content=_generate_random_text(101)) 
+        response = self.client.get(self.blog_index_url)
+        self.assertNotContains(response, '>Читать дальше<')
 
 class ArticleDetailPageTest(TestCase):
     '''Тесты детального просмотра статей.'''
@@ -177,5 +196,8 @@ class ArticleDetailPageTest(TestCase):
         self.assertEqual(response_comments[0].content, 'test comment 1')
         
     def test_article_content_safe(self):
-        '''Тестирование отображения содержани статьи без HTML разметки.'''
-        # TODO
+        '''Проверяет, что в HTML-шаблоне статьи содержание статьи показывается '''
+        templates_dir = TEMPLATES[0]['DIRS'][0]
+        template_location = os.path.join(templates_dir, self.article_detail_template)
+        with open(template_location, 'r') as f:
+            self.assertIn('article.content|safe', f.read())
