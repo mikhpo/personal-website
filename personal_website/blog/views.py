@@ -87,4 +87,4 @@ def topic(request, slug):
         request,
         'blog/blog_index.html',
         {'page_obj': paginate(request, articles)}
-     )
+    )

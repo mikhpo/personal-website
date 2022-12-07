@@ -11,11 +11,11 @@ class ArticleAdmin(admin.ModelAdmin):
     model = Article
     
     list_display = ('title', 'published', 'modified', 'public')
-    list_filter = ('series', 'topic', 'category', 'public')
+    list_filter = ('series', 'topics', 'categories', 'public')
 
     fieldsets = (
         ("Содержание", {'fields': ["title", "description", "content"]}),
-        ("Метаданные", {"fields": ["series", "topic", "category"]}),
+        ("Метаданные", {"fields": ["series", "topics", "categories"]}),
         ("Картинка", {'fields': ["image"]}),
         ("Служебные", {"fields": ["slug", "public", "published"]}),
     )

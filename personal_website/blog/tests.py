@@ -2,11 +2,12 @@ import os
 import random
 from django.test import TestCase
 from django.urls import resolve, reverse
+from django.utils.timezone import now
 from django.utils.crypto import get_random_string
 from django.contrib.auth import get_user
 from django.contrib.auth.models import User
-from blog.models import Article, Comment
-from blog.views import blog, ArticleDetailView
+from blog.models import Article, Comment, Topic
+from blog.views import blog, ArticleDetailView, topic
 from personal_website.settings import TEMPLATES
 
 def _generate_random_text(word_count: int):
@@ -26,7 +27,7 @@ class BlogIndexPageTest(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        for n in range(20):
+        for n in range(21):
             Article.objects.create(title=f'Article {n}', slug=f'article-{n}', public=random.choice([True, False]))
 
     def test_blog_index_url(self):
@@ -84,6 +85,20 @@ class BlogIndexPageTest(TestCase):
         Article.objects.create(title='Short article', slug='short-article', public=True, content=_generate_random_text(101)) 
         response = self.client.get(self.blog_index_url)
         self.assertNotContains(response, '>Читать дальше<')
+
+    def test_blog_index_content_safe(self):
+        '''Проверяет, что в HTML-шаблоне блога содержание статей показывается без HTML-разметки.'''
+        templates_dir = TEMPLATES[0]['DIRS'][0]
+        template_location = os.path.join(templates_dir, self.article_list_template)
+        with open(template_location, 'r') as f:
+            self.assertIn('article.content|safe', f.read())
+
+    def test_blog_index_article_order(self):
+        '''Проверяет, что статьи на главной странице блога отсортированы в правильном порядке.'''
+        response = self.client.get(self.blog_index_url)
+        target_articles = Article.objects.filter(public=True).order_by('-published')[:5]
+        response_articles = response.context['page_obj']
+        self.assertQuerysetEqual(target_articles, response_articles)
 
 class ArticleDetailPageTest(TestCase):
     '''Тесты детального просмотра статей.'''
@@ -201,3 +216,101 @@ class ArticleDetailPageTest(TestCase):
         template_location = os.path.join(templates_dir, self.article_detail_template)
         with open(template_location, 'r') as f:
             self.assertIn('article.content|safe', f.read())
+
+class TopicPageTest(TestCase):
+    '''Тесты страницы просмотра статей, посвященных определенной теме.'''
+
+    topic_url = '/blog/topic/'
+    reverse_topic_url = 'blog:topic'
+    topic_template = 'blog/blog_index.html'
+    base_template = 'base.html'
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.test_topic = Topic.objects.create(name='Test topic', slug='test-topic')
+        for n in range(20):
+            article = Article.objects.create(title=f'Article {n}', slug=f'article-{n}', public=random.choice([True, False]))
+            article.topics.add(cls.test_topic)
+
+    def test_topic_url(self):
+        '''Тестирование ссылки на тему.'''
+        url = self.topic_url + self.test_topic.slug + '/'
+        resolver = resolve(url)
+        response = self.client.get(url)
+        self.assertEqual(resolver.func, topic)
+        self.assertEqual(response.status_code, 200)
+
+    def test_topic_reverse_url(self):
+        '''Тестирование именной ссылки на тему.'''
+        url = self.topic_url + self.test_topic.slug + '/'
+        response = self.client.get(url)
+        reverse_url = reverse(self.reverse_topic_url, args=(self.test_topic.slug,))
+        resolver = resolve(reverse_url)
+        reverse_response = self.client.get(reverse_url)
+        self.assertEqual(resolver.func, topic)
+        self.assertEqual(reverse_response.status_code, 200)
+        self.assertEqual(response.templates, reverse_response.templates)
+    
+    def test_topic_template(self):
+        '''Тестирование корректности загрузки шаблона для списка статей по теме.'''
+        url = reverse(self.reverse_topic_url, args=(self.test_topic.slug,))
+        response = self.client.get(url)
+        self.assertTemplateUsed(response, self.topic_template)
+        self.assertTemplateUsed(response, self.base_template)
+
+    def test_topic_template_elements(self):
+        '''Тестирование наличия в шаблоне темы HTML-элементов для карточки статьи и паджинации.'''
+        url = reverse(self.reverse_topic_url, args=(self.test_topic.slug,))
+        response = self.client.get(url)
+        self.assertContains(response, 'class="card-body"')
+        self.assertContains(response, 'class="card-title"')
+        self.assertContains(response, 'class="card-text"')
+        self.assertContains(response, 'class="pagination"')
+
+    def test_topic_pagination(self):
+        '''Проверка на корректность паджинации статей по теме.'''
+        url = reverse(self.reverse_topic_url, args=(self.test_topic.slug,))
+        response = self.client.get(url)
+        self.assertTrue('page_obj' in response.context)
+        self.assertLessEqual(len(response.context['page_obj']), 5)
+    
+    def test_topic_content_filter(self):
+        '''Тест на фильтрацию контента на странице просмотра темы.'''
+        url = reverse(self.reverse_topic_url, args=(self.test_topic.slug,))
+        response = self.client.get(url)
+        all([self.assertTrue(article.public) for article in response.context['page_obj']])
+
+    def test_topic_page_text_truncated(self):
+        '''Проверяет, что текст статьи скрыт за катом, если длина текста более 200 слов.'''
+        Article.objects.filter(public=True, topics=self.test_topic).update(public=False)
+        article = Article.objects.create(title='Long article', slug='long-article', public=True, content=_generate_random_text(201))
+        article.topics.add(self.test_topic)
+        url = reverse(self.reverse_topic_url, args=(self.test_topic.slug,))
+        response = self.client.get(url)
+        self.assertContains(response, '>Читать дальше<')
+
+    def test_topic_page_text_not_truncated(self):
+        '''Проверяет, что текст статьи не скрыт за катом, если длина текста менее 200 слов.'''
+        Article.objects.filter(public=True, topics=self.test_topic).update(public=False)
+        article = Article.objects.create(title='Short article', slug='short-article', public=True, content=_generate_random_text(101))
+        article.topics.add(self.test_topic) 
+        url = reverse(self.reverse_topic_url, args=(self.test_topic.slug,))
+        response = self.client.get(url)
+        self.assertNotContains(response, '>Читать дальше<')
+
+    def test_topic_content_safe(self):
+        '''Проверяет, что в HTML-шаблоне списка статей по теме содержание статей показывается без HTML-разметки.'''
+        templates_dir = TEMPLATES[0]['DIRS'][0]
+        template_location = os.path.join(templates_dir, self.topic_template)
+        with open(template_location, 'r') as f:
+            self.assertIn('article.content|safe', f.read())
+
+    def test_topic_article_order(self):
+        '''Проверяет, что статьи по теме отсортированы в правильном порядке.'''
+        url = reverse(self.reverse_topic_url, args=(self.test_topic.slug,))
+        response = self.client.get(url)
+        target_articles = Article.objects.filter(public=True, topics=self.test_topic).order_by('-published')[:5]
+        response_articles = response.context['page_obj']
+        self.assertQuerysetEqual(target_articles, response_articles)
+
+    
