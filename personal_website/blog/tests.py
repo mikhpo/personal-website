@@ -2,12 +2,11 @@ import os
 import random
 from django.test import TestCase
 from django.urls import resolve, reverse
-from django.utils.timezone import now
 from django.utils.crypto import get_random_string
 from django.contrib.auth import get_user
 from django.contrib.auth.models import User
-from blog.models import Article, Comment, Topic
-from blog.views import blog, ArticleDetailView, topic
+from blog.models import Article, Comment, Category, Topic, Series
+from blog.views import blog, ArticleDetailView, category, topic, series
 from personal_website.settings import TEMPLATES
 
 def _generate_random_text(word_count: int):
@@ -217,6 +216,102 @@ class ArticleDetailPageTest(TestCase):
         with open(template_location, 'r') as f:
             self.assertIn('article.content|safe', f.read())
 
+class CategoryPageTest(TestCase):
+    '''Тесты страницы просмотра статей по определенной категории.'''
+
+    category_url = '/blog/category/'
+    reverse_category_url = 'blog:category'
+    category_template = 'blog/blog_index.html'
+    base_template = 'base.html'
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.test_category = Category.objects.create(name='Test category', slug='test-category')
+        for n in range(20):
+            article = Article.objects.create(title=f'Article {n}', slug=f'article-{n}', public=random.choice([True, False]))
+            article.categories.add(cls.test_category)
+
+    def test_category_url(self):
+        '''Тестирование ссылки на категорию.'''
+        url = self.category_url + self.test_category.slug + '/'
+        resolver = resolve(url)
+        response = self.client.get(url)
+        self.assertEqual(resolver.func, category)
+        self.assertEqual(response.status_code, 200)
+
+    def test_category_reverse_url(self):
+        '''Тестирование именной ссылки на категорию.'''
+        url = self.category_url + self.test_category.slug + '/'
+        response = self.client.get(url)
+        reverse_url = reverse(self.reverse_category_url, args=(self.test_category.slug,))
+        resolver = resolve(reverse_url)
+        reverse_response = self.client.get(reverse_url)
+        self.assertEqual(resolver.func, category)
+        self.assertEqual(reverse_response.status_code, 200)
+        self.assertEqual(response.templates, reverse_response.templates)
+    
+    def test_category_template(self):
+        '''Тестирование корректности загрузки шаблона для списка статей в категории.'''
+        url = reverse(self.reverse_category_url, args=(self.test_category.slug,))
+        response = self.client.get(url)
+        self.assertTemplateUsed(response, self.category_template)
+        self.assertTemplateUsed(response, self.base_template)
+
+    def test_category_template_elements(self):
+        '''Тестирование наличия в шаблоне категории HTML-элементов для карточки статьи и паджинации.'''
+        url = reverse(self.reverse_category_url, args=(self.test_category.slug,))
+        response = self.client.get(url)
+        self.assertContains(response, 'class="card-body"')
+        self.assertContains(response, 'class="card-title"')
+        self.assertContains(response, 'class="card-text"')
+        self.assertContains(response, 'class="pagination"')
+
+    def test_category_pagination(self):
+        '''Проверка на корректность паджинации статей в категории.'''
+        url = reverse(self.reverse_category_url, args=(self.test_category.slug,))
+        response = self.client.get(url)
+        self.assertTrue('page_obj' in response.context)
+        self.assertLessEqual(len(response.context['page_obj']), 5)
+    
+    def test_category_content_filter(self):
+        '''Тест на фильтрацию контента на странице просмотра категории.'''
+        url = reverse(self.reverse_category_url, args=(self.test_category.slug,))
+        response = self.client.get(url)
+        all([self.assertTrue(article.public) for article in response.context['page_obj']])
+
+    def test_category_page_text_truncated(self):
+        '''Проверяет, что текст статьи в категории скрыт за катом, если длина текста более 200 слов.'''
+        Article.objects.filter(public=True, categories=self.test_category).update(public=False)
+        article = Article.objects.create(title='Long article', slug='long-article', public=True, content=_generate_random_text(201))
+        article.categories.add(self.test_category)
+        url = reverse(self.reverse_category_url, args=(self.test_category.slug,))
+        response = self.client.get(url)
+        self.assertContains(response, '>Читать дальше<')
+
+    def test_category_page_text_not_truncated(self):
+        '''Проверяет, что текст статьи в категории не скрыт за катом, если длина текста менее 200 слов.'''
+        Article.objects.filter(public=True, categories=self.test_category).update(public=False)
+        article = Article.objects.create(title='Short article', slug='short-article', public=True, content=_generate_random_text(101))
+        article.categories.add(self.test_category) 
+        url = reverse(self.reverse_category_url, args=(self.test_category.slug,))
+        response = self.client.get(url)
+        self.assertNotContains(response, '>Читать дальше<')
+
+    def test_category_content_safe(self):
+        '''Проверяет, что в HTML-шаблоне списка статей в категории содержание статей показывается без HTML-разметки.'''
+        templates_dir = TEMPLATES[0]['DIRS'][0]
+        template_location = os.path.join(templates_dir, self.category_template)
+        with open(template_location, 'r') as f:
+            self.assertIn('article.content|safe', f.read())
+
+    def test_category_article_order(self):
+        '''Проверяет, что статьи в категории отсортированы в правильном порядке.'''
+        url = reverse(self.reverse_category_url, args=(self.test_category.slug,))
+        response = self.client.get(url)
+        target_articles = Article.objects.filter(public=True, categories=self.test_category).order_by('-published')[:5]
+        response_articles = response.context['page_obj']
+        self.assertQuerysetEqual(target_articles, response_articles)
+
 class TopicPageTest(TestCase):
     '''Тесты страницы просмотра статей, посвященных определенной теме.'''
 
@@ -281,7 +376,7 @@ class TopicPageTest(TestCase):
         all([self.assertTrue(article.public) for article in response.context['page_obj']])
 
     def test_topic_page_text_truncated(self):
-        '''Проверяет, что текст статьи скрыт за катом, если длина текста более 200 слов.'''
+        '''Проверяет, что текст статьи по теме скрыт за катом, если длина текста более 200 слов.'''
         Article.objects.filter(public=True, topics=self.test_topic).update(public=False)
         article = Article.objects.create(title='Long article', slug='long-article', public=True, content=_generate_random_text(201))
         article.topics.add(self.test_topic)
@@ -290,7 +385,7 @@ class TopicPageTest(TestCase):
         self.assertContains(response, '>Читать дальше<')
 
     def test_topic_page_text_not_truncated(self):
-        '''Проверяет, что текст статьи не скрыт за катом, если длина текста менее 200 слов.'''
+        '''Проверяет, что текст статьи по теме не скрыт за катом, если длина текста менее 200 слов.'''
         Article.objects.filter(public=True, topics=self.test_topic).update(public=False)
         article = Article.objects.create(title='Short article', slug='short-article', public=True, content=_generate_random_text(101))
         article.topics.add(self.test_topic) 
@@ -313,4 +408,98 @@ class TopicPageTest(TestCase):
         response_articles = response.context['page_obj']
         self.assertQuerysetEqual(target_articles, response_articles)
 
+class SeriesPageTest(TestCase):
+    '''Тесты страницы просмотра статей из определенной серии.'''
+
+    series_url = '/blog/series/'
+    reverse_series_url = 'blog:series'
+    series_template = 'blog/blog_index.html'
+    base_template = 'base.html'
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.test_series = Series.objects.create(name='Test series', slug='test-series')
+        for n in range(20):
+            article = Article.objects.create(title=f'Article {n}', slug=f'article-{n}', public=random.choice([True, False]))
+            article.series.add(cls.test_series)
+
+    def test_series_url(self):
+        '''Тестирование ссылки на серию.'''
+        url = self.series_url + self.test_series.slug + '/'
+        resolver = resolve(url)
+        response = self.client.get(url)
+        self.assertEqual(resolver.func, series)
+        self.assertEqual(response.status_code, 200)
+
+    def test_series_reverse_url(self):
+        '''Тестирование именной ссылки на серию.'''
+        url = self.series_url + self.test_series.slug + '/'
+        response = self.client.get(url)
+        reverse_url = reverse(self.reverse_series_url, args=(self.test_series.slug,))
+        resolver = resolve(reverse_url)
+        reverse_response = self.client.get(reverse_url)
+        self.assertEqual(resolver.func, series)
+        self.assertEqual(reverse_response.status_code, 200)
+        self.assertEqual(response.templates, reverse_response.templates)
     
+    def test_series_template(self):
+        '''Тестирование корректности загрузки шаблона для списка статей из серии.'''
+        url = reverse(self.reverse_series_url, args=(self.test_series.slug,))
+        response = self.client.get(url)
+        self.assertTemplateUsed(response, self.series_template)
+        self.assertTemplateUsed(response, self.base_template)
+
+    def test_series_template_elements(self):
+        '''Тестирование наличия в шаблоне серии HTML-элементов для карточки статьи и паджинации.'''
+        url = reverse(self.reverse_series_url, args=(self.test_series.slug,))
+        response = self.client.get(url)
+        self.assertContains(response, 'class="card-body"')
+        self.assertContains(response, 'class="card-title"')
+        self.assertContains(response, 'class="card-text"')
+        self.assertContains(response, 'class="pagination"')
+
+    def test_series_pagination(self):
+        '''Проверка на корректность паджинации статей из серии.'''
+        url = reverse(self.reverse_series_url, args=(self.test_series.slug,))
+        response = self.client.get(url)
+        self.assertTrue('page_obj' in response.context)
+        self.assertLessEqual(len(response.context['page_obj']), 5)
+    
+    def test_series_content_filter(self):
+        '''Тест на фильтрацию контента на странице просмотра серии.'''
+        url = reverse(self.reverse_series_url, args=(self.test_series.slug,))
+        response = self.client.get(url)
+        all([self.assertTrue(article.public) for article in response.context['page_obj']])
+
+    def test_series_page_text_truncated(self):
+        '''Проверяет, что текст статьи из серии скрыт за катом, если длина текста более 200 слов.'''
+        Article.objects.filter(public=True, series=self.test_series).update(public=False)
+        article = Article.objects.create(title='Long article', slug='long-article', public=True, content=_generate_random_text(201))
+        article.series.add(self.test_series)
+        url = reverse(self.reverse_series_url, args=(self.test_series.slug,))
+        response = self.client.get(url)
+        self.assertContains(response, '>Читать дальше<')
+
+    def test_series_page_text_not_truncated(self):
+        '''Проверяет, что текст статьи из серии не скрыт за катом, если длина текста менее 200 слов.'''
+        Article.objects.filter(public=True, series=self.test_series).update(public=False)
+        article = Article.objects.create(title='Short article', slug='short-article', public=True, content=_generate_random_text(101))
+        article.series.add(self.test_series) 
+        url = reverse(self.reverse_series_url, args=(self.test_series.slug,))
+        response = self.client.get(url)
+        self.assertNotContains(response, '>Читать дальше<')
+
+    def test_series_content_safe(self):
+        '''Проверяет, что в HTML-шаблоне списка статей из серии содержание статей показывается без HTML-разметки.'''
+        templates_dir = TEMPLATES[0]['DIRS'][0]
+        template_location = os.path.join(templates_dir, self.series_template)
+        with open(template_location, 'r') as f:
+            self.assertIn('article.content|safe', f.read())
+
+    def test_series_article_order(self):
+        '''Проверяет, что статьи из серии отсортированы в правильном порядке.'''
+        url = reverse(self.reverse_series_url, args=(self.test_series.slug,))
+        response = self.client.get(url)
+        target_articles = Article.objects.filter(public=True, series=self.test_series).order_by('-published')[:5]
+        response_articles = response.context['page_obj']
+        self.assertQuerysetEqual(target_articles, response_articles)
