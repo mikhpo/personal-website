@@ -1,7 +1,37 @@
+import re
+from pytils import translit
 from django.db import models
 from django.urls import reverse
 from django.utils.timezone import now
+from django.utils.text import slugify
 from django.contrib.auth.models import User
+
+def has_cyrillic(text: str):
+    '''
+    Проверяет наличие в тексте кириллических символов.
+    '''
+    return bool(re.search('[а-яА-Я]', text))
+
+def get_slug(text: str):
+    '''
+    Создает слаг из текста.
+    '''
+    if has_cyrillic:
+        return translit.slugify(text)
+    else:
+        return slugify(text)
+
+def get_unique_slug(instance, text):
+    '''
+    Создает уникальный слаг, уникальный для данного класса.
+    '''
+    model = instance.__class__
+    slug = get_slug(text)
+    n = 1
+    while model.objects.filter(slug=slug).exists():
+        n += 1
+        slug = f'{slug}-{n}'
+    return slug
 
 class Category(models.Model):
     '''
@@ -22,6 +52,11 @@ class Category(models.Model):
 
     def get_absolute_url(self):
         return reverse('blog:category', args=[str(self.slug)])
+    
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = get_unique_slug(self, self.name)
+        super().save(*args, **kwargs)
 
 class Topic(models.Model):
     '''
@@ -44,6 +79,11 @@ class Topic(models.Model):
     def get_absolute_url(self):
         return reverse('blog:topic', args=[str(self.slug)])
 
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = get_unique_slug(self, self.name)
+        super().save(*args, **kwargs)
+
 class Series(models.Model):
     '''
     Модель серии.
@@ -64,6 +104,11 @@ class Series(models.Model):
 
     def get_absolute_url(self):
         return reverse('blog:series', args=[str(self.slug)])
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = get_unique_slug(self, self.name)
+        super().save(*args, **kwargs)
 
 class  Article(models.Model):
     '''
@@ -97,6 +142,11 @@ class  Article(models.Model):
     @property
     def number_of_comments(self):
         return Comment.objects.filter(article=self).count()
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = get_unique_slug(self, self.title)
+        super().save(*args, **kwargs)
 
 class Comment(models.Model):
     '''

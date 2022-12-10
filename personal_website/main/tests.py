@@ -1,5 +1,6 @@
 from django.test import TestCase
 from django.urls import reverse, resolve
+from django.contrib.sitemaps.views import sitemap
 from blog.models import Category, Series
 from main.views import main
 
@@ -61,4 +62,14 @@ class MainPageTest(TestCase):
         response = self.client.get(self.url)
         target_series = Series.objects.filter(public=True).exclude(image='')
         self.assertQuerysetEqual(target_series, response.context['series'])
-        
+
+class SitemapTest(TestCase):
+    '''Тестирование карты сайта.'''
+
+    def test_sitemap_url(self):
+        '''Проверяет доступность карты сайта.'''
+        sitemap_url = '/sitemap.xml'       
+        resolver = resolve(sitemap_url)
+        response = self.client.get(sitemap_url)
+        self.assertEqual(resolver.func, sitemap)
+        self.assertEqual(response.status_code, 200)

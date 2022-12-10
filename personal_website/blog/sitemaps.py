@@ -1,5 +1,5 @@
 '''
-Модуль для построения карты сайта по объектам приложения.
+Модуль для построения карты сайта по объектам блога.
 '''
 from django.contrib.sitemaps import Sitemap
 from .models import Article, Series, Topic, Category

@@ -7,14 +7,8 @@ from django.contrib.auth import get_user
 from django.contrib.auth.models import User
 from blog.models import Article, Comment, Category, Topic, Series
 from blog.views import blog, ArticleDetailView, category, topic, series
+from blog.tests.utils import generate_random_text
 from personal_website.settings import TEMPLATES
-
-def _generate_random_text(word_count: int):
-    '''Генерирует случайный текст, состоящий из заданного количества слов.'''
-    random_length = random.randint(5, 50)
-    random_word = get_random_string(random_length)
-    random_text = (random_word + ' ') * word_count
-    return random_text
 
 class BlogIndexPageTest(TestCase):
     '''Тесты главной страницы блога.'''
@@ -74,14 +68,14 @@ class BlogIndexPageTest(TestCase):
     def test_blog_index_text_truncated(self):
         '''Проверяет, что текст статьи скрыт за катом, если длина текста более 200 слов.'''
         Article.objects.filter(public=True).update(public=False)
-        Article.objects.create(title='Long article', slug='long-article', public=True, content=_generate_random_text(201)) 
+        Article.objects.create(title='Long article', slug='long-article', public=True, content=generate_random_text(201)) 
         response = self.client.get(self.blog_index_url)
         self.assertContains(response, '>Читать дальше<')
 
     def test_blog_index_text_not_truncated(self):
         '''Проверяет, что текст статьи не скрыт за катом, если длина текста менее 200 слов.'''
         Article.objects.filter(public=True).update(public=False)
-        Article.objects.create(title='Short article', slug='short-article', public=True, content=_generate_random_text(101)) 
+        Article.objects.create(title='Short article', slug='short-article', public=True, content=generate_random_text(101)) 
         response = self.client.get(self.blog_index_url)
         self.assertNotContains(response, '>Читать дальше<')
 
@@ -282,7 +276,7 @@ class CategoryPageTest(TestCase):
     def test_category_page_text_truncated(self):
         '''Проверяет, что текст статьи в категории скрыт за катом, если длина текста более 200 слов.'''
         Article.objects.filter(public=True, categories=self.test_category).update(public=False)
-        article = Article.objects.create(title='Long article', slug='long-article', public=True, content=_generate_random_text(201))
+        article = Article.objects.create(title='Long article', slug='long-article', public=True, content=generate_random_text(201))
         article.categories.add(self.test_category)
         url = reverse(self.reverse_category_url, args=(self.test_category.slug,))
         response = self.client.get(url)
@@ -291,7 +285,7 @@ class CategoryPageTest(TestCase):
     def test_category_page_text_not_truncated(self):
         '''Проверяет, что текст статьи в категории не скрыт за катом, если длина текста менее 200 слов.'''
         Article.objects.filter(public=True, categories=self.test_category).update(public=False)
-        article = Article.objects.create(title='Short article', slug='short-article', public=True, content=_generate_random_text(101))
+        article = Article.objects.create(title='Short article', slug='short-article', public=True, content=generate_random_text(101))
         article.categories.add(self.test_category) 
         url = reverse(self.reverse_category_url, args=(self.test_category.slug,))
         response = self.client.get(url)
@@ -378,7 +372,7 @@ class TopicPageTest(TestCase):
     def test_topic_page_text_truncated(self):
         '''Проверяет, что текст статьи по теме скрыт за катом, если длина текста более 200 слов.'''
         Article.objects.filter(public=True, topics=self.test_topic).update(public=False)
-        article = Article.objects.create(title='Long article', slug='long-article', public=True, content=_generate_random_text(201))
+        article = Article.objects.create(title='Long article', slug='long-article', public=True, content=generate_random_text(201))
         article.topics.add(self.test_topic)
         url = reverse(self.reverse_topic_url, args=(self.test_topic.slug,))
         response = self.client.get(url)
@@ -387,7 +381,7 @@ class TopicPageTest(TestCase):
     def test_topic_page_text_not_truncated(self):
         '''Проверяет, что текст статьи по теме не скрыт за катом, если длина текста менее 200 слов.'''
         Article.objects.filter(public=True, topics=self.test_topic).update(public=False)
-        article = Article.objects.create(title='Short article', slug='short-article', public=True, content=_generate_random_text(101))
+        article = Article.objects.create(title='Short article', slug='short-article', public=True, content=generate_random_text(101))
         article.topics.add(self.test_topic) 
         url = reverse(self.reverse_topic_url, args=(self.test_topic.slug,))
         response = self.client.get(url)
@@ -474,7 +468,7 @@ class SeriesPageTest(TestCase):
     def test_series_page_text_truncated(self):
         '''Проверяет, что текст статьи из серии скрыт за катом, если длина текста более 200 слов.'''
         Article.objects.filter(public=True, series=self.test_series).update(public=False)
-        article = Article.objects.create(title='Long article', slug='long-article', public=True, content=_generate_random_text(201))
+        article = Article.objects.create(title='Long article', slug='long-article', public=True, content=generate_random_text(201))
         article.series.add(self.test_series)
         url = reverse(self.reverse_series_url, args=(self.test_series.slug,))
         response = self.client.get(url)
@@ -483,7 +477,7 @@ class SeriesPageTest(TestCase):
     def test_series_page_text_not_truncated(self):
         '''Проверяет, что текст статьи из серии не скрыт за катом, если длина текста менее 200 слов.'''
         Article.objects.filter(public=True, series=self.test_series).update(public=False)
-        article = Article.objects.create(title='Short article', slug='short-article', public=True, content=_generate_random_text(101))
+        article = Article.objects.create(title='Short article', slug='short-article', public=True, content=generate_random_text(101))
         article.series.add(self.test_series) 
         url = reverse(self.reverse_series_url, args=(self.test_series.slug,))
         response = self.client.get(url)
