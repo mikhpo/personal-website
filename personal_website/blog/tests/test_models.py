@@ -1,13 +1,20 @@
 from django.test import TestCase
 from django.db.utils import IntegrityError
-from blog.models import Article, Series, Topic, Category
+from django.utils.crypto import get_random_string
+from django.contrib.auth.models import User
+from blog.models import Article, Series, Topic, Category, Comment
+from blog.tests.utils import generate_random_text
 
 class ArticleModelTest(TestCase):
     '''Тесты модели статьи.'''
 
+    @classmethod
+    def setUpTestData(cls):
+        cls.user_1 = User.objects.create_user(username='testuser-1', email='testuser-1@example.com', password=get_random_string(5))
+        cls.article = Article.objects.create(title='Test article', author=cls.user_1)
+
     def test_article_title_unique(self):
         '''Проверка на то, что невозможно создать несколько статей с одним заголовком.'''
-        Article.objects.create(title='Test article')
         with self.assertRaises(IntegrityError):
             Article.objects.create(title='Test article')
         
@@ -24,11 +31,79 @@ class ArticleModelTest(TestCase):
 
     def test_article_absolute_url(self):
         '''Проверяется корректность создания абсолютной ссылки на статью.'''
-        article = Article.objects.create(title='Test article', slug='test-article')
-        url = '/blog/article/' + article.slug + '/'
-        absolute_url = article.get_absolute_url()
+        url = '/blog/article/' + self.article.slug + '/'
+        absolute_url = self.article.get_absolute_url()
         self.assertEqual(url, absolute_url)
 
+    def test_article_saved_on_author_delete(self):
+        '''Проверяет, что статья не удаляется при удалении автора статьи.'''
+        self.assertTrue(User.objects.filter(username='testuser-1').exists())
+        self.assertTrue(Article.objects.filter(title='Test article').exists())
+        self.user_1.delete()
+        self.assertFalse(User.objects.filter(username='testuser-1').exists())
+        self.assertTrue(Article.objects.filter(title='Test article').exists())
+
+    def test_comments_deleted_on_author_delete(self):
+        '''Проверяет, что комментарии удаляются при удалении автора комментариев.'''
+        user_2 = User.objects.create_user(username='testuser-2', email='testuser-2@example.com', password=get_random_string(5))
+        for _ in range(1, 6):
+            Comment.objects.create(article=self.article, author=user_2, content=generate_random_text(10))
+        self.assertTrue(User.objects.filter(username='testuser-2').exists())
+        self.assertGreater(self.article.number_of_comments, 0)
+        user_comments_count = Comment.objects.filter(author=user_2).count()
+        self.assertEqual(self.article.number_of_comments, user_comments_count)
+        user_2.delete()
+        self.assertFalse(User.objects.filter(username='testuser-2').exists())
+        self.assertEqual(self.article.number_of_comments, 0)
+
+    def test_article_saved_on_series_delete(self):
+        '''Проверяет, что статья не удаляется при удалении cерии.'''
+        series = Series.objects.create(name='Test series')
+        self.article.series.add(series)
+        self.assertTrue(Series.objects.filter(name='Test series').exists())
+        self.assertTrue(Article.objects.filter(title='Test article').exists())
+        self.assertTrue(series in self.article.series.all())
+        series.delete()
+        self.assertFalse(Series.objects.filter(name='Test series').exists())
+        self.assertTrue(Article.objects.filter(title='Test article').exists())
+        self.assertFalse(series in self.article.series.all())
+         
+    def test_article_saved_on_topic_delete(self):
+        '''Проверяет, что статья не удаляется при удалении темы.'''
+        topic = Topic.objects.create(name='Test topic')
+        self.article.topics.add(topic)
+        self.assertTrue(Topic.objects.filter(name='Test topic').exists())
+        self.assertTrue(Article.objects.filter(title='Test article').exists())
+        self.assertTrue(topic in self.article.topics.all())
+        topic.delete()
+        self.assertFalse(Topic.objects.filter(name='Test topic').exists())
+        self.assertTrue(Article.objects.filter(title='Test article').exists())
+        self.assertFalse(topic in self.article.topics.all())
+
+    def test_article_saved_on_category_delete(self):
+        '''Проверяет, что статья не удаляется при удалении категории.'''
+        category = Category.objects.create(name='Test category')
+        self.article.categories.add(category)
+        self.assertTrue(Category.objects.filter(name='Test category').exists())
+        self.assertTrue(Article.objects.filter(title='Test article').exists())
+        self.assertTrue(category in self.article.categories.all())
+        category.delete()
+        self.assertFalse(Category.objects.filter(name='Test category').exists())
+        self.assertTrue(Article.objects.filter(title='Test article').exists())
+        self.assertFalse(category in self.article.categories.all())
+
+    def test_comments_deleted_on_article_delete(self):
+        '''Проверяет, что комментарии удаляются при удалении статьи.'''
+        user_3 = User.objects.create_user(username='testuser-3', email='testuser-3@example.com', password=get_random_string(5))
+        for _ in range(1, 6):
+            Comment.objects.create(article=self.article, author=user_3, content=generate_random_text(10))
+        self.assertTrue(User.objects.filter(username='testuser-3').exists())
+        self.assertGreater(self.article.number_of_comments, 0)
+        self.assertEqual(self.article.number_of_comments, Comment.objects.filter(author=user_3).count())
+        self.article.delete()
+        self.assertFalse(Article.objects.filter(title='Test article').exists())
+        self.assertEqual(Comment.objects.filter(author=user_3).count(), 0)
+        
 class SeriesModelTest(TestCase):
     '''Тесты модели серии статей.'''
 
@@ -55,6 +130,10 @@ class SeriesModelTest(TestCase):
         url = '/blog/series/' + series.slug + '/'
         absolute_url = series.get_absolute_url()
         self.assertEqual(url, absolute_url)
+
+    def test_series_image_uploaded(self):
+        '''Проверка на корректность загрузки обложки серии.'''
+        pass # TODO
 
 class TopicModelTest(TestCase):
     '''Тесты модели темы статей.'''
@@ -83,6 +162,10 @@ class TopicModelTest(TestCase):
         absolute_url = topic.get_absolute_url()
         self.assertEqual(url, absolute_url)
 
+    def test_topic_image_uploaded(self):
+        '''Проверка на корректность загрузки обложки темы.'''
+        pass # TODO
+
 class CategoryModelTest(TestCase):
     '''Тесты модели категории статей.'''
 
@@ -109,3 +192,7 @@ class CategoryModelTest(TestCase):
         url = '/blog/category/' + category.slug + '/'
         absolute_url = category.get_absolute_url()
         self.assertEqual(url, absolute_url)
+
+    def test_category_image_uploaded(self):
+        '''Проверка на корректность загрузки обложки категории.'''
+        pass # TODO

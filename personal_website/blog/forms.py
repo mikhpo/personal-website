@@ -5,7 +5,7 @@ class NewCommentForm(forms.ModelForm):
     '''
     Форма создания нового комментария к статье.
     '''
-    content = forms.CharField(label ="", widget = forms.Textarea( 
+    content = forms.CharField(label = "", widget = forms.Textarea( 
         attrs ={ 
             'class':'form-control', 
             'placeholder':'Оставить комментарий', 

@@ -39,7 +39,7 @@ class Category(models.Model):
     '''
     name = models.CharField('Категория', max_length=255, unique=True)
     description = models.CharField("Описание", max_length=255, blank=True)
-    slug = models.SlugField('Слаг', unique=True)
+    slug = models.SlugField('Слаг', blank=True, unique=True)
     image = models.ImageField("Картинка", upload_to='blog/categories/', blank=True)
     public = models.BooleanField("Опубликовано", default=False)
 
@@ -65,7 +65,7 @@ class Topic(models.Model):
     '''
     name = models.CharField('Тема', max_length=255, unique=True)
     description = models.CharField("Описание", max_length=255, blank=True)
-    slug = models.SlugField('Слаг', unique=True)
+    slug = models.SlugField('Слаг', blank=True, unique=True)
     image = models.ImageField("Картинка", upload_to='blog/topics/', blank=True)
     public = models.BooleanField("Опубликовано", default=False)
 
@@ -91,7 +91,7 @@ class Series(models.Model):
     '''
     name = models.CharField('Серия', max_length=255, unique=True)
     description = models.CharField("Описание", max_length=255, blank=True)
-    slug = models.SlugField('Слаг', unique=True)
+    slug = models.SlugField('Слаг', blank=True, unique=True)
     image = models.ImageField("Картинка", upload_to='blog/series/', blank=True)
     public = models.BooleanField("Опубликовано", default=False)
 
@@ -119,9 +119,9 @@ class  Article(models.Model):
     title = models.CharField('Заголовок', max_length=255, unique=True)
     description = models.CharField("Описание", max_length=255, blank=True)
     content = models.TextField('Содержание')
-    published = models.DateTimeField('Дата публикации', default=now)
+    published = models.DateTimeField('Дата публикации', blank=True, null=True, default=now)
     modified = models.DateTimeField('Дата последнего изменения', auto_now=True)
-    slug = models.SlugField('Слаг', unique=True)
+    slug = models.SlugField('Слаг', blank=True, unique=True)
     series = models.ManyToManyField(Series, blank=True)
     topics = models.ManyToManyField(Topic, blank=True)
     categories = models.ManyToManyField(Category, blank=True)

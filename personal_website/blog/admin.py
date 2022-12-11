@@ -1,6 +1,7 @@
+from django.db import models
 from django.contrib import admin
 from tinymce.widgets import TinyMCE
-from .models import *
+from .models import Article, Comment, Series, Topic, Category
 
 
 @admin.register(Article)
@@ -23,7 +24,7 @@ class ArticleAdmin(admin.ModelAdmin):
     # Стандартная форма тектового поля заменена на HTML форму TinyMCE.
     formfield_overrides = {
         models.TextField: {'widget': TinyMCE()},
-        }
+    }
 
     # Дату публикации можно изменить только при создании статьи, но не при редактировании.
     readonly_fields=('published',)

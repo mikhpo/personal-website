@@ -170,7 +170,7 @@ class ArticleDetailPageTest(TestCase):
         response = self.client.get(url)
         self.assertContains(response, "Добавить комментарий")
 
-    def test_comments_login_required(self):
+    def test_comments_post(self):
         '''Проверка на обязательность авторизации перед созданием комментария.'''
         article = Article.objects.get(title='Test article')
         url = reverse(self.reverse_article_detail_url, args=(article.slug,))
@@ -179,6 +179,7 @@ class ArticleDetailPageTest(TestCase):
         self.client.login(username='testuser', password='12345')
         response = self.client.post(url, data={'content': 'test comment'})
         self.assertEqual(response.status_code, 200)
+        self.assertTrue(Comment.objects.filter(content='test comment').exists())
 
     def test_comments_logging(self):
         '''Проверка на запись в лог факта создания нового комментария.'''
