@@ -85,6 +85,7 @@ class BlogAdminTest(TestCase):
         '''Проверяет, что список статей в административной панели отображает нужные поля.'''
         response = self.client.get(self.admin_url + 'blog/article/')
         self.assertEqual(response.status_code, 200)
+        print(response.content.decode('utf-8'))
         for value in [self.article.title, localize_datetime(self.article.published), localize_datetime(self.article.modified), self.article.public, self.article.author]:
             self.assertContains(response, value)
 
@@ -118,6 +119,10 @@ class BlogAdminTest(TestCase):
 
     def test_article_created_via_admin(self):
         '''Проверяет успешность добавления статьи через административную панель.'''
+        response = self.client.post(self.admin_url + 'blog/article/add/', data={'title': 'Test article 2'})
+        self.assertEqual(response.status_code, 200)
+        response = self.client.post(self.admin_url + 'blog/article/add/', data={'content': generate_random_text(50)})
+        self.assertEqual(response.status_code, 200)
         response = self.client.post(self.admin_url + 'blog/article/add/', data={'title': 'Test article 2', 'content': generate_random_text(50)})
         self.assertEqual(response.status_code, 302)
         self.assertTrue(Article.objects.filter(title='Test article 2').exists())

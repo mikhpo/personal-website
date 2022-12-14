@@ -1,4 +1,5 @@
 from django.test import TestCase
+from django.utils import timezone
 from blog.models import Article, Series, Topic, Category
 
 class BlogSitemapTest(TestCase):
@@ -13,9 +14,10 @@ class BlogSitemapTest(TestCase):
         response = self.client.get(self.sitemap_url)
         self.assertEqual(response.status_code, 200)
         content = str(response.content)
-        modified_date = str(public_article.modified.date())
-        self.assertTrue('public-test-article' in content)
-        self.assertFalse('private-test-article' in content)
+        local_time = timezone.localtime(public_article.modified)
+        modified_date = str(local_time.date())
+        self.assertTrue(public_article.slug in content)
+        self.assertFalse(private_artice.slug in content)
         self.assertTrue(modified_date in content)
         
     def test_series_sitemap(self):

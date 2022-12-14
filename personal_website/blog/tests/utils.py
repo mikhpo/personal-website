@@ -1,6 +1,7 @@
 import random
 import locale
 import datetime
+from django.utils import timezone
 from django.utils.crypto import get_random_string
 
 def generate_random_text(word_count: int):
@@ -13,6 +14,6 @@ def generate_random_text(word_count: int):
 def localize_datetime(date_time: datetime.datetime):
     '''Преобразует дату-время в строку с учетом локализации и временной зоны.'''
     locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
-    timezone = datetime.datetime.now(datetime.timezone.utc).astimezone().tzinfo
-    date_time_displayed = date_time.astimezone(timezone).strftime("%d %B %Y г. %H:%M")
+    local_date_time = timezone.localtime(date_time)
+    date_time_displayed = "{dt.day} {dt:%B} {dt.year} г. {dt.hour}:{dt:%M}".format(dt=local_date_time)
     return date_time_displayed
