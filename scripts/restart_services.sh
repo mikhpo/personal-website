@@ -5,27 +5,10 @@
 
 mode='simple'
 
-# Проверка на наличие опциональных аргументов, переданных скрипту.
-while getopts "hf" option; do
-   case $option in
-        h)
-            help
-            exit
-            ;;
-        f)
-            mode='full'
-            ;;
-        *)
-            echo "Ошибка: некорректный аргумент"
-            exit
-            ;;
-   esac
-done
-
 #############################################
 # Выводит подсказку по бизнес-логике скрипта.
 #############################################
-help() {
+script_help() {
     echo
     echo "Скрипт для пезапуска сервисов сервера: Gunicorn, Nginx и PostgreSQL."
     echo "Опции:"
@@ -86,6 +69,23 @@ function main () {
     restart_gunicorn
     restart_nginx
 }
+
+# Проверка на наличие опциональных аргументов, переданных скрипту.
+while getopts "hf" option; do
+   case $option in
+        h)
+            script_help
+            exit
+            ;;
+        f)
+            mode='full'
+            ;;
+        *)
+            echo "Ошибка: некорректный аргумент"
+            exit
+            ;;
+   esac
+done
 
 # Вызов основного потока скрипта.
 main
