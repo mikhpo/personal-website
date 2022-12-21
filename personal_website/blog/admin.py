@@ -1,6 +1,7 @@
+from django.db import models
 from django.contrib import admin
 from tinymce.widgets import TinyMCE
-from .models import *
+from .models import Article, Comment, Series, Topic, Category
 
 
 @admin.register(Article)
@@ -11,11 +12,11 @@ class ArticleAdmin(admin.ModelAdmin):
     model = Article
     
     list_display = ('title', 'published', 'modified', 'public')
-    list_filter = ('series', 'topic', 'category', 'public')
+    list_filter = ('series', 'topics', 'categories', 'public')
 
     fieldsets = (
         ("Содержание", {'fields': ["title", "description", "content"]}),
-        ("Метаданные", {"fields": ["series", "topic", "category"]}),
+        ("Метаданные", {"fields": ["series", "topics", "categories"]}),
         ("Картинка", {'fields': ["image"]}),
         ("Служебные", {"fields": ["slug", "public", "published"]}),
     )
@@ -23,7 +24,7 @@ class ArticleAdmin(admin.ModelAdmin):
     # Стандартная форма тектового поля заменена на HTML форму TinyMCE.
     formfield_overrides = {
         models.TextField: {'widget': TinyMCE()},
-        }
+    }
 
     # Дату публикации можно изменить только при создании статьи, но не при редактировании.
     readonly_fields=('published',)

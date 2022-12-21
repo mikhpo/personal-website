@@ -1,19 +1,16 @@
 {% include "base.html" %}
 <!-- Шаблон страницы авторизации на сайте -->
-
 <br><br>
 <div class = "container">
   <div class="card shadow-sm p-3 mb-5 bg-white rounded align-items-center justify-content-center">
     <div class="card-body" style="margin: 0 auto; text-align:center">
       <!-- От данного шаблона наследуют шаблоны регистрации нового пользователя и восстановления пароля -->
       {% block content %}
-
       <h4 class="card-title" ALIGN='center'>Вход на сайт</h4>
       <p class="card-text">
         {% if form.errors %}
           <p>Имя пользователя или пароль введены неверно. Попробуйте ещё раз.</p>
         {% endif %}
-
         {% if next %}
           {% if user.is_authenticated %}
             <p>У данной учетной записи нет доступа к данной странице.</p>
@@ -21,7 +18,6 @@
             <p>Войдите для просмотра этой страницы.</p>
           {% endif %}
         {% endif %}
-
         <form method="post" action="{% url 'login' %}" ALIGN='center'>
           {% csrf_token %}
           <table class="center">
@@ -43,7 +39,6 @@
           <a href="{% url 'password_reset' %}">Забыли пароль?</a>
         </div>
       </p>
-
       {% endblock %}
     </div>
   </div>

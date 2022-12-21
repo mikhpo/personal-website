@@ -1,7 +1,37 @@
+import re
+from pytils import translit
 from django.db import models
 from django.urls import reverse
 from django.utils.timezone import now
+from django.utils.text import slugify
 from django.contrib.auth.models import User
+
+def has_cyrillic(text: str):
+    '''
+    Проверяет наличие в тексте кириллических символов.
+    '''
+    return bool(re.search('[а-яА-Я]', text))
+
+def get_slug(text: str):
+    '''
+    Создает слаг из текста.
+    '''
+    if has_cyrillic:
+        return translit.slugify(text)
+    else:
+        return slugify(text)
+
+def get_unique_slug(instance, text):
+    '''
+    Создает уникальный слаг, уникальный для данного класса.
+    '''
+    model = instance.__class__
+    slug = get_slug(text)
+    n = 1
+    while model.objects.filter(slug=slug).exists():
+        n += 1
+        slug = f'{slug}-{n}'
+    return slug
 
 class Category(models.Model):
     '''
@@ -9,7 +39,7 @@ class Category(models.Model):
     '''
     name = models.CharField('Категория', max_length=255, unique=True)
     description = models.CharField("Описание", max_length=255, blank=True)
-    slug = models.SlugField('Слаг', unique=True)
+    slug = models.SlugField('Слаг', blank=True, unique=True)
     image = models.ImageField("Картинка", upload_to='blog/categories/', blank=True)
     public = models.BooleanField("Опубликовано", default=False)
 
@@ -22,6 +52,11 @@ class Category(models.Model):
 
     def get_absolute_url(self):
         return reverse('blog:category', args=[str(self.slug)])
+    
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = get_unique_slug(self, self.name)
+        super().save(*args, **kwargs)
 
 class Topic(models.Model):
     '''
@@ -30,7 +65,7 @@ class Topic(models.Model):
     '''
     name = models.CharField('Тема', max_length=255, unique=True)
     description = models.CharField("Описание", max_length=255, blank=True)
-    slug = models.SlugField('Слаг', unique=True)
+    slug = models.SlugField('Слаг', blank=True, unique=True)
     image = models.ImageField("Картинка", upload_to='blog/topics/', blank=True)
     public = models.BooleanField("Опубликовано", default=False)
 
@@ -44,6 +79,11 @@ class Topic(models.Model):
     def get_absolute_url(self):
         return reverse('blog:topic', args=[str(self.slug)])
 
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = get_unique_slug(self, self.name)
+        super().save(*args, **kwargs)
+
 class Series(models.Model):
     '''
     Модель серии.
@@ -51,7 +91,7 @@ class Series(models.Model):
     '''
     name = models.CharField('Серия', max_length=255, unique=True)
     description = models.CharField("Описание", max_length=255, blank=True)
-    slug = models.SlugField('Слаг', unique=True)
+    slug = models.SlugField('Слаг', blank=True, unique=True)
     image = models.ImageField("Картинка", upload_to='blog/series/', blank=True)
     public = models.BooleanField("Опубликовано", default=False)
 
@@ -65,7 +105,12 @@ class Series(models.Model):
     def get_absolute_url(self):
         return reverse('blog:series', args=[str(self.slug)])
 
-class Article(models.Model):
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = get_unique_slug(self, self.name)
+        super().save(*args, **kwargs)
+
+class  Article(models.Model):
     '''
     Модель статьи.
     Статья может быть частью серии.
@@ -74,12 +119,12 @@ class Article(models.Model):
     title = models.CharField('Заголовок', max_length=255, unique=True)
     description = models.CharField("Описание", max_length=255, blank=True)
     content = models.TextField('Содержание')
-    published = models.DateField('Дата публикации', default=now)
-    modified = models.DateField('Дата последнего изменения', auto_now=True)
-    slug = models.SlugField('Слаг', unique=True)
+    published = models.DateTimeField('Дата публикации', blank=True, null=True, default=now)
+    modified = models.DateTimeField('Дата последнего изменения', auto_now=True)
+    slug = models.SlugField('Слаг', blank=True, unique=True)
     series = models.ManyToManyField(Series, blank=True)
-    topic = models.ManyToManyField(Topic, blank=True)
-    category = models.ManyToManyField(Category, blank=True)
+    topics = models.ManyToManyField(Topic, blank=True)
+    categories = models.ManyToManyField(Category, blank=True)
     image = models.ImageField("Картинка", upload_to='blog/articles/', blank=True)
     public = models.BooleanField("Опубликовано", default=True)
     author = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
@@ -97,6 +142,11 @@ class Article(models.Model):
     @property
     def number_of_comments(self):
         return Comment.objects.filter(article=self).count()
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = get_unique_slug(self, self.title)
+        super().save(*args, **kwargs)
 
 class Comment(models.Model):
     '''
