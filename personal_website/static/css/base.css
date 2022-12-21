@@ -30,6 +30,6 @@ img {
     height: auto;
 }
 
-table td {
+table:not(.center) td {
     border: 1px solid black; 
 }
