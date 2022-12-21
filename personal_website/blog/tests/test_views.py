@@ -93,6 +93,11 @@ class BlogIndexPageTest(TestCase):
         response_articles = response.context['page_obj']
         self.assertQuerysetEqual(target_articles, response_articles)
 
+    def test_blog_index_title(self):
+        '''Проверяет, что в заголовке странице указано, что просматривается блог.'''
+        response = self.client.get(self.blog_index_url)
+        self.assertContains(response, "Михаил Поляков - Блог")
+
 class ArticleDetailPageTest(TestCase):
     '''Тесты детального просмотра статей.'''
 

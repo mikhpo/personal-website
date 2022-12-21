@@ -1,19 +1,18 @@
 {% extends 'registration/login.html' %}
 <!-- Шаблон наследует от шаблона авторизации на сайте -->
-
 {% load crispy_forms_tags %}
-
 {% block content %}
-
-    <form action="" method="POST">
-        {% csrf_token %}
-        {{form|crispy}}
-        <br>
-        <input type="submit" class="btn btn-outline-dark" value="Зарегистрироваться"/>
-        <br><br>
-    </form>
-
-
-    Если вы уже зарегистрированы, то можете <a href="{% url 'login' %}" target="blank"><strong>войти</strong></a>.
-
+    {% if user.is_authenticated %}
+        Вы уже зарегистрированы.
+    {% else %}
+        <form action="" method="POST">
+            {% csrf_token %}
+            {{form|crispy}}
+            <br>
+            <input type="submit" class="btn btn-outline-dark" value="Зарегистрироваться"/>
+            <br>
+            <br>
+        </form>
+        Если вы уже зарегистрированы, то можете <a href="{% url 'login' %}" target="blank"><strong>войти</strong></a>.
+    {% endif %}
 {% endblock %}

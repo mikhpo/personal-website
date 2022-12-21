@@ -7,8 +7,8 @@ from main.views import main
 class MainPageTest(TestCase):
     '''Тесты загрузки главной страницы сайта.'''
 
-    url = '/main/'
-    reverse_url = 'main:main'
+    main_url = '/main/'
+    reverse_main_url = 'main:main'
     template = 'main/main.html'
     base_template = 'base.html'
 
@@ -28,18 +28,18 @@ class MainPageTest(TestCase):
     def test_main_page_redirect_url(self):
         '''Тестирование редиректа на главную страницу.'''
         response = self.client.get('/')
-        self.assertRedirects(response, self.url, status_code=301, target_status_code=200)
+        self.assertRedirects(response, self.main_url, status_code=301, target_status_code=200)
 
     def test_main_page_url(self):
         '''Тестирование ссылки на главную страницу.'''
-        resolver = resolve(self.url)
-        response = self.client.get(self.url)
+        resolver = resolve(self.main_url)
+        response = self.client.get(self.main_url)
         self.assertEqual(resolver.func, main)
         self.assertEqual(response.status_code, 200)
 
     def test_main_page_reverse_url(self):
         '''Тестирование именной ссылки на главную страницу.'''
-        url = reverse(self.reverse_url)
+        url = reverse(self.reverse_main_url)
         resolver = resolve(url)
         response = self.client.get(url)
         self.assertEqual(resolver.func, main)
@@ -47,21 +47,34 @@ class MainPageTest(TestCase):
     
     def test_main_page_template(self):
         '''Тестирование загрузки правильного шаблона.'''
-        response = self.client.get(self.url)
+        response = self.client.get(self.main_url)
         self.assertTemplateUsed(response, self.template)
         self.assertTemplateUsed(response, self.base_template)
 
+    def test_main_page_title(self):
+        '''Проверяет, что в заголовке странице указано, что просматривается блог.'''
+        response = self.client.get(self.main_url)
+        self.assertContains(response, "Михаил Поляков")
+
     def test_main_page_categories_filter(self):
         '''Проверка на корректность фильтрации категорий для главной страницы.'''
-        response = self.client.get(self.url)
+        response = self.client.get(self.main_url)
         target_categories = Category.objects.filter(public=True).exclude(image='')
         self.assertQuerysetEqual(target_categories, response.context['categories'])
 
     def test_main_page_series_filter(self):
         '''Проверка на корректность фильтрации серий для главной страницы.'''
-        response = self.client.get(self.url)
+        response = self.client.get(self.main_url)
         target_series = Series.objects.filter(public=True).exclude(image='')
         self.assertQuerysetEqual(target_series, response.context['series'])
+
+    def test_favicon_ico(self):
+        '''Проверяет доступность фавикона.'''
+        # TODO
+
+    def test_robots_txt(self):
+        '''Тестирует доступность файла с исключениями для роботов.'''
+        # TODO
 
 class SitemapTest(TestCase):
     '''Тестирование карты сайта.'''

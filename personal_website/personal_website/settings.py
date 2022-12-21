@@ -103,7 +103,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static') # абсолютный путь �
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, '..', 'node_modules'),
 ) # npm-зависимости в корневом каталоге проекта
-WHITENOISE_ROOT = STATIC_ROOT # путь до папки ПО WhiteNoise, который радикально упрощает использование статических файлов в Django-проекте. 
+WHITENOISE_ROOT = STATIC_ROOT
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage' # настройка, необходимая для WhiteNoise
 
 # Медиа файлы - это загружаемые файлы (фото, видео, документы).

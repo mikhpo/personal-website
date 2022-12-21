@@ -1,3 +1,2 @@
 User-Agent: *
-Disallow: /scripts/
 Sitemap: https://mikhailpolyakov.com/sitemap.xml

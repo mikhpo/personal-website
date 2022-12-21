@@ -10,15 +10,17 @@ logger = logging.getLogger('personal_website')
 def post_login(sender, request, user: User, **kwargs):
     if request:
         ip = request.META.get('HTTP_X_REAL_IP')
-        username = user.username
-        logger.info(f'Пользователь {username} авторизовался с IP-адреса {ip}')
+        if user: 
+            username = user.username
+            logger.info(f'Пользователь {username} авторизовался с IP-адреса {ip}')
 
 @receiver(user_logged_out)
 def post_logout(sender, request, user: User, **kwargs):
     if request:
         ip = request.META.get('HTTP_X_REAL_IP')
-        username = user.username
-        logger.info(f'Пользователь {username} c IP-адресом {ip} вышел')
+        if user: 
+            username = user.username
+            logger.info(f'Пользователь {username} c IP-адресом {ip} вышел')
 
 @receiver(user_login_failed)
 def post_login_fail(sender, credentials, request, **kwargs):

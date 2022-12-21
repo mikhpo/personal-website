@@ -85,7 +85,6 @@ class BlogAdminTest(TestCase):
         '''Проверяет, что список статей в административной панели отображает нужные поля.'''
         response = self.client.get(self.admin_url + 'blog/article/')
         self.assertEqual(response.status_code, 200)
-        print(response.content.decode('utf-8'))
         for value in [self.article.title, localize_datetime(self.article.published), localize_datetime(self.article.modified), self.article.public, self.article.author]:
             self.assertContains(response, value)
 

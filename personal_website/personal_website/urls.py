@@ -1,8 +1,8 @@
 '''Стандартный модуль, в котором зарегистрированы используемые в проекте веб-адреса.'''
 
 from django.contrib import admin
-from django.conf import settings
 from django.conf.urls.static import static
+from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.contrib.sitemaps.views import sitemap
 from django.urls import path, include
 from django.views.generic import RedirectView
@@ -27,4 +27,5 @@ urlpatterns = [
     path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.sitemap')
 ] 
 
-urlpatterns = urlpatterns + static(MEDIA_URL, document_root=MEDIA_ROOT)
+urlpatterns += staticfiles_urlpatterns()
+urlpatterns += static(MEDIA_URL, document_root=MEDIA_ROOT)
