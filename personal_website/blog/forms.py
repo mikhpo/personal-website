@@ -1,3 +1,4 @@
+from tinymce.widgets import TinyMCE
 from django import forms
 from .models import Comment
 
@@ -5,7 +6,7 @@ class NewCommentForm(forms.ModelForm):
     '''
     Форма создания нового комментария к статье.
     '''
-    content = forms.CharField(label = "", widget = forms.Textarea( 
+    content = forms.CharField(label = "", widget = TinyMCE( 
         attrs ={ 
             'class':'form-control', 
             'placeholder':'Оставить комментарий', 
