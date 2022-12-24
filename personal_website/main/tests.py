@@ -68,14 +68,6 @@ class MainPageTest(TestCase):
         target_series = Series.objects.filter(public=True).exclude(image='')
         self.assertQuerysetEqual(target_series, response.context['series'])
 
-    def test_favicon_ico(self):
-        '''Проверяет доступность фавикона.'''
-        # TODO
-
-    def test_robots_txt(self):
-        '''Тестирует доступность файла с исключениями для роботов.'''
-        # TODO
-
 class SitemapTest(TestCase):
     '''Тестирование карты сайта.'''
 

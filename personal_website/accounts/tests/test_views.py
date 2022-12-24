@@ -1,5 +1,7 @@
+from django.core import mail
 from django.test import TestCase
 from django.urls import reverse, resolve
+from django.utils.crypto import get_random_string
 from django.contrib.auth.models import User
 from accounts.views import signup
 
@@ -65,7 +67,7 @@ class UserManagementRoutesTest(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        User.objects.create_user(username='testuser', password='TestPassword123')
+        User.objects.create_user(username='testuser', password='TestPassword123', email='test@example.com')
 
     def test_login_url(self):
         '''Тестирование ссылки для входа на сайт.'''
@@ -107,3 +109,47 @@ class UserManagementRoutesTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertNotContains(response, 'Зарегистрироваться')
         self.assertContains(response, 'Вы уже зарегистрированы.')
+
+    def test_password_reset(self):
+        '''Тестирование ссылки для сброса пароля.'''
+
+        # Проверить успешность логина на сайте со старым паролем, после чего выйти с сайта.
+        self.assertTrue(self.client.login(username='testuser', password='TestPassword123'))
+        self.client.logout()
+
+        # Запросить форму для сброса пароля и ввести адрес электронной почты.
+        password_reset_form_url = '/accounts/password_reset/'
+        response = self.client.get(password_reset_form_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'registration/password_reset_form.html')
+        self.assertTemplateUsed(response, 'registration/login.html')
+        self.assertTemplateUsed(response, 'base.html')
+        self.assertContains(response, 'Адрес электронной почты')
+        self.assertContains(response, 'Сбросить')
+        response = self.client.post(password_reset_form_url, data={'email': 'test@example.com'})
+
+        # Проверить результат: переадресация на следующую страницу, генерация токена и отправка письма.
+        self.assertRedirects(response, '/accounts/password_reset/done/', status_code=302, target_status_code=200)
+        token = response.context[0]['token']
+        uid = response.context[0]['uid']
+        reset_url = f'/accounts/reset/{uid}/{token}/'
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].subject, 'Сброс пароля на example.com')
+        self.assertIn(reset_url, mail.outbox[0].body)
+
+        # Перейти по ссылке из письма, должна открыться форма для создания и подтверждения нового пароля.
+        response = self.client.get(reset_url)
+        set_password_url = f'/accounts/reset/{uid}/set-password/'
+        self.assertRedirects(response, set_password_url, status_code=302, target_status_code=200)
+
+        # Ввести в форму новый пароль и подтверждение нового пароля, после чего проверить результат: должна быть переадресация на следующую страницу. 
+        new_password = get_random_string(10)
+        response = self.client.post(set_password_url, data={'new_password1': new_password, 'new_password2': new_password})
+        self.assertRedirects(response, '/accounts/reset/done/', status_code=302, target_status_code=200)
+
+        # Проверить, что со старым паролем авторизоваться не удается, но с новым паролем авторизоваться удается.
+        self.assertFalse(self.client.login(username='testuser', password='TestPassword123'))
+        self.assertTrue(self.client.login(username='testuser', password=new_password))
+        
+
+

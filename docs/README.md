@@ -197,8 +197,10 @@ Poetry сконфигурирован таким образом, чтобы ви
 
 Проект использует встроенный модуль для тестирования Django. Для запуска тестов можно воспользоваться командой:
 
+    cd personal_website
     python personal_website/manage.py test
 
 Также для выполнения всех тестов можно запустить скрипт `run_tests.sh`:
 
     bash ./scripts/run_tests.sh
+

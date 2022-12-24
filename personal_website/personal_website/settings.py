@@ -6,11 +6,7 @@ import logging
 from pathlib import Path
 import environ
 
-env = environ.Env(
-    # Значение режима запуска сервера по умолчанию.
-    # В целях безопасности должно быть False.
-    DEBUG = (bool, False)
-)
+env = environ.Env(DEBUG = (bool, False))
 
 # Определяется абсолютный путь до текущих директорий для того, чтобы далее в проекте везде использовались относительные пути.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -100,10 +96,8 @@ USE_TZ = True
 # Статические файлы - это фавиконы, CSS, модули JavaScript, библиотеки Node. 
 STATIC_URL = '/static/' # веб-адрес, по которому будут доступны статические файлы
 STATIC_ROOT = os.path.join(BASE_DIR, 'static') # абсолютный путь до папки, в которой собраны статические файлы.
-STATICFILES_DIRS = (
-    os.path.join(BASE_DIR, '..', 'node_modules'),
-) # npm-зависимости в корневом каталоге проекта
-WHITENOISE_ROOT = STATIC_ROOT
+STATICFILES_DIRS = [os.path.join(BASE_DIR, '..', 'node_modules')] # npm-зависимости в корневом каталоге проекта
+WHITENOISE_ROOT = STATIC_ROOT # на проде статические файлы раздаются через WhiteNoise
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage' # настройка, необходимая для WhiteNoise
 
 # Медиа файлы - это загружаемые файлы (фото, видео, документы).

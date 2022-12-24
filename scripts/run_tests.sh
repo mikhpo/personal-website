@@ -6,4 +6,5 @@
 repository_root="$(dirname "$(dirname "$(readlink -f "$0")")")"
 website_root="$repository_root/personal_website"
 python=$repository_root/.venv/bin/python
-$python $website_root/manage.py test main
+cd $website_root
+$python manage.py test
