@@ -4,7 +4,7 @@
   "description": "JavaScript dependencies for my personal website",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node --test tests/"
   },
   "author": "Mikhail Polyakov",
   "license": "ISC",
