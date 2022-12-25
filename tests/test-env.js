@@ -7,7 +7,6 @@ const assert = require('node:assert').strict;
  */
 const modules = [
     'bootstrap',
-    'mongodb'
 ];
 
 /**
