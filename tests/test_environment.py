@@ -16,6 +16,10 @@ class SecretsTest(unittest.TestCase):
         'PG_PORT',
         'EMAIL_HOST_USER',
         'EMAIL_HOST_PASSWORD',
+        'MINIO_ENDPOINT',
+        'MINIO_ACCESS_KEY',
+        'MINIO_SECRET_KEY',
+        'MINIO_USE_HTTPS'
     )
 
     def test_dotenv_path(self):
