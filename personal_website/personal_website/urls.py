@@ -7,7 +7,6 @@ from django.contrib.sitemaps.views import sitemap
 from django.urls import path, include
 from django.views.generic import RedirectView
 from blog.sitemaps import ArticleSitemap, CategorySitemap, SeriesSitemap, TopicSitemap
-from personal_website.settings import MEDIA_URL, MEDIA_ROOT
 
 sitemaps = {
     'articles': ArticleSitemap,
@@ -28,4 +27,3 @@ urlpatterns = [
 ] 
 
 urlpatterns += staticfiles_urlpatterns()
-urlpatterns += static(MEDIA_URL, document_root=MEDIA_ROOT)

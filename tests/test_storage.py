@@ -24,6 +24,7 @@ class MinioTest(unittest.TestCase):
             secret_key=os.environ['MINIO_SECRET_KEY'], 
             secure=False
         )
+        cls.bucket = os.environ['MINIO_MEDIA_FILES_BUCKET']
 
     def test_minio_connection(self):
         '''Проверить, что подключение к Minio создается.'''
@@ -31,7 +32,7 @@ class MinioTest(unittest.TestCase):
     
     def test_project_bucket_exists(self):
         '''Проверить, что бакет проекта существует.'''
-        self.assertTrue(self.client.bucket_exists('personal-website'))
+        self.assertTrue(self.client.bucket_exists(self.bucket))
 
 if __name__ == '__main__':
     unittest.main()

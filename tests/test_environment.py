@@ -19,6 +19,7 @@ class SecretsTest(unittest.TestCase):
         'MINIO_ENDPOINT',
         'MINIO_ACCESS_KEY',
         'MINIO_SECRET_KEY',
+        'MINIO_MEDIA_FILES_BUCKET',
         'MINIO_USE_HTTPS'
     )
 
