@@ -2,7 +2,7 @@ import os
 import unittest
 from pathlib import Path
 
-class StrageTest(unittest.TestCase):
+class StorageTest(unittest.TestCase):
     '''Тестирование доступности системы хранения.'''
 
     def test_storage_dir_exists(self):
