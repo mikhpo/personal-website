@@ -15,7 +15,6 @@ django-tinymce = "^3.5.0"
 django-environ = "^0.9.0"
 python-dotenv = "^0.21.0"
 pytils = "^0.4.1"
-django-minio-backend = "^3.3.2"
 pillow = "^9.3.0"
 
 [tool.poetry.group.dev.dependencies]

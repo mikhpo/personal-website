@@ -16,8 +16,7 @@ class PackagesTest(unittest.TestCase):
         'django-tinymce',
         'django-environ',
         'python-dotenv',
-        'pytils',
-        'django-minio-backend',
+        'pytils'
     )
 
     def test_python_venv_present(self):

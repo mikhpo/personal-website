@@ -41,7 +41,6 @@ INSTALLED_APPS = [
     'django.contrib.sites',
     'django.contrib.sitemaps',
     'whitenoise.runserver_nostatic',
-    #'django_minio_backend',
     'crispy_forms',
     'tinymce',
     'accounts.apps.AccountsConfig',
@@ -103,7 +102,7 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage' # нас
 
 # Медиа файлы - это загружаемые файлы (фото, видео, документы).
 MEDIA_URL = '/media/' # Относительный url до медиа-файлов.
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media') # абсолютный путь до папки с медиа-файлами.
+MEDIA_ROOT = os.path.join(Path(BASE_DIR).parent.parent.parent, 'Storages', 'personal_website') # абсолютный путь до папки с медиа-файлами.
 
 LOGIN_REDIRECT_URL = '/' # адрес, на который будет перенаправлен пользователь после авторизации.
 LOGIN_URL = '/accounts/login/' # Веб-адрес формы авторизации на сайте.
@@ -302,13 +301,3 @@ LOGGING = {
         },
     }
 }
-
-
-# Настройки Minio - системы хранения S3. Minio используется в проекте для хранения загрузок.
-#DEFAULT_FILE_STORAGE = 'django_minio_backend.models.MinioBackend'
-#MINIO_ENDPOINT = env('MINIO_ENDPOINT')
-#MINIO_ACCESS_KEY = env('MINIO_ACCESS_KEY')
-#MINIO_SECRET_KEY = env('MINIO_SECRET_KEY')
-#MINIO_USE_HTTPS = env.bool('MINIO_USE_HTTPS')
-#MINIO_MEDIA_FILES_BUCKET = env('MINIO_MEDIA_FILES_BUCKET')
-#MINIO_PUBLIC_BUCKETS = [MINIO_MEDIA_FILES_BUCKET]
