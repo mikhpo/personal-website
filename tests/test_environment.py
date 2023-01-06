@@ -15,7 +15,8 @@ class SecretsTest(unittest.TestCase):
         'PG_HOST',
         'PG_PORT',
         'EMAIL_HOST_USER',
-        'EMAIL_HOST_PASSWORD'
+        'EMAIL_HOST_PASSWORD',
+        'STORAGE_DRIVE_MOUNT'
     )
 
     def test_dotenv_path(self):

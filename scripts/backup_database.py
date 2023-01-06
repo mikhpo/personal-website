@@ -12,6 +12,7 @@ import logging
 import logging.handlers
 from pathlib import Path
 from datetime import datetime
+from distutils.util import strtobool
 from dotenv import load_dotenv
 
 def set_logger():
@@ -35,7 +36,7 @@ def set_logger():
     timed_rotating_handler.setFormatter(formatter)
     logger.addHandler(timed_rotating_handler)
     return logger
-
+  
 def get_dump_size(dump_path: str) -> str:
     '''
     Определение размера папки с автоматическим определением единцы измерения.
@@ -68,6 +69,34 @@ def remove_existing_dump(dump_path: str) -> None:
         else:
             os.remove(dump_path)
 
+def get_base_dir(mount_path: str, debug: bool):
+    '''
+    Определение базовой директории хранения бэкапов. Зависит от следующих факторов: 
+    - подключен ли внешний жесткий диск, 
+    - под какой точкой монтирования, 
+    - какой режим запуска приложения.
+    '''
+    # Проверить, что внешний диск для хранения бэкапов смонтирован.
+    if os.path.ismount(mount_path) and not debug:
+        # Если диск смонтирован, то бэкап будет записан на него.
+        base_dir = mount_path
+    else:
+        # Иначе бэкап будет записан в домашнюю папку на системном диске.
+        base_dir = str(Path.home())
+    return base_dir
+
+def get_save_path(base_dir: str, pg_name: str):
+    '''
+    Построение полного пути относительно базовой директории хранения бэкапов.
+    '''
+    backup_dir = os.path.join(base_dir, 'Backups')
+    backup_path = os.path.join(backup_dir, pg_name, 'database')
+    Path(backup_path).mkdir(parents=True, exist_ok=True)
+    today = datetime.today().date()
+    dump_name = f'{pg_name}_{today}.dump'
+    dump_path = os.path.join(backup_path, dump_name)
+    return dump_path
+
 def main():
     '''
     Основное тело скрипта.
@@ -82,18 +111,15 @@ def main():
     pg_name = os.environ['PG_NAME']
     pg_user = os.environ['PG_USER']
     pg_password = os.environ['PG_PASSWORD']
+    mount_path = os.environ['STORAGE_DRIVE_MOUNT']
+    debug = bool(strtobool(os.environ['DEBUG']))
 
     # Определение системной кодировки.
     encoding = locale.getlocale()[1]
 
-    # Определение полного адреса сохранения дампа.
-    home_dir = str(Path.home())
-    backup_dir = os.path.join(home_dir, 'Backups')
-    backup_path = os.path.join(backup_dir, pg_name)
-    Path(backup_path).mkdir(parents=True, exist_ok=True)
-    today = datetime.today().date()
-    dump_name = f'{pg_name}_{today}.dump'
-    dump_path = os.path.join(backup_path, dump_name)
+    # Определение пути сохранения дампа.
+    base_dir = get_base_dir(mount_path, debug)
+    dump_path = get_save_path(base_dir, pg_name)
     logger.info(f'Дамп базы данных будет сохранен по адресу {dump_path}')
 
     # Если файл дампа сегодня уже был создан, то необходимо его удалить.
@@ -141,3 +167,4 @@ if __name__ == '__main__':
         main()
     except BaseException as e:
         logger.exception(e)
+        
