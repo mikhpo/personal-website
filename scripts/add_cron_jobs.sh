@@ -20,6 +20,7 @@ echo "Путь до интерпретатора Python: ${python}"
 # Массив задач на добавление.
 cron_jobs=(
     "0 23 * * * $python $project_root/scripts/backup_database.py"
+    "1 23 * * * $python $project_root/scripts/backup_storage.py"
 )
 
 # Получение содержимого текущего crontab файла.

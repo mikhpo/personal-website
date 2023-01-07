@@ -107,8 +107,8 @@ Poetry сконфигурирован таким образом, чтобы ви
                 urls.py
                 asgi.py
                 wsgi.py
-            app1
-            app2
+            app1/
+            app2/
 
 ## Административные команды
 
@@ -181,6 +181,7 @@ Poetry сконфигурирован таким образом, чтобы ви
 
 * `add_cron_jobs.sh` - добавить задачи в cron.
 * `backup_database.py` - создать бэкап базы данных.
+* `backup_storage.py` - создать бэкап загруженных файлов.
 * `install_dependencies.sh` - установка зависимостей внутри проекта.
 * `make_link.sh` - создать символическую ссылку на node_modules.
 * `restart_services.sh` - перезапустить Gunicorn, Nginx и PostgreSQL.

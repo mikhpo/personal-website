@@ -31,7 +31,11 @@ def set_logger():
     logger.setLevel(logging.INFO)
     console_handler = logging.StreamHandler()
     logger.addHandler(console_handler)
-    formatter = logging.Formatter(fmt = '[{asctime}] [{levelname}] [{filename} -> {funcName} -> {lineno}] {message}', datefmt = '%d.%m.%Y %H:%M:%S', style = '{')
+    formatter = logging.Formatter(
+        fmt='[{asctime}] [{levelname}] [{filename} -> {funcName} -> {lineno}] {message}', 
+        datefmt='%d.%m.%Y %H:%M:%S', 
+        style='{'
+    )
     timed_rotating_handler = logging.handlers.TimedRotatingFileHandler(log_path, when='midnight', backupCount=7)
     timed_rotating_handler.setFormatter(formatter)
     logger.addHandler(timed_rotating_handler)
@@ -39,7 +43,7 @@ def set_logger():
   
 def get_dump_size(dump_path: str) -> str:
     '''
-    Определение размера папки с автоматическим определением единцы измерения.
+    Определение размера дампа с автоматическим определением единцы измерения.
     '''
     units = ("Б", "КБ", "МБ", "ГБ", "ТБ")
 
@@ -81,8 +85,8 @@ def get_base_dir(mount_path: str, debug: bool):
         # Если диск смонтирован, то бэкап будет записан на него.
         base_dir = mount_path
     else:
-        # Иначе бэкап будет записан в домашнюю папку на системном диске.
-        base_dir = str(Path.home())
+        # Иначе бэкап будет записан в папку на системном диске.
+        base_dir = Path(__file__).resolve().parent.parent.parent.parent
     return base_dir
 
 def get_save_path(base_dir: str, pg_name: str):
@@ -96,6 +100,34 @@ def get_save_path(base_dir: str, pg_name: str):
     dump_name = f'{pg_name}_{today}.dump'
     dump_path = os.path.join(backup_path, dump_name)
     return dump_path
+
+def compose_command(pg_host: str, pg_port: str, pg_name: str, pg_user: str, dump_path: str):
+    '''
+    Составить команду pg_dump, подставив переменные окружения.
+    '''
+    pg_dump = os.popen(f'which pg_dump').read().strip()
+    dump_command = f'{pg_dump} ' \
+        f'"host={pg_host} port={pg_port} dbname={pg_name} user={pg_user}" ' \
+            '--no-privileges --no-subscriptions --no-publications -Fc -f ' \
+                f'{dump_path}'
+    return dump_command
+
+def create_dump(dump_command: str, pg_password: str):
+    '''
+    Запустить утилиту pg_dump для создания бэкапа базы данных.
+    Возвращает кортеж из стандартного вывода и стандартной ошибки.
+    '''    
+    # Пароль от базы данных PostgreSQL передается в качестве переменной окружения.
+    process = subprocess.Popen(
+        args = shlex.split(dump_command),
+        stdout = subprocess.PIPE,
+        stderr = subprocess.PIPE,
+        env = {'PGPASSWORD': pg_password}
+    )
+    
+    # Ожидаем результата выполнения bash-команды. 
+    stdout, stderr = process.communicate()
+    return stdout, stderr
 
 def main():
     '''
@@ -126,23 +158,11 @@ def main():
     remove_existing_dump(dump_path)
 
     # Вызовем bash скрипт для создания дампа базы данных при помощи утилиты pg_dump. Аргументы для скрипта считываются из переменных окружения.
-    pg_dump = os.popen(f'which pg_dump').read().strip()
-    bash_script = f'{pg_dump} ' \
-        f'"host={pg_host} port={pg_port} dbname={pg_name} user={pg_user}" ' \
-            '--no-privileges --no-subscriptions --no-publications -Fc -f ' \
-                f'{dump_path}'
-    logger.info(f"Выполняю команду: {bash_script}")
-    
-    # Пароль от базы данных PostgreSQL передается в качестве переменной окружения.
-    process = subprocess.Popen(
-        args = shlex.split(bash_script),
-        stdout = subprocess.PIPE,
-        stderr = subprocess.PIPE,
-        env = {'PGPASSWORD': pg_password}
-    )
-    
-    # Ожидаем результата выполнения bash-команды. 
-    stdout, stderr = process.communicate()
+    dump_command = compose_command(pg_host, pg_port, pg_name, pg_user, dump_path)
+    logger.info(f"Выполняю команду: {dump_command}")
+
+    # Выполнить команду pg_dump.
+    stdout, stderr = create_dump(dump_command, pg_password)
 
     # Стандартный вывод и стандартная ошибка являются байтами, 
     # которые необходимо преобразовать в строку для лучшего форматирования.
@@ -167,4 +187,3 @@ if __name__ == '__main__':
         main()
     except BaseException as e:
         logger.exception(e)
-        
