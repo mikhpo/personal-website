@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}
+    <title>{{ album.title }}</title>
+{% endblock title %}
+{% block content %}
+    <div class="container">
+        {% if photos %}
+            {% include "gallery/photos.html" %}
+        {% endif %}
+        {% if album.tags %}
+            {% with album.tags.all as tags %}
+                {% include "gallery/tags.html" %}
+            {% endwith %}
+        {% endif %}
+    </div>
+{% endblock content %}

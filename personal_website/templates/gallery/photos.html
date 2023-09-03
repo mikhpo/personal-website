@@ -1,0 +1,17 @@
+<!-- Список фотографий в представлении карточек Bootstrap. -->
+<h4>
+    <p align="center">Фотографии</p>
+</h4>
+<div class="row row-cols-1 row-cols-md-3 g-4 justify-content-center">
+    {% for photo in photos %}
+        <div class="col">
+            <a href="{{ photo.get_absolute_url }}">
+                <div class="card shadow p-2 mb-5 bg-white rounded text-center">
+                    <img class="card-img"
+                         src="{{ photo.image_preview.url }}"
+                         alt="{{ photo.name }}">
+                </div>
+            </a>
+        </div>
+    {% endfor %}
+</div>

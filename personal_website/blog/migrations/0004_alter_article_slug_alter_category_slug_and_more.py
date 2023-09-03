@@ -4,30 +4,29 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('blog', '0003_alter_article_modified_alter_article_published'),
+        ("blog", "0003_alter_article_modified_alter_article_published"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='article',
-            name='slug',
-            field=models.SlugField(blank=True, unique=True, verbose_name='Слаг'),
+            model_name="article",
+            name="slug",
+            field=models.SlugField(blank=True, unique=True, verbose_name="Слаг"),
         ),
         migrations.AlterField(
-            model_name='category',
-            name='slug',
-            field=models.SlugField(blank=True, unique=True, verbose_name='Слаг'),
+            model_name="category",
+            name="slug",
+            field=models.SlugField(blank=True, unique=True, verbose_name="Слаг"),
         ),
         migrations.AlterField(
-            model_name='series',
-            name='slug',
-            field=models.SlugField(blank=True, unique=True, verbose_name='Слаг'),
+            model_name="series",
+            name="slug",
+            field=models.SlugField(blank=True, unique=True, verbose_name="Слаг"),
         ),
         migrations.AlterField(
-            model_name='topic',
-            name='slug',
-            field=models.SlugField(blank=True, unique=True, verbose_name='Слаг'),
+            model_name="topic",
+            name="slug",
+            field=models.SlugField(blank=True, unique=True, verbose_name="Слаг"),
         ),
     ]

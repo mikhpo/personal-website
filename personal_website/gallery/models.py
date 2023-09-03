@@ -1,0 +1,298 @@
+import os
+from datetime import datetime
+from pathlib import Path
+
+from django.conf import settings
+from django.db import models
+from django.urls import reverse
+from django.utils.functional import cached_property
+from imagekit.models import ImageSpecField
+from imagekit.processors import ResizeToFit
+from PIL import Image as pImage
+from PIL.ExifTags import TAGS
+
+from personal_website.utils import get_unique_slug
+
+thumbnail_size: int = settings.GALLERY_THUMBNAIL_SIZE
+preview_size: int = settings.GALLERY_PREVIEW_SIZE
+resize_quality: int = settings.GALLERY_RESIZE_QUALITY
+
+
+class Visibility(models.TextChoices):
+    PUBLIC = "Публичная"
+    PRIVATE = "Приватная"
+
+
+class Tag(models.Model):
+    name = models.CharField(
+        verbose_name="Наименование", max_length=255, help_text="Наименование тэга"
+    )
+    slug = models.SlugField(
+        verbose_name="Слаг", unique=True, blank=True, help_text="Слаг тэга"
+    )
+    description = models.TextField(
+        verbose_name="Описание", blank=True, help_text="Описание тэга"
+    )
+
+    class Meta:
+        verbose_name = "Тэг"
+        verbose_name_plural = "Тэги"
+        ordering = ["slug"]
+
+    def __str__(self):
+        return self.name
+
+    def get_absolute_url(self):
+        return reverse("gallery:tag-detail", kwargs={"slug": self.slug})
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = get_unique_slug(self, self.name)
+        super().save(*args, **kwargs)
+
+
+class Album(models.Model):
+    """
+    Модель альбома с фотографиями.
+    """
+
+    name = models.CharField(
+        verbose_name="Наименование", max_length=255, help_text="Наименование альбома"
+    )
+    description = models.TextField(
+        verbose_name="Описание", blank=True, help_text="Описание альбома"
+    )
+    slug = models.SlugField(
+        verbose_name="Слаг", blank=True, unique=True, help_text="Слаг альбома"
+    )
+    created = models.DateTimeField(
+        verbose_name="Создан",
+        auto_now_add=True,
+        help_text="Дата и время создания альбома",
+    )
+    updated = models.DateTimeField(
+        verbose_name="Обновлен",
+        auto_now=True,
+        help_text="Дата и время последнего обновления альбома",
+    )
+    public = models.BooleanField(
+        verbose_name="Публичный", default=True, help_text="Альбом публичный"
+    )
+    cover = models.OneToOneField(
+        "Photo",
+        on_delete=models.SET_NULL,
+        related_name="+",
+        verbose_name="Обложка",
+        null=True,
+        blank=True,
+        help_text="Обложка альбома",
+    )
+    tags = models.ManyToManyField(
+        Tag,
+        verbose_name="Тэги",
+        blank=True,
+        related_name="tag_albums",
+        help_text="Тэги альбома",
+    )
+
+    class Meta:
+        verbose_name = "Альбом"
+        verbose_name_plural = "Альбомы"
+        ordering = ["-created"]
+
+    def __str__(self):
+        return self.name
+
+    def get_absolute_url(self):
+        return reverse("gallery:album-detail", kwargs={"slug": self.slug})
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = get_unique_slug(self, self.name)
+        super().save(*args, **kwargs)
+
+
+class Photo(models.Model):
+    """
+    Модель фотографии.
+    """
+
+    image = models.ImageField(
+        verbose_name="Изображение", upload_to="gallery/photos/", max_length=255
+    )
+    name = models.CharField(
+        verbose_name="Наименование",
+        blank=True,
+        max_length=255,
+        help_text="Наименование фотографии",
+    )
+    description = models.TextField(
+        verbose_name="Описание", blank=True, help_text="Описание фотографии"
+    )
+    slug = models.SlugField(
+        verbose_name="Слаг", blank=True, unique=True, help_text="Слаг фотографии"
+    )
+    uploaded = models.DateTimeField(
+        verbose_name="Загружена",
+        auto_now_add=True,
+        help_text="Дата и время загрузки фотографии",
+    )
+    modified = models.DateTimeField(
+        verbose_name="Изменена",
+        auto_now=True,
+        help_text="Дата и время последнего изменения фотографии",
+    )
+    public = models.BooleanField(
+        verbose_name="Публичная", default=True, help_text="Фотография публичная"
+    )
+    album = models.ForeignKey(
+        Album,
+        verbose_name="Альбом",
+        on_delete=models.CASCADE,
+        help_text="Альбом, в котором размещена фотография",
+    )
+    tags = models.ManyToManyField(
+        Tag,
+        verbose_name="Тэги",
+        blank=True,
+        related_name="tag_photos",
+        help_text="Тэги фотографии",
+    )
+    image_thumbnail = ImageSpecField(
+        source="image",
+        processors=[ResizeToFit(height=thumbnail_size, width=thumbnail_size)],
+        format="JPEG",
+        options={"quality": resize_quality},
+    )
+    image_preview = ImageSpecField(
+        source="image",
+        processors=[ResizeToFit(width=preview_size, height=preview_size)],
+        format="JPEG",
+        options={"quality": resize_quality},
+    )
+
+    class Meta:
+        verbose_name = "Фотография"
+        verbose_name_plural = "Фотографии"
+        ordering = ["pk"]
+
+    def __str__(self):
+        return self.name
+
+    def get_absolute_url(self):
+        return reverse("gallery:photo-detail", kwargs={"slug": self.slug})
+
+    @cached_property
+    def exif(self) -> dict:
+        """
+        Получить данные EXIF при помощи библиотеки PIL.
+        """
+        exif_data = {}
+        self.image.open()
+        with pImage.open(self.image) as img:
+            if hasattr(img, "_getexif"):
+                info = img._getexif()
+                if not info:
+                    return {}
+                for tag, value in info.items():
+                    decoded = TAGS.get(tag, tag)
+                    exif_data[decoded] = value
+            img.close()
+        return exif_data
+
+    @cached_property
+    def camera_manufacturer(self) -> str:
+        """
+        Производитель камеры.
+        """
+        return self.exif.get("Make", "")
+
+    @cached_property
+    def camera_model(self) -> str:
+        """
+        Модель камеры.
+        """
+        manufacturer = self.camera_manufacturer
+        model = self.exif.get("Model", "")
+        if manufacturer in model:
+            model = model.replace(manufacturer, "")
+            model = model.strip()
+            return model
+
+    @cached_property
+    def camera(self) -> str:
+        """
+        Название камеры = производитель + модель.
+        """
+        return f"{self.camera_manufacturer} {self.camera_model}"
+
+    @cached_property
+    def lens_model(self) -> str:
+        """
+        Модель объектива.
+        """
+        return self.exif.get("LensModel", "")
+
+    @cached_property
+    def aperture(self) -> int | None:
+        """
+        Диафрагменное число.
+        """
+        aperture = self.exif.get("FNumber", None)
+        if aperture:
+            return int(aperture)
+
+    @cached_property
+    def exposure(self) -> str:
+        """
+        Выдержка.
+        """
+        if "ExposureTime" in self.exif:
+            exposure_time: float = self.exif["ExposureTime"]
+            if exposure_time <= 1:
+                numenator = exposure_time.numerator
+                denominator = exposure_time.denominator
+                return f"{numenator}/{denominator}"
+            else:
+                return str(int(exposure_time))
+        else:
+            return ""
+
+    @cached_property
+    def iso(self) -> int | None:
+        """
+        Светочувствительность.
+        """
+        iso = self.exif.get("ISOSpeedRatings", None)
+        if iso:
+            return int(iso)
+
+    @cached_property
+    def focal_length(self) -> int | None:
+        """
+        Фокусное расстояние.
+        """
+        focal_length = self.exif.get("FocalLength", None)
+        if focal_length:
+            return int(focal_length)
+
+    @cached_property
+    def datetime_taken(self) -> datetime:
+        """
+        Получить время съемки фотографии из EXIF или использовать время создания файла.
+        """
+        original_exif = self.exif.get("DateTimeOriginal")
+        mtime = datetime.fromtimestamp(os.path.getmtime(self.image.path))
+        if not original_exif:
+            return mtime
+        try:
+            return datetime.strptime(original_exif, "%Y:%m:%d %H:%M:%S")
+        except ValueError:
+            return mtime
+
+    def save(self, *args, **kwargs):
+        if not self.name:
+            self.name = Path(self.image.name).stem
+        if not self.slug:
+            self.slug = get_unique_slug(self, self.name)
+        super().save(*args, **kwargs)

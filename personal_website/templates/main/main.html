@@ -1,22 +1,16 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 <!--
     Главная страница сайта. Взаимосвязана с блогом. 
     Отображает категории и серии статей из блога,
     сгруппированные в виде карточек.
 -->
 {% block content %}
-    <style>
-        .card:hover {
-            transform: scale(1.025);
-        }
-        .card {
-            height: 90%; 
-        }
-    </style>
-    <!-- Категории -->
+    <!-- Категории. -->
     {% if categories %}
         <div class="container">
-            <h4><p align="center">Выберите категорию</p></h4>
+            <h4>
+                <p align="center">Выберите категорию</p>
+            </h4>
             <div class="row row-cols-1 row-cols-md-3 g-4 justify-content-center">
                 {% for category in categories %}
                     <div class="col">
@@ -28,14 +22,10 @@
                             {% endif %}
                             <div class="card-body">
                                 <h5 class="card-title">
-                                    <a href="{{ category.get_absolute_url }}" style="color: black; text-decoration: none;">
-                                        {{category.name}}
-                                    </a>
+                                    <a href="{{ category.get_absolute_url }}">{{ category.name }}</a>
                                 </h5>
                                 <p class="card-text">
-                                    <a href="{{ category.get_absolute_url }}" style="color: black; text-decoration: none;">
-                                        {{category.description}}
-                                    </a>
+                                    <a href="{{ category.get_absolute_url }}">{{ category.description }}</a>
                                 </p>
                             </div>
                         </div>
@@ -46,10 +36,12 @@
         <br>
         <br>
     {% endif %}
-    <!-- Серии -->
+    <!-- Серии. -->
     {% if series %}
         <div class="container">
-            <h4><p align="center">Или серию</p></h4>
+            <h4>
+                <p align="center">Или серию</p>
+            </h4>
             <div class="row row-cols-1 row-cols-md-3 g-4 justify-content-center">
                 {% for serial in series %}
                     <div class="col">
@@ -61,14 +53,10 @@
                             {% endif %}
                             <div class="card-body">
                                 <h6 class="card-title">
-                                    <a href="{{ serial.get_absolute_url }}" style="color: black; text-decoration: none;">
-                                        {{serial.name}}
-                                    </a>
+                                    <a href="{{ serial.get_absolute_url }}">{{ serial.name }}</a>
                                 </h6>
                                 <p class="card-text">
-                                    <a href="{{ serial.get_absolute_url }}" style="color: black; text-decoration: none;">
-                                        {{serial.description}}
-                                    </a>
+                                    <a href="{{ serial.get_absolute_url }}">{{ serial.description }}</a>
                                 </p>
                             </div>
                         </div>
@@ -79,4 +67,4 @@
         <br>
         <br>
     {% endif %}
-{% endblock %}
+{% endblock content %}

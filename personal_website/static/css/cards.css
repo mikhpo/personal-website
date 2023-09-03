@@ -1,0 +1,14 @@
+.card-title {
+    margin: 0 auto;
+    text-align: center;
+}
+
+.card-title a {
+    color: black;
+    text-decoration: none;
+}
+
+.card-body {
+    margin: 0 auto;
+    text-align: center;
+}

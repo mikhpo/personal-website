@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+    <div class="container">
+        {% if album_list %}
+            {% with album_list as albums %}
+                {% include "gallery/albums.html" %}
+            {% endwith %}
+        {% endif %}
+    </div>
+{% endblock content %}

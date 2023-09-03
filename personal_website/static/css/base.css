@@ -1,16 +1,7 @@
-@charset "UTF-8";
+@charset 'UTF-8';
 
 html body {
     background-color: whitesmoke;
-}
-
-.navbar-dark .navbar-nav .nav-link {
-    color: whitesmoke;
-}
-
-.navbar-dark .navbar-nav .nav-link:focus,
-.navbar-dark .navbar-nav .nav-link:hover {
-    color: white;
 }
 
 .center {
@@ -19,9 +10,9 @@ html body {
 }
 
 td {
-    padding-top:5px;
-    padding-bottom:5px;
-    padding-right:5px;   
+    padding-top: 5px;
+    padding-bottom: 5px;
+    padding-right: 5px;
 }
 
 img {
@@ -31,5 +22,9 @@ img {
 }
 
 table:not(.center) td {
-    border: 1px solid black; 
+    border: 1px solid black;
+}
+
+.pagination {
+    justify-content: center
 }
