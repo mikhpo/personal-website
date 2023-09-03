@@ -1,22 +1,28 @@
-from tinymce.widgets import TinyMCE
+from blog.models import Comment
 from django import forms
-from .models import Comment
+from tinymce.widgets import TinyMCE
+
 
 class NewCommentForm(forms.ModelForm):
-    '''
+    """
     Форма создания нового комментария к статье.
-    '''
-    content = forms.CharField(label = "", widget = TinyMCE( 
-        attrs ={ 
-            'class':'form-control', 
-            'placeholder':'Оставить комментарий', 
-            'rows': 4,
-        })) 
+    """
+
+    content = forms.CharField(
+        label="",
+        widget=TinyMCE(
+            attrs={
+                "class": "form-control",
+                "placeholder": "Оставить комментарий",
+                "rows": 4,
+            }
+        ),
+    )
 
     class Meta:
         model = Comment
-        fields = ['content']
+        fields = ["content"]
 
     def __init__(self, *args, **kwargs):
         super(NewCommentForm, self).__init__(*args, **kwargs)
-        self.fields['content'].label = ""
+        self.fields["content"].label = ""

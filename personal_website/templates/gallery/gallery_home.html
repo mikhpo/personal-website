@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+<!-- 
+    Главная страница раздела галереи.
+    Показывает список альбомов и тэгов. 
+-->
+{% block content %}
+    <div class="container">
+        {% if albums %}
+            {% include "gallery/albums.html" %}
+        {% endif %}
+        {% if tags %}
+            {% include "gallery/tags.html" %}
+        {% endif %}
+    </div>
+{% endblock content %}

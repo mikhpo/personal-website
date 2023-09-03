@@ -13,16 +13,12 @@ function print_line() {
 # Определение абсолютных путей директорий и исполняемых файлов.
 repository_root="$(dirname "$(dirname "$(readlink -f "$0")")")"
 website_root="$repository_root/personal_website"
-python_executable=$repository_root/.venv/bin/python
+python_executable="$repository_root/.venv/bin/python"
+script_file="$website_root/manage.py"
 print_line
 echo "Корневая директория репозитория: ${repository_root}"
-echo "Директория проекта Django: ${repository_root}"
 echo "Путь до исполняемого файла Python: ${python_executable}"
-
-# Выполнить юнит-тесты Python для проверки общих настроек проекта.
-print_line
-echo "Выполнение тестов Python"
-$python_executable -m unittest
+echo "Директория проекта Django: ${website_root}"
 
 # Выполнить юнит-тесты Node.js для проверки общих настроек проекта.
 print_line
@@ -30,7 +26,6 @@ echo "Выполнение тестов Node.js"
 npm test
 
 # Выполнить выполнить юнит-тесты Django для проверки функциональности проекта.
-cd $website_root
 print_line
 echo "Выполнение тестов Django"
-$python_executable manage.py test
+$python_executable $script_file test
