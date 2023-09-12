@@ -26,11 +26,16 @@ DEBUG = env("DEBUG")
 # Ключ проекта Django (генерируется автоматически).
 SECRET_KEY = env("SECRET_KEY")
 
-CUSTOM_DOMAIN = "mikhailpolyakov.com"
+# Доменное имя, по которому доступен сайт.
+CUSTOM_DOMAIN = env("CUSTOM_DOMAIN")
+
+IP_ADDRESS = env("IP_ADDRESS")
 
 # Список адресов, которые будет обслуживать Django проект. Если не добавлять адрес в этот список, то запросы по данному адресу обрабатываться не будут.
 ALLOWED_HOSTS = [
     "127.0.0.1",
+    "localhost",
+    IP_ADDRESS,
     CUSTOM_DOMAIN,
     f"www.{CUSTOM_DOMAIN}",
 ]
@@ -113,10 +118,10 @@ USE_TZ = True
 STATIC_URL = "/static/"
 
 # Абсолютный путь до папки, в которой собраны статические файлы.
-STATIC_ROOT = os.path.join(BASE_DIR, "static")
+STATIC_ROOT = env("STATIC_ROOT")
 
 # NPM-зависимости в корневом каталоге проекта.
-STATICFILES_DIRS = [os.path.join(PROJECT_DIR, "node_modules")]
+STATICFILES_DIRS = [BASE_DIR / "static", PROJECT_DIR / "node_modules"]
 
 # На проде статические файлы раздаются через WhiteNoise.
 WHITENOISE_ROOT = STATIC_ROOT
@@ -231,18 +236,11 @@ TINYMCE_DEFAULT_CONFIG = {
 """
 Настройки логирования.
 """
-LOGS_DIR = os.path.join(PROJECT_DIR, "logs")  # общая папка для сохранения логов
+LOGS_ROOT = env("LOGS_ROOT")  # общая папка для сохранения логов
+LOG_DIR = os.path.join(LOGS_ROOT, PROJECT_NAME)
 
-# Список директорий для ведения логов.
-LOG_DIRS = [
-    LOGS_DIR,
-    os.path.join(LOGS_DIR, PROJECT_NAME),
-]
-
-# Cоздать директории для логов, если они не существуют.
-for dir in LOG_DIRS:
-    os.makedirs(dir, exist_ok=True)
-
+# Cоздать директорию для логов, если не существует.
+Path(LOG_DIR).mkdir(parents=True, exist_ok=True)
 
 LOGGING = {
     "version": 1,
@@ -296,7 +294,7 @@ LOGGING = {
         PROJECT_NAME: {
             "level": "INFO",
             "class": "logging.handlers.TimedRotatingFileHandler",
-            "filename": os.path.join(LOGS_DIR, PROJECT_NAME, f"{PROJECT_NAME}.log"),
+            "filename": os.path.join(LOG_DIR, f"{PROJECT_NAME}.log"),
             "formatter": "simple",
             "when": "midnight",
             "backupCount": 7,

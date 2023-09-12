@@ -4,7 +4,7 @@
     Форма регистрации.
     Шаблон наследует от шаблона авторизации на сайте. 
 -->
-{% block content %}
+{% block card %}
     {% if user.is_authenticated %}
         Вы уже зарегистрированы.
     {% else %}
@@ -18,6 +18,6 @@
         Если вы уже зарегистрированы, то можете
         <a href="{% url "login" %}" target="blank">
             <strong>войти</strong>
-        </a>.
+        </a>
     {% endif %}
-{% endblock content %}
+{% endblock card %}

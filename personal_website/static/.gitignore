@@ -1,6 +1,4 @@
+node_modules
 admin
-bootstrap
-@popperjs
 tinymce
 django_tinymce
-node_modules

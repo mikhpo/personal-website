@@ -11,7 +11,6 @@ import shutil
 import subprocess
 import sys
 from datetime import datetime
-from distutils.util import strtobool
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -52,13 +51,17 @@ def get_dump_size(dump_path: str) -> str:
     """
     units = ("Б", "КБ", "МБ", "ГБ", "ТБ")
 
-    # Определение размера дампа в байтах. Способ определения размера дампа зависит от типа дампа: файл или папка.
+    # Определение размера дампа в байтах.
+    # Способ определения размера дампа зависит
+    # от типа дампа: файл или папка.
     if os.path.isdir(dump_path):
         size = sum([f.stat().st_size for f in Path(dump_path).glob("**/*")])
     else:
         size = os.path.getsize(dump_path)
 
-    # Определение единцы измерения размера дампа. Значение округляется до целого числа и возвращается в виде строки с указанием размерности.
+    # Определение единцы измерения размера дампа.
+    # Значение округляется до целого числа и возвращается
+    # в виде строки с указанием размерности.
     for unit in units:
         if size < 1024:
             value = int(size)
@@ -144,7 +147,6 @@ def main():
     pg_name = os.environ["PG_NAME"]
     pg_user = os.environ["PG_USER"]
     pg_password = os.environ["PG_PASSWORD"]
-    debug = bool(strtobool(os.environ["DEBUG"]))
 
     # Определение системной кодировки.
     encoding = locale.getlocale()[1]
@@ -157,7 +159,8 @@ def main():
     # Если файл дампа сегодня уже был создан, то необходимо его удалить.
     remove_existing_dump(dump_path)
 
-    # Вызовем bash скрипт для создания дампа базы данных при помощи утилиты pg_dump. Аргументы для скрипта считываются из переменных окружения.
+    # Вызовем bash скрипт для создания дампа базы данных при помощи утилиты pg_dump.
+    # Аргументы для скрипта считываются из переменных окружения.
     dump_command = compose_command(pg_host, pg_port, pg_name, pg_user, dump_path)
     logger.info(f"Выполняю команду: {dump_command}")
 

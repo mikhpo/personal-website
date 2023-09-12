@@ -9,7 +9,6 @@ import os
 import shlex
 import subprocess
 import sys
-from distutils.util import strtobool
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -61,7 +60,9 @@ def get_storage_size(storage_path: str) -> str:
             filepath = os.path.join(path, file)
             size += os.path.getsize(filepath)
 
-    # Определение единцы измерения размера дампа. Значение округляется до целого числа и возвращается в виде строки с указанием размерности.
+    # Определение единцы измерения размера дампа.
+    # Значение округляется до целого числа и возвращается
+    # в виде строки с указанием размерности.
     for unit in units:
         if size < 1024:
             value = int(size)

@@ -58,7 +58,11 @@ def main(dump_path: str) -> None:
     # Вызовем bash скрипт для восстановления базы данных из дампа при помощи утилиты pg_restore.
     # Аргументы для скрипта считываются из модуля settings.
     pg_restore = os.popen(f"which pg_restore").read().strip()
-    bash_script = f"{pg_restore} -Fc --single-transaction -h {pg_host} -U {pg_user} -p {pg_port} -d {pg_name} {dump_path}"
+    bash_script = (
+        f"{pg_restore} -Fc --single-transaction --no-owner "
+        f"-h {pg_host} -U {pg_user} -p {pg_port} -d {pg_name} "
+        f"{dump_path}"
+    )
     print(f"Выполняю команду: {bash_script}")
 
     # Синхронный вызов bash-скрипта.
