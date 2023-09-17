@@ -218,3 +218,66 @@ Poetry сконфигурирован таким образом, чтобы ви
 Также для выполнения всех тестов можно запустить bash-скрипт `run_tests.sh`:
 
     bash ./scripts/run_tests.sh
+
+## Настройка ПО
+
+### Подготовка базы данных PostgreSQL
+
+Переключиться на учетную запись postgres:
+
+    sudo -i -u postgres
+
+Войти в интерпретатор PostgreSQL: 
+
+    psql
+
+Создать пользователя:
+
+    CREATE USER user WITH PASSWORD 'password';
+
+Создать базу данных:
+
+    CREATE DATABASE name OWNER user ENCODING 'UTF8';
+
+Выйти из интерпретатора PostgreSQL:
+
+    \q
+
+Переключиться на стандартного пользователя:
+
+    \exit
+
+
+### Настройка certbot для обновления сертификата
+
+Установить certbot:
+
+    sudo apt install certbot python3-certbot-nginx
+
+Получить SSL сертификат:
+
+    sudo certbot --nginx -d example.com -d www.example.com
+
+Проверить расписание обновления сертификата:
+
+    sudo systemctl status certbot.timer
+
+Проверить процесс обновления сертификата:
+
+    sudo certbot renew --dry-run
+
+## Решение проблем
+
+### Ошибка 413 Request Entity Too Large
+
+Для загрузки файлов большого размера через nginx необходимо установить соответствующее значение client_max_body_size в /etc/nginx/nginx.conf:
+
+    sudo nano /etc/nginx/nginx.conf
+
+Значение client_max_body_size указывается в блоке http:
+
+    http {
+        ...
+        client_max_body_size = 25M;
+        ...
+    }
