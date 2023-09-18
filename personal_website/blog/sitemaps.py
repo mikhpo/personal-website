@@ -1,8 +1,9 @@
 """
 Модуль для построения карты сайта по объектам блога.
 """
-from blog.models import Article, Category, Series, Topic
 from django.contrib.sitemaps import Sitemap
+
+from blog.models import Article, Category, Series, Topic
 
 
 class ArticleSitemap(Sitemap):

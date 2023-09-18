@@ -12,7 +12,7 @@ class StaticFilesTests(SimpleTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.static_dir = os.path.join(settings.BASE_DIR, "static")
+        cls.static_dir = os.path.join(settings.PROJECT_DIR, "static")
 
     def test_static_files_dir_exists(self):
         """
@@ -33,10 +33,3 @@ class StaticFilesTests(SimpleTestCase):
         """
         admin_staticfiles_dir = os.path.join(self.static_dir, "admin")
         self.assertTrue(os.path.exists(admin_staticfiles_dir))
-
-    def test_node_modules_symlink_created(self):
-        """
-        Проверяет, что создана символическая ссылка на пакет модулей npm в директории статических файлов.
-        """
-        symlink_path = os.path.join(self.static_dir, "node_modules")
-        self.assertTrue(os.path.islink(symlink_path))

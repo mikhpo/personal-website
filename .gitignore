@@ -7,7 +7,6 @@
 node_modules
 secrets.json
 .env
-logs
 __pycache__
 *.log
 *.pyc
@@ -17,3 +16,7 @@ mikhailpolyakov.key
 .coverage
 htmlcov
 CACHE
+logs
+static
+storage
+backups

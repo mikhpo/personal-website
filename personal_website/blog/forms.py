@@ -1,6 +1,7 @@
-from blog.models import Comment
 from django import forms
 from tinymce.widgets import TinyMCE
+
+from blog.models import Comment
 
 
 class NewCommentForm(forms.ModelForm):

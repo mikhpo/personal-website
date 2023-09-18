@@ -4,8 +4,8 @@ from http import HTTPStatus
 from django.conf import settings
 from django.db.models import QuerySet
 from django.test import TestCase, override_settings
-from gallery.models import Album, Photo, Tag
 
+from gallery.models import Album, Photo, Tag
 from personal_website.utils import list_image_paths
 
 

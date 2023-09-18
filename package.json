@@ -4,7 +4,7 @@
   "description": "JavaScript dependencies for my personal website",
   "main": "index.js",
   "scripts": {
-    "test": "node --test"
+    "test": "node --test tests"
   },
   "author": "Mikhail Polyakov",
   "license": "ISC",

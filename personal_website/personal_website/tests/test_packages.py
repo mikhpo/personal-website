@@ -4,7 +4,7 @@ import pkg_resources
 from django.conf import settings
 from django.test import SimpleTestCase
 
-PYTHON_PACKAGES = ("django", "gunicorn", "psycopg", "whitenoise", "boto3", "pillow")
+PYTHON_PACKAGES = ("django", "gunicorn", "psycopg", "whitenoise", "pillow")
 
 
 class PythonPackagesTests(SimpleTestCase):

@@ -6,6 +6,7 @@ from django.db.models import QuerySet
 from django.http import HttpResponse
 from django.test import TestCase, override_settings
 from django.urls import resolve, reverse
+
 from gallery.models import Album, Photo, Tag
 from gallery.views import (
     AlbumDetailView,
@@ -16,7 +17,6 @@ from gallery.views import (
     TagDetailView,
     TagListView,
 )
-
 from personal_website.utils import list_image_paths
 
 APP_NAME = "gallery"
