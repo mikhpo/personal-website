@@ -7,9 +7,9 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
+
 from gallery.apps import GalleryConfig
 from gallery.models import Album, Photo, Tag
-
 from personal_website.utils import list_image_paths
 
 ADMIN_URL = "/admin/"

@@ -1,8 +1,9 @@
-from accounts.forms import SignUpForm
-from accounts.utils import generate_unique_username
 from django.contrib.auth.models import User
 from django.test import TestCase
 from django.utils.crypto import get_random_string
+
+from accounts.forms import SignUpForm
+from accounts.utils import generate_unique_username
 
 
 class SignUpFormTest(TestCase):

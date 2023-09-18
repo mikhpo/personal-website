@@ -1,7 +1,6 @@
 """
 Стандартный модуль, в котором зарегистрированы используемые в проекте веб-адреса.
 """
-from blog.sitemaps import ArticleSitemap, CategorySitemap, SeriesSitemap, TopicSitemap
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
@@ -9,6 +8,8 @@ from django.contrib.sitemaps.views import sitemap
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.urls import include, path
 from django.views.generic import RedirectView
+
+from blog.sitemaps import ArticleSitemap, CategorySitemap, SeriesSitemap, TopicSitemap
 from gallery.sitemaps import AlbumSitemap, PhotoSitemap, TagSitemap
 
 sitemaps = {

@@ -1,9 +1,10 @@
 from django.contrib import admin
 from django.db import models
 from django.utils.safestring import mark_safe
+from tinymce.widgets import TinyMCE
+
 from gallery.forms import AlbumForm
 from gallery.models import Album, Photo, Tag
-from tinymce.widgets import TinyMCE
 
 formfield_overrides = {
     models.TextField: {"widget": TinyMCE()},
@@ -21,6 +22,7 @@ class PhotoAdmin(admin.ModelAdmin):
     readonly_fields = ("uploaded", "modified")
     list_display = ("name", "uploaded", "modified", "public", "thumbnail")
     list_filter = ("tags", "album")
+    ordering = ("-modified",)
 
     def thumbnail(self, obj: Photo):
         """

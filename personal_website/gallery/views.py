@@ -1,5 +1,6 @@
 from django.db.models import QuerySet
 from django.views.generic import DetailView, ListView, TemplateView
+
 from gallery.mixins import GalleryContentMixin
 from gallery.models import Album, Photo, Tag
 
