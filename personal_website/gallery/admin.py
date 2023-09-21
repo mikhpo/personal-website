@@ -19,10 +19,10 @@ class PhotoAdmin(admin.ModelAdmin):
 
     model = Photo
     formfield_overrides = formfield_overrides
-    readonly_fields = ("uploaded", "modified")
-    list_display = ("name", "uploaded", "modified", "public", "thumbnail")
+    readonly_fields = ("uploaded_at", "modified_at")
+    list_display = ("name", "uploaded_at", "modified_at", "public", "thumbnail")
     list_filter = ("tags", "album")
-    ordering = ("-modified",)
+    ordering = ("-modified_at",)
 
     def thumbnail(self, obj: Photo):
         """
@@ -34,17 +34,21 @@ class PhotoAdmin(admin.ModelAdmin):
 
     thumbnail.short_description = "Миниатюра"
 
+class PhotoInline(admin.TabularInline):
+    model = Photo
+    exclude = ("description", "slug")
+
 
 @admin.register(Album)
 class AlbumAdmin(admin.ModelAdmin):
     """
     Настройки отображения модели фотоальбома в панели администрирования Django.
     """
-
+    inlines = [PhotoInline]
     form = AlbumForm
     formfield_overrides = formfield_overrides
-    readonly_fields = ("created", "updated")
-    list_display = ("name", "created", "updated", "public", "thumbnail")
+    readonly_fields = ("created_at", "updated_at")
+    list_display = ("name", "created_at", "updated_at", "public", "thumbnail")
     list_filter = ("tags",)
 
     def thumbnail(self, obj: Album):

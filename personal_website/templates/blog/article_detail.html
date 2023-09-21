@@ -14,9 +14,9 @@
                 <h4 class="card-title">{{ article.title }}</h4>
                 <p class="card-text">{{ article.content|safe }}</p>
                 <div class="card-footer">
-                    <small class="text-muted">Опубликовано {{ article.published }}</small>
+                    <small class="text-muted">Опубликовано {{ article.published_at }}</small>
                     <br>
-                    <small class="text-muted">Обновлено {{ article.modified }}</small>
+                    <small class="text-muted">Обновлено {{ article.modified_at }}</small>
                 </div>
             </div>
             <div id="comments_section">

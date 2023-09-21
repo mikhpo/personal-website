@@ -13,14 +13,11 @@ from PIL.ExifTags import TAGS
 
 from personal_website.utils import get_unique_slug
 
+from .managers import PublicAlbumManager, PublicPhotoManager
+
 thumbnail_size: int = settings.GALLERY_THUMBNAIL_SIZE
 preview_size: int = settings.GALLERY_PREVIEW_SIZE
 resize_quality: int = settings.GALLERY_RESIZE_QUALITY
-
-
-class Visibility(models.TextChoices):
-    PUBLIC = "Публичная"
-    PRIVATE = "Приватная"
 
 
 class Tag(models.Model):
@@ -65,12 +62,12 @@ class Album(models.Model):
     slug = models.SlugField(
         verbose_name="Слаг", blank=True, unique=True, help_text="Слаг альбома"
     )
-    created = models.DateTimeField(
+    created_at = models.DateTimeField(
         verbose_name="Создан",
         auto_now_add=True,
         help_text="Дата и время создания альбома",
     )
-    updated = models.DateTimeField(
+    updated_at = models.DateTimeField(
         verbose_name="Обновлен",
         auto_now=True,
         help_text="Дата и время последнего обновления альбома",
@@ -95,10 +92,13 @@ class Album(models.Model):
         help_text="Тэги альбома",
     )
 
+    objects = models.Manager()
+    published = PublicAlbumManager()
+
     class Meta:
         verbose_name = "Альбом"
         verbose_name_plural = "Альбомы"
-        ordering = ["-created"]
+        ordering = ["-created_at"]
 
     def __str__(self):
         return self.name
@@ -132,12 +132,12 @@ class Photo(models.Model):
     slug = models.SlugField(
         verbose_name="Слаг", blank=True, unique=True, help_text="Слаг фотографии"
     )
-    uploaded = models.DateTimeField(
+    uploaded_at = models.DateTimeField(
         verbose_name="Загружена",
         auto_now_add=True,
         help_text="Дата и время загрузки фотографии",
     )
-    modified = models.DateTimeField(
+    modified_at = models.DateTimeField(
         verbose_name="Изменена",
         auto_now=True,
         help_text="Дата и время последнего изменения фотографии",
@@ -170,6 +170,9 @@ class Photo(models.Model):
         format="JPEG",
         options={"quality": resize_quality},
     )
+
+    objects = models.Manager()
+    published = PublicPhotoManager()
 
     class Meta:
         verbose_name = "Фотография"

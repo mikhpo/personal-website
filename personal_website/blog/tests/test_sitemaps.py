@@ -26,11 +26,11 @@ class BlogSitemapTest(TestCase):
         response = self.client.get(self.SITEMAP_URL)
         self.assertEqual(response.status_code, HTTPStatus.OK)
         content = str(response.content)
-        local_time = timezone.localtime(public_article.modified)
-        modified_date = str(local_time.date())
+        local_time = timezone.localtime(public_article.modified_at)
+        modified_at_date = str(local_time.date())
         self.assertTrue(public_article.get_absolute_url() in content)
         self.assertFalse(private_artice.get_absolute_url() in content)
-        self.assertTrue(modified_date in content)
+        self.assertTrue(modified_at_date in content)
 
     def test_series_sitemap(self):
         """

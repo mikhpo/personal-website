@@ -17,17 +17,17 @@ class AlbumSitemap(Sitemap):
     protocol = "https"
 
     def items(self):
-        return Album.objects.filter(public=True)
+        return Album.published.all()
 
     def lastmod(self, obj: Album):
-        return obj.updated
+        return obj.updated_at
 
 
 class PhotoSitemap(Sitemap):
     protocol = "https"
 
     def items(self):
-        return Photo.objects.filter(public=True)
+        return Photo.published.all()
 
     def lastmod(self, obj: Photo):
-        return obj.modified
+        return obj.modified_at

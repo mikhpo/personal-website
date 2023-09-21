@@ -23,16 +23,19 @@ class GalleryAdminTest(TestCase):
 
     @classmethod
     def setUpTestData(cls):
+        super().setUpTestData()
         cls.superuser: User = User.objects.create_superuser(
             username="testadmin", password="12345"
         )
+        os.makedirs(settings.MEDIA_ROOT)
+
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(settings.MEDIA_ROOT, ignore_errors=True)
+        super().tearDownClass()
 
     def setUp(self):
-        os.makedirs(settings.MEDIA_ROOT)
         self.client.login(username="testadmin", password="12345")
-
-    def tearDown(self):
-        shutil.rmtree(settings.MEDIA_ROOT)
 
     def test_gallery_admin_page_displayed(self):
         """
@@ -145,9 +148,12 @@ class GalleryAdminTest(TestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
         # Заполнить форму, отправить форму, проверить статус ответа.
-        response = self.client.post(
-            album_add_url, data={"name": _TEST_ALBUM_NAME, "public": True}
-        )
+        data = {
+            "name": _TEST_ALBUM_NAME,
+            "photo_set-TOTAL_FORMS": 0,
+            "photo_set-INITIAL_FORMS": 0,
+        }
+        response = self.client.post(album_add_url, data)
         self.assertEqual(response.status_code, HTTPStatus.FOUND)
 
         # Проверить, что альбом с указанным именем существует в базе данных и что слаг автоматически создан.

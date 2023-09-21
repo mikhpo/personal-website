@@ -59,7 +59,7 @@ class GalleryModelsTest(TestCase):
         Проверяет, что обязательные атрибуты фотографий определяются автоматически.
         """
         photos = Photo.objects.all()
-        fields = ["name", "slug", "uploaded", "modified", "public"]
+        fields = ["name", "slug", "uploaded_at", "modified_at", "public"]
         for photo in photos:
             for field in fields:
                 value = getattr(photo, field)

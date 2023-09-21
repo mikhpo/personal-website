@@ -122,8 +122,8 @@ class BlogAdminTest(TestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
         for value in [
             self.article.title,
-            format_local_datetime(self.article.published),
-            format_local_datetime(self.article.modified),
+            format_local_datetime(self.article.published_at),
+            format_local_datetime(self.article.modified_at),
             self.article.public,
             self.article.author,
         ]:
@@ -203,7 +203,7 @@ class BlogAdminTest(TestCase):
         )
         self.assertEqual(response.status_code, HTTPStatus.FOUND)
         self.assertTrue(Article.objects.filter(title="Test article 2").exists())
-        self.assertNotEqual(Article.objects.get(title="Test article 2").published, None)
+        self.assertNotEqual(Article.objects.get(title="Test article 2").published_at, None)
 
     def test_comment_created_via_admin(self):
         """

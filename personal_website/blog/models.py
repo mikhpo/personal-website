@@ -4,6 +4,7 @@ from django.urls import reverse
 from django.utils.timezone import now
 
 from personal_website.utils import get_unique_slug
+from .managers import PublicArticleManager, PublicTopicManager, PublicSeriesManager, PublicGategoryManager
 
 
 class Category(models.Model):
@@ -16,6 +17,9 @@ class Category(models.Model):
     slug = models.SlugField("Слаг", blank=True, unique=True)
     image = models.ImageField("Картинка", upload_to="blog/categories/", blank=True)
     public = models.BooleanField("Опубликовано", default=False)
+
+    objects = models.Manager()
+    published = PublicGategoryManager()
 
     class Meta:
         ordering = ["name"]
@@ -45,6 +49,9 @@ class Topic(models.Model):
     image = models.ImageField("Картинка", upload_to="blog/topics/", blank=True)
     public = models.BooleanField("Опубликовано", default=False)
 
+    objects = models.Manager()
+    published = PublicTopicManager()
+
     class Meta:
         ordering = ["name"]
         verbose_name_plural = "Темы"
@@ -73,6 +80,9 @@ class Series(models.Model):
     image = models.ImageField("Картинка", upload_to="blog/series/", blank=True)
     public = models.BooleanField("Опубликовано", default=False)
 
+    objects = models.Manager()
+    published = PublicSeriesManager()
+
     class Meta:
         ordering = ["name"]
         verbose_name_plural = "Серии"
@@ -99,10 +109,10 @@ class Article(models.Model):
     title = models.CharField("Заголовок", max_length=255, unique=True)
     description = models.CharField("Описание", max_length=255, blank=True)
     content = models.TextField("Содержание")
-    published = models.DateTimeField(
+    published_at = models.DateTimeField(
         "Дата публикации", blank=True, null=True, default=now
     )
-    modified = models.DateTimeField("Дата последнего изменения", auto_now=True)
+    modified_at = models.DateTimeField("Дата последнего изменения", auto_now=True)
     slug = models.SlugField("Слаг", blank=True, unique=True)
     series = models.ManyToManyField(Series, blank=True)
     topics = models.ManyToManyField(Topic, blank=True)
@@ -111,8 +121,11 @@ class Article(models.Model):
     public = models.BooleanField("Опубликовано", default=True)
     author = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
 
+    objects = models.Manager()
+    published = PublicArticleManager()
+
     class Meta:
-        ordering = ["-published"]
+        ordering = ["-published_at"]
         verbose_name_plural = "Статьи"
 
     def get_absolute_url(self):
