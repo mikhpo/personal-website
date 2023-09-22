@@ -4,8 +4,8 @@ from http import HTTPStatus
 from django.conf import settings
 from django.db.models import QuerySet
 from django.test import TestCase, override_settings
-
 from gallery.models import Album, Photo, Tag
+
 from personal_website.utils import list_image_paths
 
 
@@ -59,7 +59,7 @@ class GalleryModelsTest(TestCase):
         Проверяет, что обязательные атрибуты фотографий определяются автоматически.
         """
         photos = Photo.objects.all()
-        fields = ["name", "slug", "uploaded", "modified", "public"]
+        fields = ["name", "slug", "uploaded_at", "modified_at", "public"]
         for photo in photos:
             for field in fields:
                 value = getattr(photo, field)

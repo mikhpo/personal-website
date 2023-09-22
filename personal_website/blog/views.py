@@ -63,7 +63,7 @@ def blog(request):
     Добавлена разбивка по страницам. Здесь указано количество статей на страницу.
     Отображаются только те статьи, для которых не была установлена невидимость (черновики).
     """
-    content = Article.objects.filter(public=True)
+    content = Article.published.all()
     return render(
         request, "blog/article_list.html", {"page_obj": paginate(request, content)}
     )

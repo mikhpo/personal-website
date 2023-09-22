@@ -8,6 +8,6 @@ class GalleryContentMixin(object):
 
     def get_context_data(self, **kwargs):
         context = super(GalleryContentMixin, self).get_context_data(**kwargs)
-        context["albums"] = Album.objects.all()
+        context["albums"] = Album.published.all()
         context["tags"] = Tag.objects.all()
         return context

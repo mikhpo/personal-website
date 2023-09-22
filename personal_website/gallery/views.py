@@ -1,6 +1,5 @@
 from django.db.models import QuerySet
 from django.views.generic import DetailView, ListView, TemplateView
-
 from gallery.mixins import GalleryContentMixin
 from gallery.models import Album, Photo, Tag
 
@@ -32,9 +31,9 @@ class PhotoListView(ListView):
 
     def get_queryset(self):
         # Отсортировать набор фотографий от новых к старым.
-        photos: QuerySet[Photo] = super(PhotoListView, self).get_queryset()
-        photos = sorted(photos, key=lambda photo: photo.datetime_taken)
-        return photos
+        photos = Photo.published.all()
+        photos_sorted = sorted(photos, key=lambda photo: photo.datetime_taken)
+        return photos_sorted
 
 
 class AlbumDetailView(DetailView):
@@ -53,7 +52,7 @@ class AlbumDetailView(DetailView):
         context = super(AlbumDetailView, self).get_context_data(**kwargs)
 
         # Получить коллекцию фотографий из даного альбома.
-        photos: QuerySet[Photo] = context["album"].photo_set.all()
+        photos: QuerySet[Photo] = context["album"].photo_set.filter(public=True)
 
         # Добавить фотографии в контекст, отсортировав от старых к новым.
         context["photos"] = sorted(photos, key=lambda photo: photo.datetime_taken)
@@ -67,6 +66,7 @@ class AlbumListView(ListView):
 
     model = Album
     template_name = "gallery/album_list.html"
+    queryset = Album.published.all()
 
 
 class TagDetailView(DetailView):
@@ -89,7 +89,7 @@ class TagDetailView(DetailView):
         # Добавить полученные альбомы и фотографии в контекст.
         # Отсортирофать альбомы и фотографии от новых к старым.
         context["albums"] = sorted(
-            albums, key=lambda album: album.created, reverse=True
+            albums, key=lambda album: album.created_at, reverse=True
         )
         context["photos"] = sorted(
             photos, key=lambda photo: photo.datetime_taken, reverse=True

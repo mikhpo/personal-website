@@ -1,12 +1,11 @@
 from http import HTTPStatus
 
+from accounts.views import signup
 from django.contrib.auth.models import User
 from django.core import mail
 from django.test import TestCase
 from django.urls import resolve, reverse
 from django.utils.crypto import get_random_string
-
-from accounts.views import signup
 
 
 class UserPersmissionsTest(TestCase):

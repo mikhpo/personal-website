@@ -1,6 +1,6 @@
+from blog.forms import NewCommentForm
 from django.test import TestCase
 
-from blog.forms import NewCommentForm
 from personal_website.utils import generate_random_text
 
 

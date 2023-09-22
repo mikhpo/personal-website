@@ -6,7 +6,6 @@ from django.db.models import QuerySet
 from django.http import HttpResponse
 from django.test import TestCase, override_settings
 from django.urls import resolve, reverse
-
 from gallery.models import Album, Photo, Tag
 from gallery.views import (
     AlbumDetailView,
@@ -17,6 +16,7 @@ from gallery.views import (
     TagDetailView,
     TagListView,
 )
+
 from personal_website.utils import list_image_paths
 
 APP_NAME = "gallery"
@@ -25,13 +25,13 @@ GALLERY_URL = f"/{APP_NAME}/"
 GALLERY_URL_NAME = f"{APP_NAME}:{APP_NAME}"
 PHOTO_LIST_URL = f"/{APP_NAME}/photos/"
 PHOTO_LIST_URL_NAME = f"{APP_NAME}:photo-list"
-PHOTO_DETAIL_URL = f"/{APP_NAME}/photo"
+PHOTO_DETAIL_URL = f"/{APP_NAME}/photos"
 PHOTO_DETAIL_URL_NAME = f"{APP_NAME}:photo-detail"
-ALBUM_DETAIL_URL = f"/{APP_NAME}/album"
+ALBUM_DETAIL_URL = f"/{APP_NAME}/albums"
 ALBUM_DETAIL_URL_NAME = f"{APP_NAME}:album-detail"
 ALBUM_LIST_URL = f"/{APP_NAME}/albums/"
 ALBUM_LIST_URL_NAME = f"{APP_NAME}:album-list"
-TAG_DETAIL_URL = f"/{APP_NAME}/tag"
+TAG_DETAIL_URL = f"/{APP_NAME}/tags"
 TAG_DETAIL_URL_NAME = f"{APP_NAME}:tag-detail"
 TAG_LIST_URL = f"/{APP_NAME}/tags/"
 TAG_LIST_URL_NAME = f"{APP_NAME}:tag-list"
@@ -204,15 +204,22 @@ class GalleryViewsTest(TestCase):
     def test_album_detail_view_context(self):
         """
         Проверить контекст ответа, полученного при запросе страницы детального просмотра альбома.
+        В альбоме должны отображаться только публичные фотографии.
         """
         album_slug = self.album.slug
         url = f"{ALBUM_DETAIL_URL}/{album_slug}/"
+        all_photos: QuerySet[Photo] = self.album.photo_set.all()
+        private_photo = all_photos.last()
+        private_photo.public = False
+        private_photo.save()
+        public_photos = Photo.objects.filter(album=self.album, public=True)
         response = self.client.get(url)
         context = response.context
-        photos: QuerySet[Photo] = self.album.photo_set.all()
-        for photo in photos:
+        context_photos: QuerySet[Photo] = context["photos"]
+        for photo in public_photos:
             self.assertContains(response, photo)
-        self.assertEqual(photos.count(), len(context["photos"]))
+        self.assertNotContains(response, private_photo)
+        self.assertEqual(len(context_photos), public_photos.count())
 
     def test_album_list_url(self):
         """
@@ -238,6 +245,21 @@ class GalleryViewsTest(TestCase):
             self.assertEqual(response.templates, reverse_response.templates)
             self.assertTemplateUsed(response, ALBUM_LIST_TEMPLATE_NAME)
             self.assertTemplateUsed(response, BASE_TEMPLATE_NAME)
+
+    def test_album_list_context(self):
+        """
+        В списке альбомов должны отображаться только публичные альбомы.
+        """
+        with self.subTest("Публичный альбом отображается"):
+            self.assertTrue(self.album.public)
+            response = self.client.get(ALBUM_LIST_URL)
+            self.assertContains(response, self.album)
+
+        with self.subTest("Приватный альбом не отображается"):
+            self.album.public = False
+            self.album.save()
+            response = self.client.get(ALBUM_LIST_URL)
+            self.assertNotContains(response, self.album)
 
     def test_tag_detail_url(self):
         """

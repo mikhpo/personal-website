@@ -1,10 +1,9 @@
 from http import HTTPStatus
 
+from blog.models import Category, Series
 from django.contrib.sitemaps.views import sitemap
 from django.test import TestCase
 from django.urls import resolve, reverse
-
-from blog.models import Category, Series
 from main.views import main
 
 

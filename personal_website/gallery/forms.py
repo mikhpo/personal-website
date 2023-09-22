@@ -1,5 +1,4 @@
 from django import forms
-
 from gallery.models import Album, Photo
 
 

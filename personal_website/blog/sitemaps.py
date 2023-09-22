@@ -1,37 +1,36 @@
 """
 Модуль для построения карты сайта по объектам блога.
 """
-from django.contrib.sitemaps import Sitemap
-
 from blog.models import Article, Category, Series, Topic
+from django.contrib.sitemaps import Sitemap
 
 
 class ArticleSitemap(Sitemap):
     protocol = "https"
 
     def items(self):
-        return Article.objects.filter(public=True)
+        return Article.published.all()
 
-    def lastmod(self, obj):
-        return obj.modified
+    def lastmod(self, obj: Article):
+        return obj.modified_at
 
 
 class SeriesSitemap(Sitemap):
     protocol = "https"
 
     def items(self):
-        return Series.objects.filter(public=True)
+        return Series.published.all()
 
 
 class TopicSitemap(Sitemap):
     protocol = "https"
 
     def items(self):
-        return Topic.objects.filter(public=True)
+        return Topic.published.all()
 
 
 class CategorySitemap(Sitemap):
     protocol = "https"
 
     def items(self):
-        return Category.objects.filter(public=True)
+        return Category.published.all()

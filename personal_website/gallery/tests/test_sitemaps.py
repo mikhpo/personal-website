@@ -2,8 +2,8 @@ from http import HTTPStatus
 
 from django.test import TestCase
 from django.utils import timezone
-
 from gallery.models import Album, Photo, Tag
+
 from personal_website.utils import list_image_paths
 
 SITEMAP_URL = "/sitemap.xml"
@@ -61,11 +61,11 @@ class GallerySitemapTest(TestCase):
         response = self.client.get(SITEMAP_URL)
         self.assertEqual(response.status_code, HTTPStatus.OK)
         content = str(response.content)
-        local_time = timezone.localtime(self.public_album.updated)
-        modified_date = str(local_time.date())
+        local_time = timezone.localtime(self.public_album.updated_at)
+        modified_at_date = str(local_time.date())
         self.assertTrue(self.public_album.get_absolute_url() in content)
         self.assertFalse(self.private_album.get_absolute_url() in content)
-        self.assertTrue(modified_date in content)
+        self.assertTrue(modified_at_date in content)
 
     def test_photo_sitemap(self):
         """
