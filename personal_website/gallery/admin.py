@@ -1,10 +1,9 @@
 from django.contrib import admin
 from django.db import models
 from django.utils.safestring import mark_safe
-from tinymce.widgets import TinyMCE
-
 from gallery.forms import AlbumForm
 from gallery.models import Album, Photo, Tag
+from tinymce.widgets import TinyMCE
 
 formfield_overrides = {
     models.TextField: {"widget": TinyMCE()},
@@ -34,9 +33,11 @@ class PhotoAdmin(admin.ModelAdmin):
 
     thumbnail.short_description = "Миниатюра"
 
+
 class PhotoInline(admin.TabularInline):
     model = Photo
     exclude = ("description", "slug")
+    extra = 5
 
 
 @admin.register(Album)
@@ -44,6 +45,7 @@ class AlbumAdmin(admin.ModelAdmin):
     """
     Настройки отображения модели фотоальбома в панели администрирования Django.
     """
+
     inlines = [PhotoInline]
     form = AlbumForm
     formfield_overrides = formfield_overrides

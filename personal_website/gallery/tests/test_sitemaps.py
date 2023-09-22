@@ -2,8 +2,8 @@ from http import HTTPStatus
 
 from django.test import TestCase
 from django.utils import timezone
-
 from gallery.models import Album, Photo, Tag
+
 from personal_website.utils import list_image_paths
 
 SITEMAP_URL = "/sitemap.xml"

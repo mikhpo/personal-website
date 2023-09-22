@@ -6,7 +6,6 @@ from django.db.models import QuerySet
 from django.http import HttpResponse
 from django.test import TestCase, override_settings
 from django.urls import resolve, reverse
-
 from gallery.models import Album, Photo, Tag
 from gallery.views import (
     AlbumDetailView,
@@ -17,6 +16,7 @@ from gallery.views import (
     TagDetailView,
     TagListView,
 )
+
 from personal_website.utils import list_image_paths
 
 APP_NAME = "gallery"
@@ -212,7 +212,7 @@ class GalleryViewsTest(TestCase):
         private_photo = all_photos.last()
         private_photo.public = False
         private_photo.save()
-        public_photos  = Photo.objects.filter(album=self.album, public=True)
+        public_photos = Photo.objects.filter(album=self.album, public=True)
         response = self.client.get(url)
         context = response.context
         context_photos: QuerySet[Photo] = context["photos"]
@@ -247,9 +247,9 @@ class GalleryViewsTest(TestCase):
             self.assertTemplateUsed(response, BASE_TEMPLATE_NAME)
 
     def test_album_list_context(self):
-        '''
+        """
         В списке альбомов должны отображаться только публичные альбомы.
-        '''
+        """
         with self.subTest("Публичный альбом отображается"):
             self.assertTrue(self.album.public)
             response = self.client.get(ALBUM_LIST_URL)

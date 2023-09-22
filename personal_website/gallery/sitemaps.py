@@ -2,7 +2,6 @@
 Модуль для построения карты сайта по объектам блога.
 """
 from django.contrib.sitemaps import Sitemap
-
 from gallery.models import Album, Photo, Tag
 
 

@@ -2,14 +2,14 @@ import os
 import random
 from http import HTTPStatus
 
+from blog.models import Article, Category, Comment, Series, Topic
+from blog.views import ArticleDetailView, blog, category, series, topic
 from django.contrib.auth import get_user
 from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import resolve, reverse
 from django.utils.crypto import get_random_string
 
-from blog.models import Article, Category, Comment, Series, Topic
-from blog.views import ArticleDetailView, blog, category, series, topic
 from personal_website.settings import PROJECT_NAME, TEMPLATES
 from personal_website.utils import generate_random_text
 
@@ -148,7 +148,9 @@ class BlogIndexPageTest(TestCase):
         Проверяет, что статьи на главной странице блога отсортированы в правильном порядке.
         """
         response = self.client.get(ARTICLE_LIST_URL)
-        target_articles = Article.objects.filter(public=True).order_by("-published_at")[:5]
+        target_articles = Article.objects.filter(public=True).order_by("-published_at")[
+            :5
+        ]
         response_articles = response.context["page_obj"]
         self.assertQuerysetEqual(target_articles, response_articles)
 

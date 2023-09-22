@@ -1,8 +1,7 @@
+from blog.models import Article, Category, Comment, Series, Topic
 from django.contrib import admin
 from django.db import models
 from tinymce.widgets import TinyMCE
-
-from blog.models import Article, Category, Comment, Series, Topic
 
 formfield_overrides = {
     models.TextField: {"widget": TinyMCE()},

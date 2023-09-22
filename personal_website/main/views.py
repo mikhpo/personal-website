@@ -1,6 +1,5 @@
-from django.shortcuts import render
-
 from blog.models import Category, Series
+from django.shortcuts import render
 
 
 def main(request):

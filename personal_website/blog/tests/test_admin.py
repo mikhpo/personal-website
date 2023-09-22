@@ -1,13 +1,13 @@
 import os
 from http import HTTPStatus
 
+from blog.apps import BlogConfig
+from blog.models import Article, Category, Comment, Series, Topic
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 
-from blog.apps import BlogConfig
-from blog.models import Article, Category, Comment, Series, Topic
 from personal_website.utils import (
     format_local_datetime,
     generate_random_text,
@@ -203,7 +203,9 @@ class BlogAdminTest(TestCase):
         )
         self.assertEqual(response.status_code, HTTPStatus.FOUND)
         self.assertTrue(Article.objects.filter(title="Test article 2").exists())
-        self.assertNotEqual(Article.objects.get(title="Test article 2").published_at, None)
+        self.assertNotEqual(
+            Article.objects.get(title="Test article 2").published_at, None
+        )
 
     def test_comment_created_via_admin(self):
         """

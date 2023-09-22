@@ -4,7 +4,13 @@ from django.urls import reverse
 from django.utils.timezone import now
 
 from personal_website.utils import get_unique_slug
-from .managers import PublicArticleManager, PublicTopicManager, PublicSeriesManager, PublicGategoryManager
+
+from .managers import (
+    PublicArticleManager,
+    PublicGategoryManager,
+    PublicSeriesManager,
+    PublicTopicManager,
+)
 
 
 class Category(models.Model):

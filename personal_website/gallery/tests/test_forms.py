@@ -2,9 +2,9 @@ import os
 
 from django.conf import settings
 from django.test import TestCase, override_settings
-
 from gallery.forms import AlbumForm
 from gallery.models import Album, Photo
+
 from personal_website.utils import list_image_paths
 
 
