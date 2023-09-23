@@ -18,7 +18,19 @@ class PhotoAdmin(admin.ModelAdmin):
 
     model = Photo
     formfield_overrides = formfield_overrides
-    readonly_fields = ("uploaded_at", "modified_at")
+    fields = (
+        "image",
+        "name",
+        "slug",
+        "preview",
+        "description",
+        "album",
+        "public",
+        "tags",
+        "uploaded_at",
+        "modified_at",
+    )
+    readonly_fields = ("preview", "uploaded_at", "modified_at")
     list_display = ("name", "uploaded_at", "modified_at", "public", "thumbnail")
     list_filter = ("tags", "album")
     ordering = ("-modified_at",)
@@ -31,7 +43,16 @@ class PhotoAdmin(admin.ModelAdmin):
             return mark_safe(f"<img src='{obj.image_thumbnail.url}'/>")
         return ""
 
+    def preview(self, obj: Photo):
+        """
+        Получить превью фотографии для административной панели.
+        """
+        if obj.image:
+            return mark_safe(f"<img src='{obj.image_preview.url}'/>")
+        return ""
+
     thumbnail.short_description = "Миниатюра"
+    preview.short_description = "Превью"
 
 
 class PhotoInline(admin.TabularInline):
