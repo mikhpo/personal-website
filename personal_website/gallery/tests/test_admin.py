@@ -16,7 +16,7 @@ ADMIN_URL = "/admin/"
 
 
 @override_settings(MEDIA_ROOT=os.path.join(settings.BASE_DIR, "temp"))
-class GalleryAdminTest(TestCase):
+class GalleryAdminTests(TestCase):
     """
     Тестирование функциональности раздела галереи в административном интерфейсе Django.
     """
@@ -28,6 +28,7 @@ class GalleryAdminTest(TestCase):
             username="testadmin", password="12345"
         )
         os.makedirs(settings.MEDIA_ROOT)
+        cls.image_path = list_image_paths()[0]
 
     @classmethod
     def tearDownClass(cls):
@@ -35,6 +36,8 @@ class GalleryAdminTest(TestCase):
         super().tearDownClass()
 
     def setUp(self):
+        self.photo_image = open(self.image_path, "rb")
+        self.photo_name = Path(self.image_path).stem
         self.client.login(username="testadmin", password="12345")
 
     def test_gallery_admin_page_displayed(self):
@@ -45,24 +48,53 @@ class GalleryAdminTest(TestCase):
         response = self.client.get(ADMIN_URL)
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertContains(response, app_verbose_name)
-        response = self.client.get(ADMIN_URL + "gallery/")
+        url = ADMIN_URL + "gallery/"
+        response = self.client.get(url)
         self.assertEqual(response.status_code, HTTPStatus.OK)
         for action in ["Добавить", "Изменить"]:
             self.assertContains(response, action)
 
-    def test_photo_admin_page_displayed(self):
+    def test_photo_admin_list_page_displayed(self):
         """
         Проверяет, что в административной панели отображается модель фотографии.
         """
+        url = ADMIN_URL + "gallery/photo/"
         photos_verbose_name = Photo._meta.verbose_name_plural
         self.assertNotEqual(photos_verbose_name, None)
         response = self.client.get(ADMIN_URL)
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertContains(response, photos_verbose_name)
-        response = self.client.get(ADMIN_URL + "gallery/photo/")
+        response = self.client.get(url)
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
-    def test_album_admin_page_displayed(self):
+    def test_photo_change_page_rendered(self):
+        """
+        Проверяет корректность отображения страницы изменения фотографии.
+        """
+        with self.subTest("Получение страницы детального просмотра и изменения"):
+            album = Album.objects.create(name="Test album")
+            photo = Photo.objects.create(name="Test photo", album=album)
+            slug = "test-photo"
+            url = ADMIN_URL + f"gallery/photo/{photo.pk}/change/"
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, HTTPStatus.OK)
+            self.assertEqual(photo.slug, slug)
+
+        with self.subTest("Отправка данных для изменения объекта"):
+            new_slug = "new-slug"
+            data = {
+                "image": SimpleUploadedFile(
+                    self.photo_image.name, self.photo_image.read()
+                ),
+                "name": photo.name,
+                "album": album.pk,
+                "slug": new_slug,
+            }
+            response = self.client.post(url, data)
+            photo.refresh_from_db()
+            self.assertEqual(photo.slug, new_slug)
+
+    def test_album_admin_list_page_displayed(self):
         """
         Проверяет, что в административной панели отображается модель альбома.
         """
@@ -71,10 +103,11 @@ class GalleryAdminTest(TestCase):
         response = self.client.get(ADMIN_URL)
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertContains(response, albums_verbose_name)
-        response = self.client.get(ADMIN_URL + "gallery/album/")
+        url = ADMIN_URL + "gallery/album/"
+        response = self.client.get(url)
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
-    def test_tag_admin_page_displayed(self):
+    def test_tag_admin_list_page_displayed(self):
         """
         Проверяет, что в административной панели отображается модель тэга.
         """
@@ -83,7 +116,8 @@ class GalleryAdminTest(TestCase):
         response = self.client.get(ADMIN_URL)
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertContains(response, tags_verbose_name)
-        response = self.client.get(ADMIN_URL + "gallery/tag/")
+        url = ADMIN_URL + "gallery/tag/"
+        response = self.client.get(url)
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_photo_add_via_admin(self):
@@ -94,26 +128,23 @@ class GalleryAdminTest(TestCase):
         album = Album.objects.create(name="Тестовый альбом")
 
         # Ссылка на форму добавления фотографии в административной панели.
-        photo_add_url = ADMIN_URL + "gallery/photo/add/"
-        response = self.client.get(photo_add_url)
+        url = ADMIN_URL + "gallery/photo/add/"
+        response = self.client.get(url)
         self.assertEqual(response.status_code, HTTPStatus.OK)
-
-        # Получение фотографии, которая будет загружена.
-        image_path = list_image_paths()[0]
-        photo_image = open(image_path, "rb")
-        photo_name = Path(image_path).stem
 
         # Загрузить фотографию, проверить статус ответа и что фотография с именем исходного файла существует в базе данных.
         response = self.client.post(
-            photo_add_url,
+            url,
             data={
-                "image": SimpleUploadedFile(photo_image.name, photo_image.read()),
+                "image": SimpleUploadedFile(
+                    self.photo_image.name, self.photo_image.read()
+                ),
                 "album": album.pk,
                 "public": True,
             },
         )
         self.assertEqual(response.status_code, HTTPStatus.FOUND)
-        self.assertTrue(Photo.objects.filter(name=photo_name).exists())
+        self.assertTrue(Photo.objects.filter(name=self.photo_name).exists())
 
     def test_tag_add_via_admin(self):
         """
@@ -122,12 +153,12 @@ class GalleryAdminTest(TestCase):
         _TEST_TAG_NAME = "test"
 
         # Ссылка на форму добавления тэга в административной панели.
-        tag_add_url = ADMIN_URL + "gallery/tag/add/"
-        response = self.client.get(tag_add_url)
+        url = ADMIN_URL + "gallery/tag/add/"
+        response = self.client.get(url)
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
         # Заполнить форму, отправить форму, проверить статус ответа.
-        response = self.client.post(tag_add_url, data={"name": _TEST_TAG_NAME})
+        response = self.client.post(url, data={"name": _TEST_TAG_NAME})
         self.assertEqual(response.status_code, HTTPStatus.FOUND)
 
         # Проверить, что тэг с указанным именем существует в базе данных и что слаг автоматически создан.
@@ -143,8 +174,8 @@ class GalleryAdminTest(TestCase):
         _TEST_ALBUM_NAME = "Test album"
 
         # Ссылка на форму добавления альбома в административной панели.
-        album_add_url = ADMIN_URL + "gallery/album/add/"
-        response = self.client.get(album_add_url)
+        url = ADMIN_URL + "gallery/album/add/"
+        response = self.client.get(url)
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
         # Заполнить форму, отправить форму, проверить статус ответа.
@@ -153,7 +184,7 @@ class GalleryAdminTest(TestCase):
             "photo_set-TOTAL_FORMS": 0,
             "photo_set-INITIAL_FORMS": 0,
         }
-        response = self.client.post(album_add_url, data)
+        response = self.client.post(url, data)
         self.assertEqual(response.status_code, HTTPStatus.FOUND)
 
         # Проверить, что альбом с указанным именем существует в базе данных и что слаг автоматически создан.
@@ -161,3 +192,26 @@ class GalleryAdminTest(TestCase):
         self.assertTrue(queryset.exists())
         album = queryset.first()
         self.assertEqual(album.slug, "test-album")
+
+    def test_album_admin_change(self):
+        """
+        Проверка представления для изменения альбома.
+        """
+        with self.subTest("Получение страницы GET-методом"):
+            album = Album.objects.create(name="Test album")
+            url = ADMIN_URL + f"gallery/album/{album.pk}/change/"
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, HTTPStatus.OK)
+
+        with self.subTest("Изменение альбома POST-методом"):
+            new_slug = "new-slug"
+            data = {
+                "name": album.name,
+                "slug": new_slug,
+                "photo_set-TOTAL_FORMS": 0,
+                "photo_set-INITIAL_FORMS": 0,
+            }
+            response = self.client.post(url, data)
+            album.refresh_from_db()
+            self.assertEqual(response.status_code, HTTPStatus.FOUND)
+            self.assertEqual(album.slug, new_slug)
