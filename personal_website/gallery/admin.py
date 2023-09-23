@@ -22,7 +22,7 @@ class PhotoAdmin(admin.ModelAdmin):
         "image",
         "name",
         "slug",
-        "preview",
+        "image_preview",
         "description",
         "album",
         "public",
@@ -30,12 +30,12 @@ class PhotoAdmin(admin.ModelAdmin):
         "uploaded_at",
         "modified_at",
     )
-    readonly_fields = ("preview", "uploaded_at", "modified_at")
-    list_display = ("name", "uploaded_at", "modified_at", "public", "thumbnail")
+    readonly_fields = ("image_preview", "uploaded_at", "modified_at")
+    list_display = ("name", "uploaded_at", "modified_at", "public", "image_thumbnail")
     list_filter = ("tags", "album")
     ordering = ("-modified_at",)
 
-    def thumbnail(self, obj: Photo):
+    def image_thumbnail(self, obj: Photo):
         """
         Получить миниатюру фотографии для административной панели.
         """
@@ -43,7 +43,7 @@ class PhotoAdmin(admin.ModelAdmin):
             return mark_safe(f"<img src='{obj.image_thumbnail.url}'/>")
         return ""
 
-    def preview(self, obj: Photo):
+    def image_preview(self, obj: Photo):
         """
         Получить превью фотографии для административной панели.
         """
@@ -51,14 +51,30 @@ class PhotoAdmin(admin.ModelAdmin):
             return mark_safe(f"<img src='{obj.image_preview.url}'/>")
         return ""
 
-    thumbnail.short_description = "Миниатюра"
-    preview.short_description = "Превью"
+    image_thumbnail.short_description = "Миниатюра"
+    image_preview.short_description = "Превью"
 
 
 class PhotoInline(admin.TabularInline):
     model = Photo
-    exclude = ("description", "slug")
+    fields = (
+        "image",
+        "name",
+        "image_thumbnail",
+        "public",
+    )
+    readonly_fields = ("image_thumbnail",)
     extra = 5
+
+    def image_thumbnail(self, obj: Photo):
+        """
+        Получить миниатюру фотографии для административной панели.
+        """
+        if obj.image:
+            return mark_safe(f"<img src='{obj.image_thumbnail.url}'/>")
+        return ""
+
+    image_thumbnail.short_description = "Миниатюра"
 
 
 @admin.register(Album)
@@ -69,20 +85,46 @@ class AlbumAdmin(admin.ModelAdmin):
 
     inlines = [PhotoInline]
     form = AlbumForm
+    fields = (
+        "name",
+        "description",
+        "slug",
+        "cover",
+        "cover_preview",
+        "tags",
+        "created_at",
+        "updated_at",
+    )
     formfield_overrides = formfield_overrides
-    readonly_fields = ("created_at", "updated_at")
-    list_display = ("name", "created_at", "updated_at", "public", "thumbnail")
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+        "cover_preview",
+        "cover_preview",
+    )
+    list_display = ("name", "created_at", "updated_at", "public", "cover_thumbnail")
     list_filter = ("tags",)
 
-    def thumbnail(self, obj: Album):
+    def cover_thumbnail(self, obj: Album):
         """
         Получить миниатюру обложки альбома для административной панели.
         """
-        if obj.cover:
-            return mark_safe(f"<img src='{obj.cover.image_thumbnail.url}'/>")
+        cover: Photo = obj.cover
+        if cover:
+            return mark_safe(f"<img src='{cover.image_thumbnail.url}'/>")
         return ""
 
-    thumbnail.short_description = "Обложка"
+    def cover_preview(self, obj: Album):
+        """
+        Получить превью обложки альбома для административной панели.
+        """
+        cover: Photo = obj.cover
+        if cover:
+            return mark_safe(f"<img src='{cover.image_preview.url}'/>")
+        return ""
+
+    cover_thumbnail.short_description = "Обложка"
+    cover_preview.short_description = "Обложка"
 
 
 @admin.register(Tag)
