@@ -8,14 +8,14 @@
 # 4. Перезапуск Gunicorn.
 # 5. Перезапуск Nginx. 
 # Адрес корневого каталога проекта определяется автоматически.
-
-project_name="personal_website"
 repository_root="$(dirname "$(dirname "$(readlink -fm "$0")")")"
+project_name="personal_website"
 python="$project_root/.venv/bin/python"
+$script="$repository_root/$project_name/manage.py"
 cd $repository_root
 git fetch origin
 git pull
 bash ./scripts/install_dependencies.sh
-$python $repository_root/$project_name/manage.py migrate 
+& $python $script migrate 
 bash ./scripts/add_cron_jobs.sh
 bash ./scripts/restart_services.sh
