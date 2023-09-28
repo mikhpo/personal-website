@@ -20,7 +20,7 @@ class GalleryFormsTest(TestCase):
         """
         form = AlbumForm()
         self.assertEqual(form.instance.pk, None)
-        self.assertQuerysetEqual(form.fields["cover"].queryset, Photo.objects.none())
+        self.assertQuerySetEqual(form.fields["cover"].queryset, Photo.objects.none())
 
     def test_album_default_is_public(self):
         """
@@ -63,4 +63,4 @@ class GalleryFormsTest(TestCase):
             self.assertNotIn(langtang_photo, cover_choices)
 
         # Убедиться, что список фотографий для выбора соответствует полному списку фотографий из Тосканы.
-        self.assertQuerysetEqual(cover_choices, tuscany_photos)
+        self.assertQuerySetEqual(cover_choices, tuscany_photos)

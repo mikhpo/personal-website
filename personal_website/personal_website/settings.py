@@ -15,7 +15,7 @@ PROJECT_DIR = BASE_DIR.parent
 PROJECT_NAME = BASE_DIR.name
 
 # Определение признака запуска в режиме тестирования.
-TEST = "test" in sys.argv
+TEST = any((("test" in sys.argv), ("pytest" in sys.modules)))
 
 # Прочитать переменные окружения из .env файла.
 environ.Env.read_env(os.path.join(PROJECT_DIR, ".env"))
@@ -108,8 +108,6 @@ LANGUAGE_CODE = "ru"
 TIME_ZONE = "Europe/Moscow"
 
 USE_I18N = True
-
-USE_L10N = True
 
 # Да, если мы хотим использовать настройку временной зоны.
 USE_TZ = True

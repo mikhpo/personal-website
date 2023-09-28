@@ -1,10 +1,10 @@
 import os
+import pkgutil
 
-import pkg_resources
 from django.conf import settings
 from django.test import SimpleTestCase
 
-PYTHON_PACKAGES = ("django", "gunicorn", "psycopg", "whitenoise", "pillow")
+REQUIRED_PACKAGES = ("django", "gunicorn", "psycopg", "whitenoise", "PIL")
 
 
 class PythonPackagesTests(SimpleTestCase):
@@ -23,10 +23,6 @@ class PythonPackagesTests(SimpleTestCase):
         """
         Проверяет, что все пакеты Python установлены.
         """
-        working_set = pkg_resources.working_set
-        installed_packages_list = sorted(
-            [f"{package.key}=={package.version}" for package in working_set]
-        )
-        installed_packages = ", ".join(installed_packages_list)
-        for package in PYTHON_PACKAGES:
-            self.assertIn(package, installed_packages)
+        for package in REQUIRED_PACKAGES:
+            loader = pkgutil.find_loader(package)
+            self.assertIsNotNone(loader)
