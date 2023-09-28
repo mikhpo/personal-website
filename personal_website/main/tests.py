@@ -97,7 +97,7 @@ class MainPageTest(TestCase):
         """
         response = self.client.get(self.main_url)
         target_categories = Category.objects.filter(public=True).exclude(image="")
-        self.assertQuerysetEqual(target_categories, response.context["categories"])
+        self.assertQuerySetEqual(target_categories, response.context["categories"])
 
     def test_main_page_series_filter(self):
         """
@@ -105,7 +105,7 @@ class MainPageTest(TestCase):
         """
         response = self.client.get(self.main_url)
         target_series = Series.objects.filter(public=True).exclude(image="")
-        self.assertQuerysetEqual(target_series, response.context["series"])
+        self.assertQuerySetEqual(target_series, response.context["series"])
 
 
 class SitemapTest(TestCase):

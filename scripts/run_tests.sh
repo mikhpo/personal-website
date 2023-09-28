@@ -3,29 +3,21 @@
 # Запуск тестов проекта.
 # Адреса исполняемых файлов определяются автоматически.
 
-#####################
 # Вывести в терминал линию для разделения этапов выполнения скрипта.
-#####################
 function print_line() {
     printf %"$(tput cols)"s |tr " " "="
 }
 
-# Определение абсолютных путей директорий и исполняемых файлов.
+# Смена директории на корневую директорию проекта.
 repository_root="$(dirname "$(dirname "$(readlink -f "$0")")")"
-website_root="$repository_root/personal_website"
-python_executable="$repository_root/.venv/bin/python"
-script_file="$website_root/manage.py"
-print_line
-echo "Корневая директория репозитория: ${repository_root}"
-echo "Путь до исполняемого файла Python: ${python_executable}"
-echo "Директория проекта Django: ${website_root}"
+cd $repository_root
 
-# Выполнить юнит-тесты Node.js для проверки общих настроек проекта.
+# Запустить тесты Node.js.
 print_line
 echo "Выполнение тестов Node.js"
 npm test
 
-# Выполнить выполнить юнит-тесты Django для проверки функциональности проекта.
+# Запустить тесты Django при помощи Pytest.
 print_line
 echo "Выполнение тестов Django"
-$python_executable $script_file test
+pytest

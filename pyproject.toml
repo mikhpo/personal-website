@@ -25,12 +25,20 @@ coverage = "^7.3.0"
 black = "^23.7.0"
 isort = "^5.12.0"
 djlint = "^1.32.1"
+pytest = "^7.4.2"
+pytest-subtests = "^0.11.0"
+pytest-django = "^4.5.2"
 
 [tool.isort]
 profile = "django"
 
 [tool.djlint]
 ignore="H006,H013"
+
+[tool.pytest.ini_options]
+pythonpath = "personal_website ."
+DJANGO_SETTINGS_MODULE = "personal_website.settings"
+filterwarnings = ["ignore::django.utils.deprecation.RemovedInDjango51Warning"]
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

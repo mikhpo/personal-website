@@ -106,7 +106,7 @@ class UserManagementRoutesTest(TestCase):
         Тестирование ссылки для выхода с сайта.
         """
         url = "/accounts/logout/"
-        response = self.client.get(url)
+        response = self.client.post(url)
         self.assertEqual(response.status_code, HTTPStatus.FOUND)
         self.assertRedirects(
             response,

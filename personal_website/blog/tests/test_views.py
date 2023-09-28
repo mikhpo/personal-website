@@ -152,7 +152,7 @@ class BlogIndexPageTest(TestCase):
             :5
         ]
         response_articles = response.context["page_obj"]
-        self.assertQuerysetEqual(target_articles, response_articles)
+        self.assertQuerySetEqual(target_articles, response_articles)
 
     def test_article_list_title(self):
         """
@@ -293,7 +293,7 @@ class ArticleDetailPageTest(TestCase):
         response = self.client.get(url)
         target_comments = Comment.objects.filter(article=article).order_by("posted")
         response_comments = response.context["comments"]
-        self.assertQuerysetEqual(target_comments, response_comments)
+        self.assertQuerySetEqual(target_comments, response_comments)
         self.assertEqual(response_comments[0].content, "test comment 1")
 
     def test_article_content_safe(self):
@@ -443,7 +443,7 @@ class CategoryPageTest(TestCase):
             public=True, categories=self.test_category
         ).order_by("-published_at")[:5]
         response_articles = response.context["page_obj"]
-        self.assertQuerysetEqual(target_articles, response_articles)
+        self.assertQuerySetEqual(target_articles, response_articles)
 
 
 class TopicPageTest(TestCase):
@@ -577,7 +577,7 @@ class TopicPageTest(TestCase):
             public=True, topics=self.test_topic
         ).order_by("-published_at")[:5]
         response_articles = response.context["page_obj"]
-        self.assertQuerysetEqual(target_articles, response_articles)
+        self.assertQuerySetEqual(target_articles, response_articles)
 
 
 class SeriesPageTest(TestCase):
@@ -715,4 +715,4 @@ class SeriesPageTest(TestCase):
             public=True, series=self.test_series
         ).order_by("-published_at")[:5]
         response_articles = response.context["page_obj"]
-        self.assertQuerysetEqual(target_articles, response_articles)
+        self.assertQuerySetEqual(target_articles, response_articles)
