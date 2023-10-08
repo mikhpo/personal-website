@@ -36,6 +36,7 @@ class PhotoAdmin(admin.ModelAdmin):
     list_filter = ("tags", "album")
     ordering = ("-modified_at",)
 
+    @admin.display(description="Миниатюра")
     def image_thumbnail(self, obj: Photo):
         """
         Получить миниатюру фотографии для административной панели.
@@ -44,6 +45,7 @@ class PhotoAdmin(admin.ModelAdmin):
             return mark_safe(f"<img src='{obj.image_thumbnail.url}'/>")
         return ""
 
+    @admin.display(description="Превью")
     def image_preview(self, obj: Photo):
         """
         Получить превью фотографии для административной панели.
@@ -51,9 +53,6 @@ class PhotoAdmin(admin.ModelAdmin):
         if obj.image:
             return mark_safe(f"<img src='{obj.image_preview.url}'/>")
         return ""
-
-    image_thumbnail.short_description = "Миниатюра"
-    image_preview.short_description = "Превью"
 
 
 class PhotoInline(admin.TabularInline):
@@ -67,6 +66,7 @@ class PhotoInline(admin.TabularInline):
     readonly_fields = ("image_thumbnail",)
     extra = 5
 
+    @admin.display(description="Миниатюра")
     def image_thumbnail(self, obj: Photo):
         """
         Получить миниатюру фотографии для административной панели.
@@ -74,8 +74,6 @@ class PhotoInline(admin.TabularInline):
         if obj.image:
             return mark_safe(f"<img src='{obj.image_thumbnail.url}'/>")
         return ""
-
-    image_thumbnail.short_description = "Миниатюра"
 
 
 @admin.register(Album)
@@ -95,6 +93,8 @@ class AlbumAdmin(admin.ModelAdmin):
         "tags",
         "created_at",
         "updated_at",
+        "photos_count",
+        "public_photos_count",
     )
     formfield_overrides = formfield_overrides
     readonly_fields = (
@@ -102,10 +102,21 @@ class AlbumAdmin(admin.ModelAdmin):
         "updated_at",
         "cover_preview",
         "cover_preview",
+        "photos_count",
+        "public_photos_count",
     )
-    list_display = ("name", "created_at", "updated_at", "public", "cover_thumbnail")
+    list_display = (
+        "name",
+        "created_at",
+        "updated_at",
+        "public",
+        "cover_thumbnail",
+        "photos_count",
+        "public_photos_count",
+    )
     list_filter = ("tags",)
 
+    @admin.display(description="Обложка")
     def cover_thumbnail(self, obj: Album):
         """
         Получить миниатюру обложки альбома для административной панели.
@@ -115,6 +126,7 @@ class AlbumAdmin(admin.ModelAdmin):
             return mark_safe(f"<img src='{cover.image_thumbnail.url}'/>")
         return ""
 
+    @admin.display(description="Обложка")
     def cover_preview(self, obj: Album):
         """
         Получить превью обложки альбома для административной панели.
@@ -124,8 +136,13 @@ class AlbumAdmin(admin.ModelAdmin):
             return mark_safe(f"<img src='{cover.image_preview.url}'/>")
         return ""
 
-    cover_thumbnail.short_description = "Обложка"
-    cover_preview.short_description = "Обложка"
+    @admin.display(description="Фотографий")
+    def photos_count(self, obj: Album):
+        return obj.photos_count
+
+    @admin.display(description="Публичных фотографий")
+    def public_photos_count(self, obj: Album):
+        return obj.public_photos_count
 
 
 @admin.register(Tag)

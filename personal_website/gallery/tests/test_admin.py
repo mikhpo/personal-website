@@ -184,9 +184,10 @@ class GalleryAdminTests(TestCase):
         self.assertEqual(response.status_code, HTTPStatus.FOUND)
 
         # Проверить, что альбом с указанным именем существует в базе данных и что слаг автоматически создан.
-        queryset = Album.objects.filter(name=_TEST_ALBUM_NAME)
+        queryset = Album.objects.all()
         self.assertTrue(queryset.exists())
         album = queryset.first()
+        self.assertEqual(album.name, _TEST_ALBUM_NAME)
         self.assertEqual(album.slug, "test-album")
 
     def test_album_admin_change(self):

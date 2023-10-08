@@ -111,6 +111,22 @@ class Album(models.Model):
             self.slug = get_unique_slug(self, self.name)
         super().save(*args, **kwargs)
 
+    @property
+    def photos_count(self):
+        """
+        Количество фотографий в альбоме.
+        """
+        photos = Photo.objects.filter(album=self)
+        return photos.count()
+
+    @property
+    def public_photos_count(self):
+        """
+        Количество публичных фотографий в альбоме.
+        """
+        photos = Photo.published.filter(album=self)
+        return photos.count()
+
 
 class Photo(models.Model):
     """

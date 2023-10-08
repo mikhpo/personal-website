@@ -111,12 +111,21 @@ class GalleryModelsTest(TestCase):
         # Проверить количество фотографий в тосканском альбоме.
         photos_in_album: QuerySet[Photo] = self.tuscany_album.photo_set
         self.assertEqual(photos_in_album.count(), 3)
+        self.assertEqual(self.tuscany_album.photos_count, 3)
 
         # Удалить последнюю тосканскую фотографию и проверить, что в тосканском альбоме осталось две фотографии.
         last_tuscany_photo = tuscany_photos.last()
         last_tuscany_photo.delete()
         photos_in_album.all()
         self.assertEqual(photos_in_album.count(), 2)
+        self.assertEqual(self.tuscany_album.photos_count, 2)
+
+        # Сделать одну из фотографий непубличной и убедиться,
+        # что счетчик публичных фотографий меньше счетчика фотографий.
+        photo = photos_in_album.first()
+        photo.public = False
+        photo.save()
+        self.assertEqual(self.tuscany_album.public_photos_count, 1)
 
         # Удалить альбом и проверить, что все фотографии из него были также удалены.
         self.tuscany_album.delete()
