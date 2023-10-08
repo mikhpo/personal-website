@@ -15,7 +15,7 @@ script="$project_root/$project_name/manage.py"
 cd $project_root
 git fetch origin
 git pull
-bash $project_root/scripts/install_dependencies.sh
+bash $project_root/tools/install_dependencies.sh
 $python $script migrate 
-bash $project_root/scripts/add_cron_jobs.sh
-bash $project_root/scripts/restart_services.sh
+bash $project_root/tools/add_cron_jobs.sh
+bash $project_root/tools/restart_services.sh
