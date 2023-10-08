@@ -59,7 +59,7 @@ def main(dump_path: str) -> None:
     # Аргументы для скрипта считываются из модуля settings.
     pg_restore = os.popen(f"which pg_restore").read().strip()
     bash_script = (
-        f"{pg_restore} -Fc --single-transaction --no-owner "
+        f"{pg_restore} -Fc --single-transaction --no-owner --clean "
         f"-h {pg_host} -U {pg_user} -p {pg_port} -d {pg_name} "
         f"{dump_path}"
     )

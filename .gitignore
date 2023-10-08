@@ -16,7 +16,7 @@ mikhailpolyakov.key
 .coverage
 htmlcov
 CACHE
-logs
-static
-storage
-backups
+/logs/
+/static/
+/storage/
+/backups/

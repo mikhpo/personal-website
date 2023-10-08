@@ -1,11 +1,15 @@
 import os
+import shutil
 from http import HTTPStatus
 
 from django.conf import settings
+from django.contrib.auth.models import User
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db.models import QuerySet
 from django.http import HttpResponse
 from django.test import TestCase, override_settings
 from django.urls import resolve, reverse
+
 from gallery.models import Album, Photo, Tag
 from gallery.views import (
     AlbumDetailView,
@@ -15,8 +19,8 @@ from gallery.views import (
     PhotoListView,
     TagDetailView,
     TagListView,
+    UploadFormView,
 )
-
 from personal_website.utils import list_image_paths
 
 APP_NAME = "gallery"
@@ -35,6 +39,8 @@ TAG_DETAIL_URL = f"/{APP_NAME}/tags"
 TAG_DETAIL_URL_NAME = f"{APP_NAME}:tag-detail"
 TAG_LIST_URL = f"/{APP_NAME}/tags/"
 TAG_LIST_URL_NAME = f"{APP_NAME}:tag-list"
+UPLOAD_URL = f"/{APP_NAME}/upload/"
+UPLOAD_URL_NAME = f"{APP_NAME}:upload"
 
 BASE_TEMPLATE_NAME = "base.html"
 GALLERY_TEMPLATE_NAME = f"{APP_NAME}/{APP_NAME}_home.html"
@@ -44,6 +50,7 @@ ALBUM_DETAIL_TEMPLATE_NAME = f"{APP_NAME}/album_detail.html"
 ALBUM_LIST_TEMPLATE_NAME = f"{APP_NAME}/album_list.html"
 TAG_DETAIL_TEMPLATE_NAME = f"{APP_NAME}/tag_detail.html"
 TAG_LIST_TEMPLATE_NAME = f"{APP_NAME}/tag_list.html"
+UPLOAD_TEMPLATE_NAME = f"{APP_NAME}/upload.html"
 
 
 @override_settings(MEDIA_ROOT=os.path.join(settings.BASE_DIR, "media"))
@@ -339,3 +346,121 @@ class GalleryViewsTest(TestCase):
             self.assertEqual(response.templates, reverse_response.templates)
             self.assertTemplateUsed(response, TAG_LIST_TEMPLATE_NAME)
             self.assertTemplateUsed(response, BASE_TEMPLATE_NAME)
+
+
+class UploadFormViewTests(TestCase):
+    """
+    Тесты формы для пакетной загрузки фотографий в альбом.
+    """
+
+    test_username = "test_username"
+    staff_username = "staff_username"
+    test_password = "test_password"
+    staff_password = "staff_password"
+
+    @classmethod
+    def setUpTestData(cls) -> None:
+        super().setUpTestData()
+        cls.user = User.objects.create_user(
+            username=cls.test_username, password=cls.test_password
+        )
+        cls.staff_user = User.objects.create_superuser(
+            username=cls.staff_username, password=cls.staff_password
+        )
+        os.makedirs(settings.MEDIA_ROOT, exist_ok=True)
+        cls.test_image_paths = list_image_paths()
+
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(settings.MEDIA_ROOT, ignore_errors=True)
+        super().tearDownClass()
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.client.login(username=self.staff_username, password=self.staff_password)
+
+    def test_upload_url_resolve(self):
+        """
+        Стандартная ссылка корректно разрешается.
+        """
+        resolver_match = resolve(UPLOAD_URL)
+        self.assertEqual(resolver_match.func.view_class, UploadFormView)
+
+    def test_upload_url_name_resolve(self):
+        """
+        Имя ссылки разрешается корректно.
+        """
+        url = reverse(UPLOAD_URL_NAME)
+        resolver_match = resolve(url)
+        self.assertEqual(resolver_match.func.view_class, UploadFormView)
+
+    def test_templates_used(self):
+        """
+        Проверка использованных представлением шаблонов.
+        """
+        response = self.client.get(UPLOAD_URL)
+        for template in (UPLOAD_TEMPLATE_NAME, BASE_TEMPLATE_NAME):
+            self.assertTemplateUsed(response, template)
+
+    def test_response_status_code(self):
+        """
+        Проверить полученный статус HTTP-ответа.
+        """
+        with self.subTest("Статус ответа для пользователя с правами администратора"):
+            response = self.client.get(UPLOAD_URL)
+            self.assertEqual(response.status_code, HTTPStatus.OK)
+
+        with self.subTest("Статус ответа для пользователя с обычными правами"):
+            self.client.login(username=self.test_username, password=self.test_password)
+            response = self.client.get(UPLOAD_URL)
+            self.assertNotEqual(response.status_code, HTTPStatus.OK)
+
+        with self.subTest("Статус ответа для пользователя, который не авторизован"):
+            self.client.logout()
+            response = self.client.get(UPLOAD_URL)
+            self.assertNotEqual(response.status_code, HTTPStatus.OK)
+
+    def test_item_in_navbar(self):
+        """
+        Проверка показа ссылки на форму загрузки в навигационной панели.
+        """
+        with self.subTest("С главной страницы не доступна ссылка на форму загрузки"):
+            response = self.client.get("/main/")
+            self.assertNotContains(response, UPLOAD_URL)
+
+        with self.subTest("Со страницы галереи доступна ссылка на форму загрузки"):
+            response = self.client.get(GALLERY_URL)
+            self.assertContains(response, UPLOAD_URL)
+
+        with self.subTest(
+            "Для пользователя с обычными правами не доступна ссылка на форму загрузки"
+        ):
+            self.client.login(username=self.test_username, password=self.test_password)
+            response = self.client.get(GALLERY_URL)
+            self.assertNotContains(response, UPLOAD_URL)
+
+        with self.subTest(
+            "Для пользователя, который не авторизован, не доступна ссылка на форму загрузки"
+        ):
+            self.client.logout()
+            response = self.client.get(GALLERY_URL)
+            self.assertNotContains(response, UPLOAD_URL)
+
+    def test_images_upload(self):
+        """
+        Проверка результатов загрузки фотографий через форму.
+        """
+        album = Album.objects.create(name="Тестовый альбом")
+        photos = []
+        for image_path in self.test_image_paths:
+            with open(image_path, "rb") as image:
+                file = SimpleUploadedFile(name=image.name, content=image.read())
+                photos.append(file)
+
+        data = {"photos": photos, "album": album.pk}
+        response = self.client.post(UPLOAD_URL, data)
+
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
+        self.assertRedirects(response, GALLERY_URL)
+        for photo in Photo.objects.all():
+            self.assertEqual(photo.album, album)

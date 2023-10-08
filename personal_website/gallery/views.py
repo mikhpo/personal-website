@@ -1,5 +1,11 @@
+from django.contrib.admin.views.decorators import staff_member_required
 from django.db.models import QuerySet
+from django.urls import reverse_lazy
+from django.utils.decorators import method_decorator
 from django.views.generic import DetailView, ListView, TemplateView
+from django.views.generic.edit import FormView
+
+from gallery.forms import UploadForm
 from gallery.mixins import GalleryContentMixin
 from gallery.models import Album, Photo, Tag
 
@@ -104,3 +110,30 @@ class TagListView(ListView):
 
     model = Tag
     template_name = "gallery/tag_list.html"
+
+
+@method_decorator(staff_member_required, "dispatch")
+class UploadFormView(FormView):
+    """
+    Представление для пакетной загрузки фотографий в альбом.
+    """
+
+    template_name = "gallery/upload.html"
+    form_class = UploadForm
+    success_url = reverse_lazy("gallery:gallery")
+
+    def post(self, request, *args, **kwargs):
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+        if form.is_valid():
+            return self.form_valid(form)
+        else:
+            return self.form_invalid(form)
+
+    def form_valid(self, form: UploadForm):
+        data: dict = form.cleaned_data
+        photos = data["photos"]
+        album = data["album"]
+        for photo in photos:
+            Photo.objects.create(image=photo, album=album)
+        return super().form_valid(form)
