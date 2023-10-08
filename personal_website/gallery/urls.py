@@ -1,4 +1,5 @@
 from django.urls import path
+
 from gallery import views
 
 app_name = "gallery"
@@ -11,4 +12,5 @@ urlpatterns = [
     path("photos/<slug:slug>/", views.PhotoDetailView.as_view(), name="photo-detail"),
     path("albums/<slug:slug>/", views.AlbumDetailView.as_view(), name="album-detail"),
     path("tags/<slug:slug>/", views.TagDetailView.as_view(), name="tag-detail"),
+    path("upload/", views.UploadFormView.as_view(), name="upload"),
 ]

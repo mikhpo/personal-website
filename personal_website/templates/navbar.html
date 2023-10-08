@@ -1,8 +1,10 @@
 {% load static %}
 <!-- Навигационная панель. -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm mb-5">
-    <link rel="shortcut icon" href="{% static "favicon.ico" %}" type="image/ico" />
-    <div class="container">
+<nav class="navbar navbar-expand-lg shadow mb-5">
+    <link rel="shortcut icon"
+          href="{% static "favicon.ico" %}"
+          type="image/ico" />
+    <div class="container-fluid">
         <a class="navbar-brand">Mikhail Polyakov</a>
         <button class="navbar-toggler"
                 type="button"
@@ -16,20 +18,49 @@
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                 <li class="nav-item">
-                    <a class="nav-link {% if "/main/" in request.path %}active{% endif %}" aria-current="page" href="{% url "main:main" %}">
-                        Главная
-                    </a>
+                    <a {% if "/main/" in request.path %}class="nav-link active"{% else %}class="nav-link"{% endif %}
+                       aria-current="page"
+                       href="{% url "main:main" %}">Главная</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {% if "/blog/" in request.path %}active{% endif %}" aria-current="page" href="{% url "blog:blog" %}">
-                        Блог
-                    </a>
+                    <a {% if "/blog/" in request.path %}class="nav-link active"{% else %}class="nav-link"{% endif %}
+                       aria-current="page"
+                       href="{% url "blog:blog" %}">Блог</a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link {% if "/gallery/" in request.path %}active{% endif %}" aria-current="page" href="{% url "gallery:gallery" %}">
-                        Галерея
-                    </a>
-                </li>
+                {% if "/gallery/" in request.path %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link active dropdown-toggle "
+                           href="{% url "gallery:gallery" %}"
+                           role="button"
+                           data-bs-toggle="dropdown"
+                           aria-expanded="false">Галерея</a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="{% url "gallery:album-list" %}">Альбомы</a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url "gallery:photo-list" %}">Фотографии</a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url "gallery:tag-list" %}">Тэги</a>
+                            </li>
+                            {% if request.user.is_staff %}
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{% url "gallery:upload" %}">Загрузка</a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </li>
+                {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link"
+                           aria-current="page"
+                           href="{% url "gallery:gallery" %}">Галерея</a>
+                    </li>
+                {% endif %}
             </ul>
             {% if user.is_authenticated %}
                 <span class="navbar-text text-nowrap">
@@ -38,10 +69,10 @@
                 {% if request.user.is_staff %}
                     <a href="{% url "admin:index" %}" class="navbar-text text-nowrap">Администрирование</a>
                 {% endif %}
-                <a href="{% url "logout" %}" class="btn btn-outline-light" role="button">Выйти</a>
+                <a href="{% url "logout" %}" class="btn btn-outline-dark" role="button">Выйти</a>
             {% else %}
                 <a href="{% url "accounts:signup" %}" class="navbar-text text-nowrap">Регистрация</a>
-                <a href="{% url "login" %}" class="btn btn-outline-light" role="button">Войти</a>
+                <a href="{% url "login" %}" class="btn btn-outline-dark" role="button">Войти</a>
             {% endif %}
         </div>
     </div>

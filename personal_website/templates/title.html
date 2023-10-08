@@ -1,0 +1,7 @@
+{% if "blog" in request.path %}
+    Михаил Поляков - Блог
+{% elif "gallery" in request.path %}
+    Михаил Поляков - Галерея
+{% else %}
+    Михаил Поляков
+{% endif %}

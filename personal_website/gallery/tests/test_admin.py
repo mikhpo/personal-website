@@ -7,9 +7,9 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
+
 from gallery.apps import GalleryConfig
 from gallery.models import Album, Photo, Tag
-
 from personal_website.utils import list_image_paths
 
 ADMIN_URL = "/admin/"
@@ -133,16 +133,12 @@ class GalleryAdminTests(TestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
         # Загрузить фотографию, проверить статус ответа и что фотография с именем исходного файла существует в базе данных.
-        response = self.client.post(
-            url,
-            data={
-                "image": SimpleUploadedFile(
-                    self.photo_image.name, self.photo_image.read()
-                ),
-                "album": album.pk,
-                "public": True,
-            },
-        )
+        data = {
+            "image": SimpleUploadedFile(self.photo_image.name, self.photo_image.read()),
+            "album": album.pk,
+            "public": True,
+        }
+        response = self.client.post(url, data)
         self.assertEqual(response.status_code, HTTPStatus.FOUND)
         self.assertTrue(Photo.objects.filter(name=self.photo_name).exists())
 

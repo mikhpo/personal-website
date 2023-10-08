@@ -1,13 +1,13 @@
 import os
 from http import HTTPStatus
 
-from blog.apps import BlogConfig
-from blog.models import Article, Category, Comment, Series, Topic
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 
+from blog.apps import BlogConfig
+from blog.models import Article, Category, Comment, Series, Topic
 from personal_website.utils import (
     format_local_datetime,
     generate_random_text,

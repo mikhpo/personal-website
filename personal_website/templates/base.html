@@ -10,20 +10,16 @@
         content="user-scalable=no, width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <head>
     {% block head %}
-      {% block title %}
-        {% if "blog" in request.path %}
-          <title>Михаил Поляков - Блог</title>
-        {% elif "gallery" in request.path %}
-          <title>Михаил Поляков - Галерея</title>
-        {% else %}
-          <title>Михаил Поляков</title>
-        {% endif %}
-      {% endblock title %}
-      <link rel="stylesheet"
-            href="{% static "bootstrap/dist/css/bootstrap.min.css" %}">
+      <title>
+        {% block title %}
+          {% include "title.html" %}
+        {% endblock title %}
+      </title>
+      <link rel="stylesheet" href="{% static "bootstrap/dist/css/bootstrap.min.css" %}">
       <link rel="stylesheet" href="{% static "css/base.css" %}">
       <link rel="stylesheet" href="{% static "css/navbar.css" %}">
       <link rel="stylesheet" href="{% static "css/cards.css" %}">
+      <link rel="stylesheet" href="{% static "css/forms.css" %}">
       {% block css %}
       {% endblock css %}
       {% block navbar %}

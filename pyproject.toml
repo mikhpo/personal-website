@@ -31,6 +31,7 @@ pytest-django = "^4.5.2"
 
 [tool.isort]
 profile = "django"
+src_paths = ["personal_website"]
 
 [tool.djlint]
 ignore="H006,H013"

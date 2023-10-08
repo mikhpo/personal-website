@@ -9,37 +9,37 @@
     <div class="card shadow-sm p-3 mb-5 bg-white rounded align-items-center justify-content-center">
       <div class="card-body">
         {% block card %}
-        <h4 class="card-title" align="center">Вход на сайт</h4>
-        <p class="card-text">
-          {% if form.errors %}<p>Имя пользователя или пароль введены неверно. Попробуйте ещё раз.</p>{% endif %}
-          {% if next %}
-            {% if user.is_authenticated %}
-              <p>У данной учетной записи нет доступа к данной странице.</p>
-            {% else %}
-              <p>Войдите для просмотра этой страницы.</p>
+          <h4 class="card-title" align="center">Вход на сайт</h4>
+          <p class="card-text">
+            {% if form.errors %}<p>Имя пользователя или пароль введены неверно. Попробуйте ещё раз.</p>{% endif %}
+            {% if next %}
+              {% if user.is_authenticated %}
+                <p>У данной учетной записи нет доступа к данной странице.</p>
+              {% else %}
+                <p>Войдите для просмотра этой страницы.</p>
+              {% endif %}
             {% endif %}
-          {% endif %}
-          <form method="post" action="{% url "login" %}" ALIGN="center">
-            {% csrf_token %}
-            <table class="center">
-              <tr>
-                <td>{{ form.username.label_tag }}</td>
-                <td>{{ form.username }}</td>
-              </tr>
-              <tr>
-                <td>{{ form.password.label_tag }}</td>
-                <td>{{ form.password }}</td>
-              </tr>
-            </table>
+            <form method="post" action="{% url "login" %}" ALIGN="center">
+              {% csrf_token %}
+              <table class="center">
+                <tr>
+                  <td>{{ form.username.label_tag }}</td>
+                  <td>{{ form.username }}</td>
+                </tr>
+                <tr>
+                  <td>{{ form.password.label_tag }}</td>
+                  <td>{{ form.password }}</td>
+                </tr>
+              </table>
+              <br>
+              <input type="submit" class="btn btn-outline-dark" value="Войти" />
+              <input type="hidden" name="next" value="{{ next }}" />
+            </form>
             <br>
-            <input type="submit" class="btn btn-outline-dark" value="Войти" />
-            <input type="hidden" name="next" value="{{ next }}" />
-          </form>
-          <br>
-          <div>
-            <a href="{% url "password_reset" %}">Забыли пароль?</a>
-          </div>
-        </p>
+            <div>
+              <a href="{% url "password_reset" %}">Забыли пароль?</a>
+            </div>
+          </p>
         {% endblock card %}
       </div>
     </div>

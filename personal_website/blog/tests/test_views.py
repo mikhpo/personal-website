@@ -2,14 +2,14 @@ import os
 import random
 from http import HTTPStatus
 
-from blog.models import Article, Category, Comment, Series, Topic
-from blog.views import ArticleDetailView, blog, category, series, topic
 from django.contrib.auth import get_user
 from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import resolve, reverse
 from django.utils.crypto import get_random_string
 
+from blog.models import Article, Category, Comment, Series, Topic
+from blog.views import ArticleDetailView, blog, category, series, topic
 from personal_website.settings import PROJECT_NAME, TEMPLATES
 from personal_website.utils import generate_random_text
 
@@ -34,7 +34,7 @@ TOPIC_TEMPLATE = f"{APP_NAME}/article_list.html"
 BASE_TEMPLATE = "base.html"
 
 
-class BlogIndexPageTest(TestCase):
+class BlogIndexPageTests(TestCase):
     """
     Тесты главной страницы блога.
     """
@@ -162,7 +162,7 @@ class BlogIndexPageTest(TestCase):
         self.assertContains(response, "Михаил Поляков - Блог")
 
 
-class ArticleDetailPageTest(TestCase):
+class ArticleDetailPageTests(TestCase):
     """
     Тесты детального просмотра статей.
     """
@@ -306,7 +306,7 @@ class ArticleDetailPageTest(TestCase):
             self.assertIn("article.content|safe", f.read())
 
 
-class CategoryPageTest(TestCase):
+class CategoryPageTests(TestCase):
     """
     Тесты страницы просмотра статей по определенной категории.
     """
@@ -446,7 +446,7 @@ class CategoryPageTest(TestCase):
         self.assertQuerySetEqual(target_articles, response_articles)
 
 
-class TopicPageTest(TestCase):
+class TopicPageTests(TestCase):
     """
     Тесты страницы просмотра статей, посвященных определенной теме.
     """
@@ -580,7 +580,7 @@ class TopicPageTest(TestCase):
         self.assertQuerySetEqual(target_articles, response_articles)
 
 
-class SeriesPageTest(TestCase):
+class SeriesPageTests(TestCase):
     """
     Тесты страницы просмотра статей из определенной серии.
     """
@@ -715,4 +715,4 @@ class SeriesPageTest(TestCase):
             public=True, series=self.test_series
         ).order_by("-published_at")[:5]
         response_articles = response.context["page_obj"]
-        self.assertQuerySetEqual(target_articles, response_articles)
+        self.assertQuerysetEqual(target_articles, response_articles)

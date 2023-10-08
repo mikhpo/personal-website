@@ -1,8 +1,9 @@
 from http import HTTPStatus
 
-from blog.models import Article, Category, Series, Topic
 from django.test import TestCase
 from django.utils import timezone
+
+from blog.models import Article, Category, Series, Topic
 
 
 class BlogSitemapTest(TestCase):

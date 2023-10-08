@@ -2,7 +2,7 @@
 {% load crispy_forms_tags %}
 <!-- Шаблон для статьи и комментариев, наследует от базового шаблона. -->
 {% block title %}
-    <title>{{ article.title }}</title>
+    {{ article.title }}
 {% endblock title %}
 {% block extra_header %}
     {{ comment_form.media }}

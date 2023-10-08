@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 {% block title %}
-    <title>{{ photo.album.name }} - {{ photo.name }}</title>
+    {{ photo.album.name }} - {{ photo.name }}
 {% endblock title %}
 {% block content %}
     <div class="container">

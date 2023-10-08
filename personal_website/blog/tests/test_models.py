@@ -1,9 +1,9 @@
-from blog.models import Article, Category, Comment, Series, Topic
 from django.contrib.auth.models import User
 from django.db.utils import IntegrityError
 from django.test import TestCase
 from django.utils.crypto import get_random_string
 
+from blog.models import Article, Category, Comment, Series, Topic
 from personal_website.utils import generate_random_text
 
 
