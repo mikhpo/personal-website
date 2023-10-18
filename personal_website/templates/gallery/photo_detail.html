@@ -9,46 +9,74 @@
             <div class="card-body">
                 <img class="card-img" src="{{ photo.image.url }}" alt="{{ photo.name }}">
                 <div class="card-footer" align="center">
-                    {% block exif %}
-                        <table>
-                            {% if photo.camera %}
-                                <tr>
-                                    <td>Камера</td>
-                                    <td>{{ photo.camera }}</td>
-                                </tr>
-                            {% endif %}
-                            {% if photo.lens_model %}
-                                <tr>
-                                    <td>Объектив</td>
-                                    <td>{{ photo.lens_model }}</td>
-                                </tr>
-                            {% endif %}
-                            {% if photo.focal_length %}
-                                <tr>
-                                    <td>Фокусное расстояние</td>
-                                    <td>{{ photo.focal_length }} мм</td>
-                                </tr>
-                            {% endif %}
-                            {% if photo.aperture %}
-                                <tr>
-                                    <td>Диафрагма</td>
-                                    <td>F/{{ photo.aperture|floatformat:"0" }}</td>
-                                </tr>
-                            {% endif %}
-                            {% if photo.exposure %}
-                                <tr>
-                                    <td>Экспозиция</td>
-                                    <td>{{ photo.exposure }} с</td>
-                                </tr>
-                            {% endif %}
-                            {% if photo.iso %}
-                                <tr>
-                                    <td>Светочувствительность</td>
-                                    <td>ISO {{ photo.iso }}</td>
-                                </tr>
-                            {% endif %}
-                        </table>
-                    {% endblock exif %}
+                    <button type="button"
+                            class="btn btn-outline-dark"
+                            data-bs-toggle="modal"
+                            data-bs-target="#exifModal">О фотографии</button>
+                    {% block modal %}
+                        <div class="modal fade"
+                             id="exifModal"
+                             tabindex="-1"
+                             aria-labelledby="exifModalLabel"
+                             aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h1 class="modal-title fs-5" id="exifModalLabel">EXIF</h1>
+                                        <button type="button"
+                                                class="btn-close"
+                                                data-bs-dismiss="modal"
+                                                aria-label="Закрыть"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        {% block exif %}
+                                            <table class="table table-sm table-hover">
+                                                {% if photo.camera %}
+                                                    <tr>
+                                                        <td>Камера</td>
+                                                        <td>{{ photo.camera }}</td>
+                                                    </tr>
+                                                {% endif %}
+                                                {% if photo.lens_model %}
+                                                    <tr>
+                                                        <td>Объектив</td>
+                                                        <td>{{ photo.lens_model }}</td>
+                                                    </tr>
+                                                {% endif %}
+                                                {% if photo.focal_length %}
+                                                    <tr>
+                                                        <td>Фокусное расстояние</td>
+                                                        <td>{{ photo.focal_length }} мм</td>
+                                                    </tr>
+                                                {% endif %}
+                                                {% if photo.aperture %}
+                                                    <tr>
+                                                        <td>Диафрагма</td>
+                                                        <td>F/{{ photo.aperture|floatformat:"0" }}</td>
+                                                    </tr>
+                                                {% endif %}
+                                                {% if photo.exposure %}
+                                                    <tr>
+                                                        <td>Экспозиция</td>
+                                                        <td>{{ photo.exposure }} с</td>
+                                                    </tr>
+                                                {% endif %}
+                                                {% if photo.iso %}
+                                                    <tr>
+                                                        <td>Светочувствительность</td>
+                                                        <td>ISO {{ photo.iso }}</td>
+                                                    </tr>
+                                                {% endif %}
+                                            </table>
+                                        {% endblock exif %}
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-outline-dark" data-bs-dismiss="modal">Закрыть</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endblock modal %}
                 </div>
             </div>
         </div>
