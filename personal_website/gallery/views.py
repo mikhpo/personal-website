@@ -1,3 +1,5 @@
+from typing import Any
+
 from django.contrib.admin.views.decorators import staff_member_required
 from django.db.models import QuerySet
 from django.urls import reverse_lazy
@@ -25,6 +27,21 @@ class PhotoDetailView(DetailView):
 
     model = Photo
     template_name = "gallery/photo_detail.html"
+
+    def get_context_data(self, **kwargs) -> dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        photo: Photo = self.get_object()
+        context["next_photo"] = (
+            Photo.published.filter(album=photo.album, pk__gt=photo.pk)
+            .order_by("pk")
+            .first()
+        )
+        context["previous_photo"] = (
+            Photo.published.filter(album=photo.album, pk__lt=photo.pk)
+            .order_by("pk")
+            .last()
+        )
+        return context
 
 
 class PhotoListView(ListView):

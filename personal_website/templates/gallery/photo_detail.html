@@ -9,10 +9,17 @@
             <div class="card-body">
                 <img class="card-img" src="{{ photo.image.url }}" alt="{{ photo.name }}">
                 <div class="card-footer" align="center">
-                    <button type="button"
-                            class="btn btn-outline-dark"
-                            data-bs-toggle="modal"
-                            data-bs-target="#exifModal">О фотографии</button>
+                    <div class="btn-group" role="group" aria-label="Photo navigation buttons">
+                        {% if previous_photo %}
+                            <a href="{{ previous_photo.get_absolute_url }}"
+                               class="btn btn-outline-dark">Предыдущая</a>
+                        {% endif %}
+                        <button type="button"
+                                class="btn btn-outline-dark"
+                                data-bs-toggle="modal"
+                                data-bs-target="#exifModal">О фотографии</button>
+                        {% if next_photo %}<a href="{{ next_photo.get_absolute_url }}" class="btn btn-outline-dark">Следующая</a>{% endif %}
+                    </div>
                     {% block modal %}
                         <div class="modal fade"
                              id="exifModal"
