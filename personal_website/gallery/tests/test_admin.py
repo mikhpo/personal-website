@@ -27,7 +27,7 @@ class GalleryAdminTests(TestCase):
         cls.superuser: User = User.objects.create_superuser(
             username="testadmin", password="12345"
         )
-        os.makedirs(settings.MEDIA_ROOT)
+        os.makedirs(settings.MEDIA_ROOT, exist_ok=True)
         cls.image_path = list_image_paths()[0]
 
     @classmethod

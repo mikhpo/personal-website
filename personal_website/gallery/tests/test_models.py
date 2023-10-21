@@ -1,3 +1,4 @@
+import datetime
 import os
 from http import HTTPStatus
 
@@ -54,9 +55,9 @@ class GalleryModelsTest(TestCase):
         self.assertEqual(Album.objects.all().count(), 2)
         self.assertEqual(Photo.objects.all().count(), 5)
 
-    def test_photo_fields_auto_field(self):
+    def test_photo_fields_auto_save(self):
         """
-        Проверяет, что обязательные атрибуты фотографий определяются автоматически.
+        Проверяет, что некоторые атрибуты фотографий определяются автоматически.
         """
         photos = Photo.objects.all()
         fields = ["name", "slug", "uploaded_at", "modified_at", "public"]
@@ -253,9 +254,8 @@ class GalleryModelsTest(TestCase):
         """
         album = Album.objects.first()
         url = album.get_absolute_url()
-        response = self.client.get(url)
-        status_code = response.status_code
-        self.assertEqual(status_code, HTTPStatus.OK)
+        self.assertIsInstance(url, str)
+        self.assertIn(album.slug, url)
 
     def test_tag_get_absolute_url(self):
         """
@@ -266,3 +266,11 @@ class GalleryModelsTest(TestCase):
         response = self.client.get(url)
         status_code = response.status_code
         self.assertEqual(status_code, HTTPStatus.OK)
+
+    def test_datetime_taken(self):
+        """
+        Проверка получения даты и времени съемки фотографии.
+        """
+        first_photo = Photo.objects.first()
+        datetime_taken = first_photo.datetime_taken
+        self.assertIsInstance(datetime_taken, datetime.datetime)

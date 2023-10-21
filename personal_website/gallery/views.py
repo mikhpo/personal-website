@@ -30,17 +30,26 @@ class PhotoDetailView(DetailView):
 
     def get_context_data(self, **kwargs) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
-        photo: Photo = self.get_object()
-        context["next_photo"] = (
-            Photo.published.filter(album=photo.album, pk__gt=photo.pk)
-            .order_by("pk")
-            .first()
+        obj: Photo = self.get_object()
+
+        album_photos = Photo.published.filter(album=obj.album)
+        next_photos = list(
+            filter(
+                lambda photo: photo.datetime_taken > obj.datetime_taken,
+                sorted(album_photos, key=lambda photo: photo.datetime_taken),
+            )
         )
-        context["previous_photo"] = (
-            Photo.published.filter(album=photo.album, pk__lt=photo.pk)
-            .order_by("pk")
-            .last()
+        previous_photos = list(
+            filter(
+                lambda photo: photo.datetime_taken < obj.datetime_taken,
+                sorted(
+                    album_photos, key=lambda photo: photo.datetime_taken, reverse=True
+                ),
+            )
         )
+
+        context["next_photo"] = next_photos[0] if next_photos else None
+        context["previous_photo"] = previous_photos[0] if previous_photos else None
         return context
 
 
