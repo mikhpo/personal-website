@@ -300,14 +300,26 @@ class Photo(models.Model):
         """
         Получить время съемки фотографии из EXIF или использовать время создания файла.
         """
+        # Проверить наличие файла изображения.
+        if not self.image.name or not Path(self.image.path).exists():
+            return None
+
+        # Получить дату и время последнего изменения файла.
+        time_stamp = os.path.getmtime(self.image.path)
+        date_time = datetime.fromtimestamp(time_stamp)
+
+        # Если в EXIF отсутствует дата и время съемки,
+        # то вернуть дату и время последнего изменения.
         original_exif = self.exif.get("DateTimeOriginal")
-        mtime = datetime.fromtimestamp(os.path.getmtime(self.image.path))
         if not original_exif:
-            return mtime
+            return date_time
+
+        # Получить дату и время съемки из EXIF, если не перехвачено исключение.
+        # Если перехвачено исключение, то вернуть дату и время изменения файла.
         try:
             return datetime.strptime(original_exif, "%Y:%m:%d %H:%M:%S")
         except ValueError:
-            return mtime
+            return date_time
 
     def save(self, *args, **kwargs):
         if not self.name:

@@ -184,9 +184,10 @@ class GalleryViewsTest(TestCase):
         """
         Проверить содержание представления для детального просмотра фотографии.
         """
-        first_photo = Photo.objects.first()
-        last_photo = Photo.objects.last()
         all_photos = Photo.objects.all()
+        sorted_photos = sorted(all_photos, key=lambda photo: photo.datetime_taken)
+        first_photo = sorted_photos[0]
+        last_photo = sorted_photos[-1]
         middle_photos = all_photos.exclude(pk__in=[first_photo.pk, last_photo.pk])
         middle_photo = random.choice(middle_photos)
         new_album = Album.objects.create(name="New test album")
@@ -396,6 +397,7 @@ class GalleryViewsTest(TestCase):
             self.assertTemplateUsed(response, BASE_TEMPLATE_NAME)
 
 
+@override_settings(MEDIA_ROOT=os.path.join(settings.BASE_DIR, "temp"))
 class UploadFormViewTests(TestCase):
     """
     Тесты формы для пакетной загрузки фотографий в альбом.

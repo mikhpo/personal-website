@@ -5,6 +5,7 @@ from tinymce.widgets import TinyMCE
 
 from gallery.forms import AlbumForm
 from gallery.models import Album, Photo, Tag
+from personal_website.utils import format_local_datetime
 
 formfield_overrides = {
     models.TextField: {"widget": TinyMCE()},
@@ -28,11 +29,25 @@ class PhotoAdmin(admin.ModelAdmin):
         "album",
         "public",
         "tags",
+        "taken_at",
         "uploaded_at",
         "modified_at",
+        "exif_table",
     )
-    readonly_fields = ("image_preview", "uploaded_at", "modified_at")
-    list_display = ("name", "uploaded_at", "modified_at", "public", "image_thumbnail")
+    readonly_fields = (
+        "image_preview",
+        "uploaded_at",
+        "modified_at",
+        "taken_at",
+        "exif_table",
+    )
+    list_display = (
+        "name",
+        "uploaded_at",
+        "modified_at",
+        "public",
+        "image_thumbnail",
+    )
     list_filter = ("tags", "album")
     ordering = ("-modified_at",)
 
@@ -54,6 +69,48 @@ class PhotoAdmin(admin.ModelAdmin):
             return mark_safe(f"<img src='{obj.image_preview.url}'/>")
         return ""
 
+    @admin.display(description="Создана")
+    def taken_at(self, obj: Photo):
+        """
+        Дата и время съемки.
+        """
+        return format_local_datetime(obj.datetime_taken)
+
+    @admin.display(description="EXIF")
+    def exif_table(self, obj: Photo):
+        """
+        Таблица с данными EXIF.
+        """
+        table_html = f"""
+            <table>
+                <tr>
+                    <td>Камера</td>
+                    <td>{obj.camera}</td>
+                </tr>
+                <tr>
+                    <td>Объектив</td>
+                    <td>{obj.lens_model}</td>
+                </tr>
+                <tr>
+                    <td>Фокусное расстояние</td>
+                    <td>{obj.focal_length} мм</td>
+                </tr>
+                <tr>
+                    <td>Диафрагма</td>
+                    <td>F/{obj.aperture}</td>
+                </tr>
+                <tr>
+                    <td>Выдержка</td>
+                    <td>{obj.exposure} с</td>
+                </tr>
+                <tr>
+                    <td>Светочувствительность</td>
+                    <td>ISO {obj.iso }</td>
+                </tr>
+        </table>
+    """
+        return mark_safe(table_html)
+
 
 class PhotoInline(admin.TabularInline):
     model = Photo
@@ -64,6 +121,7 @@ class PhotoInline(admin.TabularInline):
         "public",
     )
     readonly_fields = ("image_thumbnail",)
+    show_change_link = True
     extra = 5
 
     @admin.display(description="Миниатюра")
