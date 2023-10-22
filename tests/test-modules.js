@@ -5,7 +5,7 @@ const assert = require("node:assert").strict;
  * Список модулей node, которые должны быть установлены в проекте.
  * @type {!Array<string>}
  */
-const modules = ["bootstrap", "masonry-layout"];
+const modules = ["bootstrap"];
 
 /**
  * Проверяет возможность импорта модуля,
