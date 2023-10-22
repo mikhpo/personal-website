@@ -6,7 +6,7 @@
     {% for photo in photos %}
         <div class="col">
             <a href="{{ photo.get_absolute_url }}">
-                <div class="card shadow p-2 mb-5 bg-white rounded text-center">
+                <div class="card shadow bg-white rounded text-center">
                     <img class="card-img"
                          src="{{ photo.image_preview.url }}"
                          alt="{{ photo.name }}">

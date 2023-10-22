@@ -184,14 +184,21 @@ class GalleryViewsTest(TestCase):
         """
         Проверить содержание представления для детального просмотра фотографии.
         """
+        # Получить фотографии, отсортированные по дате и времени съемки.
         all_photos = Photo.objects.all()
         sorted_photos = sorted(all_photos, key=lambda photo: photo.datetime_taken)
         first_photo = sorted_photos[0]
         last_photo = sorted_photos[-1]
         middle_photos = all_photos.exclude(pk__in=[first_photo.pk, last_photo.pk])
         middle_photo = random.choice(middle_photos)
+
+        # Создать новый альбом и фотографию в нем.
         new_album = Album.objects.create(name="New test album")
         new_photo = Photo.objects.create(name="New photo", album=new_album)
+
+        # Идентификаторы элементов, соответствующих ссылкам на следующую и предыдущую фотографию.
+        NEXT_PHOTO_LINK_ID = "next-photo-link"
+        PREVIOUS_PHOTO_LINK_ID = "previous-photo-link"
 
         with self.subTest(
             "Для первой фотографии в альбоме доступа только ссылка на следующую фотографию"
@@ -200,9 +207,9 @@ class GalleryViewsTest(TestCase):
             response = self.client.get(url)
             context = response.context
             self.assertIsNotNone(context["next_photo"])
-            self.assertContains(response, "Следующая")
+            self.assertContains(response, NEXT_PHOTO_LINK_ID)
             self.assertIsNone(context["previous_photo"])
-            self.assertNotContains(response, "Предыдущая")
+            self.assertNotContains(response, PREVIOUS_PHOTO_LINK_ID)
 
         with self.subTest(
             "Для последней фотографии в альбоме доступна только ссылка на предыдущую фотографию"
@@ -211,9 +218,9 @@ class GalleryViewsTest(TestCase):
             response = self.client.get(url)
             context = response.context
             self.assertIsNotNone(context["previous_photo"])
-            self.assertContains(response, "Предыдущая")
+            self.assertContains(response, PREVIOUS_PHOTO_LINK_ID)
             self.assertIsNone(context["next_photo"])
-            self.assertNotContains(response, "Следующая")
+            self.assertNotContains(response, NEXT_PHOTO_LINK_ID)
             self.assertNotContains(response, new_photo.get_absolute_url())
 
         with self.subTest(
@@ -224,9 +231,9 @@ class GalleryViewsTest(TestCase):
             response = self.client.get(url)
             context = response.context
             self.assertIsNotNone(context["next_photo"])
-            self.assertContains(response, "Следующая")
+            self.assertContains(response, NEXT_PHOTO_LINK_ID)
             self.assertIsNotNone(context["previous_photo"])
-            self.assertContains(response, "Предыдущая")
+            self.assertContains(response, PREVIOUS_PHOTO_LINK_ID)
 
     def test_album_detail_url(self):
         """
