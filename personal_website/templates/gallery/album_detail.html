@@ -8,7 +8,7 @@
         {% if photos %}
             {% include "gallery/photos.html" %}
         {% endif %}
-        {% if album.tags %}
+        {% if album.tags|length > 0 %}
             {% with album.tags.all as tags %}
                 {% include "gallery/tags.html" %}
             {% endwith %}

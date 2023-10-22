@@ -5,7 +5,7 @@
 <div class="row row-cols-1 row-cols-md-3 g-4 justify-content-center">
     {% for album in albums %}
         <div class="col">
-            <div class="card shadow p-2 mb-5 bg-white rounded text-center">
+            <div class="card shadow bg-white rounded text-center">
                 {% if album.cover.image.url %}
                     <a href="{{ album.get_absolute_url }}">
                         <img src="{{ album.cover.image_preview.url }}" alt="{{ album.name }}">

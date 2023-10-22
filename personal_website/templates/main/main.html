@@ -14,7 +14,7 @@
             <div class="row row-cols-1 row-cols-md-3 g-4 justify-content-center">
                 {% for category in categories %}
                     <div class="col">
-                        <div class="card shadow p-2 mb-5 bg-white rounded text-center">
+                        <div class="card shadow bg-white rounded text-center">
                             {% if category.image %}
                                 <a href="{{ category.get_absolute_url }}">
                                     <img src="{{ category.image.url }}" class="card-img-top">
@@ -43,7 +43,7 @@
             <div class="row row-cols-1 row-cols-md-3 g-4 justify-content-center">
                 {% for serial in series %}
                     <div class="col">
-                        <div class="card shadow p-2 mb-5 bg-white rounded text-center">
+                        <div class="card shadow bg-white rounded text-center">
                             {% if serial.image %}
                                 <a href="{{ serial.get_absolute_url }}">
                                     <img src="{{ serial.image.url }}" class="card-img-top">
