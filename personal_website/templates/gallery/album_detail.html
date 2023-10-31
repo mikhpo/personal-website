@@ -5,13 +5,20 @@
 {% endblock title %}
 {% block content %}
     <div class="container">
-        {% if photos %}
-            {% include "gallery/photos.html" %}
-        {% endif %}
-        {% if album.tags|length > 0 %}
-            {% with album.tags.all as tags %}
-                {% include "gallery/tags.html" %}
-            {% endwith %}
-        {% endif %}
+        <h4>
+            <p align="center">{{ album.name }}</p>
+        </h4>
+        <p>
+            {% if photos %}
+                {% include "gallery/photos.html" %}
+            {% endif %}
+        </p>
+        <p>
+            {% if album.tags|length > 0 %}
+                {% with album.tags.all as tags %}
+                    {% include "gallery/tags.html" %}
+                {% endwith %}
+            {% endif %}
+        </p>
     </div>
 {% endblock content %}
