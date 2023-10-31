@@ -91,6 +91,12 @@ class Album(models.Model):
         related_name="tag_albums",
         help_text="Тэги альбома",
     )
+    order = models.PositiveIntegerField(
+        verbose_name="Порядок",
+        default=0,
+        blank=False,
+        null=False,
+    )
 
     objects = models.Manager()
     published = PublicAlbumManager()
@@ -98,7 +104,7 @@ class Album(models.Model):
     class Meta:
         verbose_name = "Альбом"
         verbose_name_plural = "Альбомы"
-        ordering = ["-created_at"]
+        ordering = ["-order"]
 
     def __str__(self):
         return self.name

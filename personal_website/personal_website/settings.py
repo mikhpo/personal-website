@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     "crispy_forms",
     "crispy_bootstrap5",
     "tinymce",
+    "adminsortable2",
     "django_cleanup.apps.CleanupConfig",
     "accounts",
     "gallery",

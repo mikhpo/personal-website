@@ -1,3 +1,4 @@
+from adminsortable2.admin import SortableAdminMixin
 from django.contrib import admin
 from django.db import models
 from django.utils.safestring import mark_safe
@@ -20,7 +21,7 @@ class PhotoAdmin(admin.ModelAdmin):
 
     model = Photo
     formfield_overrides = formfield_overrides
-    fields = (
+    fields = [
         "image",
         "name",
         "slug",
@@ -33,23 +34,23 @@ class PhotoAdmin(admin.ModelAdmin):
         "uploaded_at",
         "modified_at",
         "exif_table",
-    )
-    readonly_fields = (
+    ]
+    readonly_fields = [
         "image_preview",
         "uploaded_at",
         "modified_at",
         "taken_at",
         "exif_table",
-    )
-    list_display = (
+    ]
+    list_display = [
         "name",
         "uploaded_at",
         "modified_at",
         "public",
         "image_thumbnail",
-    )
-    list_filter = ("tags", "album")
-    ordering = ("-modified_at",)
+    ]
+    list_filter = ["tags", "album"]
+    ordering = ["-modified_at"]
 
     @admin.display(description="Миниатюра")
     def image_thumbnail(self, obj: Photo):
@@ -135,14 +136,14 @@ class PhotoInline(admin.TabularInline):
 
 
 @admin.register(Album)
-class AlbumAdmin(admin.ModelAdmin):
+class AlbumAdmin(SortableAdminMixin, admin.ModelAdmin):
     """
     Настройки отображения модели фотоальбома в панели администрирования Django.
     """
 
     inlines = [PhotoInline]
     form = AlbumForm
-    fields = (
+    fields = [
         "name",
         "description",
         "slug",
@@ -153,17 +154,17 @@ class AlbumAdmin(admin.ModelAdmin):
         "updated_at",
         "photos_count",
         "public_photos_count",
-    )
+    ]
     formfield_overrides = formfield_overrides
-    readonly_fields = (
+    readonly_fields = [
         "created_at",
         "updated_at",
         "cover_preview",
         "cover_preview",
         "photos_count",
         "public_photos_count",
-    )
-    list_display = (
+    ]
+    list_display = [
         "name",
         "created_at",
         "updated_at",
@@ -171,8 +172,9 @@ class AlbumAdmin(admin.ModelAdmin):
         "cover_thumbnail",
         "photos_count",
         "public_photos_count",
-    )
-    list_filter = ("tags",)
+        "order",
+    ]
+    list_filter = ["tags"]
 
     @admin.display(description="Обложка")
     def cover_thumbnail(self, obj: Album):
@@ -211,4 +213,4 @@ class TagAdmin(admin.ModelAdmin):
 
     model = Tag
     formfield_overrides = formfield_overrides
-    list_display = ("name",)
+    list_display = ["name"]
