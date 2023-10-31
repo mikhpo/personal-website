@@ -17,24 +17,24 @@ class ArticleAdmin(admin.ModelAdmin):
 
     model = Article
 
-    list_display = ("title", "published_at", "modified_at", "public")
-    list_filter = ("series", "topics", "categories", "public")
+    list_display = ["title", "published_at", "modified_at", "public"]
+    list_filter = ["series", "topics", "categories", "public"]
 
-    fieldsets = (
+    fieldsets = [
         ("Содержание", {"fields": ["title", "description", "content"]}),
         ("Метаданные", {"fields": ["series", "topics", "categories"]}),
         ("Картинка", {"fields": ["image"]}),
         ("Служебные", {"fields": ["slug", "public", "published_at"]}),
-    )
+    ]
 
     # Стандартная форма тектового поля заменена на HTML форму TinyMCE.
     formfield_overrides = formfield_overrides
 
     # Дату публикации можно изменить только при создании статьи, но не при редактировании.
-    readonly_fields = ("published_at",)
+    readonly_fields = ["published_at"]
 
     # Автор фиксируется, но не редактируется.
-    exclude = ("author",)
+    exclude = ["author"]
 
     def get_readonly_fields(self, request, obj=None):
         if obj:
@@ -55,8 +55,8 @@ class CategoryAdmin(admin.ModelAdmin):
     """
 
     model = Category
-    list_display = ("name", "public", "slug", "image")
-    list_filter = ("public",)
+    list_display = ["name", "public", "slug", "image"]
+    list_filter = ["public"]
 
 
 @admin.register(Series)
@@ -66,8 +66,8 @@ class SeriesAdmin(admin.ModelAdmin):
     """
 
     model = Series
-    list_display = ("name", "public", "slug", "image")
-    list_filter = ("public",)
+    list_display = ["name", "public", "slug", "image"]
+    list_filter = ["public"]
 
 
 @admin.register(Topic)
@@ -77,8 +77,8 @@ class TopicAdmin(admin.ModelAdmin):
     """
 
     model = Topic
-    list_display = ("name", "public", "slug", "image")
-    list_filter = ("public",)
+    list_display = ["name", "public", "slug", "image"]
+    list_filter = ["public"]
 
 
 @admin.register(Comment)
@@ -88,6 +88,6 @@ class CommentAdmin(admin.ModelAdmin):
     """
 
     model = Comment
-    list_display = ("article", "author", "posted")
-    list_filter = ("article", "author")
+    list_display = ["article", "author", "posted"]
+    list_filter = ["article", "author"]
     formfield_overrides = formfield_overrides
