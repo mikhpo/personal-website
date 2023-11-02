@@ -10,6 +10,7 @@ from django.db.models import QuerySet
 from django.http import HttpResponse
 from django.test import TestCase, override_settings
 from django.urls import resolve, reverse
+from django.utils.crypto import get_random_string
 
 from gallery.models import Album, Photo, Tag
 from gallery.views import (
@@ -426,6 +427,7 @@ class UploadFormViewTests(TestCase):
         )
         os.makedirs(settings.MEDIA_ROOT, exist_ok=True)
         cls.test_image_paths = list_image_paths()
+        cls.album = Album.objects.create(name="Тестовый альбом")
 
     @classmethod
     def tearDownClass(cls):
@@ -507,17 +509,57 @@ class UploadFormViewTests(TestCase):
         """
         Проверка результатов загрузки фотографий через форму.
         """
-        album = Album.objects.create(name="Тестовый альбом")
         photos = []
         for image_path in self.test_image_paths:
             with open(image_path, "rb") as image:
                 file = SimpleUploadedFile(name=image.name, content=image.read())
                 photos.append(file)
 
-        data = {"photos": photos, "album": album.pk}
+        data = {"photos": photos, "album": self.album.pk}
         response = self.client.post(UPLOAD_URL, data)
 
         self.assertEqual(response.status_code, HTTPStatus.FOUND)
         self.assertRedirects(response, GALLERY_URL)
         for photo in Photo.objects.all():
-            self.assertEqual(photo.album, album)
+            self.assertEqual(photo.album, self.album)
+
+    def test_upload_messages(self):
+        """
+        После загрузки фотографий появляется сообщение с результатом.
+        """
+        photos = []
+        for image_path in self.test_image_paths:
+            with open(image_path, "rb") as image:
+                file = SimpleUploadedFile(name=image.name, content=image.read())
+                photos.append(file)
+
+        data = {"photos": photos, "album": self.album.pk}
+        response = self.client.post(UPLOAD_URL, data, follow=True)
+        self.assertTemplateUsed(response, "messages.html")
+
+        photo_count = len(photos)
+        url = self.album.get_absolute_url()
+        name = self.album.name
+        message = (
+            f"Загружено <b>{photo_count}</b> фотографий в альбом "
+            f'<a href="{url}" class="alert-link">{name}</a>'
+        )
+        self.assertContains(response, message)
+
+    def test_upload_image_verify(self):
+        """
+        Загружаемое изображение проверяется на валидность.
+        """
+        file = SimpleUploadedFile(
+            name="test.pdf",
+            content=bytes(get_random_string(12).encode()),
+            content_type="application/pdf",
+        )
+
+        data = {"photos": [file], "album": self.album.pk}
+        response = self.client.post(UPLOAD_URL, data, follow=True)
+        message = f"Загруженный файл &quot;{file.name}&quot; не является изображением"
+        self.assertContains(response, message)
+
+        photos = Photo.objects.filter(album=self.album)
+        self.assertFalse(photos.exists())
