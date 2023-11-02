@@ -1,15 +1,22 @@
+import logging
 from typing import Any
 
+from django.conf import settings
+from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.db.models import QuerySet
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
+from django.utils.safestring import mark_safe
 from django.views.generic import DetailView, ListView, TemplateView
 from django.views.generic.edit import FormView
+from PIL import Image, UnidentifiedImageError
 
 from gallery.forms import UploadForm
 from gallery.mixins import GalleryContentMixin
 from gallery.models import Album, Photo, Tag
+
+logger = logging.getLogger(settings.PROJECT_NAME)
 
 
 class GalleryHomeView(GalleryContentMixin, TemplateView):
@@ -157,9 +164,38 @@ class UploadFormView(FormView):
             return self.form_invalid(form)
 
     def form_valid(self, form: UploadForm):
+        # Получение данных из отправленной формы.
         data: dict = form.cleaned_data
         photos = data["photos"]
-        album = data["album"]
+        album: Album = data["album"]
+
+        # Цикл для каждой фотографии из отправленной формы.
+        counter = 0  # инициализация счетчика загруженных фотографий
         for photo in photos:
-            Photo.objects.create(image=photo, album=album)
+            try:
+                image = Image.open(photo)
+                image.verify()
+                Photo.objects.create(image=photo, album=album)
+                logger.debug(f'Загружена фотография "{photo}" в альбом "{album}"')
+                counter += 1
+            except UnidentifiedImageError as error:
+                message = f'Загруженный файл "{photo}" не является изображением'
+                messages.add_message(self.request, messages.ERROR, message)
+                logger.error(message)
+            except Exception as error:
+                message = f'Ошибка загрузки фотографии в альбом "{album}": "{error}"'
+                messages.add_message(self.request, messages.ERROR, message)
+                logger.exception(message)
+
+        #  Если хотя бы одна фотография заружена в альбом.
+        if counter:
+            url = album.get_absolute_url()
+            string = (
+                f"Загружено <b>{counter}</b> фотографий в альбом "
+                f'<a href="{url}" class="alert-link">{album.name}</a>'
+            )
+            safe_string = mark_safe(string)
+            messages.add_message(self.request, messages.SUCCESS, safe_string)
+            logger.info(f"Загружено {counter} фотографий в альбом {album.name}")
+
         return super().form_valid(form)

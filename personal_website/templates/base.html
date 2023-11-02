@@ -31,6 +31,9 @@
   </head>
   <body>
     {% block body %}
+      {% block messages %}
+        {% include "messages.html" %}
+      {% endblock messages %}
       {% block content %}
       {% endblock content %}
       <script src="{% static "bootstrap/dist/js/bootstrap.bundle.min.js" %}"></script>
