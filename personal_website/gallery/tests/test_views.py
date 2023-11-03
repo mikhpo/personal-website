@@ -535,7 +535,7 @@ class UploadFormViewTests(TestCase):
 
         data = {"photos": photos, "album": self.album.pk}
         response = self.client.post(UPLOAD_URL, data, follow=True)
-        self.assertTemplateUsed(response, "messages.html")
+        self.assertTemplateUsed(response, "messages/alerts.html")
 
         photo_count = len(photos)
         url = self.album.get_absolute_url()

@@ -1,0 +1,10 @@
+{% load static %}
+{% with alt="Bootstrap" width="32" height="32" %}
+    {% if message.tags == "success" %}
+        <img src="{% static "bootstrap-icons/icons/check.svg" %}" alt={{ alt }} width={{ width }} height={{ height }}>
+    {% elif message.tags in "warning,error" %}
+        <img src="{% static "bootstrap-icons/icons/exclamation.svg" %}" alt={{ alt }} width={{ width }} height={{ height }}>
+    {% elif message.tags in "debug,info" %}
+        <img src="{% static "bootstrap-icons/icons/info.svg" %}" alt={{ alt }} width={{ width }} height={{ height }}>
+    {% endif %}
+{% endwith %}
