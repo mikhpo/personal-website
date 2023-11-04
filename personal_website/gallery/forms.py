@@ -1,6 +1,6 @@
 from django import forms
 
-from gallery.models import Album, Photo
+from .models import Album, Photo
 
 
 class MultipleFileInput(forms.ClearableFileInput):

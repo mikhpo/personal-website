@@ -1,17 +1,19 @@
 import datetime
-import os
 from http import HTTPStatus
+from pathlib import Path
 
-from django.conf import settings
 from django.db.models import QuerySet
-from django.test import TestCase, override_settings
+from django.test import TestCase
 
-from gallery.models import Album, Photo, Tag
-from personal_website.utils import list_image_paths
+from gallery.models import Album, Photo, Tag, photo_image_upload_path
+from personal_website.utils import (
+    copy_test_images,
+    list_file_paths,
+    remove_test_dir,
+)
 
 
-@override_settings(MEDIA_ROOT=os.path.join(settings.BASE_DIR, "media"))
-class GalleryModelsTest(TestCase):
+class GalleryModelsTests(TestCase):
     """
     Тестирование моделей галереи. Фотографии заранее сохранены в директории /media/ проекта.
     """
@@ -21,6 +23,9 @@ class GalleryModelsTest(TestCase):
         """
         Метод применяется один раз перед выполнением тестов класса.
         """
+        super().setUpTestData()
+        remove_test_dir()
+
         # Создать теги.
         for tag in ["Путешествия", "Италия", "Тоскана", "Непал", "Лангтанг"]:
             Tag.objects.create(name=tag)
@@ -36,16 +41,22 @@ class GalleryModelsTest(TestCase):
             description="Фотографии из путешествия по Лангтангу весной 2014 года",
         )
 
+    def setUp(self) -> None:
         # Создать фотографии в базе данных из картинок в директории проекта.
-        images = list_image_paths()
+        test_dir = copy_test_images()
+        images = list_file_paths(test_dir)
         for image in images:
             if "Tuscany" in image:
-                album = cls.tuscany_album
+                album = self.tuscany_album
             elif "Langtang" in image:
-                album = cls.langtang_album
+                album = self.langtang_album
             else:
                 raise Exception("Нужно создать новый тестовый альбом")
             Photo.objects.create(image=image, album=album)
+
+    def tearDown(self) -> None:
+        remove_test_dir()
+        super().tearDown()
 
     def test_objects_created(self):
         """
@@ -274,3 +285,28 @@ class GalleryModelsTest(TestCase):
         first_photo = Photo.objects.first()
         datetime_taken = first_photo.datetime_taken
         self.assertIsInstance(datetime_taken, datetime.datetime)
+
+    def test_photo_album_changed(self):
+        """
+        Путь фотографии изменяется после изменения альбома фотографии.
+        """
+        # Файл по изначальному адресу существует.
+        photo = Photo.objects.filter(album=self.tuscany_album).last()
+        old_path = photo.image.path
+        old_path_exists = Path(old_path).exists()
+        self.assertTrue(old_path_exists)
+
+        # Изменить альбом и сохранить фотографию.
+        old_relative_path = photo.image.name
+        file_name = Path(old_relative_path).name
+        photo.album = self.langtang_album
+        photo.save()
+
+        # Адрес файла был изменен корректно.
+        new_name_is_absolute = Path(photo.image.name).is_absolute()
+        new_path_exists = Path(photo.image.path).exists()
+        upload_path = photo_image_upload_path(photo, file_name)
+        self.assertFalse(new_name_is_absolute)
+        self.assertNotEqual(old_relative_path, photo.image.name)
+        self.assertEqual(photo.image.name, upload_path)
+        self.assertTrue(new_path_exists)

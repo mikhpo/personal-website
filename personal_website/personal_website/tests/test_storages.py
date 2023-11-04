@@ -1,11 +1,11 @@
 import os
+from pathlib import Path
 
+from django.core.files.storage import FileSystemStorage
 from django.test import SimpleTestCase
 from dotenv import load_dotenv
 
-from personal_website.utils import str_to_bool
-
-test_s3 = str_to_bool(os.getenv("TEST_S3"))
+from personal_website.storages import select_storage
 
 
 class FileSystemStorageTests(SimpleTestCase):
@@ -24,3 +24,12 @@ class FileSystemStorageTests(SimpleTestCase):
         """
         storage_dir = os.getenv("STORAGE_ROOT")
         self.assertTrue(os.path.exists(storage_dir))
+
+    def test_select_storage(self):
+        """
+        Селектор хранилища возвращает тестовое хранилище.
+        """
+        storage = select_storage()
+        self.assertIsInstance(storage, FileSystemStorage)
+        storage_name = Path(storage.location).name
+        self.assertEqual(storage_name, "temp")

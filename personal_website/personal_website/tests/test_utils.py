@@ -1,6 +1,7 @@
 import datetime
 import os
 
+from django.conf import settings
 from django.test import SimpleTestCase
 from django.utils.crypto import get_random_string
 from django.utils.timezone import get_current_timezone
@@ -9,7 +10,7 @@ from personal_website.utils import (
     format_local_datetime,
     get_slug,
     has_cyrillic,
-    list_image_paths,
+    list_file_paths,
     str_to_bool,
 )
 
@@ -109,7 +110,7 @@ class ListImagesPathTests(SimpleTestCase):
         """
         Проверить, что возвращенные пути существуют.
         """
-        image_paths_list = list_image_paths()
+        image_paths_list = list_file_paths(settings.TEST_IMAGES_DIR)
         self.assertIsInstance(image_paths_list, list)
         for image_path in image_paths_list:
             self.assertTrue(os.path.exists(image_path))

@@ -9,13 +9,14 @@ from django.test import TestCase, override_settings
 from blog.apps import BlogConfig
 from blog.models import Article, Category, Comment, Series, Topic
 from personal_website.utils import (
+    copy_test_images,
     format_local_datetime,
     generate_random_text,
-    list_image_paths,
+    list_file_paths,
+    remove_test_dir,
 )
 
 
-@override_settings(MEDIA_ROOT=os.path.join(settings.BASE_DIR, "temp"))
 class BlogAdminTest(TestCase):
     """
     Тестирование функциональности раздела блога в административном интерфейсе Django.
@@ -37,6 +38,12 @@ class BlogAdminTest(TestCase):
         cls.comment: Comment = Comment.objects.create(
             article=cls.article, author=cls.superuser, content=generate_random_text(10)
         )
+        cls.test_dir = copy_test_images()
+
+    @classmethod
+    def tearDownClass(cls):
+        remove_test_dir()
+        super().tearDownClass()
 
     def setUp(self):
         self.client.login(username="testadmin", password="12345")
@@ -245,7 +252,7 @@ class BlogAdminTest(TestCase):
 
         # Загрузить изображение через административный интерфейс.
         series_change_url = self.ADMIN_URL + f"blog/series/{self.series.pk}/change/"
-        image_paths = list_image_paths()
+        image_paths = list_file_paths(self.test_dir)
         image_path = image_paths[0]
         image = open(image_path, "rb")
         response = self.client.post(
@@ -277,7 +284,7 @@ class BlogAdminTest(TestCase):
 
         # Загрузить изображение через административный интерфейс.
         topic_change_url = self.ADMIN_URL + f"blog/topic/{self.topic.pk}/change/"
-        image_paths = list_image_paths()
+        image_paths = list_file_paths(self.test_dir)
         image_path = image_paths[0]
         image = open(image_path, "rb")
         response = self.client.post(
@@ -311,7 +318,7 @@ class BlogAdminTest(TestCase):
         category_change_url = (
             self.ADMIN_URL + f"blog/category/{self.category.pk}/change/"
         )
-        image_paths = list_image_paths()
+        image_paths = list_file_paths(self.test_dir)
         image_path = image_paths[0]
         image = open(image_path, "rb")
         response = self.client.post(

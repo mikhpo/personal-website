@@ -1,21 +1,21 @@
-import os
-import shutil
 from http import HTTPStatus
 from pathlib import Path
 
-from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import TestCase, override_settings
+from django.test import TestCase
 
 from gallery.apps import GalleryConfig
 from gallery.models import Album, Photo, Tag
-from personal_website.utils import list_image_paths
+from personal_website.utils import (
+    copy_test_images,
+    list_file_paths,
+    remove_test_dir,
+)
 
 ADMIN_URL = "/admin/"
 
 
-@override_settings(MEDIA_ROOT=os.path.join(settings.BASE_DIR, "temp"))
 class GalleryAdminTests(TestCase):
     """
     Тестирование функциональности раздела галереи в административном интерфейсе Django.
@@ -27,12 +27,12 @@ class GalleryAdminTests(TestCase):
         cls.superuser: User = User.objects.create_superuser(
             username="testadmin", password="12345"
         )
-        os.makedirs(settings.MEDIA_ROOT, exist_ok=True)
-        cls.image_path = list_image_paths()[0]
+        test_dir = copy_test_images()
+        cls.image_path = list_file_paths(test_dir)[0]
 
     @classmethod
     def tearDownClass(cls):
-        shutil.rmtree(settings.MEDIA_ROOT, ignore_errors=True)
+        remove_test_dir()
         super().tearDownClass()
 
     def setUp(self):

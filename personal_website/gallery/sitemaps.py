@@ -3,7 +3,7 @@
 """
 from django.contrib.sitemaps import Sitemap
 
-from gallery.models import Album, Photo, Tag
+from .models import Album, Photo, Tag
 
 
 class TagSitemap(Sitemap):

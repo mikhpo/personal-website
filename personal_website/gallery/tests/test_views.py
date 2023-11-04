@@ -23,7 +23,11 @@ from gallery.views import (
     TagListView,
     UploadFormView,
 )
-from personal_website.utils import list_image_paths
+from personal_website.utils import (
+    copy_test_images,
+    list_file_paths,
+    remove_test_dir,
+)
 
 APP_NAME = "gallery"
 
@@ -55,7 +59,6 @@ TAG_LIST_TEMPLATE_NAME = f"{APP_NAME}/tag_list.html"
 UPLOAD_TEMPLATE_NAME = f"{APP_NAME}/upload.html"
 
 
-@override_settings(MEDIA_ROOT=os.path.join(settings.BASE_DIR, "media"))
 class GalleryViewsTest(TestCase):
     """
     Тестирование представлений галереи.
@@ -66,10 +69,16 @@ class GalleryViewsTest(TestCase):
         cls.tag = Tag.objects.create(name="Test tag")
         cls.album = Album.objects.create(name="Test album")
         cls.album.tags.add(cls.tag)
-        images = list_image_paths()
+        cls.test_dir = copy_test_images()
+        images = list_file_paths(cls.test_dir)
         for image in images:
             photo = Photo.objects.create(image=image, album=cls.album)
             photo.tags.add(cls.tag)
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        remove_test_dir()
+        super().tearDownClass()
 
     def check_gallery_mixin_content(self, response: HttpResponse):
         """
@@ -405,7 +414,6 @@ class GalleryViewsTest(TestCase):
             self.assertTemplateUsed(response, BASE_TEMPLATE_NAME)
 
 
-@override_settings(MEDIA_ROOT=os.path.join(settings.BASE_DIR, "temp"))
 class UploadFormViewTests(TestCase):
     """
     Тесты формы для пакетной загрузки фотографий в альбом.
@@ -426,12 +434,13 @@ class UploadFormViewTests(TestCase):
             username=cls.staff_username, password=cls.staff_password
         )
         os.makedirs(settings.MEDIA_ROOT, exist_ok=True)
-        cls.test_image_paths = list_image_paths()
+        cls.test_dir = copy_test_images()
+        cls.test_image_paths = list_file_paths(cls.test_dir)
         cls.album = Album.objects.create(name="Тестовый альбом")
 
     @classmethod
     def tearDownClass(cls):
-        shutil.rmtree(settings.MEDIA_ROOT, ignore_errors=True)
+        remove_test_dir()
         super().tearDownClass()
 
     def setUp(self) -> None:

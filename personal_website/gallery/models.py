@@ -1,6 +1,7 @@
 import os
 from datetime import datetime
 from pathlib import Path
+from typing import Self
 
 from django.conf import settings
 from django.db import models
@@ -11,9 +12,11 @@ from imagekit.processors import ResizeToFit
 from PIL import Image as pImage
 from PIL.ExifTags import TAGS
 
+from personal_website.storages import select_storage
 from personal_website.utils import get_unique_slug
 
 from .managers import PublicAlbumManager, PublicPhotoManager
+from .utils import move_photo_image, photo_image_upload_path
 
 thumbnail_size: int = settings.GALLERY_THUMBNAIL_SIZE
 preview_size: int = settings.GALLERY_PREVIEW_SIZE
@@ -140,7 +143,10 @@ class Photo(models.Model):
     """
 
     image = models.ImageField(
-        verbose_name="Изображение", upload_to="gallery/photos/", max_length=255
+        verbose_name="Изображение",
+        upload_to=photo_image_upload_path,
+        storage=select_storage,
+        max_length=255,
     )
     name = models.CharField(
         verbose_name="Наименование",
@@ -328,8 +334,26 @@ class Photo(models.Model):
             return date_time
 
     def save(self, *args, **kwargs):
+        """
+        Операции, выполняемые при каждом сохранении модели.
+        """
+        if self.pk:
+            previous = Photo.objects.get(pk=self.pk)
+            if previous.album != self.album:
+                self.change_album_photo_image_path(previous)
         if not self.name:
             self.name = Path(self.image.name).stem
         if not self.slug:
             self.slug = get_unique_slug(self, self.name)
         super().save(*args, **kwargs)
+
+    def change_album_photo_image_path(self, previous: Self):
+        """
+        Изменить местоположение изображения фотографии относительно альбома.
+        """
+        old_path = previous.image.path
+        new_path = move_photo_image(self, old_path)
+        file_name = Path(new_path).name
+        new_relative_path = photo_image_upload_path(self, file_name)
+        self.image = new_relative_path
+        return self

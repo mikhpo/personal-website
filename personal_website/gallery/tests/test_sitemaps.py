@@ -1,10 +1,11 @@
 from http import HTTPStatus
 
+from django.conf import settings
 from django.test import TestCase
 from django.utils import timezone
 
 from gallery.models import Album, Photo, Tag
-from personal_website.utils import list_image_paths
+from personal_website.utils import list_file_paths
 
 SITEMAP_URL = "/sitemap.xml"
 
@@ -36,7 +37,7 @@ class GallerySitemapTest(TestCase):
         )
 
         # Создать фотографии в базе данных из картинок в директории проекта.
-        images = list_image_paths()
+        images = list_file_paths(settings.TEST_IMAGES_DIR)
         for image in images:
             if "Tuscany" in image:
                 Photo.objects.create(image=image, public=True, album=cls.public_album)
