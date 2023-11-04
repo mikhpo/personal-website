@@ -12,11 +12,22 @@ from django.views.generic import DetailView, ListView, TemplateView
 from django.views.generic.edit import FormView
 from PIL import Image, UnidentifiedImageError
 
-from gallery.forms import UploadForm
-from gallery.mixins import GalleryContentMixin
-from gallery.models import Album, Photo, Tag
+from .forms import UploadForm
+from .models import Album, Photo, Tag
 
 logger = logging.getLogger(settings.PROJECT_NAME)
+
+
+class GalleryContentMixin(object):
+    """
+    Миксин для добавления в контекст запроса списка альбомов и тегов галереи.
+    """
+
+    def get_context_data(self, **kwargs):
+        context = super(GalleryContentMixin, self).get_context_data(**kwargs)
+        context["albums"] = Album.published.all()
+        context["tags"] = Tag.objects.all()
+        return context
 
 
 class GalleryHomeView(GalleryContentMixin, TemplateView):

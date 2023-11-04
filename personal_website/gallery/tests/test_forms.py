@@ -5,7 +5,7 @@ from django.test import TestCase, override_settings
 
 from gallery.forms import AlbumForm
 from gallery.models import Album, Photo
-from personal_website.utils import list_image_paths
+from personal_website.utils import list_file_paths
 
 
 @override_settings(MEDIA_ROOT=os.path.join(settings.BASE_DIR, "media"))
@@ -39,7 +39,7 @@ class GalleryFormsTest(TestCase):
         langtang_album = Album.objects.create(name="Лангтанг")
 
         # Создать фотографии в базе данных, загрузив их с диска.
-        images = list_image_paths()
+        images = list_file_paths(settings.TEST_IMAGES_DIR)
         for image in images:
             if "Tuscany" in image:
                 Photo.objects.create(image=image, public=True, album=tuscany_album)

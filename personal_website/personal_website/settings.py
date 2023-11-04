@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     "crispy_bootstrap5",
     "tinymce",
     "adminsortable2",
+    "imagekit",
     "django_cleanup.apps.CleanupConfig",
     "accounts",
     "gallery",
@@ -131,9 +132,19 @@ MEDIA_URL = "/media/"
 # Абсолютный путь до папки с медиа-файлами.
 MEDIA_ROOT = env("STORAGE_ROOT")
 
+# Адрес временной папки для тестирования.
+TEMP_ROOT = PROJECT_DIR / "temp"
+
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
     "staticfiles": {"BACKEND": "whitenoise.storage.CompressedStaticFilesStorage"},
+    "test": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+        "OPTIONS": {
+            "location": TEMP_ROOT,
+            "base_url": "/media/",
+        },
+    },
 }
 
 # Адрес, на который будет перенаправлен пользователь после авторизации.
@@ -333,3 +344,6 @@ GALLERY_PREVIEW_SIZE = 1000
 
 # Качество сжатия миниатюр и предварительного просмотра.
 GALLERY_RESIZE_QUALITY = 100
+
+# Адрес каталога с фотографиями для тестирования.
+TEST_IMAGES_DIR = BASE_DIR / "media" / "gallery" / "photos"
