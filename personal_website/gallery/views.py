@@ -18,24 +18,18 @@ from .models import Album, Photo, Tag
 logger = logging.getLogger(settings.PROJECT_NAME)
 
 
-class GalleryContentMixin(object):
-    """
-    Миксин для добавления в контекст запроса списка альбомов и тегов галереи.
-    """
-
-    def get_context_data(self, **kwargs):
-        context = super(GalleryContentMixin, self).get_context_data(**kwargs)
-        context["albums"] = Album.published.all()
-        context["tags"] = Tag.objects.all()
-        return context
-
-
-class GalleryHomeView(GalleryContentMixin, TemplateView):
+class GalleryHomeView(TemplateView):
     """
     Предствление главной страницы галереи.
     """
 
     template_name = "gallery/gallery_home.html"
+
+    def get_context_data(self, **kwargs):
+        context = super(GalleryHomeView, self).get_context_data(**kwargs)
+        context["albums"] = Album.published.all()
+        context["tags"] = Tag.objects.all()
+        return context
 
 
 class PhotoDetailView(DetailView):
@@ -68,6 +62,7 @@ class PhotoDetailView(DetailView):
 
         context["next_photo"] = next_photos[0] if next_photos else None
         context["previous_photo"] = previous_photos[0] if previous_photos else None
+        context["tags"] = obj.tags.all()
         return context
 
 
@@ -85,6 +80,11 @@ class PhotoListView(ListView):
         photos_sorted = sorted(photos, key=lambda photo: photo.datetime_taken)
         return photos_sorted
 
+    def get_context_data(self, **kwargs):
+        context = super(PhotoListView, self).get_context_data(**kwargs)
+        context["tags"] = Tag.objects.all()
+        return context
+
 
 class AlbumDetailView(DetailView):
     """
@@ -100,12 +100,14 @@ class AlbumDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super(AlbumDetailView, self).get_context_data(**kwargs)
+        album: Album = context["album"]
 
         # Получить коллекцию фотографий из даного альбома.
-        photos: QuerySet[Photo] = context["album"].photo_set.filter(public=True)
+        photos: QuerySet[Photo] = album.photo_set.filter(public=True)
 
         # Добавить фотографии в контекст, отсортировав от старых к новым.
         context["photos"] = sorted(photos, key=lambda photo: photo.datetime_taken)
+        context["tags"] = album.tags.all()
         return context
 
 
@@ -117,6 +119,11 @@ class AlbumListView(ListView):
     model = Album
     template_name = "gallery/album_list.html"
     queryset = Album.published.all()
+
+    def get_context_data(self, **kwargs):
+        context = super(AlbumListView, self).get_context_data(**kwargs)
+        context["tags"] = Tag.objects.all()
+        return context
 
 
 class TagDetailView(DetailView):
@@ -144,16 +151,8 @@ class TagDetailView(DetailView):
         context["photos"] = sorted(
             photos, key=lambda photo: photo.datetime_taken, reverse=True
         )
+        context["tags"] = Tag.objects.all()
         return context
-
-
-class TagListView(ListView):
-    """
-    Представление для просмотра списка тегов.
-    """
-
-    model = Tag
-    template_name = "gallery/tag_list.html"
 
 
 @method_decorator(staff_member_required, "dispatch")
@@ -165,6 +164,11 @@ class UploadFormView(FormView):
     template_name = "gallery/upload.html"
     form_class = UploadForm
     success_url = reverse_lazy("gallery:gallery")
+
+    def get_context_data(self, **kwargs):
+        context = super(UploadFormView, self).get_context_data(**kwargs)
+        context["tags"] = Tag.objects.all()
+        return context
 
     def post(self, request, *args, **kwargs):
         form_class = self.get_form_class()

@@ -19,7 +19,6 @@ from gallery.views import (
     PhotoDetailView,
     PhotoListView,
     TagDetailView,
-    TagListView,
     UploadFormView,
 )
 from personal_website.utils import (
@@ -42,8 +41,6 @@ ALBUM_LIST_URL = f"/{APP_NAME}/albums/"
 ALBUM_LIST_URL_NAME = f"{APP_NAME}:album-list"
 TAG_DETAIL_URL = f"/{APP_NAME}/tags"
 TAG_DETAIL_URL_NAME = f"{APP_NAME}:tag-detail"
-TAG_LIST_URL = f"/{APP_NAME}/tags/"
-TAG_LIST_URL_NAME = f"{APP_NAME}:tag-list"
 UPLOAD_URL = f"/{APP_NAME}/upload/"
 UPLOAD_URL_NAME = f"{APP_NAME}:upload"
 
@@ -82,24 +79,6 @@ class GalleryViewsTest(TestCase):
         remove_test_dir()
         super().tearDownClass()
 
-    def check_gallery_mixin_content(self, response: HttpResponse):
-        """
-        Переиспользуемый метод проверки добавления контента
-        в контекст представления с использованием миксина.
-        """
-        context = response.context
-        with self.subTest("Альбомы галереи содержатся в контексте представления"):
-            albums = Album.objects.all()
-            for album in albums:
-                self.assertContains(response, album)
-            self.assertEqual(albums.count(), len(context["albums"]))
-
-        with self.subTest("Тэги галереи содержатся в контексте представления"):
-            tags = Tag.objects.all()
-            for tag in tags:
-                self.assertContains(response, tag)
-            self.assertEqual(tags.count(), len(context["tags"]))
-
     def test_gallery_home_url(self):
         """
         Проверить работоспособность ссылки на главную страницу галереи.
@@ -131,7 +110,18 @@ class GalleryViewsTest(TestCase):
         автоматически добавляется контекст содержимого галереи.
         """
         response = self.client.get(GALLERY_URL)
-        self.check_gallery_mixin_content(response)
+        context = response.context
+        with self.subTest("Альбомы галереи содержатся в контексте представления"):
+            albums = Album.objects.all()
+            for album in albums:
+                self.assertContains(response, album)
+            self.assertEqual(albums.count(), len(context["albums"]))
+
+        with self.subTest("Тэги галереи содержатся в контексте представления"):
+            tags = Tag.objects.all()
+            for tag in tags:
+                self.assertContains(response, tag)
+            self.assertEqual(tags.count(), len(context["tags"]))
 
     def test_photo_list_url(self):
         """
@@ -157,6 +147,18 @@ class GalleryViewsTest(TestCase):
             self.assertEqual(response.templates, reverse_response.templates)
             self.assertTemplateUsed(response, PHOTO_LIST_TEMPLATE_NAME)
             self.assertTemplateUsed(response, BASE_TEMPLATE_NAME)
+
+    def test_photo_list_view_context(self):
+        """
+        Проверить, что в контекст списка всех фотографий
+        автоматически добавляется набор тэгов.
+        """
+        response = self.client.get(PHOTO_LIST_URL)
+        context = response.context
+        tags = Tag.objects.all()
+        for tag in tags:
+            self.assertContains(response, tag)
+        self.assertEqual(tags.count(), len(context["tags"]))
 
     def test_photo_detail_url(self):
         """
@@ -247,6 +249,15 @@ class GalleryViewsTest(TestCase):
             self.assertIsNotNone(context["previous_photo"])
             self.assertContains(response, PREVIOUS_PHOTO_LINK_ID)
 
+        with self.subTest("Представление содержит список тэгов данной фотографии"):
+            url = f"{PHOTO_DETAIL_URL}/{first_photo.slug}/"
+            response = self.client.get(url)
+            context = response.context
+            tags = Tag.objects.all()
+            for tag in tags:
+                self.assertContains(response, tag)
+            self.assertEqual(tags.count(), len(context["tags"]))
+
     def test_album_detail_url(self):
         """
         Проверить работоспособность ссылки на детальный просмотр альбома.
@@ -290,11 +301,19 @@ class GalleryViewsTest(TestCase):
         public_photos = Photo.objects.filter(album=self.album, public=True)
         response = self.client.get(url)
         context = response.context
-        context_photos: QuerySet[Photo] = context["photos"]
-        for photo in public_photos:
-            self.assertContains(response, photo)
-        self.assertNotContains(response, private_photo)
-        self.assertEqual(len(context_photos), public_photos.count())
+
+        with self.subTest("Представление содержит только публичные фотографии"):
+            context_photos: QuerySet[Photo] = context["photos"]
+            for photo in public_photos:
+                self.assertContains(response, photo)
+            self.assertNotContains(response, private_photo)
+            self.assertEqual(len(context_photos), public_photos.count())
+
+        with self.subTest("Представление содержит список тэгов данного альбома"):
+            tags = Tag.objects.all()
+            for tag in tags:
+                self.assertContains(response, tag)
+            self.assertEqual(tags.count(), len(context["tags"]))
 
     def test_album_list_url(self):
         """
@@ -343,6 +362,13 @@ class GalleryViewsTest(TestCase):
             self.album.save()
             response = self.client.get(ALBUM_LIST_URL)
             self.assertNotContains(response, self.album)
+
+        with self.subTest("Представление содержит полный набор тэгов галереи"):
+            context = response.context
+            tags = Tag.objects.all()
+            for tag in tags:
+                self.assertContains(response, tag)
+            self.assertEqual(tags.count(), len(context["tags"]))
 
     def test_tag_detail_url(self):
         """
@@ -398,30 +424,11 @@ class GalleryViewsTest(TestCase):
                 self.assertContains(response, photo)
             self.assertEqual(photos.count(), len(context["photos"]))
 
-    def test_tag_list_url(self):
-        """
-        Проверка получения страницы по запросу списка тэгов.
-        """
-        with self.subTest("Проверка обычной ссылки на просмотр списка всех тегов"):
-            resolver_match = resolve(TAG_LIST_URL)
-            response = self.client.get(TAG_LIST_URL)
-            url_view_class = resolver_match.func.view_class
-            self.assertEqual(url_view_class, TagListView)
-            self.assertEqual(response.status_code, HTTPStatus.OK)
-
-        with self.subTest("Проверка именной ссылки на просмотр списка всех тегов"):
-            reverse_url = reverse(TAG_LIST_URL_NAME)
-            reverse_resolver_match = resolve(reverse_url)
-            reverse_response = self.client.get(reverse_url)
-            reverse_url_view_class = reverse_resolver_match.func.view_class
-            self.assertEqual(reverse_url_view_class, TagListView)
-            self.assertEqual(reverse_response.status_code, HTTPStatus.OK)
-            self.assertEqual(url_view_class, reverse_url_view_class)
-
-        with self.subTest("Проверка используемых представлением шаблонов"):
-            self.assertEqual(response.templates, reverse_response.templates)
-            self.assertTemplateUsed(response, TAG_LIST_TEMPLATE_NAME)
-            self.assertTemplateUsed(response, BASE_TEMPLATE_NAME)
+        with self.subTest("Представление содержит полный набор тэгов галереи"):
+            tags = Tag.objects.all()
+            for tag in tags:
+                self.assertContains(response, tag)
+            self.assertEqual(tags.count(), len(context["tags"]))
 
 
 class UploadFormViewTests(TestCase):
@@ -582,3 +589,14 @@ class UploadFormViewTests(TestCase):
 
         photos = Photo.objects.filter(album=self.album)
         self.assertFalse(photos.exists())
+
+    def test_upload_view_context(self):
+        """
+        Представление содержит полный набор тэгов галереи.
+        """
+        response = self.client.get(UPLOAD_URL)
+        context = response.context
+        tags = Tag.objects.all()
+        for tag in tags:
+            self.assertContains(response, tag)
+        self.assertEqual(tags.count(), len(context["tags"]))
