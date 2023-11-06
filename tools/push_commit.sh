@@ -8,6 +8,7 @@ poetry export -f requirements.txt --output requirements.txt --without-hashes --w
 isort .
 black .
 git add .
+git status
 read -p "Сообщение для коммита: " message
 git commit -m "$message"
 git push

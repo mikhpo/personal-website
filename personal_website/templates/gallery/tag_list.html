@@ -1,12 +1,27 @@
-{% extends "base.html" %}
 {% block content %}
-    <div class="container-fluid">
-        {% if tag_list %}
-            {% with tag_list as tags %}
-                {% include "gallery/tags.html" %}
-            {% endwith %}
-        {% endif %}
+    <div class="offcanvas offcanvas-start"
+         tabindex="-1"
+         id="tagsOffcanvas"
+         aria-labelledby="tagsOffcanvasLabel">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tagsOffcanvasLabel">Тэги</h5>
+            <button type="button"
+                    class="btn-close"
+                    data-bs-dismiss="offcanvas"
+                    aria-label="Закрыть"></button>
+        </div>
+        <div class="offcanvas-body">
+            <div class="container text-center ">
+                <div class="d-grid gap-2 mx-auto">
+                    {% for tag in tags %}
+                        {% if tag.name %}
+                            <a class="btn btn-outline-dark"
+                               href="{{ tag.get_absolute_url }}"
+                               role="button">{{ tag.name }}</a>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
     </div>
-    <br>
-    <br>
 {% endblock content %}

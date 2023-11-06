@@ -1,9 +1,9 @@
-{% extends "base.html" %}
+{% extends "gallery/gallery_home.html" %}
 {% load static %}
 {% block title %}
     {{ album.name }}
 {% endblock title %}
-{% block content %}
+{% block gallery %}
     <div class="container-fluid">
         <h4>
             <p align="center">{{ album.name }}</p>
@@ -13,12 +13,5 @@
                 {% include "gallery/photos.html" %}
             {% endif %}
         </p>
-        <p>
-            {% if album.tags|length > 0 %}
-                {% with album.tags.all as tags %}
-                    {% include "gallery/tags.html" %}
-                {% endwith %}
-            {% endif %}
-        </p>
     </div>
-{% endblock content %}
+{% endblock gallery %}

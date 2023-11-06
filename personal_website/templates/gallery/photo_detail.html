@@ -1,9 +1,9 @@
-{% extends "base.html" %}
+{% extends "gallery/gallery_home.html" %}
 {% load static %}
 {% block title %}
     {{ photo.album.name }} - {{ photo.name }}
 {% endblock title %}
-{% block content %}
+{% block gallery %}
     <div class="container-fluid">
         <div class="card shadow bg-white rounded justify-content">
             <img class="card-img" src="{{ photo.image.url }}" alt="{{ photo.name }}">
@@ -94,4 +94,4 @@
     </div>
     <br>
     <br>
-{% endblock content %}
+{% endblock gallery %}

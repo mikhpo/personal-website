@@ -4,14 +4,13 @@
     Показывает список альбомов и тэгов. 
 -->
 {% block content %}
-    <div class="container-fluid">
-        {% if albums %}
-            {% include "gallery/albums.html" %}
-        {% endif %}
-        {% if tags %}
-            <br>
-            {% include "gallery/tags.html" %}
-        {% endif %}
-    </div>
+    {% block gallery %}
+        <div class="container-fluid">
+            {% if albums %}
+                {% include "gallery/albums.html" %}
+            {% endif %}
+        </div>
+    {% endblock gallery %}
     <br>
+    {% include "gallery/tag_list.html" %}
 {% endblock content %}

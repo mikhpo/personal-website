@@ -42,7 +42,11 @@
                                 <a class="dropdown-item" href="{% url "gallery:photo-list" %}">Фотографии</a>
                             </li>
                             <li>
-                                <a class="dropdown-item" href="{% url "gallery:tag-list" %}">Тэги</a>
+                                <button class="dropdown-item"
+                                        type="button"
+                                        data-bs-toggle="offcanvas"
+                                        data-bs-target="#tagsOffcanvas"
+                                        aria-controls="tagsOffcanvas">Тэги</button>
                             </li>
                             {% if request.user.is_staff %}
                                 <li>

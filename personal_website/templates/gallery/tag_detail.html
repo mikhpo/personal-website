@@ -1,5 +1,5 @@
-{% extends "base.html" %}
-{% block content %}
+{% extends "gallery/gallery_home.html" %}
+{% block gallery %}
     <div class="container-fluid">
         {% if albums %}
             {% include "gallery/albums.html" %}
@@ -10,4 +10,4 @@
     </div>
     <br>
     <br>
-{% endblock content %}
+{% endblock gallery %}

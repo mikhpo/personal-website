@@ -1,6 +1,6 @@
-{% extends "base.html" %}
+{% extends "gallery/gallery_home.html" %}
 {% load static %}
-{% block content %}
+{% block gallery %}
     <div class="container-fluid">
         {% if album_list %}
             {% with album_list as albums %}
@@ -10,4 +10,4 @@
     </div>
     <br>
     <br>
-{% endblock content %}
+{% endblock gallery %}
