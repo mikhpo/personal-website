@@ -1,6 +1,5 @@
 import os
 import random
-import shutil
 from http import HTTPStatus
 
 from django.conf import settings
@@ -8,7 +7,7 @@ from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db.models import QuerySet
 from django.http import HttpResponse
-from django.test import TestCase, override_settings
+from django.test import TestCase
 from django.urls import resolve, reverse
 from django.utils.crypto import get_random_string
 
@@ -74,6 +73,9 @@ class GalleryViewsTest(TestCase):
         for image in images:
             photo = Photo.objects.create(image=image, album=cls.album)
             photo.tags.add(cls.tag)
+        first_photo = Photo.objects.first()
+        cls.album.cover = first_photo
+        cls.album.save()
 
     @classmethod
     def tearDownClass(cls) -> None:
@@ -323,13 +325,21 @@ class GalleryViewsTest(TestCase):
         """
         В списке альбомов должны отображаться только публичные альбомы.
         """
+        with self.subTest("Приватный альбом не отображается"):
+            self.album.public = False
+            self.album.save()
+            response = self.client.get(ALBUM_LIST_URL)
+            self.assertNotContains(response, self.album)
+
         with self.subTest("Публичный альбом отображается"):
+            self.album.public = True
+            self.album.save()
             self.assertTrue(self.album.public)
             response = self.client.get(ALBUM_LIST_URL)
             self.assertContains(response, self.album)
 
-        with self.subTest("Приватный альбом не отображается"):
-            self.album.public = False
+        with self.subTest("Альбом без обложки не отображается"):
+            self.album.cover = None
             self.album.save()
             response = self.client.get(ALBUM_LIST_URL)
             self.assertNotContains(response, self.album)
