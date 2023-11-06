@@ -1,29 +1,29 @@
-<!-- Список альбомов в представлении карточек Bootstrap. -->
+{% comment %} Список альбомов в представлении карточек Bootstrap. {% endcomment %}
 <h4>
     <p align="center">Альбомы</p>
 </h4>
 <div class="row row-cols-1 row-cols-md-3 g-4 justify-content-center">
     {% for album in albums %}
-        <div class="col">
-            <div class="card shadow bg-white rounded text-center">
-                {% if album.cover.image.url %}
+        {% if album.cover.image.url %}
+            <div class="col">
+                <div class="card shadow bg-white rounded text-center">
                     <a href="{{ album.get_absolute_url }}">
                         <img src="{{ album.cover.image_preview.url }}" alt="{{ album.name }}">
                     </a>
-                {% endif %}
-                <div class="card-body">
-                    {% if album.name %}
-                        <h5 class="card-title">
-                            <a href="{{ album.get_absolute_url }}">{{ album.name }}</a>
-                        </h5>
-                    {% endif %}
-                    {% if album.description %}
-                        <p class="card-text">
-                            <a href="{{ album.get_absolute_url }}">{{ album.description }}</a>
-                        </p>
-                    {% endif %}
+                    <div class="card-body">
+                        {% if album.name %}
+                            <h5 class="card-title">
+                                <a href="{{ album.get_absolute_url }}">{{ album.name }}</a>
+                            </h5>
+                        {% endif %}
+                        {% if album.description %}
+                            <p class="card-text">
+                                <a href="{{ album.get_absolute_url }}">{{ album.description }}</a>
+                            </p>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
-        </div>
+        {% endif %}
     {% endfor %}
 </div>

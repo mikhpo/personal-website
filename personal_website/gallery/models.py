@@ -255,7 +255,10 @@ class Photo(models.Model):
         """
         Название камеры = производитель + модель.
         """
-        return f"{self.camera_manufacturer} {self.camera_model}"
+        if self.camera_model:
+            return f"{self.camera_manufacturer} {self.camera_model}"
+        else:
+            return self.camera_manufacturer
 
     @cached_property
     def lens_model(self) -> str:

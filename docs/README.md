@@ -294,3 +294,9 @@ Poetry сконфигурирован таким образом, чтобы ви
         client_max_body_size = 25M;
         ...
     }
+
+### Ошибка 500: unsupported locale setting
+
+1. Выполнить команду `sudo dpkg-reconfigure locales`
+2. Выбрать "ru_RU.UTF-8" в списке локалей.
+3. Нажать `Enter`.
