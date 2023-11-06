@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 {% block content %}
-    <div class="container">
+    <div class="container-fluid">
         {% if object_list %}
             {% with object_list as photos %}
                 {% include "gallery/photos.html" %}

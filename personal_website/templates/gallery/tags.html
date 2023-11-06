@@ -2,23 +2,14 @@
 <h4>
     <p align="center">Тэги</p>
 </h4>
-<div class="row row-cols-1 row-cols-md-3 g-4 justify-content-center">
-    {% for tag in tags %}
-        <div class="col">
-            <div class="card shadow bg-white rounded text-center">
-                <div class="card-body">
-                    {% if tag.name %}
-                        <h5 class="card-title">
-                            <a href="{{ tag.get_absolute_url }}">{{ tag.name }}</a>
-                        </h5>
-                    {% endif %}
-                    {% if tag.description %}
-                        <p class="card-text">
-                            <a href="{{ tag.get_absolute_url }}">{{ tag.description }}</a>
-                        </p>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    {% endfor %}
+<div class="container">
+    <div class="d-grid gap-2 d-md-block text-center">
+        {% for tag in tags %}
+            {% if tag.name %}
+                <a class="btn btn-outline-dark"
+                   href="{{ tag.get_absolute_url }}"
+                   role="button">{{ tag.name }}</a>
+            {% endif %}
+        {% endfor %}
+    </div>
 </div>
