@@ -29,6 +29,7 @@ djlint = "^1.34.0"
 pytest = "^7.4.3"
 pytest-subtests = "^0.11.0"
 pytest-django = "^4.6.0"
+pytest-cov = "^4.1.0"
 
 [tool.isort]
 profile = "django"
@@ -40,7 +41,12 @@ ignore="H006,H013"
 [tool.pytest.ini_options]
 pythonpath = "personal_website ."
 DJANGO_SETTINGS_MODULE = "personal_website.settings"
-filterwarnings = ["ignore::django.utils.deprecation.RemovedInDjango51Warning"]
+
+[tool.coverage.run]
+branch = true
+
+[tool.coverage.report]
+omit = ["*/tests/*", "*/tests.py", "*/__init__.py", "*/migrations/*"]
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

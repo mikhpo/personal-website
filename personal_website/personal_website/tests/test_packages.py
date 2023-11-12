@@ -1,5 +1,5 @@
 import os
-import pkgutil
+from importlib.util import find_spec
 
 from django.conf import settings
 from django.test import SimpleTestCase
@@ -24,5 +24,5 @@ class PythonPackagesTests(SimpleTestCase):
         Проверяет, что все пакеты Python установлены.
         """
         for package in REQUIRED_PACKAGES:
-            loader = pkgutil.find_loader(package)
-            self.assertIsNotNone(loader)
+            spec = find_spec(package)
+            self.assertIsNotNone(spec)

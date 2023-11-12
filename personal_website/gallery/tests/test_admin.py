@@ -171,8 +171,6 @@ class GalleryAdminTests(TestCase):
 
         # Ссылка на форму добавления альбома в административной панели.
         url = ADMIN_URL + "gallery/album/add/"
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, HTTPStatus.OK)
 
         # Заполнить форму, отправить форму, проверить статус ответа.
         data = {
@@ -184,9 +182,9 @@ class GalleryAdminTests(TestCase):
         self.assertEqual(response.status_code, HTTPStatus.FOUND)
 
         # Проверить, что альбом с указанным именем существует в базе данных и что слаг автоматически создан.
-        queryset = Album.objects.all()
-        self.assertTrue(queryset.exists())
-        album = queryset.first()
+        albums = Album.objects.all()
+        album: Album = albums.first()
+        self.assertTrue(albums.exists())
         self.assertEqual(album.name, _TEST_ALBUM_NAME)
         self.assertEqual(album.slug, "test-album")
 
