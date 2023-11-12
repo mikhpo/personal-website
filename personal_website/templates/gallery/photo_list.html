@@ -6,8 +6,9 @@
             {% with object_list as photos %}
                 {% include "gallery/photos.html" %}
             {% endwith %}
+            <br>
+            {% include "pagination.html" %}
         {% endif %}
     </div>
-    <br>
     <br>
 {% endblock gallery %}

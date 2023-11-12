@@ -715,4 +715,4 @@ class SeriesPageTests(TestCase):
             public=True, series=self.test_series
         ).order_by("-published_at")[:5]
         response_articles = response.context["page_obj"]
-        self.assertQuerysetEqual(target_articles, response_articles)
+        self.assertQuerySetEqual(target_articles, response_articles)

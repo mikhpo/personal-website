@@ -20,4 +20,5 @@ npm test
 # Запустить тесты Django при помощи Pytest.
 print_line
 echo "Выполнение тестов Django"
-pytest
+coverage run -m pytest
+coverage html

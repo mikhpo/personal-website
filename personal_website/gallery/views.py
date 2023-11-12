@@ -73,11 +73,16 @@ class PhotoListView(ListView):
 
     model = Photo
     template_name = "gallery/photo_list.html"
+    paginate_by = 40
 
     def get_queryset(self):
-        # Отсортировать набор фотографий от новых к старым.
+        """
+        Отсортировать набор фотографий от новых к старым.
+        """
         photos = Photo.published.all()
-        photos_sorted = sorted(photos, key=lambda photo: photo.datetime_taken)
+        photos_sorted = sorted(
+            photos, key=lambda photo: photo.datetime_taken, reverse=True
+        )
         return photos_sorted
 
     def get_context_data(self, **kwargs):
