@@ -40,6 +40,7 @@ ignore="H006,H013"
 
 [tool.pytest.ini_options]
 pythonpath = "personal_website ."
+python_files = ["tests.py", "test_*.py", "*_tests.py"]
 DJANGO_SETTINGS_MODULE = "config.settings"
 
 [tool.coverage.run]
