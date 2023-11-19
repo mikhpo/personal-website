@@ -40,7 +40,7 @@ ignore="H006,H013"
 
 [tool.pytest.ini_options]
 pythonpath = "personal_website ."
-DJANGO_SETTINGS_MODULE = "personal_website.settings"
+DJANGO_SETTINGS_MODULE = "config.settings"
 
 [tool.coverage.run]
 branch = true

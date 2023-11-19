@@ -2,16 +2,12 @@ from pathlib import Path
 
 from django.test import TestCase
 
+from config.utils import copy_test_images, list_file_paths, remove_test_dir
 from gallery.models import Album, Photo
 from gallery.utils import (
     move_photo_image,
     photo_image_upload_full_path,
     photo_image_upload_path,
-)
-from personal_website.utils import (
-    copy_test_images,
-    list_file_paths,
-    remove_test_dir,
 )
 
 

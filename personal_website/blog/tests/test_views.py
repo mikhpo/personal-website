@@ -10,8 +10,8 @@ from django.utils.crypto import get_random_string
 
 from blog.models import Article, Category, Comment, Series, Topic
 from blog.views import ArticleDetailView, blog, category, series, topic
-from personal_website.settings import PROJECT_NAME, TEMPLATES
-from personal_website.utils import generate_random_text
+from config.settings import PROJECT_NAME, TEMPLATES
+from config.utils import generate_random_text
 
 APP_NAME = "blog"
 

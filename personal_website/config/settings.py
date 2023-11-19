@@ -5,7 +5,7 @@ from pathlib import Path
 
 import environ
 
-from personal_website.utils import NoColorLogFormatter
+from config.utils import NoColorLogFormatter
 
 env = environ.Env(DEBUG=(bool, False))
 
@@ -82,9 +82,9 @@ if TEST:
     MIDDLEWARE.remove(WHITENOISE_MIDDLEWARE)
 
 # Относительный путь до urls.py основного модуля Django.
-ROOT_URLCONF = f"{PROJECT_NAME}.urls"
+ROOT_URLCONF = "config.urls"
 
-WSGI_APPLICATION = f"{PROJECT_NAME}.wsgi.application"
+WSGI_APPLICATION = "config.wsgi.application"
 
 AUTH_PASSWORD_VALIDATORS = [
     {

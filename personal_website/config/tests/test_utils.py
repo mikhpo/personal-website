@@ -6,7 +6,7 @@ from django.test import SimpleTestCase
 from django.utils.crypto import get_random_string
 from django.utils.timezone import get_current_timezone
 
-from personal_website.utils import (
+from config.utils import (
     format_local_datetime,
     get_slug,
     has_cyrillic,

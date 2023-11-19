@@ -1,4 +1,4 @@
-from personal_website.managers import PublicManager
+from config.managers import PublicManager
 
 
 class PublicPhotoManager(PublicManager):

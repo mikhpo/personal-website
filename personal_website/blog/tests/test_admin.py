@@ -8,7 +8,7 @@ from django.test import TestCase, override_settings
 
 from blog.apps import BlogConfig
 from blog.models import Article, Category, Comment, Series, Topic
-from personal_website.utils import (
+from config.utils import (
     copy_test_images,
     format_local_datetime,
     generate_random_text,
