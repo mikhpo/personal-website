@@ -1,4 +1,4 @@
-from personal_website.utils.model import PublicManager
+from personal_website.utils.db import PublicManager
 
 
 class PublicArticleManager(PublicManager):
