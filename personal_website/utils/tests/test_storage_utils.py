@@ -5,7 +5,7 @@ from django.core.files.storage import FileSystemStorage
 from django.test import SimpleTestCase
 from dotenv import load_dotenv
 
-from config.storages import select_storage
+from personal_website.utils.storage import select_storage
 
 
 class FileSystemStorageTests(SimpleTestCase):

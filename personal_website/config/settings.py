@@ -5,7 +5,7 @@ from pathlib import Path
 
 import environ
 
-from config.utils import NoColorLogFormatter
+from utils import NoColorLogFormatter
 
 env = environ.Env(DEBUG=(bool, False))
 

@@ -11,7 +11,6 @@ from django.test import TestCase
 from django.urls import resolve, reverse
 from django.utils.crypto import get_random_string
 
-from config.utils import copy_test_images, list_file_paths, remove_test_dir
 from gallery.models import Album, Photo, Tag
 from gallery.views import (
     AlbumDetailView,
@@ -22,6 +21,7 @@ from gallery.views import (
     TagDetailView,
     UploadFormView,
 )
+from utils import copy_test_images, list_file_paths, remove_test_dir
 
 APP_NAME = "gallery"
 

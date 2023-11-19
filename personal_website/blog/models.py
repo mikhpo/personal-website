@@ -3,7 +3,7 @@ from django.db import models
 from django.urls import reverse
 from django.utils.timezone import now
 
-from config.utils import get_unique_slug
+from utils import get_unique_slug
 
 from .managers import (
     PublicArticleManager,

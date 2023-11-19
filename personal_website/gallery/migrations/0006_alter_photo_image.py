@@ -4,8 +4,8 @@ from pathlib import Path
 
 from django.db import migrations, models
 
-import config.storages
 import gallery.utils
+import personal_website.utils.storage
 from gallery.apps import GalleryConfig
 from gallery.utils import move_photo_image, photo_image_upload_path
 
@@ -37,7 +37,7 @@ class Migration(migrations.Migration):
             name="image",
             field=models.ImageField(
                 max_length=255,
-                storage=config.storages.select_storage,
+                storage=personal_website.utils.storage.select_storage,
                 upload_to=gallery.utils.photo_image_upload_path,
                 verbose_name="Изображение",
             ),

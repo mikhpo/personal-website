@@ -3,9 +3,9 @@ import os
 from django.conf import settings
 from django.test import TestCase, override_settings
 
-from config.utils import list_file_paths
 from gallery.forms import AlbumForm
 from gallery.models import Album, Photo
+from utils import list_file_paths
 
 
 @override_settings(MEDIA_ROOT=os.path.join(settings.BASE_DIR, "media"))

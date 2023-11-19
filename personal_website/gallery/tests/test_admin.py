@@ -5,9 +5,9 @@ from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 
-from config.utils import copy_test_images, list_file_paths, remove_test_dir
 from gallery.apps import GalleryConfig
 from gallery.models import Album, Photo, Tag
+from utils import copy_test_images, list_file_paths, remove_test_dir
 
 ADMIN_URL = "/admin/"
 

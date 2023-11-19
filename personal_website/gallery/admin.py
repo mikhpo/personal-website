@@ -4,7 +4,7 @@ from django.db import models
 from django.utils.safestring import mark_safe
 from tinymce.widgets import TinyMCE
 
-from config.utils import format_local_datetime
+from utils import format_local_datetime
 
 from .forms import AlbumForm
 from .models import Album, Photo, Tag

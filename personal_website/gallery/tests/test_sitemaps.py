@@ -4,8 +4,8 @@ from django.conf import settings
 from django.test import TestCase
 from django.utils import timezone
 
-from config.utils import list_file_paths
 from gallery.models import Album, Photo, Tag
+from utils import list_file_paths
 
 SITEMAP_URL = "/sitemap.xml"
 
