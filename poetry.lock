@@ -268,20 +268,18 @@ files = [
 django = ">=4.2"
 
 [[package]]
-name = "django-environ"
-version = "0.11.2"
-description = "A package that allows you to utilize 12factor inspired environment variables to configure your Django application."
+name = "django-extensions"
+version = "3.2.3"
+description = "Extensions for Django"
 optional = false
-python-versions = ">=3.6,<4"
+python-versions = ">=3.6"
 files = [
-    {file = "django-environ-0.11.2.tar.gz", hash = "sha256:f32a87aa0899894c27d4e1776fa6b477e8164ed7f6b3e410a62a6d72caaf64be"},
-    {file = "django_environ-0.11.2-py2.py3-none-any.whl", hash = "sha256:0ff95ab4344bfeff693836aa978e6840abef2e2f1145adff7735892711590c05"},
+    {file = "django-extensions-3.2.3.tar.gz", hash = "sha256:44d27919d04e23b3f40231c4ab7af4e61ce832ef46d610cc650d53e68328410a"},
+    {file = "django_extensions-3.2.3-py3-none-any.whl", hash = "sha256:9600b7562f79a92cbf1fde6403c04fee314608fefbb595502e34383ae8203401"},
 ]
 
-[package.extras]
-develop = ["coverage[toml] (>=5.0a4)", "furo (>=2021.8.17b43,<2021.9.dev0)", "pytest (>=4.6.11)", "sphinx (>=3.5.0)", "sphinx-notfound-page"]
-docs = ["furo (>=2021.8.17b43,<2021.9.dev0)", "sphinx (>=3.5.0)", "sphinx-notfound-page"]
-testing = ["coverage[toml] (>=5.0a4)", "pytest (>=4.6.11)"]
+[package.dependencies]
+Django = ">=3.2"
 
 [[package]]
 name = "django-imagekit"
@@ -350,6 +348,58 @@ files = [
 ]
 
 [[package]]
+name = "faker"
+version = "20.1.0"
+description = "Faker is a Python package that generates fake data for you."
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "Faker-20.1.0-py3-none-any.whl", hash = "sha256:aeb3e26742863d1e387f9d156f1c36e14af63bf5e6f36fb39b8c27f6a903be38"},
+    {file = "Faker-20.1.0.tar.gz", hash = "sha256:562a3a09c3ed3a1a7b20e13d79f904dfdfc5e740f72813ecf95e4cf71e5a2f52"},
+]
+
+[package.dependencies]
+python-dateutil = ">=2.4"
+
+[[package]]
+name = "faker-file"
+version = "0.17.11"
+description = "Generate files with fake data."
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "faker-file-0.17.11.tar.gz", hash = "sha256:6ea67b5083b29edbe4f3d808d6aa13fea58bde5e01d306ec44af6f4aeff367cb"},
+    {file = "faker_file-0.17.11-py2.py3-none-any.whl", hash = "sha256:8a805d1731f98ae9cab580da4c5899e3669a531065534c2ca1d7edd51d434193"},
+]
+
+[package.dependencies]
+Faker = "*"
+
+[package.extras]
+all = ["Faker", "WeasyPrint", "edge-tts", "gtts", "imgkit", "nlpaug", "nltk", "odfpy", "openpyxl", "paramiko", "pathy[all]", "pdf2image", "pdfkit", "python-docx", "python-pptx", "reportlab", "tablib", "textaugment", "tika", "torch", "transformers", "xml2epub"]
+azure = ["pathy[azure]"]
+bmp = ["WeasyPrint", "pdf2image"]
+common = ["Faker", "WeasyPrint", "edge-tts", "gtts", "imgkit", "odfpy", "openpyxl", "paramiko", "pathy[all]", "pdf2image", "pdfkit", "python-docx", "python-pptx", "reportlab", "tablib", "xml2epub"]
+data-augmentation = ["nlpaug", "nltk", "textaugment", "tika", "torch", "transformers"]
+django = ["Django (>=2.2)"]
+docx = ["python-docx"]
+epub = ["xml2epub"]
+gcs = ["pathy[gcs]"]
+gif = ["WeasyPrint", "pdf2image"]
+images = ["imgkit"]
+mp3 = ["edge-tts", "gtts"]
+odp = ["odfpy"]
+ods = ["odfpy", "tablib"]
+odt = ["odfpy"]
+pdf = ["pdfkit", "reportlab"]
+pptx = ["python-pptx"]
+s3 = ["pathy[s3]"]
+sftp = ["paramiko"]
+sqlalchemy = ["SQLAlchemy (>=1.0)", "SQLAlchemy-Utils (>=0.37.0)"]
+tiff = ["WeasyPrint", "pdf2image"]
+xlsx = ["openpyxl", "tablib"]
+
+[[package]]
 name = "gunicorn"
 version = "21.2.0"
 description = "WSGI HTTP Server for UNIX"
@@ -390,6 +440,20 @@ files = [
     {file = "html-void-elements-0.1.0.tar.gz", hash = "sha256:931b88f84cd606fee0b582c28fcd00e41d7149421fb673e1e1abd2f0c4f231f0"},
     {file = "html_void_elements-0.1.0-py3-none-any.whl", hash = "sha256:784cf39db03cdeb017320d9301009f8f3480f9d7b254d0974272e80e0cb5e0d2"},
 ]
+
+[[package]]
+name = "imgkit"
+version = "1.2.3"
+description = "Wkhtmltopdf python wrapper to convert html to image using the webkit rendering engine and qt"
+optional = false
+python-versions = "*"
+files = [
+    {file = "imgkit-1.2.3-py3-none-any.whl", hash = "sha256:cba8e3f67da6e0a5c87345a8b41605337851f9b9b75719500fa6810ecff84791"},
+    {file = "imgkit-1.2.3.tar.gz", hash = "sha256:c9ade93d0281277c898b983c959f11f0cc1cb4a5fed144560dfa4d273fb50cd8"},
+]
+
+[package.dependencies]
+six = "*"
 
 [[package]]
 name = "iniconfig"
@@ -446,6 +510,24 @@ files = [
 
 [package.extras]
 dev = ["hypothesis"]
+
+[[package]]
+name = "model-bakery"
+version = "1.17.0"
+description = "Smart object creation facility for Django."
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "model_bakery-1.17.0-py3-none-any.whl", hash = "sha256:1d26f1a7043c46e6729145b964a7740bf8f6dddac16510fd18323a1492fba757"},
+    {file = "model_bakery-1.17.0.tar.gz", hash = "sha256:fe808132cd966164600f0450cc05b3cfa50c6c062e00f739a861c5a4b9f236ca"},
+]
+
+[package.dependencies]
+django = ">=3.2"
+
+[package.extras]
+docs = ["sphinx", "sphinx-rtd-theme"]
+test = ["black", "coverage", "mypy", "pillow", "pytest", "pytest-django", "ruff"]
 
 [[package]]
 name = "mypy-extensions"
@@ -761,6 +843,20 @@ attrs = ">=19.2.0"
 pytest = ">=7.0"
 
 [[package]]
+name = "python-dateutil"
+version = "2.8.2"
+description = "Extensions to the standard Python datetime module"
+optional = false
+python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,>=2.7"
+files = [
+    {file = "python-dateutil-2.8.2.tar.gz", hash = "sha256:0123cacc1627ae19ddf3c27a5de5bd67ee4586fbdd6440d9748f8abb483d3e86"},
+    {file = "python_dateutil-2.8.2-py2.py3-none-any.whl", hash = "sha256:961d03dc3453ebbc59dbdea9e4e11c5651520a876d0f4db161e8674aae935da9"},
+]
+
+[package.dependencies]
+six = ">=1.5"
+
+[[package]]
 name = "python-dotenv"
 version = "1.0.0"
 description = "Read key-value pairs from a .env file and set them as environment variables"
@@ -1026,4 +1122,4 @@ brotli = ["Brotli"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "e7ba9ad0582b35d1542364c35300bb26afad6014c9b9c284d85297967ff485c2"
+content-hash = "be92e8e77a9fc7c0fdcc0d1b87c1255f1ddfe498a3c3f6f49e8847c7fd715f6d"

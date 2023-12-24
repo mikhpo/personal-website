@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 from django.test import TestCase
@@ -8,11 +9,7 @@ from gallery.utils import (
     photo_image_upload_full_path,
     photo_image_upload_path,
 )
-from personal_website.utils import (
-    copy_test_images,
-    list_file_paths,
-    remove_test_dir,
-)
+from personal_website.utils import list_file_paths
 
 
 class GalleryUtilsTests(TestCase):
@@ -36,8 +33,9 @@ class GalleryUtilsTests(TestCase):
         )
 
         # Создать фотографии в базе данных из картинок в директории проекта.
-        test_dir = copy_test_images()
-        images = list_file_paths(test_dir)
+        test_dir = os.getenv("TEMP_ROOT")
+        test_images_dir = os.path.join(test_dir, "gallery", "photos")
+        images = list_file_paths(test_images_dir)
         for image in images:
             if "Tuscany" in image:
                 album = cls.tuscany_album
@@ -46,11 +44,6 @@ class GalleryUtilsTests(TestCase):
             else:
                 raise Exception("Нужно создать новый тестовый альбом")
             Photo.objects.create(image=image, album=album)
-
-    @classmethod
-    def tearDownClass(cls) -> None:
-        remove_test_dir()
-        super().tearDownClass()
 
     def test_photo_image_upload_path(self):
         """

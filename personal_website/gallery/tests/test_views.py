@@ -21,11 +21,7 @@ from gallery.views import (
     TagDetailView,
     UploadFormView,
 )
-from personal_website.utils import (
-    copy_test_images,
-    list_file_paths,
-    remove_test_dir,
-)
+from personal_website.utils import list_file_paths
 
 APP_NAME = "gallery"
 
@@ -65,19 +61,15 @@ class GalleryViewsTest(TestCase):
         cls.tag = Tag.objects.create(name="Test tag")
         cls.album = Album.objects.create(name="Test album")
         cls.album.tags.add(cls.tag)
-        cls.test_dir = copy_test_images()
-        images = list_file_paths(cls.test_dir)
+        test_dir = os.getenv("TEMP_ROOT")
+        test_images_dir = os.path.join(test_dir, "gallery", "photos")
+        images = list_file_paths(test_images_dir)
         for image in images:
             photo = Photo.objects.create(image=image, album=cls.album)
             photo.tags.add(cls.tag)
         first_photo = Photo.objects.first()
         cls.album.cover = first_photo
         cls.album.save()
-
-    @classmethod
-    def tearDownClass(cls) -> None:
-        remove_test_dir()
-        super().tearDownClass()
 
     def test_gallery_home_url(self):
         """
@@ -451,14 +443,10 @@ class UploadFormViewTests(TestCase):
             username=cls.staff_username, password=cls.staff_password
         )
         os.makedirs(settings.MEDIA_ROOT, exist_ok=True)
-        cls.test_dir = copy_test_images()
-        cls.test_image_paths = list_file_paths(cls.test_dir)
+        test_dir = os.getenv("TEMP_ROOT")
+        test_images_dir = os.path.join(test_dir, "gallery", "photos")
+        cls.test_image_paths = list_file_paths(test_images_dir)
         cls.album = Album.objects.create(name="Тестовый альбом")
-
-    @classmethod
-    def tearDownClass(cls):
-        remove_test_dir()
-        super().tearDownClass()
 
     def setUp(self) -> None:
         super().setUp()

@@ -7,13 +7,14 @@ from django.conf import settings
 from django.db import models
 from django.urls import reverse
 from django.utils.functional import cached_property
+from django.utils.timezone import get_current_timezone, now
 from imagekit.models import ImageSpecField
 from imagekit.processors import ResizeToFit
 from PIL import Image as pImage
 from PIL.ExifTags import TAGS
 
-from personal_website.storages import select_storage
 from personal_website.utils import get_unique_slug
+from project.storages import select_storage
 
 from .managers import PublicAlbumManager, PublicPhotoManager
 from .utils import move_photo_image, photo_image_upload_path
@@ -21,6 +22,8 @@ from .utils import move_photo_image, photo_image_upload_path
 thumbnail_size: int = settings.GALLERY_THUMBNAIL_SIZE
 preview_size: int = settings.GALLERY_PREVIEW_SIZE
 resize_quality: int = settings.GALLERY_RESIZE_QUALITY
+
+current_timezone = get_current_timezone()
 
 
 class Tag(models.Model):
@@ -317,11 +320,11 @@ class Photo(models.Model):
         """
         # Проверить наличие файла изображения.
         if not self.image.name or not Path(self.image.path).exists():
-            return None
+            return now()
 
         # Получить дату и время последнего изменения файла.
         time_stamp = os.path.getmtime(self.image.path)
-        date_time = datetime.fromtimestamp(time_stamp)
+        date_time = datetime.fromtimestamp(time_stamp, current_timezone)
 
         # Если в EXIF отсутствует дата и время съемки,
         # то вернуть дату и время последнего изменения.

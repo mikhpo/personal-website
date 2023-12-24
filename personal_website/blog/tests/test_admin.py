@@ -1,20 +1,16 @@
-import os
 from http import HTTPStatus
 
-from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import TestCase, override_settings
+from django.test import TestCase
+from faker import Faker
+from faker_file.providers.jpeg_file import JpegFileProvider
 
 from blog.apps import BlogConfig
 from blog.models import Article, Category, Comment, Series, Topic
-from personal_website.utils import (
-    copy_test_images,
-    format_local_datetime,
-    generate_random_text,
-    list_file_paths,
-    remove_test_dir,
-)
+from personal_website.utils import format_local_datetime, generate_random_text
+
+FAKER = Faker()
 
 
 class BlogAdminTest(TestCase):
@@ -38,12 +34,7 @@ class BlogAdminTest(TestCase):
         cls.comment: Comment = Comment.objects.create(
             article=cls.article, author=cls.superuser, content=generate_random_text(10)
         )
-        cls.test_dir = copy_test_images()
-
-    @classmethod
-    def tearDownClass(cls):
-        remove_test_dir()
-        super().tearDownClass()
+        cls.jpeg_raw = JpegFileProvider(FAKER).jpeg_file(raw=True)
 
     def setUp(self):
         self.client.login(username="testadmin", password="12345")
@@ -252,12 +243,9 @@ class BlogAdminTest(TestCase):
 
         # Загрузить изображение через административный интерфейс.
         series_change_url = self.ADMIN_URL + f"blog/series/{self.series.pk}/change/"
-        image_paths = list_file_paths(self.test_dir)
-        image_path = image_paths[0]
-        image = open(image_path, "rb")
         response = self.client.post(
             series_change_url,
-            data={"image": SimpleUploadedFile(image.name, image.read())},
+            data={"image": SimpleUploadedFile(FAKER.word(), self.jpeg_raw)},
         )
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
@@ -284,12 +272,9 @@ class BlogAdminTest(TestCase):
 
         # Загрузить изображение через административный интерфейс.
         topic_change_url = self.ADMIN_URL + f"blog/topic/{self.topic.pk}/change/"
-        image_paths = list_file_paths(self.test_dir)
-        image_path = image_paths[0]
-        image = open(image_path, "rb")
         response = self.client.post(
             topic_change_url,
-            data={"image": SimpleUploadedFile(image.name, image.read())},
+            data={"image": SimpleUploadedFile(FAKER.word(), self.jpeg_raw)},
         )
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
@@ -318,12 +303,9 @@ class BlogAdminTest(TestCase):
         category_change_url = (
             self.ADMIN_URL + f"blog/category/{self.category.pk}/change/"
         )
-        image_paths = list_file_paths(self.test_dir)
-        image_path = image_paths[0]
-        image = open(image_path, "rb")
         response = self.client.post(
             category_change_url,
-            data={"image": SimpleUploadedFile(image.name, image.read())},
+            data={"image": SimpleUploadedFile(FAKER.word(), self.jpeg_raw)},
         )
         self.assertEqual(response.status_code, HTTPStatus.OK)
 

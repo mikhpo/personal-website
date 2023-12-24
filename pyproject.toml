@@ -7,19 +7,23 @@ authors = ["Mikhail Polyakov <mikhpo@outlook.com>"]
 [tool.poetry.dependencies]
 python = "^3.11"
 Django = "^4.2.7"
-django-crispy-forms = "^2.1"
 django-tinymce = "^3.6.1"
 django-cleanup = "^8.0.0"
 django-imagekit = "^5.0.0"
 django-admin-sortable2 = "^2.1.10"
+django-extensions = "^3.2.3"
+django-crispy-forms = "^2.1"
 crispy-bootstrap5 = "^2023.10"
 whitenoise = "^6.6.0"
 gunicorn = "^21.2.0"
 python-dotenv = "^1.0.0"
 pytils = "^0.4.1"
 pillow = "^10.1.0"
+imgkit = "^1.2.3"
 psycopg = {extras = ["binary"], version = "^3.1.12"}
-django-environ = "^0.11.2"
+faker = "^20.1.0"
+faker-file = "^0.17.11"
+model-bakery = "^1.17.0"
 
 [tool.poetry.group.dev.dependencies]
 coverage = "^7.3.2"
@@ -40,7 +44,8 @@ ignore="H006,H013"
 
 [tool.pytest.ini_options]
 pythonpath = "personal_website ."
-DJANGO_SETTINGS_MODULE = "personal_website.settings"
+python_files = ["tests.py", "test_*.py", "*_tests.py"]
+DJANGO_SETTINGS_MODULE = "project.settings"
 
 [tool.coverage.run]
 branch = true

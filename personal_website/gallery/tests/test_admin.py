@@ -1,3 +1,4 @@
+import os
 from http import HTTPStatus
 from pathlib import Path
 
@@ -7,11 +8,7 @@ from django.test import TestCase
 
 from gallery.apps import GalleryConfig
 from gallery.models import Album, Photo, Tag
-from personal_website.utils import (
-    copy_test_images,
-    list_file_paths,
-    remove_test_dir,
-)
+from personal_website.utils import list_file_paths
 
 ADMIN_URL = "/admin/"
 
@@ -27,13 +24,9 @@ class GalleryAdminTests(TestCase):
         cls.superuser: User = User.objects.create_superuser(
             username="testadmin", password="12345"
         )
-        test_dir = copy_test_images()
-        cls.image_path = list_file_paths(test_dir)[0]
-
-    @classmethod
-    def tearDownClass(cls):
-        remove_test_dir()
-        super().tearDownClass()
+        temp_dir = os.getenv("TEMP_ROOT")
+        test_images_dir = os.path.join(temp_dir, "gallery", "photos")
+        cls.image_path = list_file_paths(test_images_dir)[0]
 
     def setUp(self):
         self.photo_image = open(self.image_path, "rb")
