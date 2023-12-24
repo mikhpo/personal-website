@@ -3,13 +3,15 @@ import os
 import sys
 from pathlib import Path
 
-import environ
+from dotenv import load_dotenv
 
-from utils import NoColorLogFormatter
+from personal_website.utils import NoColorLogFormatter, str_to_bool
 
-env = environ.Env(DEBUG=(bool, False))
+# Прочитать переменные окружения из .os.getenv файла.
+load_dotenv()
 
-# Определяется абсолютный путь до текущих директорий для того, чтобы далее в проекте везде использовались относительные пути.
+# Определяется абсолютный путь до текущих директорий для того,
+# чтобы далее в проекте везде использовались относительные пути.
 BASE_DIR = Path(__file__).resolve().parent.parent
 PROJECT_DIR = BASE_DIR.parent
 PROJECT_NAME = BASE_DIR.name
@@ -17,27 +19,24 @@ PROJECT_NAME = BASE_DIR.name
 # Определение признака запуска в режиме тестирования.
 TEST = any((("test" in sys.argv), ("pytest" in sys.modules)))
 
-# Прочитать переменные окружения из .env файла.
-environ.Env.read_env(os.path.join(PROJECT_DIR, ".env"))
-
 # Режим запуска сервера.
-DEBUG = env("DEBUG")
+DEBUG = str_to_bool(os.getenv("DEBUG"))
 
 # Ключ проекта Django (генерируется автоматически).
-SECRET_KEY = env("SECRET_KEY")
+SECRET_KEY = os.getenv("SECRET_KEY")
 
 # Доменное имя, по которому доступен сайт.
-CUSTOM_DOMAIN = env("CUSTOM_DOMAIN")
+WEBSITE_NAME = os.getenv("WEBSITE_NAME")
 
-IP_ADDRESS = env("IP_ADDRESS")
-
-# Список адресов, которые будет обслуживать Django проект. Если не добавлять адрес в этот список, то запросы по данному адресу обрабатываться не будут.
+# Список адресов, которые будет обслуживать Django проект.
+# Если не добавлять адрес в этот список, то запросы по данному адресу обрабатываться не будут.
 ALLOWED_HOSTS = [
+    "0.0.0.0",
     "127.0.0.1",
     "localhost",
-    IP_ADDRESS,
-    CUSTOM_DOMAIN,
-    f"www.{CUSTOM_DOMAIN}",
+    WEBSITE_NAME,
+    f"www.{WEBSITE_NAME}",
+    os.getenv("WEBSITE_HOST"),
 ]
 
 # Список приложений = модули Django + модули сообщества + приложения проекта.
@@ -57,6 +56,7 @@ INSTALLED_APPS = [
     "adminsortable2",
     "imagekit",
     "django_cleanup.apps.CleanupConfig",
+    "django_extensions",
     "accounts",
     "gallery",
     "blog",
@@ -82,9 +82,9 @@ if TEST:
     MIDDLEWARE.remove(WHITENOISE_MIDDLEWARE)
 
 # Относительный путь до urls.py основного модуля Django.
-ROOT_URLCONF = "config.urls"
+ROOT_URLCONF = "project.urls"
 
-WSGI_APPLICATION = "config.wsgi.application"
+WSGI_APPLICATION = "project.wsgi.application"
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -118,7 +118,7 @@ USE_TZ = True
 STATIC_URL = "/static/"
 
 # Абсолютный путь до папки, в которой собраны статические файлы.
-STATIC_ROOT = env("STATIC_ROOT")
+STATIC_ROOT = os.getenv("STATIC_ROOT")
 
 # NPM-зависимости в корневом каталоге проекта.
 STATICFILES_DIRS = [BASE_DIR / "static", PROJECT_DIR / "node_modules"]
@@ -130,10 +130,10 @@ WHITENOISE_ROOT = STATIC_ROOT
 MEDIA_URL = "/media/"
 
 # Абсолютный путь до папки с медиа-файлами.
-MEDIA_ROOT = env("STORAGE_ROOT")
+MEDIA_ROOT = os.getenv("STORAGE_ROOT")
 
 # Адрес временной папки для тестирования.
-TEMP_ROOT = PROJECT_DIR / "temp"
+TEMP_ROOT = os.getenv("TEMP_ROOT")
 
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
@@ -169,11 +169,11 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": env("PG_NAME"),
-        "USER": env("PG_USER"),
-        "PASSWORD": env("PG_PASSWORD"),
-        "HOST": env("PG_HOST"),
-        "PORT": env("PG_PORT"),
+        "NAME": os.getenv("POSTGRES_NAME"),
+        "USER": os.getenv("POSTGRES_USER"),
+        "PASSWORD": os.getenv("POSTGRES_PASSWORD"),
+        "HOST": os.getenv("POSTGRES_HOST"),
+        "PORT": os.getenv("POSTGRES_PORT"),
     }
 }
 
@@ -203,13 +203,16 @@ TEMPLATES = [
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
-EMAIL_HOST_USER = env("EMAIL_HOST_USER")
-EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD")
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False
 
-# настройки модуля Django Crispy Forms, улучшающего отображение стандартных форм Django.
+# Выбор тестового раннера.
+TEST_RUNNER = "project.runner.CustomRunner"
+
+# Настройки модуля Django Crispy Forms, улучшающего отображение стандартных форм Django.
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
 
@@ -246,7 +249,7 @@ TINYMCE_DEFAULT_CONFIG = {
 """
 Настройки логирования.
 """
-LOGS_ROOT = env("LOGS_ROOT")  # общая папка для сохранения логов
+LOGS_ROOT = os.getenv("LOGS_ROOT")  # общая папка для сохранения логов
 LOG_DIR = os.path.join(LOGS_ROOT, PROJECT_NAME)
 
 # Cоздать директорию для логов, если не существует.
@@ -344,6 +347,3 @@ GALLERY_PREVIEW_SIZE = 1000
 
 # Качество сжатия миниатюр и предварительного просмотра.
 GALLERY_RESIZE_QUALITY = 100
-
-# Адрес каталога с фотографиями для тестирования.
-TEST_IMAGES_DIR = BASE_DIR / "media" / "gallery" / "photos"

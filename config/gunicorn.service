@@ -11,7 +11,7 @@ ExecStart=/root/personal-website/.venv/bin/gunicorn \
           --access-logfile - \
           --workers 3 \
           --bind unix:/run/gunicorn.sock \
-          config.wsgi:application
+          project.wsgi:application
 
 [Install]
 WantedBy=multi-user.target

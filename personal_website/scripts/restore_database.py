@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 #
 # Скрипт для восстановления базы данных PostgreSQL из дампа.
+
 import argparse
 import locale
 import os
@@ -10,6 +11,25 @@ import sys
 from pathlib import Path
 
 from dotenv import load_dotenv
+
+from personal_website.utils import calculate_path_size
+
+
+def parse_argument() -> str:
+    """
+    Парсер адреса дампа из аргументов командной строки.
+    """
+    parser = argparse.ArgumentParser(
+        description="Восстановление базы данных PostgreSQL из дампа",
+        epilog="Внимание! Выполнение данного скрипта может привести к потере данных!",
+    )
+    parser.add_argument("dump_path", type=str, nargs="?", help="Полный адрес дампа")
+    dump_path = parser.parse_args().dump_path
+    if not dump_path:
+        dump_path = input(
+            "Не указан адрес дампа. Пожалуйста, укажите полный адрес дампа: "
+        )
+    return dump_path
 
 
 def verify_command():
@@ -29,28 +49,36 @@ def check_dump(dump_path: str):
     Проверяет, указан ли путь к дампу в аргументах скрипта и, если указан, то корректный ли.
     """
     if not dump_path:
-        dump_path = input(
-            "Не указан адрес дампа. Пожалуйста, укажите полный адрес дампа: "
-        )
-        if not dump_path:
-            sys.exit("Вы не указали адрес дампа!")
-        else:
-            if not Path(dump_path).exists():
-                sys.exit("Указанный путь не существует")
+        sys.exit("Вы не указали адрес дампа!")
+    else:
+        if not Path(dump_path).exists():
+            sys.exit("Указанный путь не существует")
     return dump_path
 
 
-def main(dump_path: str) -> None:
-    print(f"Запущен скрипт для восстановления базы данных из дампа {dump_path}")
+def main() -> None:
+    # Получить адрес дампа.
+    dump_path = parse_argument()
+    print(f"Запущен скрипт для восстановления базы данных из дампа '{dump_path}'")
+    verify_command()
+    dump_path = check_dump(dump_path)
+
+    # Определить размер дампа.
+    dump_size = calculate_path_size(dump_path)
+    verbose_size = dump_size.get("message")
+    print(f"Размер дампа составляет {verbose_size}")
 
     # Загрузка переменных окружения из файла .env в корневой директории проекта.
-    print("Загрузка переменных окружения из файла .env")
-    load_dotenv()
-    pg_host = os.environ["PG_HOST"]
-    pg_user = os.environ["PG_USER"]
-    pg_port = os.environ["PG_PORT"]
-    pg_name = os.environ["PG_NAME"]
-    pg_password = os.environ["PG_PASSWORD"]
+    if load_dotenv():
+        print("Переменные окружения считаны из .env файла")
+    else:
+        sys.exit("Не удалось считать переменные окружения из .env файла")
+
+    POSTGRES_HOST = os.environ["POSTGRES_HOST"]
+    POSTGRES_USER = os.environ["POSTGRES_USER"]
+    POSTGRES_PORT = os.environ["POSTGRES_PORT"]
+    POSTGRES_NAME = os.environ["POSTGRES_NAME"]
+    POSTGRES_PASSWORD = os.environ["POSTGRES_PASSWORD"]
 
     # Определение системной кодировки.
     encoding = locale.getlocale()[1]
@@ -60,8 +88,8 @@ def main(dump_path: str) -> None:
     pg_restore = os.popen(f"which pg_restore").read().strip()
     bash_script = (
         f"{pg_restore} -Fc --single-transaction --no-owner --clean "
-        f"-h {pg_host} -U {pg_user} -p {pg_port} -d {pg_name} "
-        f"{dump_path}"
+        + f"-h {POSTGRES_HOST} -U {POSTGRES_USER} -p {POSTGRES_PORT} -d {POSTGRES_NAME} "
+        + f"{dump_path}"
     )
     print(f"Выполняю команду: {bash_script}")
 
@@ -70,7 +98,7 @@ def main(dump_path: str) -> None:
         args=shlex.split(bash_script),
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
-        env={"PGPASSWORD": pg_password},
+        env={"PGPASSWORD": POSTGRES_PASSWORD},
     )
 
     # Ожидаем результата выполнения bash-команды.
@@ -79,9 +107,11 @@ def main(dump_path: str) -> None:
     # Стандартный вывод и стандартная ошибка являются байтами,
     # которые необходимо преобразовать в строку для лучшего форматирования.
     if stderr:
-        sys.exit(stderr.decode(encoding=encoding))
+        message = stderr.decode(encoding=encoding)
+        sys.exit(message)
     elif len(stdout) > 0:
-        print(stdout.decode(encoding=encoding))
+        message = stdout.decode(encoding=encoding)
+        print(message)
     else:
         print("Выполнение команды завершено")
 
@@ -90,11 +120,4 @@ def main(dump_path: str) -> None:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Восстановление базы данных PostgreSQL из дампа"
-    )
-    parser.add_argument("dump_path", type=str, nargs="?", help="Полный адрес дампа")
-    dump_path = parser.parse_args().dump_path
-    verify_command()
-    dump_path = check_dump(dump_path)
-    main(dump_path)
+    main()

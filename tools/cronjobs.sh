@@ -7,20 +7,21 @@
 #   3. Если задачи ещё не добавлены, то добавляет задачи в crontab.
 
 # Определение символа перехода на новую строку. 
-newline=$'\n'
+readonly NEWLINE=$'\n'
 
 # Определение корневой директории проекта.
-project_root="$(dirname "$(dirname "$(readlink -fm "$0")")")"
+readonly project_root="$(dirname "$(dirname "$(readlink -fm "$0")")")"
 echo "Корневая директория проекта: ${project_root}"
 
-# Определение пути исполняемого файла Python.
-python="$project_root/.venv/bin/python"
+# Определение пути исполняемого файла Python и выполняемой команды.
+readonly python="$project_root/.venv/bin/python"
+readonly command="$project_root/personal_website/manage.py runscript"
 echo "Путь до интерпретатора Python: ${python}"
 
 # Массив задач на добавление.
 cron_jobs=(
-    "0 23 * * * $python $project_root/scripts/backup_database.py"
-    "1 23 * * * $python $project_root/scripts/backup_storage.py"
+    "0 23 * * * $python $command backup_database"
+    "1 23 * * * $python $command backup_storage"
 )
 
 # Получение содержимого текущего crontab файла.
@@ -40,14 +41,14 @@ for job in "${cron_jobs[@]}"
                 cron="${job}"
             else
                 # Если файл не пуст, то задача добавляется с новой строки.
-                cron="${cron}${newline}${job}"
+                cron="${cron}${NEWLINE}${job}"
             fi            
         fi
     done
 
 # Обязательное добавление пустой строки в конец crontab.
-cron="${cron}${newline}"
+cron="${cron}${NEWLINE}"
 
 # Сохранение результата в crontab.
 echo "$cron" | crontab -
-echo "Актуальное содержание crontab:${newline}${cron}"
+echo "Актуальное содержание crontab:${NEWLINE}${cron}"

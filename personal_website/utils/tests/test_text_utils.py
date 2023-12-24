@@ -1,6 +1,6 @@
 from django.test import SimpleTestCase
 
-from utils import get_slug, has_cyrillic
+from personal_website.utils import get_slug, has_cyrillic
 
 
 class HasCyrrillicTests(SimpleTestCase):

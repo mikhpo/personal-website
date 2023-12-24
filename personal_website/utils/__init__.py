@@ -1,5 +1,5 @@
 from .format import *
+from .log import *
 from .path import *
 from .setup import *
-from .testing import *
 from .text import *

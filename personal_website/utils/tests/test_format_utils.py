@@ -3,7 +3,7 @@ import datetime
 from django.test import SimpleTestCase
 from django.utils.timezone import get_current_timezone
 
-from utils import format_local_datetime
+from personal_website.utils import format_local_datetime
 
 
 class FormatLocalDatetimeTests(SimpleTestCase):

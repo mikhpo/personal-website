@@ -1,7 +1,7 @@
 from django.test import TestCase
 
 from blog.forms import NewCommentForm
-from utils import generate_random_text
+from personal_website.utils import generate_random_text
 
 
 class CommentFormTest(TestCase):

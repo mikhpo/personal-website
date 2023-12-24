@@ -1,7 +1,7 @@
 from django.test import SimpleTestCase
 from django.utils.crypto import get_random_string
 
-from utils import str_to_bool
+from personal_website.utils import str_to_bool
 
 
 class StrToBollTests(SimpleTestCase):

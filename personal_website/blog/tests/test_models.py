@@ -4,7 +4,7 @@ from django.test import TestCase
 from django.utils.crypto import get_random_string
 
 from blog.models import Article, Category, Comment, Series, Topic
-from utils import generate_random_text
+from personal_website.utils import generate_random_text
 
 
 class ArticleModelTest(TestCase):

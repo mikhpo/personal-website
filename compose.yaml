@@ -1,0 +1,39 @@
+services:
+
+  website:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - POSTGRES_HOST=postgres
+      - STATIC_ROOT=/srv/website/static
+      - STORAGE_ROOT=/srv/website/storage
+      - BACKUP_ROOT=/srv/website/backup
+      - LOGS_ROOT=/srv/website/logs
+      - TEMP_ROOT=/srv/website/temp
+    env_file: .env
+    ports:
+      - ${WEBSITE_PORT}:${WEBSITE_PORT}
+    depends_on:
+      - postgres
+    restart: always
+    develop:
+      watch:
+      - action: rebuild
+        path: .
+  
+  postgres:
+    image: postgres
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_NAME}
+    env_file: .env
+    ports:
+      - ${POSTGRES_PORT}:${POSTGRES_PORT}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    restart: always
+
+volumes:
+  postgres-data:
