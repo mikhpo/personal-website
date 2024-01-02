@@ -52,5 +52,6 @@ RUN poetry install
 COPY . .
 
 # Выполнить скрипт, запускающий сервер.
+ENV PYTHONPATH=.
 ENTRYPOINT ["/bin/bash", "personal_website/entrypoint.sh"]
 CMD ["0.0.0.0", "8000"]

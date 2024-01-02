@@ -26,7 +26,7 @@ DEBUG = str_to_bool(os.getenv("DEBUG"))
 SECRET_KEY = os.getenv("SECRET_KEY")
 
 # Доменное имя, по которому доступен сайт.
-WEBSITE_NAME = os.getenv("WEBSITE_NAME")
+DOMAIN_NAME = os.getenv("DOMAIN_NAME")
 
 # Список адресов, которые будет обслуживать Django проект.
 # Если не добавлять адрес в этот список, то запросы по данному адресу обрабатываться не будут.
@@ -34,9 +34,8 @@ ALLOWED_HOSTS = [
     "0.0.0.0",
     "127.0.0.1",
     "localhost",
-    WEBSITE_NAME,
-    f"www.{WEBSITE_NAME}",
-    os.getenv("WEBSITE_HOST"),
+    DOMAIN_NAME,
+    f"www.{DOMAIN_NAME}",
 ]
 
 # Список приложений = модули Django + модули сообщества + приложения проекта.

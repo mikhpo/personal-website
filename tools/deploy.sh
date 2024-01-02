@@ -6,7 +6,7 @@
 set -e
 
 # Определение рабочих каталогов проекта.
-readonly project_root="$(dirname "$(dirname "$(readlink -f "$0")")")"
+project_root="$(dirname "$(dirname "$(readlink -f "$0")")")"
 readonly config_dir="$project_root/config"
 
 #######################################
@@ -19,7 +19,7 @@ function setup_gunicorn() {
     readonly service="$config_dir/gunicorn.service"
     readonly DESTINATION_DIR="/etc/systemd/system/"
 
-    sudo cp $socket $service $DESTINATION_DIR
+    sudo cp "$socket" "$service" $DESTINATION_DIR
     sudo systemctl start gunicorn.socket
     sudo systemctl enable gunicorn.socket
 

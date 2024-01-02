@@ -11,8 +11,7 @@ node_modules
 static
 storage
 .coverage
+.env
 .env.dist
 .env.example
 .markdownlint.json
-compose.yaml
-Dockerfile

@@ -1,8 +1,11 @@
 import os
+from unittest import skipIf
 
 from django.conf import settings
 from django.test import SimpleTestCase
 from dotenv import load_dotenv
+
+from personal_website.utils import is_running_in_container
 
 ENVIRONMENT_VARIABLES = (
     "DEBUG",
@@ -19,6 +22,7 @@ ENVIRONMENT_VARIABLES = (
 )
 
 
+@skipIf(is_running_in_container(), "Не актуально для запуска из контейнера")
 class SecretsTests(SimpleTestCase):
     """
     Проверка на то, что секреты загружаются.

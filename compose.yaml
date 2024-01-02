@@ -5,7 +5,6 @@ services:
       context: .
       dockerfile: Dockerfile
     environment:
-      - POSTGRES_HOST=postgres
       - STATIC_ROOT=/srv/website/static
       - STORAGE_ROOT=/srv/website/storage
       - BACKUP_ROOT=/srv/website/backup
@@ -13,15 +12,15 @@ services:
       - TEMP_ROOT=/srv/website/temp
     env_file: .env
     ports:
-      - ${WEBSITE_PORT}:${WEBSITE_PORT}
+      - 8000:8000
     depends_on:
       - postgres
     restart: always
     develop:
       watch:
-      - action: rebuild
-        path: .
-  
+        - action: rebuild
+          path: .
+
   postgres:
     image: postgres
     environment:
