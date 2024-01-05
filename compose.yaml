@@ -5,14 +5,17 @@ services:
       context: .
       dockerfile: Dockerfile
     environment:
-      - STATIC_ROOT=/srv/website/static
-      - STORAGE_ROOT=/srv/website/storage
-      - BACKUP_ROOT=/srv/website/backup
-      - LOGS_ROOT=/srv/website/logs
-      - TEMP_ROOT=/srv/website/temp
+      - STORAGE_ROOT=${WORK_DIR}/storage
+      - STATIC_ROOT=${WORK_DIR}/static
+      - BACKUP_ROOT=${WORK_DIR}/backups
+      - LOGS_ROOT=${WORK_DIR}/logs
+      - TEMP_ROOT=${WORK_DIR}/temp
     env_file: .env
     ports:
       - 8000:8000
+    volumes:
+      - storage-root:${WORK_DIR}/storage
+      - static-root:${WORK_DIR}/static
     depends_on:
       - postgres
     restart: always
@@ -34,5 +37,31 @@ services:
       - postgres-data:/var/lib/postgresql/data
     restart: always
 
+  nginx:
+    image: nginx
+    environment:
+      - STORAGE_ROOT=${WORK_DIR}/storage
+      - STATIC_ROOT=${WORK_DIR}/static
+    env_file: .env
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./nginx/templates:/etc/nginx/templates
+      - storage-root:${WORK_DIR}/storage
+      - static-root:${WORK_DIR}/static
+    depends_on:
+      - website
+    restart: always
+    develop:
+      watch:
+        - action: rebuild
+          path: ./nginx
+
 volumes:
+  static-root:
+  storage-root:
   postgres-data:
+  
+
+
