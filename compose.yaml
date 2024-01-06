@@ -1,9 +1,13 @@
 services:
 
+  # Веб-сайт на Django. Запускается либо через Gunicorn, либо через команду runserver. 
+  # Способ запуска и параметры запуска определяются скриптом entrypoint.sh.
   website:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: ./personal_website/Dockerfile
+      args:
+        - WORK_DIR=${WORK_DIR}
     environment:
       - STORAGE_ROOT=${WORK_DIR}/storage
       - STATIC_ROOT=${WORK_DIR}/static
@@ -14,8 +18,8 @@ services:
     ports:
       - 8000:8000
     volumes:
-      - storage-root:${WORK_DIR}/storage
-      - static-root:${WORK_DIR}/static
+      - website-storage:${WORK_DIR}/storage:rw
+      - website-static:${WORK_DIR}/static:rw
     depends_on:
       - postgres
     restart: always
@@ -24,6 +28,7 @@ services:
         - action: rebuild
           path: .
 
+  # Кластер PostgreSQL для веб-сайта. База данных создается автоматически.
   postgres:
     image: postgres
     environment:
@@ -34,11 +39,14 @@ services:
     ports:
       - ${POSTGRES_PORT}:${POSTGRES_PORT}
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql/data:rw
     restart: always
 
+  # Прокси-сервер Nginx. Образ включает Certbot для получения и обновления сертификатов.
+  # При создании контейнера производится автоматическое создание конфигурационного файла 
+  # из каталога с шаблонами и заполнение переменными окружения утилитой envbust.
   nginx:
-    image: nginx
+    build: ./nginx
     environment:
       - STORAGE_ROOT=${WORK_DIR}/storage
       - STATIC_ROOT=${WORK_DIR}/static
@@ -47,9 +55,11 @@ services:
       - 80:80
       - 443:443
     volumes:
-      - ./nginx/templates:/etc/nginx/templates
-      - storage-root:${WORK_DIR}/storage
-      - static-root:${WORK_DIR}/static
+      - ./nginx/templates:/etc/nginx/templates:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:rw
+      - website-storage:${WORK_DIR}/storage:ro
+      - website-static:${WORK_DIR}/static:ro
+      - nginx-certs:/etc/letsencrypt/live/${DOMAIN_NAME}:rw
     depends_on:
       - website
     restart: always
@@ -59,9 +69,10 @@ services:
           path: ./nginx
 
 volumes:
-  static-root:
-  storage-root:
+  website-storage:
+  website-static:
   postgres-data:
+  nginx-certs:
   
 
 

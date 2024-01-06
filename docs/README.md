@@ -1,20 +1,20 @@
 # Персональный сайт
 
 <div align="center">
-    <img src="../personal_website/static/android-chrome-192x192.png" width="10%" style="border:10px;margin:10px"></img>
+    <img src="../personal_website/static/android-chrome-192x192.png" width="5%" style="border:10px;margin:10px"></img>
 </div>
 <div align="center">
-    <img src="./logos/Django_logo.svg" width="20%" style="border:10px;margin:10px"></img>
+    <img src="./logos/Django_logo.svg" width="10%" style="border:10px;margin:10px"></img>
 </div>
 <div align="center">
-    <img src="./logos/Python-logo-notext.svg" width="10%" style="border:10px;margin:10px"></img>
-    <img src="./logos/Bootstrap_logo.svg" width="12%" style="border:10px;margin:10px"></img>  
-    <img src="./logos/Postgresql_elephant.svg" width="10%" style="border:10px;margin:10px"></img>
+    <img src="./logos/Python-logo-notext.svg" width="5%" style="border:10px;margin:10px"></img>
+    <img src="./logos/Bootstrap_logo.svg" width="6%" style="border:10px;margin:10px"></img>  
+    <img src="./logos/Postgresql_elephant.svg" width="5%" style="border:10px;margin:10px"></img>
 </div>
 <div align="center">
-    <img src="./logos/Gunicorn_logo_2010.svg" width="20%" style="border:10px;margin:15px"></img>
-    <img src="./logos/Nginx_logo.svg" width="20%" style="border:10px;margin:15px"></img>
-    <img src="./logos/Logo-ubuntu_no(r)-black_orange-hex.svg" width="20%" style="border:10px;margin:15px"></img>
+    <img src="./logos/Gunicorn_logo_2010.svg" width="10%" style="border:10px;margin:15px"></img>
+    <img src="./logos/Nginx_logo.svg" width="8%" style="border:10px;margin:15px"></img>
+    <img src="./logos/01-primary-blue-docker-logo.svg" width="10%" style="border:10px;margin:15px"></img>
 </div>
 
 Проект по созданию персонального сайта. Конфигурация, функции, классы и шаблоны максимально абстрактными - так, чтобы можно было использовать проект в качестве шаблона для другого сайта.
@@ -246,13 +246,47 @@ Poetry сконфигурирован таким образом, чтобы ви
 
     bash runtests.sh
 
+Для запуска pytest в контейнере используется команда:
+
+    docker compose run website pytest
+
 ## Контейнеризация
 
-Проект использует Docker и Compose для контейнеризации. Настройки сборки приложения определены в [Dockerfile](../Dockerfile), а в файле [compose.yaml](../compose.yaml) определены параметры запуска сервисов в контейнерах.
+Проект использует Docker и Compose для контейнеризации. Настройки сборки приложения определены в [Dockerfile](../personal_website/Dockerfile), а в файле [compose.yaml](../compose.yaml) определены параметры запуска сервисов в контейнерах. Docker Compose поднимает следующие сервисы:
 
-## Настройка ПО
+* Основное приложение Django
+* База данных PostgreSQL
+* Прокси-сервер Nginx
 
-### Подготовка базы данных PostgreSQL
+Для запуска контейнеров в интерактивном режиме можно использовать команду:
+
+    docker compose up
+
+Для запуска контейнеров в неинтерактивном режиме используется команда:
+
+    docker compose up -d
+
+Для сборки образов контейнеров без поднятия сервисов используется команда:
+
+    docker compose build
+
+Для отслеживания изменений и автоматического пересоздания контейнеров в режиме разработки можно использовать команду:
+
+    docker compose up -d && docker compose watch
+
+Для удаления контейнеров и вспомогательных ресурсов (томов, сетей) используется команда:
+
+    docker compose down
+
+## Вспомогательные сервисы
+
+### PostgreSQL
+
+#### Использование PostgreSQL в контейнере
+
+При создании контейнера с кластером базы данных [PostgreSQL](https://www.postgresql.org/) на основе [официального образа postgres](https://hub.docker.com/_/postgres) база данных создается автоматически в соответствии со значениями переменных окружения `POSTGRES_USER`, `POSTGRES_PASSWORD` и `POSTGRES_DB`, указанными в файле [compose.yaml](../compose.yaml). Для подключения к базе данных необходимо использовать имя хоста `postgres`, если сервис, из которого производится переключение, также запускается при помощи Docker Compose, и имя хоста `localhost` в случаях, если сервис запускается на том же хосте, но не через Docker Compose.
+
+#### Ручное создание базы данных PostgreSQL
 
 Переключиться на учетную запись postgres:
 
@@ -278,23 +312,19 @@ Poetry сконфигурирован таким образом, чтобы ви
 
     \exit
 
-### Настройка certbot для обновления сертификата
+### Nginx и Certbot
 
-Установить certbot:
+Для создания контейнера с [Nginx](https://nginx.org/ru/) испольузется [официальный образ nginx](https://hub.docker.com/_/nginx), в который дополнительно устанавливается [Certbot](https://certbot.eff.org/). При создании контейнера применяется утилита `envbust`, которая заполняет шаблон файла конфигурации nginx значениями переменных окружения, считанных из `.env` файла. Шаблоны конфигурационных файлов должны храниться в каталоге [nginx/templates/](../nginx/templates/).
 
-    sudo apt install certbot python3-certbot-nginx
+Certbot используется для получения и обновления сертификатов. Для первичного получения сертификата [Let's Encrypt](https://letsencrypt.org/) со сроком действия 90 дней и изменения конфигурации nginx для включения HTTPS необходимо выполнить команду:
 
-Получить SSL сертификат:
+    docker compose run nginx bash certbot.sh
 
-    sudo certbot --nginx -d example.com -d www.example.com
+Команда для обновления сертификата установливается автоматически в cron для запуска каждые 12 часов. Фактическое обновление сертификатов производится только в том случае, если остается менее 30 дней до срока окончания действия текущего сертификата.
 
-Проверить расписание обновления сертификата:
+Для ручного обновления сертификата можно выполнить команду:
 
-    sudo systemctl status certbot.timer
-
-Проверить процесс обновления сертификата:
-
-    sudo certbot renew --dry-run
+    docker compose run nginx certbot renew
 
 ## Решение проблем
 

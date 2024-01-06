@@ -3,6 +3,8 @@
 # Определение базового образа.
 FROM debian
 
+ARG WORK_DIR
+
 # Обновление и установка общих системных пакетов.
 RUN apt-get update && \
     apt-get upgrade -y && \
@@ -39,7 +41,8 @@ RUN rm -rf /var/lib/apt/lists/* && \
 ENV LANG=ru_RU.utf8
 
 # Создать каталог для проекта и перейти в него.
-WORKDIR /srv/website
+ENV WORK_DIR=$WORK_DIR
+WORKDIR $WORK_DIR
 
 # Установить зависимости Node.js через npm.
 COPY package.json package-lock.json ./
