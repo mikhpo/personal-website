@@ -7,19 +7,19 @@ services:
       context: .
       dockerfile: ./personal_website/Dockerfile
       args:
-        - WORK_DIR=${WORK_DIR}
+        - WORK_DIR=/srv/website
     environment:
-      - STORAGE_ROOT=${WORK_DIR}/storage
-      - STATIC_ROOT=${WORK_DIR}/static
-      - BACKUP_ROOT=${WORK_DIR}/backups
-      - LOGS_ROOT=${WORK_DIR}/logs
-      - TEMP_ROOT=${WORK_DIR}/temp
+      - STORAGE_ROOT=/srv/website/storage
+      - STATIC_ROOT=/srv/website/static
+      - BACKUP_ROOT=/srv/website/backups
+      - LOGS_ROOT=/srv/website/logs
+      - TEMP_ROOT=/srv/website/temp
     env_file: .env
     ports:
       - 8000:8000
     volumes:
-      - website-storage:${WORK_DIR}/storage:rw
-      - website-static:${WORK_DIR}/static:rw
+      - website-storage:/srv/website/storage:rw
+      - website-static:/srv/website/static:rw
     depends_on:
       - postgres
     restart: always
@@ -48,8 +48,8 @@ services:
   nginx:
     build: ./nginx
     environment:
-      - STORAGE_ROOT=${WORK_DIR}/storage
-      - STATIC_ROOT=${WORK_DIR}/static
+      - STORAGE_ROOT=/srv/website/storage
+      - STATIC_ROOT=/srv/website/static
     env_file: .env
     ports:
       - 80:80
@@ -57,8 +57,8 @@ services:
     volumes:
       - ./nginx/templates:/etc/nginx/templates:ro
       - ./nginx/conf.d:/etc/nginx/conf.d:rw
-      - website-storage:${WORK_DIR}/storage:ro
-      - website-static:${WORK_DIR}/static:ro
+      - website-storage:/srv/website/storage:ro
+      - website-static:/srv/website/static:ro
       - nginx-certs:/etc/letsencrypt/live/${DOMAIN_NAME}:rw
     depends_on:
       - website
