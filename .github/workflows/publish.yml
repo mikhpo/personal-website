@@ -47,6 +47,9 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
+          file: ./personal_website/Dockerfile
+          build-args: |
+            - WORK_DIR=/srv/website
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
