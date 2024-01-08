@@ -35,6 +35,10 @@ env:
 jobs:
   test_project_compose:
     runs-on: ubuntu-latest
+
+    # Выполнять рабочий процесс в контейнере, 
+    # чтобы были доступны сервисы Docker Compose.
+    container: ubuntu
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
