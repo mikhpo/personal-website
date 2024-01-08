@@ -51,7 +51,7 @@ jobs:
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          python -m pip install -r requirements.txt
 
       # Создать пустой файл .env, потому что к нему обращается Docker Compose.
       - name: Fake env file
