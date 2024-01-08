@@ -1,6 +1,6 @@
 # Опубликовать образ контейнера основного сервиса в несколько реестров: 
-# - Docker Hub
 # - GitHub Container registry
+# - Docker Hub
 name: Publish Docker image
 
 # Выполняется после того, как закрыт Pull Request в ветку "main",
