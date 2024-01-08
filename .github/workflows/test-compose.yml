@@ -15,6 +15,7 @@ env:
   DEBUG: True
   DJANGO_PORT: 8000
   SECRET_KEY: ${{ secrets.SECRET_KEY }}
+  WORK_DIR: /srv/website
   STORAGE_ROOT: /srv/website/storage
   STATIC_ROOT: /srv/website/static
   BACKUP_ROOT: /srv/website/backups
@@ -38,6 +39,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          path: ${{ env.WORK_DIR }}
 
       - name: Setup Python
         uses: actions/setup-python@v5
