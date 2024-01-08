@@ -29,7 +29,7 @@ env:
   EMAIL_HOST_USER: ${{ secrets.EMAIL_HOST_USER }}
   EMAIL_HOST_PASSWORD: ${{ secrets.EMAIL_HOST_PASSWORD }}
   DOMAIN_NAME: ${{ secrets.DOMAIN_NAME }}
-  NGINX_HOST: 0.0.0.0
+  NGINX_HOST: nginx
   NGINX_PORT: 80
 
 jobs:
@@ -62,15 +62,13 @@ jobs:
           
       # Выполнить интеграционные тесты сервисов, запускаемых Docker Compose.
       - name: Run integration tests
-        run: |
-          export POSTGRES_HOST=0.0.0.0
-          python -m pytest tests -p no:django
+        run: docker compose -f compose.yaml exec website poetry run pytest tests -p no:django
         
       # Выполнить тесты основного приложения на Python и зависимостей Node.js.
       - name: Run website tests
         run: |
-          docker compose -f compose.yaml exec npm test
-          docker compose -f compose.yaml exec poetry run coverage run -m pytest
+          docker compose -f compose.yaml exec website npm test
+          docker compose -f compose.yaml exec website poetry run coverage run -m pytest
 
       - name: Stop Docker Compose
         run: docker compose -f compose.yaml down
