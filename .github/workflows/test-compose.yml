@@ -62,7 +62,7 @@ jobs:
           
       # Выполнить интеграционные тесты сервисов, запускаемых Docker Compose.
       - name: Run integration tests
-        run: python -m pytest tests
+        run: pytest tests
         
       # Выполнить тесты основного приложения на Python и зависимостей Node.js.
       - name: Run website tests
