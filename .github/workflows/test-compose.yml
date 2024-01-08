@@ -15,12 +15,11 @@ env:
   DEBUG: True
   DJANGO_PORT: 8000
   SECRET_KEY: ${{ secrets.SECRET_KEY }}
-  WORK_DIR: /srv/website
-  STORAGE_ROOT: /srv/website/storage
-  STATIC_ROOT: /srv/website/static
-  BACKUP_ROOT: /srv/website/backups
-  LOGS_ROOT: /srv/website/logs
-  TEMP_ROOT: /srv/website/temp
+  STORAGE_ROOT: ${{ github.workspace }}/storage
+  STATIC_ROOT: ${{ github.workspace }}/static
+  BACKUP_ROOT: ${{ github.workspace }}/backups
+  LOGS_ROOT: ${{ github.workspace }}/logs
+  TEMP_ROOT: ${{ github.workspace }}/temp
   PROJECT_NAME: personal_website
   POSTGRES_USER: postgres
   POSTGRES_PASSWORD: postgres
@@ -39,8 +38,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          path: ${{ env.WORK_DIR }}
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -65,7 +62,7 @@ jobs:
           
       # Выполнить интеграционные тесты сервисов, запускаемых Docker Compose.
       - name: Run integration tests
-        run: pytest tests
+        run: python -m pytest tests -p no:django
         
       # Выполнить тесты основного приложения на Python и зависимостей Node.js.
       - name: Run website tests
