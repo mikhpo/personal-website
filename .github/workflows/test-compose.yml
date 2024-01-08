@@ -15,6 +15,11 @@ env:
   DEBUG: True
   DJANGO_PORT: 8000
   SECRET_KEY: ${{ secrets.SECRET_KEY }}
+  STORAGE_ROOT: /srv/website/storage
+  STATIC_ROOT: /srv/website/static
+  BACKUP_ROOT: /srv/website/backups
+  LOGS_ROOT: /srv/website/logs
+  TEMP_ROOT: /srv/website/temp
   PROJECT_NAME: personal_website
   POSTGRES_USER: postgres
   POSTGRES_PASSWORD: postgres
