@@ -29,16 +29,12 @@ env:
   EMAIL_HOST_USER: ${{ secrets.EMAIL_HOST_USER }}
   EMAIL_HOST_PASSWORD: ${{ secrets.EMAIL_HOST_PASSWORD }}
   DOMAIN_NAME: ${{ secrets.DOMAIN_NAME }}
-  NGINX_HOST: nginx
+  NGINX_HOST: 0.0.0.0
   NGINX_PORT: 80
 
 jobs:
   test_project_compose:
     runs-on: ubuntu-latest
-
-    # Выполнять рабочий процесс в контейнере, 
-    # чтобы были доступны сервисы Docker Compose.
-    container: ubuntu
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -66,7 +62,9 @@ jobs:
           
       # Выполнить интеграционные тесты сервисов, запускаемых Docker Compose.
       - name: Run integration tests
-        run: python -m pytest tests -p no:django
+        run: |
+          export POSTGRES_HOST=0.0.0.0
+          python -m pytest tests -p no:django
         
       # Выполнить тесты основного приложения на Python и зависимостей Node.js.
       - name: Run website tests
