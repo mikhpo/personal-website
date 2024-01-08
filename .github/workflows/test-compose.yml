@@ -62,13 +62,13 @@ jobs:
           
       # Выполнить интеграционные тесты сервисов, запускаемых Docker Compose.
       - name: Run integration tests
-        run: docker compose -f compose.yaml exec website poetry run pytest tests -p no:django
+        run: docker compose -f compose.yaml run website poetry run pytest tests -p no:django
         
       # Выполнить тесты основного приложения на Python и зависимостей Node.js.
       - name: Run website tests
         run: |
-          docker compose -f compose.yaml exec website npm test
-          docker compose -f compose.yaml exec website poetry run coverage run -m pytest
+          docker compose -f compose.yaml run website npm test
+          docker compose -f compose.yaml run website poetry run coverage run -m pytest
 
       - name: Stop Docker Compose
         run: docker compose -f compose.yaml down
