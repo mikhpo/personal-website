@@ -1,17 +1,29 @@
+# Опубликовать образ контейнера основного сервиса в несколько реестров: 
+# - Docker Hub
+# - GitHub Container registry
 name: Publish Docker image
 
+# Выполняется после того, как закрыт Pull Request в ветку "main",
+# если изменения в файлах не касаются только путей из перечня исключений.
 on:
   pull_request:
     types:
       - closed
     branches:
       - 'main'
+    paths-ignore:
+      - 'docs/**'
+      - 'nginx/**'
+      - '.vscode/**'
 
 env:
   DOCKER_REPOSITORY: personal-website
+  WORK_DIR: /srv/website
 
 jobs:
   push_image_to_registries:
+
+    # Выполняется в том случае, если Pull Request завершен положительно.
     if: github.event.pull_request.merged == true
     name: Push website Docker image to multiple registries
     runs-on: ubuntu-latest
@@ -43,13 +55,14 @@ jobs:
             ${{ secrets.DOCKER_USERNAME }}/${{ env.DOCKER_REPOSITORY }}
             ghcr.io/${{ github.repository }}
       
+      # Параметры сборки аналогичны параметрам для Docker Compose.
       - name: Build and push Docker images
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./personal_website/Dockerfile
           build-args: |
-            - WORK_DIR=/srv/website
+            - WORK_DIR=${{ env.WORK_DIR }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

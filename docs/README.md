@@ -235,7 +235,7 @@ Poetry сконфигурирован таким образом, чтобы ви
 
 Для запуска pytest в контейнере используется команда:
 
-    docker compose run website pytest
+    docker compose exec website poetry run pytest
 
 ## Контейнеризация
 

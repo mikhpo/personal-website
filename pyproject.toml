@@ -24,6 +24,7 @@ psycopg = {extras = ["binary"], version = "^3.1.12"}
 faker = "^20.1.0"
 faker-file = "^0.17.11"
 model-bakery = "^1.17.0"
+requests = "^2.31.0"
 
 [tool.poetry.group.dev.dependencies]
 coverage = "^7.3.2"
@@ -46,6 +47,7 @@ ignore="H006,H013"
 pythonpath = "personal_website ."
 python_files = ["tests.py", "test_*.py", "*_tests.py"]
 DJANGO_SETTINGS_MODULE = "project.settings"
+testpaths = "personal_website"
 
 [tool.coverage.run]
 branch = true
