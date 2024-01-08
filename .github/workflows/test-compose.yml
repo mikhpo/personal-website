@@ -44,6 +44,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      # Создать пустой файл .env, потому что к нему обращается Docker Compose.
+      - name: Fake env file
+        run: touch .env
+
       # Сборка и запуск контейнеров.
       - name: Build and run Docker Compose
         run: |
