@@ -5,9 +5,6 @@ name: Test with Docker Compose
 # Рабочий процесс выполняется при открытии и переоткрытии Pull Request.
 on:
   pull_request:
-    types:
-      - opened
-      - reopened
     paths-ignore:
       - 'docs/**'
       - 'nginx/**'
