@@ -2,7 +2,8 @@
 # интеграционное тестирование и тесты веб-сайта.
 name: Test with Docker Compose
 
-# Рабочий процесс выполняется при открытии и переоткрытии Pull Request.
+# Рабочий процесс выполняется при открытии и переоткрытии Pull Request,
+# а также добавлении новых коммитов в PR.
 on:
   pull_request:
     paths-ignore:
@@ -54,7 +55,7 @@ jobs:
           
       # Выполнить интеграционные тесты сервисов, запускаемых Docker Compose.
       - name: Run integration tests
-        run: pytest tests
+        run: python -m pytest tests
         
       # Выполнить тесты основного приложения на Python и зависимостей Node.js.
       - name: Run website tests
