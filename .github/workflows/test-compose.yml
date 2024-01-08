@@ -29,7 +29,7 @@ env:
   EMAIL_HOST_USER: ${{ secrets.EMAIL_HOST_USER }}
   EMAIL_HOST_PASSWORD: ${{ secrets.EMAIL_HOST_PASSWORD }}
   DOMAIN_NAME: ${{ secrets.DOMAIN_NAME }}
-  NGINX_HOST: localhost
+  NGINX_HOST: 127.0.0.1
   NGINX_PORT: 80
 
 jobs:
@@ -62,7 +62,9 @@ jobs:
           
       # Выполнить интеграционные тесты сервисов, запускаемых Docker Compose.
       - name: Run integration tests
-        run: python -m pytest tests -p no:django
+        run: |
+          export POSTGRES_HOST=127.0.0.1
+          python -m pytest tests -p no:django
         
       # Выполнить тесты основного приложения на Python и зависимостей Node.js.
       - name: Run website tests
