@@ -22,7 +22,7 @@ env:
   PROJECT_NAME: personal_website
   POSTGRES_USER: postgres
   POSTGRES_PASSWORD: postgres
-  POSTGRES_HOST: postgres
+  POSTGRES_HOST: localhost
   POSTGRES_PORT: 5432
   POSTGRES_NAME: personal_website
   EMAIL_HOST_USER: ${{ secrets.EMAIL_HOST_USER }}
@@ -30,7 +30,7 @@ env:
   DOMAIN_NAME: ${{ secrets.DOMAIN_NAME }}
 
 jobs:
-  test_website_service:
+  test_python_with_coverage:
     runs-on: ubuntu-latest
 
     # Тесты использует службу PostgreSQL, развернутую в контейнере.
@@ -63,6 +63,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
       
-      - name: Run Pytest
+      - name: Run Pytest with Coverage
         run: coverage run -m pytest
       
