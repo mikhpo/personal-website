@@ -1,0 +1,97 @@
+# Выполнить Python тесты веб-сайта.
+name: Test Python code
+
+# Рабочий процесс выполняется при открытии и переоткрытии Pull Request,
+# а также при добавлении новых коммитов в Pull Request.
+on:
+  pull_request:
+    paths-ignore:
+      - 'docs/**'
+      - 'nginx/**'
+      - '.vscode/**'
+
+env:
+  DEBUG: True
+  DJANGO_PORT: 8000
+  SECRET_KEY: ${{ secrets.SECRET_KEY }}
+  STORAGE_ROOT: ${{ github.workspace }}/storage
+  STATIC_ROOT: ${{ github.workspace }}/static
+  BACKUP_ROOT: ${{ github.workspace }}/backups
+  LOGS_ROOT: ${{ github.workspace }}/logs
+  TEMP_ROOT: ${{ github.workspace }}/temp
+  PROJECT_NAME: personal_website
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: postgres
+  POSTGRES_HOST: localhost
+  POSTGRES_PORT: 5432
+  POSTGRES_NAME: personal_website
+  EMAIL_HOST_USER: ${{ secrets.EMAIL_HOST_USER }}
+  EMAIL_HOST_PASSWORD: ${{ secrets.EMAIL_HOST_PASSWORD }}
+  DOMAIN_NAME: ${{ secrets.DOMAIN_NAME }}
+  LANG: ru_RU.utf8
+
+jobs:
+  test_python_with_coverage:
+    runs-on: ubuntu-latest
+
+    # Тесты использует службу PostgreSQL, развернутую в контейнере.
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_USER: ${{ env.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ env.POSTGRES_NAME }}
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Пакет wkhtmltopdf необходим для создания фейковых изображений.
+      - name: Install wkhtmltopdf
+        run: |
+          sudo apt-get update
+          sudo apt-get install wkhtmltopdf
+
+      # Пакет locales необходим для форматирования значений даты и времени.
+      - name: Install locales
+        run: |
+          sudo apt-get update
+          sudo apt-get install locales
+          sudo rm -rf /var/lib/apt/lists/*
+          sudo localedef -i ru_RU -c -f UTF-8 -A /usr/share/locale/locale.alias ${{ env.LANG }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'latest'
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install poetry
+          poetry install
+
+      - name: Install Node.js dependencies
+        run: |
+          npm install
+          npm ls
+      
+      - name: Collect static files
+        run: poetry run python personal_website/manage.py collectstatic --noinput
+
+      - name: Run Pytest
+        run: poetry run coverage run -m pytest
+      

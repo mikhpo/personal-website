@@ -1,11 +1,11 @@
 import os
+import unittest
 
 import psycopg
-from django.test import SimpleTestCase
 from dotenv import load_dotenv
 
 
-class PostgresTests(SimpleTestCase):
+class TestPostgres(unittest.TestCase):
     """
     Тесты базы данных PostgreSQL.
     """
@@ -13,15 +13,15 @@ class PostgresTests(SimpleTestCase):
     @classmethod
     def setUpClass(cls):
         """
-        Прочитать настройки проекта Django.
+        Определить параметры подключения.
         """
         super().setUpClass()
         load_dotenv()
-        cls.dbname = os.environ["POSTGRES_NAME"]
-        cls.user = os.environ["POSTGRES_USER"]
         cls.host = os.environ["POSTGRES_HOST"]
         cls.port = os.environ["POSTGRES_PORT"]
+        cls.user = os.environ["POSTGRES_USER"]
         cls.password = os.environ["POSTGRES_PASSWORD"]
+        cls.dbname = os.environ["POSTGRES_NAME"]
 
     def connect_postgres(self):
         """
@@ -49,3 +49,7 @@ class PostgresTests(SimpleTestCase):
         """
         postgres_connected = self.postgres_connected()
         self.assertTrue(postgres_connected)
+
+
+if __name__ == "__main__":
+    unittest.main()

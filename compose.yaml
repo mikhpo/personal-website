@@ -8,6 +8,9 @@ services:
       dockerfile: ./personal_website/Dockerfile
       args:
         - WORK_DIR=/srv/website
+      tags:
+        - mikhpo/personal-website:latest
+        - ghcr.io/mikhpo/personal-website:latest
     environment:
       - STORAGE_ROOT=/srv/website/storage
       - STATIC_ROOT=/srv/website/static
@@ -16,7 +19,7 @@ services:
       - TEMP_ROOT=/srv/website/temp
     env_file: .env
     ports:
-      - 8000:8000
+      - ${DJANGO_PORT}:${DJANGO_PORT}
     volumes:
       - website-storage:/srv/website/storage:rw
       - website-static:/srv/website/static:rw
@@ -52,7 +55,7 @@ services:
       - STATIC_ROOT=/srv/website/static
     env_file: .env
     ports:
-      - 80:80
+      - ${NGINX_PORT}:${NGINX_PORT}
       - 443:443
     volumes:
       - ./nginx/templates:/etc/nginx/templates:ro
