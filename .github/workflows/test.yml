@@ -69,11 +69,13 @@ jobs:
           pip install -r requirements.txt
 
       - name: Install Node.js dependencies
-        run: npm install
+        run: |
+          npm ls
+          npm install
             
       - name: Run Node.js tests
         run: npm test
       
-      - name: Run Pytest tests
+      - name: Run Pytest
         run: coverage run -m pytest
       
