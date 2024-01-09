@@ -70,8 +70,8 @@ jobs:
 
       - name: Install Node.js dependencies
         run: |
-          npm ls
           npm install
+          npm ls
             
       - name: Run Node.js tests
         run: npm test
