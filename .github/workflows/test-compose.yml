@@ -12,7 +12,7 @@ on:
       - '.vscode/**'
 
 env:
-  DEBUG: True
+  DEBUG: False
   DJANGO_PORT: 8000
   SECRET_KEY: ${{ secrets.SECRET_KEY }}
   STORAGE_ROOT: ${{ github.workspace }}/storage
@@ -66,6 +66,15 @@ jobs:
         with:
           image: personal-website-website:latest
           run: poetry run pytest tests -p no:django
+        env:
+          PROJECT_NAME: ${{ env.PROJECT_NAME }}
+          POSTGRES_USER: ${{ env.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+          POSTGRES_HOST: ${{ env.POSTGRES_HOST }}
+          POSTGRES_PORT: ${{ env.POSTGRES_PORT }}
+          POSTGRES_NAME: ${{ env.POSTGRES_NAME }}
+          NGINX_HOST: ${{ env.NGINX_HOST }}
+          NGINX_PORT: ${{ env.NGINX_PORT }}
         
       # Выполнить тесты основного приложения на Python и зависимостей Node.js.
       - name: Run website tests
@@ -75,6 +84,24 @@ jobs:
           run: |
             npm test
             poetry run coverage run -m pytest
+        env:
+          DEBUG: ${{ env.DEBUG }}
+          SECRET_KEY: ${{ env.SECRET_KEY }}
+          STORAGE_ROOT: ${{ env.STORAGE_ROOT }}
+          STATIC_ROOT: ${{ env.STATIC_ROOT }}
+          BACKUP_ROOT: ${{ env.BACKUP_ROOT }}
+          LOGS_ROOT: ${{ env.LOGS_ROOT }}
+          TEMP_ROOT: ${{ env.TEMP_ROOT }}
+          PROJECT_NAME: ${{ env.PROJECT_NAME }}
+          POSTGRES_USER: ${{ env.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+          POSTGRES_HOST: ${{ env.POSTGRES_HOST }}
+          POSTGRES_PORT: ${{ env.POSTGRES_PORT }}
+          POSTGRES_NAME: ${{ env.POSTGRES_NAME }}
+          EMAIL_HOST_USER: ${{ env.EMAIL_HOST_USER }}
+          EMAIL_HOST_PASSWORD: ${{ env.EMAIL_HOST_PASSWORD }}
+          DOMAIN_NAME: ${{ env.DOMAIN_NAME }}
+
 
       - name: Stop Docker Compose
         run: docker compose -f compose.yaml down
