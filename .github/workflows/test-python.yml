@@ -28,6 +28,7 @@ env:
   EMAIL_HOST_USER: ${{ secrets.EMAIL_HOST_USER }}
   EMAIL_HOST_PASSWORD: ${{ secrets.EMAIL_HOST_PASSWORD }}
   DOMAIN_NAME: ${{ secrets.DOMAIN_NAME }}
+  LANG: ru_RU.utf8
 
 jobs:
   test_python_with_coverage:
@@ -53,10 +54,19 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # Пакет wkhtmltopdf необходим для создания фейковых изображений.
       - name: Install wkhtmltopdf
         run: |
           sudo apt-get update
           sudo apt-get install wkhtmltopdf
+
+      # Пакет locales необходим для форматирования значений даты и времени.
+      - name: Install locales
+        run: |
+          sudo apt-get update
+          sudo apt-get install locales
+          sudo rm -rf /var/lib/apt/lists/*
+          sudo localedef -i ru_RU -c -f UTF-8 -A /usr/share/locale/locale.alias ${{ env.LANG }}
 
       - name: Setup Python
         uses: actions/setup-python@v5
