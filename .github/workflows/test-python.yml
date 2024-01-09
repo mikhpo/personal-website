@@ -53,16 +53,35 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Install wkhtmltopdf
+        run: |
+          sudo apt-get update
+          sudo apt-get install wkhtmltopdf
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'latest'
+
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install poetry
+          poetry install
+
+      - name: Install Node.js dependencies
+        run: |
+          npm install -g
+          npm ls
       
-      - name: Run Pytest with Coverage
-        run: coverage run -m pytest
+      - name: Collect static files
+        run: poetry run python personal_website/manage.py collectstatic --noinput
+
+      - name: Run Pytest
+        run: poetry run coverage run -m pytest
       
