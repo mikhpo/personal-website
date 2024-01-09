@@ -54,6 +54,8 @@ jobs:
           images: |
             ${{ secrets.DOCKER_USERNAME }}/${{ env.DOCKER_REPOSITORY }}
             ghcr.io/${{ github.repository }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
       
       # Параметры сборки аналогичны параметрам для Docker Compose.
       - name: Build and push Docker images
