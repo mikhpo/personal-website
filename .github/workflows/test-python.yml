@@ -1,5 +1,5 @@
-# Выполнить тесты веб-сайта.
-name: Test website service
+# Выполнить Python тесты веб-сайта.
+name: Test Python code
 
 # Рабочий процесс выполняется при открытии и переоткрытии Pull Request,
 # а также при добавлении новых коммитов в Pull Request.
@@ -58,25 +58,10 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Setup Node.js environment
-        uses: actions/setup-node@v4
-        with:
-          node-version: 'latest'
-
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-
-      - name: Install Node.js dependencies
-        run: |
-          npm install -g
-          npm ls
-            
-      - name: Run Node.js tests
-        run: |
-          npm ls
-          npm test
       
       - name: Run Pytest
         run: coverage run -m pytest
