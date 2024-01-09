@@ -76,7 +76,7 @@ jobs:
 
       - name: Install Node.js dependencies
         run: |
-          npm install -g
+          npm install
           npm ls
       
       - name: Collect static files
