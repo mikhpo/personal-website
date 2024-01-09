@@ -70,11 +70,13 @@ jobs:
 
       - name: Install Node.js dependencies
         run: |
-          npm install
+          npm install -g
           npm ls
             
       - name: Run Node.js tests
-        run: npm test
+        run: |
+          npm ls
+          npm test
       
       - name: Run Pytest
         run: coverage run -m pytest
