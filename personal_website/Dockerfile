@@ -16,7 +16,6 @@ RUN apt-get update && \
     ca-certificates \
     postgresql-client \
     python3 \
-    python3 \
     python3-pip \
     pipx \
     wkhtmltopdf

@@ -13,7 +13,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-from personal_website.utils import calculate_path_size, set_file_logger
+from personal_website.utils import calculate_path_size
 
 
 def remove_existing_dump(dump_path: str) -> None:
@@ -80,17 +80,14 @@ def main():
     """
     Основное тело скрипта.
     """
-    logger = set_file_logger(__file__)
     try:
-        logger.info("Запущен скрипт для создания дампа базы данных PostgreSQL")
+        print("Запущен скрипт для создания дампа базы данных PostgreSQL")
 
         # Получение параметров из переменных окружения.
         if load_dotenv():
-            logger.info("Переменные окружения считаны из .env файла")
+            print("Переменные окружения считаны из .env файла")
         else:
-            message = "Не удалось считать переменные окружения из .env файла"
-            logger.error(message)
-            sys.exit(message)
+            sys.exit("Не удалось считать переменные окружения из .env файла")
 
         POSTGRES_HOST = os.environ["POSTGRES_HOST"]
         POSTGRES_PORT = os.environ["POSTGRES_PORT"]
@@ -104,11 +101,11 @@ def main():
         # Определение пути сохранения дампа.
         base_dir = os.getenv("BACKUP_ROOT")
         dump_path = get_save_path(base_dir, POSTGRES_NAME)
-        logger.info(f"Дамп базы данных будет сохранен по адресу {dump_path}")
+        print(f"Дамп базы данных будет сохранен по адресу {dump_path}")
 
         # Если файл дампа сегодня уже был создан, то необходимо его удалить.
         if Path(dump_path).exists():
-            logger.info(
+            print(
                 f"Сегодня уже был создан дамп '{dump_path}'. "
                 "Ранее созданный дамп будет удален"
             )
@@ -119,7 +116,7 @@ def main():
         dump_command = compose_command(
             POSTGRES_HOST, POSTGRES_PORT, POSTGRES_NAME, POSTGRES_USER, dump_path
         )
-        logger.info(f"Выполняю команду: {dump_command}")
+        print(f"Выполняю команду: {dump_command}")
 
         # Выполнить команду pg_dump.
         stdout, stderr = create_dump(dump_command, POSTGRES_PASSWORD)
@@ -131,23 +128,23 @@ def main():
             sys.exit(message)
         elif len(stdout) > 0:
             message = stdout.decode(encoding=encoding)
-            logger.info(message)
+            print(message)
         else:
-            logger.info("Выполнение команды завершено")
+            print("Выполнение команды завершено")
 
         # Если выполнение скрипта успешно завершено, то направим в stdout
         # строку с результатом и указанием адресов получателей бэкапа.
         if Path(dump_path).exists():
             size = calculate_path_size(dump_path)
             message_size = size.get("message")
-            logger.info(
+            print(
                 f"Дамп базы данных PostgreSQL сохранен по адресу '{dump_path}'. "
                 f"Размер дампа: {message_size}"
             )
         else:
             sys.exit("Дамп базы данных PostgreSQL не был сохранен")
     except Exception as error:
-        logger.exception(f"Ошибка выполнения скрипта: {error}")
+        sys.exit(f"Ошибка выполнения скрипта: {error}")
 
 
 if __name__ == "__main__":
