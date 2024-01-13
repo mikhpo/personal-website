@@ -14,7 +14,7 @@ from PIL import Image as pImage
 from PIL.ExifTags import TAGS
 
 from personal_website.utils import get_unique_slug
-from project.storages import select_storage
+from personal_website.storages import select_storage
 
 from .managers import PublicAlbumManager, PublicPhotoManager
 from .utils import move_photo_image, photo_image_upload_path

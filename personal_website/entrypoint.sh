@@ -109,7 +109,7 @@ function main() {
             --bind="$host":"$port" \
             --workers="$num_workers" \
             --pythonpath="$website_dir" \
-            "project.wsgi:application"
+            "personal_website.wsgi:application"
     fi
 }
 

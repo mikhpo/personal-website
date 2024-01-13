@@ -10,7 +10,7 @@
 readonly NEWLINE=$'\n'
 
 # Определение корневой директории проекта.
-readonly project_root="$(dirname "$(dirname "$(readlink -fm "$0")")")"
+project_root="$(dirname "$(dirname "$(readlink -fm "$0")")")"
 echo "Корневая директория проекта: ${project_root}"
 
 # Определение пути исполняемого файла Python и выполняемой команды.
@@ -25,7 +25,7 @@ cron_jobs=(
 )
 
 # Получение содержимого текущего crontab файла.
-cron=`crontab -l 2> /dev/null`
+cron=$(crontab -l 2> /dev/null)
 
 # Цикл для каждого элемента из массива задач на добавление.
 for job in "${cron_jobs[@]}"

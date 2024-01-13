@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-from project.storages import select_storage
+from personal_website.storages import select_storage
 
 from .apps import GalleryConfig
 

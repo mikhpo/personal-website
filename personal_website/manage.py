@@ -8,8 +8,7 @@ import sys
 
 
 def main():
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "project.settings")
-    sys.path.append(".")
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "personal_website.settings")
 
     try:
         from django.core.management import execute_from_command_line

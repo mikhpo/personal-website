@@ -81,9 +81,9 @@ if TEST:
     MIDDLEWARE.remove(WHITENOISE_MIDDLEWARE)
 
 # Относительный путь до urls.py основного модуля Django.
-ROOT_URLCONF = "project.urls"
+ROOT_URLCONF = "personal_website.urls"
 
-WSGI_APPLICATION = "project.wsgi.application"
+WSGI_APPLICATION = "personal_website.wsgi.application"
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -209,7 +209,7 @@ EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False
 
 # Выбор тестового раннера.
-TEST_RUNNER = "project.runner.CustomRunner"
+TEST_RUNNER = "personal_website.runners.CustomRunner"
 
 # Настройки модуля Django Crispy Forms, улучшающего отображение стандартных форм Django.
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
