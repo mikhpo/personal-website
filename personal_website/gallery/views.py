@@ -54,9 +54,7 @@ class PhotoDetailView(DetailView):
         previous_photos = list(
             filter(
                 lambda photo: photo.datetime_taken < obj.datetime_taken,
-                sorted(
-                    album_photos, key=lambda photo: photo.datetime_taken, reverse=True
-                ),
+                sorted(album_photos, key=lambda photo: photo.datetime_taken, reverse=True),
             )
         )
 
@@ -80,9 +78,7 @@ class PhotoListView(ListView):
         Отсортировать набор фотографий от новых к старым.
         """
         photos = Photo.published.all()
-        photos_sorted = sorted(
-            photos, key=lambda photo: photo.datetime_taken, reverse=True
-        )
+        photos_sorted = sorted(photos, key=lambda photo: photo.datetime_taken, reverse=True)
         return photos_sorted
 
     def get_context_data(self, **kwargs):
@@ -150,12 +146,8 @@ class TagDetailView(DetailView):
 
         # Добавить полученные альбомы и фотографии в контекст.
         # Отсортирофать альбомы и фотографии от новых к старым.
-        context["albums"] = sorted(
-            albums, key=lambda album: album.created_at, reverse=True
-        )
-        context["photos"] = sorted(
-            photos, key=lambda photo: photo.datetime_taken, reverse=True
-        )
+        context["albums"] = sorted(albums, key=lambda album: album.created_at, reverse=True)
+        context["photos"] = sorted(photos, key=lambda photo: photo.datetime_taken, reverse=True)
         context["tags"] = Tag.objects.all()
         return context
 
@@ -198,7 +190,7 @@ class UploadFormView(FormView):
                 Photo.objects.create(image=photo, album=album)
                 logger.debug(f'Загружена фотография "{photo}" в альбом "{album}"')
                 counter += 1
-            except UnidentifiedImageError as error:
+            except UnidentifiedImageError:
                 message = f'Загруженный файл "{photo}" не является изображением'
                 messages.add_message(self.request, messages.ERROR, message)
                 logger.error(message)

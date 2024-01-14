@@ -36,10 +36,19 @@ pytest-subtests = "^0.11.0"
 pytest-django = "^4.6.0"
 pytest-cov = "^4.1.0"
 pyclean = "^2.7.6"
+pre-commit = "^3.6.0"
+ruff = "^0.1.13"
+
+[tool.black]
+line-length = 120
 
 [tool.isort]
-profile = "django"
+line_length = 120
+profile = "black"
 src_paths = ["personal_website"]
+
+[tool.ruff]
+line-length = 120
 
 [tool.djlint]
 ignore="H006,H013"

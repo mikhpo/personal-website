@@ -91,7 +91,7 @@ jobs:
         run: |
           npm install
           npm ls
-      
+
       # Выполнить сбор статических файлов административной командой Django.
       - name: Collect static files
         run: poetry run python personal_website/manage.py collectstatic --noinput
@@ -99,4 +99,3 @@ jobs:
       # Запустить тесты проекта Django при помощи Pytest.
       - name: Run Pytest
         run: poetry run pytest
-      

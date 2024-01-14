@@ -13,15 +13,11 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="article",
             name="modified",
-            field=models.DateTimeField(
-                auto_now=True, verbose_name="Дата последнего изменения"
-            ),
+            field=models.DateTimeField(auto_now=True, verbose_name="Дата последнего изменения"),
         ),
         migrations.AlterField(
             model_name="article",
             name="published",
-            field=models.DateTimeField(
-                default=django.utils.timezone.now, verbose_name="Дата публикации"
-            ),
+            field=models.DateTimeField(default=django.utils.timezone.now, verbose_name="Дата публикации"),
         ),
     ]

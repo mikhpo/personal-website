@@ -39,12 +39,8 @@ class MainPageTest(TestCase):
         )
         Series.objects.bulk_create(
             [
-                Series(
-                    name="Series 1", slug="series-1", image="image_1.jpg", public=True
-                ),
-                Series(
-                    name="Series 2", slug="series-2", image="image_1.jpg", public=False
-                ),
+                Series(name="Series 1", slug="series-1", image="image_1.jpg", public=True),
+                Series(name="Series 2", slug="series-2", image="image_1.jpg", public=False),
                 Series(name="Series 3", slug="series-3", image="", public=True),
             ]
         )
@@ -54,9 +50,7 @@ class MainPageTest(TestCase):
         Тестирование редиректа на главную страницу.
         """
         response = self.client.get("/")
-        self.assertRedirects(
-            response, self.main_url, status_code=301, target_status_code=HTTPStatus.OK
-        )
+        self.assertRedirects(response, self.main_url, status_code=301, target_status_code=HTTPStatus.OK)
 
     def test_main_page_url(self):
         """

@@ -37,9 +37,7 @@ class ArticleModelTest(TestCase):
         self.assertEqual(first_article.slug, "first-test-article")
         second_article = Article.objects.create(title="Вторая тестовая статья")
         self.assertEqual(second_article.slug, "vtoraya-testovaya-statya")
-        third_article = Article.objects.create(
-            title="Третья тестовая статья", slug="third-test-article"
-        )
+        third_article = Article.objects.create(title="Третья тестовая статья", slug="third-test-article")
         self.assertEqual(third_article.slug, "third-test-article")
         fourth_article = Article.objects.create(title="Third test article")
         self.assertEqual(fourth_article.slug, "third-test-article-2")
@@ -72,9 +70,7 @@ class ArticleModelTest(TestCase):
             password=get_random_string(5),
         )
         for _ in range(1, 6):
-            Comment.objects.create(
-                article=self.article, author=user_2, content=generate_random_text(10)
-            )
+            Comment.objects.create(article=self.article, author=user_2, content=generate_random_text(10))
         self.assertTrue(User.objects.filter(username="testuser-2").exists())
         self.assertGreater(self.article.number_of_comments, 0)
         user_comments_count = Comment.objects.filter(author=user_2).count()
@@ -135,9 +131,7 @@ class ArticleModelTest(TestCase):
             password=get_random_string(5),
         )
         for _ in range(1, 6):
-            Comment.objects.create(
-                article=self.article, author=user_3, content=generate_random_text(10)
-            )
+            Comment.objects.create(article=self.article, author=user_3, content=generate_random_text(10))
         self.assertTrue(User.objects.filter(username="testuser-3").exists())
         self.assertGreater(self.article.number_of_comments, 0)
         self.assertEqual(
@@ -171,9 +165,7 @@ class SeriesModelTest(TestCase):
         self.assertEqual(first_series.slug, "first-test-series")
         second_series = Series.objects.create(name="Вторая тестовая серия")
         self.assertEqual(second_series.slug, "vtoraya-testovaya-seriya")
-        third_series = Series.objects.create(
-            name="Третья тестовая серия", slug="third-test-series"
-        )
+        third_series = Series.objects.create(name="Третья тестовая серия", slug="third-test-series")
         self.assertEqual(third_series.slug, "third-test-series")
         fourth_series = Series.objects.create(name="Third test series")
         self.assertEqual(fourth_series.slug, "third-test-series-2")
@@ -210,9 +202,7 @@ class TopicModelTest(TestCase):
         self.assertEqual(first_topic.slug, "first-test-topic")
         second_topic = Topic.objects.create(name="Вторая тестовая тема")
         self.assertEqual(second_topic.slug, "vtoraya-testovaya-tema")
-        third_topic = Topic.objects.create(
-            name="Третья тестовая тема", slug="third-test-topic"
-        )
+        third_topic = Topic.objects.create(name="Третья тестовая тема", slug="third-test-topic")
         self.assertEqual(third_topic.slug, "third-test-topic")
         fourth_topic = Topic.objects.create(name="Third test topic")
         self.assertEqual(fourth_topic.slug, "third-test-topic-2")
@@ -249,9 +239,7 @@ class CategoryModelTest(TestCase):
         self.assertEqual(first_category.slug, "first-test-category")
         second_category = Category.objects.create(name="Вторая тестовая категория")
         self.assertEqual(second_category.slug, "vtoraya-testovaya-kategoriya")
-        third_category = Category.objects.create(
-            name="Третья тестовая категория", slug="third-test-category"
-        )
+        third_category = Category.objects.create(name="Третья тестовая категория", slug="third-test-category")
         self.assertEqual(third_category.slug, "third-test-category")
         fourth_category = Category.objects.create(name="Third test category")
         self.assertEqual(fourth_category.slug, "third-test-category-2")

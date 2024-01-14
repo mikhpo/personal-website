@@ -42,9 +42,7 @@ class ArticleDetailView(DetailView):
             article=self.get_object(),
         )
         new_comment.save()
-        logger.info(
-            f'Пользователь {self.request.user} оставил комментарий к статье "{self.get_object()}"'
-        )
+        logger.info(f'Пользователь {self.request.user} оставил комментарий к статье "{self.get_object()}"')
         return self.get(self, request, *args, **kwargs)
 
 
@@ -65,9 +63,7 @@ def blog(request):
     Отображаются только те статьи, для которых не была установлена невидимость (черновики).
     """
     content = Article.published.all()
-    return render(
-        request, "blog/article_list.html", {"page_obj": paginate(request, content)}
-    )
+    return render(request, "blog/article_list.html", {"page_obj": paginate(request, content)})
 
 
 def category(request, slug):
@@ -76,9 +72,7 @@ def category(request, slug):
     """
     category = Category.objects.get(slug=slug)
     articles = category.article_set.filter(public=True)
-    return render(
-        request, "blog/article_list.html", {"page_obj": paginate(request, articles)}
-    )
+    return render(request, "blog/article_list.html", {"page_obj": paginate(request, articles)})
 
 
 def series(request, slug):
@@ -87,9 +81,7 @@ def series(request, slug):
     """
     series = Series.objects.get(slug=slug)
     articles = series.article_set.filter(public=True)
-    return render(
-        request, "blog/article_list.html", {"page_obj": paginate(request, articles)}
-    )
+    return render(request, "blog/article_list.html", {"page_obj": paginate(request, articles)})
 
 
 def topic(request, slug):
@@ -98,6 +90,4 @@ def topic(request, slug):
     """
     topic = Topic.objects.get(slug=slug)
     articles = topic.article_set.filter(public=True)
-    return render(
-        request, "blog/article_list.html", {"page_obj": paginate(request, articles)}
-    )
+    return render(request, "blog/article_list.html", {"page_obj": paginate(request, articles)})

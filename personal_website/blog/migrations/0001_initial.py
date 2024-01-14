@@ -27,15 +27,11 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "title",
-                    models.CharField(
-                        max_length=255, unique=True, verbose_name="Заголовок"
-                    ),
+                    models.CharField(max_length=255, unique=True, verbose_name="Заголовок"),
                 ),
                 (
                     "description",
-                    models.CharField(
-                        blank=True, max_length=255, verbose_name="Описание"
-                    ),
+                    models.CharField(blank=True, max_length=255, verbose_name="Описание"),
                 ),
                 ("content", models.TextField(verbose_name="Содержание")),
                 (
@@ -47,16 +43,12 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "modified",
-                    models.DateField(
-                        auto_now=True, verbose_name="Дата последнего изменения"
-                    ),
+                    models.DateField(auto_now=True, verbose_name="Дата последнего изменения"),
                 ),
                 ("slug", models.SlugField(unique=True, verbose_name="Слаг")),
                 (
                     "image",
-                    models.ImageField(
-                        blank=True, upload_to="blog/articles/", verbose_name="Картинка"
-                    ),
+                    models.ImageField(blank=True, upload_to="blog/articles/", verbose_name="Картинка"),
                 ),
                 (
                     "public",
@@ -91,15 +83,11 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "name",
-                    models.CharField(
-                        max_length=255, unique=True, verbose_name="Категория"
-                    ),
+                    models.CharField(max_length=255, unique=True, verbose_name="Категория"),
                 ),
                 (
                     "description",
-                    models.CharField(
-                        blank=True, max_length=255, verbose_name="Описание"
-                    ),
+                    models.CharField(blank=True, max_length=255, verbose_name="Описание"),
                 ),
                 ("slug", models.SlugField(unique=True, verbose_name="Слаг")),
                 (
@@ -138,16 +126,12 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "description",
-                    models.CharField(
-                        blank=True, max_length=255, verbose_name="Описание"
-                    ),
+                    models.CharField(blank=True, max_length=255, verbose_name="Описание"),
                 ),
                 ("slug", models.SlugField(unique=True, verbose_name="Слаг")),
                 (
                     "image",
-                    models.ImageField(
-                        blank=True, upload_to="blog/series/", verbose_name="Картинка"
-                    ),
+                    models.ImageField(blank=True, upload_to="blog/series/", verbose_name="Картинка"),
                 ),
                 (
                     "public",
@@ -177,16 +161,12 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "description",
-                    models.CharField(
-                        blank=True, max_length=255, verbose_name="Описание"
-                    ),
+                    models.CharField(blank=True, max_length=255, verbose_name="Описание"),
                 ),
                 ("slug", models.SlugField(unique=True, verbose_name="Слаг")),
                 (
                     "image",
-                    models.ImageField(
-                        blank=True, upload_to="blog/topics/", verbose_name="Картинка"
-                    ),
+                    models.ImageField(blank=True, upload_to="blog/topics/", verbose_name="Картинка"),
                 ),
                 (
                     "public",
@@ -222,9 +202,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "author",
-                    models.ForeignKey(
-                        on_delete=django.db.models.deletion.CASCADE, to="auth.user"
-                    ),
+                    models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="auth.user"),
                 ),
             ],
             options={

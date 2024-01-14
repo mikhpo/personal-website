@@ -51,9 +51,7 @@ class SignUpFormTest(TestCase):
         self.assertTrue(form.is_valid())
         self.assertEqual(form.clean(), form.cleaned_data)
         form.save()
-        self.assertTrue(
-            User.objects.filter(username=self.valid_credentials["username"]).exists()
-        )
+        self.assertTrue(User.objects.filter(username=self.valid_credentials["username"]).exists())
 
     def test_signup_form_invalid_password(self):
         """
@@ -127,9 +125,7 @@ class SignUpFormTest(TestCase):
         form = SignUpForm(data=self.valid_credentials)
         self.assertTrue(form.is_valid())
         form.save()
-        self.assertTrue(
-            User.objects.filter(username=self.valid_credentials["username"]).exists()
-        )
+        self.assertTrue(User.objects.filter(username=self.valid_credentials["username"]).exists())
 
         # Теперь создать второго пользователя с данным адресом электронной почты.
         invalid_credentials = {

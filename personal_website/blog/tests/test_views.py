@@ -10,8 +10,8 @@ from django.utils.crypto import get_random_string
 
 from blog.models import Article, Category, Comment, Series, Topic
 from blog.views import ArticleDetailView, blog, category, series, topic
-from personal_website.utils import generate_random_text
 from personal_website.settings import PROJECT_NAME, TEMPLATES
+from personal_website.utils import generate_random_text
 
 APP_NAME = "blog"
 
@@ -148,9 +148,7 @@ class BlogIndexPageTests(TestCase):
         Проверяет, что статьи на главной странице блога отсортированы в правильном порядке.
         """
         response = self.client.get(ARTICLE_LIST_URL)
-        target_articles = Article.objects.filter(public=True).order_by("-published_at")[
-            :5
-        ]
+        target_articles = Article.objects.filter(public=True).order_by("-published_at")[:5]
         response_articles = response.context["page_obj"]
         self.assertQuerySetEqual(target_articles, response_articles)
 
@@ -169,12 +167,8 @@ class ArticleDetailPageTests(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        User.objects.create_user(
-            username="testuser", email="testuser@example.com", password="12345"
-        )
-        Article.objects.create(
-            title="Test article", slug="article-test", content=get_random_string(250)
-        )
+        User.objects.create_user(username="testuser", email="testuser@example.com", password="12345")
+        Article.objects.create(title="Test article", slug="article-test", content=get_random_string(250))
 
     def test_article_detail_url(self):
         """
@@ -286,9 +280,7 @@ class ArticleDetailPageTests(TestCase):
         article = Article.objects.get(title="Test article")
         user = User.objects.get(username="testuser")
         for i in range(1, 6):
-            Comment.objects.create(
-                article=article, author=user, content=f"test comment {i}"
-            )
+            Comment.objects.create(article=article, author=user, content=f"test comment {i}")
         url = reverse(ARTICLE_DETAIL_URL_NAME, args=(article.slug,))
         response = self.client.get(url)
         target_comments = Comment.objects.filter(article=article).order_by("posted")
@@ -313,9 +305,7 @@ class CategoryPageTests(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        cls.test_category = Category.objects.create(
-            name="Test category", slug="test-category"
-        )
+        cls.test_category = Category.objects.create(name="Test category", slug="test-category")
         for n in range(20):
             article = Article.objects.create(
                 title=f"Article {n}",
@@ -390,9 +380,7 @@ class CategoryPageTests(TestCase):
         """
         Проверяет, что текст статьи в категории скрыт за катом, если длина текста более 200 слов.
         """
-        Article.objects.filter(public=True, categories=self.test_category).update(
-            public=False
-        )
+        Article.objects.filter(public=True, categories=self.test_category).update(public=False)
         article = Article.objects.create(
             title="Long article",
             slug="long-article",
@@ -409,9 +397,7 @@ class CategoryPageTests(TestCase):
         """
         Проверяет, что текст статьи в категории не скрыт за катом, если длина текста менее 200 слов.
         """
-        Article.objects.filter(public=True, categories=self.test_category).update(
-            public=False
-        )
+        Article.objects.filter(public=True, categories=self.test_category).update(public=False)
         article = Article.objects.create(
             title="Short article",
             slug="short-article",
@@ -439,9 +425,9 @@ class CategoryPageTests(TestCase):
         """
         url = reverse(CATEGORY_URL_NAME, args=(self.test_category.slug,))
         response = self.client.get(url)
-        target_articles = Article.objects.filter(
-            public=True, categories=self.test_category
-        ).order_by("-published_at")[:5]
+        target_articles = Article.objects.filter(public=True, categories=self.test_category).order_by("-published_at")[
+            :5
+        ]
         response_articles = response.context["page_obj"]
         self.assertQuerySetEqual(target_articles, response_articles)
 
@@ -573,9 +559,7 @@ class TopicPageTests(TestCase):
         """
         url = reverse(TOPIC_URL_NAME, args=(self.test_topic.slug,))
         response = self.client.get(url)
-        target_articles = Article.objects.filter(
-            public=True, topics=self.test_topic
-        ).order_by("-published_at")[:5]
+        target_articles = Article.objects.filter(public=True, topics=self.test_topic).order_by("-published_at")[:5]
         response_articles = response.context["page_obj"]
         self.assertQuerySetEqual(target_articles, response_articles)
 
@@ -662,9 +646,7 @@ class SeriesPageTests(TestCase):
         """
         Проверяет, что текст статьи из серии скрыт за катом, если длина текста более 200 слов.
         """
-        Article.objects.filter(public=True, series=self.test_series).update(
-            public=False
-        )
+        Article.objects.filter(public=True, series=self.test_series).update(public=False)
         article = Article.objects.create(
             title="Long article",
             slug="long-article",
@@ -681,9 +663,7 @@ class SeriesPageTests(TestCase):
         """
         Проверяет, что текст статьи из серии не скрыт за катом, если длина текста менее 200 слов.
         """
-        Article.objects.filter(public=True, series=self.test_series).update(
-            public=False
-        )
+        Article.objects.filter(public=True, series=self.test_series).update(public=False)
         article = Article.objects.create(
             title="Short article",
             slug="short-article",
@@ -711,8 +691,6 @@ class SeriesPageTests(TestCase):
         """
         url = reverse(SERIES_URL_NAME, args=(self.test_series.slug,))
         response = self.client.get(url)
-        target_articles = Article.objects.filter(
-            public=True, series=self.test_series
-        ).order_by("-published_at")[:5]
+        target_articles = Article.objects.filter(public=True, series=self.test_series).order_by("-published_at")[:5]
         response_articles = response.context["page_obj"]
         self.assertQuerySetEqual(target_articles, response_articles)

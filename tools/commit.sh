@@ -7,14 +7,7 @@
 project_root="$(dirname "$(dirname "$(readlink -f "$0")")")"
 cd "$project_root" || exit
 
-# Экспортировать зависимости Python в файл requirements.txt.
-poetry export -f requirements.txt --output requirements.txt --without-hashes --with dev
-
-# Выполнить сортировку импортов и форматирование кода.
-isort .
-black .
-
-# Добавть все сообщения в коммит, запросить сообщение
+# Добавить все сообщения в коммит, запросить сообщение
 # для комиита и отправить в удаленный репозиторий.
 git add .
 git status

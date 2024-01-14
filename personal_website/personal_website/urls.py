@@ -9,12 +9,7 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.urls import include, path
 from django.views.generic import RedirectView
 
-from blog.sitemaps import (
-    ArticleSitemap,
-    CategorySitemap,
-    SeriesSitemap,
-    TopicSitemap,
-)
+from blog.sitemaps import ArticleSitemap, CategorySitemap, SeriesSitemap, TopicSitemap
 from gallery.sitemaps import AlbumSitemap, PhotoSitemap, TagSitemap
 
 sitemaps = {

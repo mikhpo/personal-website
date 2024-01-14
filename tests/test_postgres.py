@@ -40,7 +40,7 @@ class TestPostgres(unittest.TestCase):
             conn = self.connect_postgres()
             conn.close()
             return True
-        except:
+        except psycopg.OperationalError:
             return False
 
     def test_postgres_connection(self):

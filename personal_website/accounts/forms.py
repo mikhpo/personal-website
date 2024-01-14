@@ -55,9 +55,7 @@ class SignUpForm(UserCreationForm):
         last_name = self.cleaned_data.get("last_name")
         email = self.cleaned_data.get("email")
         if User.objects.filter(email=email).exists():
-            raise ValidationError(
-                "Пользователь с таким адресом электронной почты уже зарегистрирован!"
-            )
+            raise ValidationError("Пользователь с таким адресом электронной почты уже зарегистрирован!")
         if first_name == last_name:
             raise ValidationError("У вас совпадают имя и фамилия!")
         return self.cleaned_data

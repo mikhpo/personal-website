@@ -22,9 +22,7 @@ class BlogAdminTest(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        cls.superuser: User = User.objects.create_superuser(
-            username="testadmin", password="12345"
-        )
+        cls.superuser: User = User.objects.create_superuser(username="testadmin", password="12345")
         cls.series: Series = Series.objects.create(name="Test series")
         cls.topic: Topic = Topic.objects.create(name="Test topic")
         cls.category: Category = Category.objects.create(name="Test category")
@@ -186,9 +184,7 @@ class BlogAdminTest(TestCase):
         """
         Проверяет успешность добавления статьи через административную панель.
         """
-        response = self.client.post(
-            self.ADMIN_URL + "blog/article/add/", data={"title": "Test article 2"}
-        )
+        response = self.client.post(self.ADMIN_URL + "blog/article/add/", data={"title": "Test article 2"})
         self.assertEqual(response.status_code, HTTPStatus.OK)
         response = self.client.post(
             self.ADMIN_URL + "blog/article/add/",
@@ -201,9 +197,7 @@ class BlogAdminTest(TestCase):
         )
         self.assertEqual(response.status_code, HTTPStatus.FOUND)
         self.assertTrue(Article.objects.filter(title="Test article 2").exists())
-        self.assertNotEqual(
-            Article.objects.get(title="Test article 2").published_at, None
-        )
+        self.assertNotEqual(Article.objects.get(title="Test article 2").published_at, None)
 
     def test_comment_created_via_admin(self):
         """
@@ -219,18 +213,14 @@ class BlogAdminTest(TestCase):
         )
         self.assertEqual(response.status_code, HTTPStatus.FOUND)
         self.assertTrue(
-            Comment.objects.filter(
-                content="Test comment", article=self.article, author=self.superuser
-            ).exists()
+            Comment.objects.filter(content="Test comment", article=self.article, author=self.superuser).exists()
         )
 
     def test_series_created_via_admin(self):
         """
         Проверяет успешность добавления серии через административную панель.
         """
-        response = self.client.post(
-            self.ADMIN_URL + "blog/series/add/", data={"name": "Test series 2"}
-        )
+        response = self.client.post(self.ADMIN_URL + "blog/series/add/", data={"name": "Test series 2"})
         self.assertEqual(response.status_code, HTTPStatus.FOUND)
         self.assertTrue(Series.objects.filter(name="Test series 2").exists())
 
@@ -257,9 +247,7 @@ class BlogAdminTest(TestCase):
         """
         Проверяет успешность добавления темы через административную панель.
         """
-        response = self.client.post(
-            self.ADMIN_URL + "blog/topic/add/", data={"name": "Test topic 2"}
-        )
+        response = self.client.post(self.ADMIN_URL + "blog/topic/add/", data={"name": "Test topic 2"})
         self.assertEqual(response.status_code, HTTPStatus.FOUND)
         self.assertTrue(Topic.objects.filter(name="Test topic 2").exists())
 
@@ -286,9 +274,7 @@ class BlogAdminTest(TestCase):
         """
         Проверяет успешность добавления категории через административную панель.
         """
-        response = self.client.post(
-            self.ADMIN_URL + "blog/category/add/", data={"name": "Test category 2"}
-        )
+        response = self.client.post(self.ADMIN_URL + "blog/category/add/", data={"name": "Test category 2"})
         self.assertEqual(response.status_code, HTTPStatus.FOUND)
         self.assertTrue(Category.objects.filter(name="Test category 2").exists())
 
@@ -300,9 +286,7 @@ class BlogAdminTest(TestCase):
         self.assertFalse(bool(self.category.image))
 
         # Загрузить изображение через административный интерфейс.
-        category_change_url = (
-            self.ADMIN_URL + f"blog/category/{self.category.pk}/change/"
-        )
+        category_change_url = self.ADMIN_URL + f"blog/category/{self.category.pk}/change/"
         response = self.client.post(
             category_change_url,
             data={"image": SimpleUploadedFile(FAKER.word(), self.jpeg_raw)},
