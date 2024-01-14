@@ -11,6 +11,8 @@
 # Актуально для развертывания серевисов в системе хоста.
 
 project_root="$(dirname "$(dirname "$(dirname "$(readlink -fm "$0")")")")"
+cd "$project_root" || exit
+
 readonly PROJECT_NAME="personal_website"
 readonly python="$project_root/.venv/bin/python"
 readonly manage="$project_root/$PROJECT_NAME/manage.py"
@@ -22,6 +24,7 @@ readonly DESTINATION_DIR="/etc/systemd/system/"
 cd "$project_root" || exit
 
 git fetch origin
+git checkout main
 git pull
 npm install
 poetry install

@@ -6,10 +6,11 @@
 # Выйти в случае ошибки.
 set -e
 
-# Определение рабочих каталогов проекта.
+# Определение рабочих файлов проекта.
 project_root="$(dirname "$(dirname "$(dirname "$(readlink -f "$0")")")")"
 readonly config_dir="$project_root/tools/server/config"
 readonly dotenv="$project_root/.env"
+cd "$project_root" || exit
 
 # Название проекта для конфигурации Nginx.
 readonly WEBSITE_NAME="personal-website"
@@ -26,7 +27,8 @@ function confirm_dotenv() {
 }
 
 #######################################
-# Загрузить переменные окружения из .env файла.
+# Загрузить переменные окружения из .env файла 
+# или выйти, если файл не существует.
 #######################################
 function load_dotenv() {
     if [ -f "$dotenv" ]; then
