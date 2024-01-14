@@ -15,5 +15,6 @@ storage
 .env.dist
 .env.example
 .markdownlint.json
+.ruff_cache
 nginx/conf.d
 tools/server

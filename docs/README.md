@@ -273,6 +273,18 @@ Certbot используется для получения и обновлени
 
     docker compose run nginx certbot renew
 
+## Хуки в Git
+
+Проект использует хуки в Git для подготовки коммита, автоматической проверки и форматирования кода.
+
+Для ручного запуска хуков [pre-commit](https://pre-commit.com/) можно использовать команду:
+
+    pre-commit run --all-files
+
+Для обновления конфигураций хуков можно использовать команду:
+
+    pre-commit autoupdate
+
 ## Решение проблем
 
 ### Ошибка 413 Request Entity Too Large

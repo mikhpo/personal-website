@@ -21,3 +21,4 @@ CACHE
 /backups/
 /temp/
 nginx/conf.d
+.ruff_cache
