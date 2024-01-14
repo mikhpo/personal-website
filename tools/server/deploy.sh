@@ -3,25 +3,24 @@
 # Скрипт для первоначального развертывания через Gunicorn и Nginx.
 # Используется для сценария развертывания сервисов на сервере.
 
+# Выйти в случае ошибки.
+set -e
+
 # Определение рабочих каталогов проекта.
-project_root="$(dirname "$(dirname "$(readlink -f "$0")")")"
+project_root="$(dirname "$(dirname "$(dirname "$(readlink -f "$0")")")")"
 readonly config_dir="$project_root/tools/server/config"
 readonly dotenv="$project_root/.env"
-
-# Версия Node.js для установки.
-readonly NODE_MAJOR=20
 
 # Название проекта для конфигурации Nginx.
 readonly WEBSITE_NAME="personal-website"
 
 #######################################
-# Запросить подтверждение готовности 
+# Запросить подтверждение готовности
 # файла с переменными окружения.
 #######################################
 function confirm_dotenv() {
     read -p "Файл .env уже заполнен? [y/n] " -n 1 -r
-    if [[ ! $REPLY =~ ^[Yy]$ ]]
-    then
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
         exit
     fi
 }
@@ -30,7 +29,13 @@ function confirm_dotenv() {
 # Загрузить переменные окружения из .env файла.
 #######################################
 function load_dotenv() {
-    eval export "$(cat "$dotenv")"
+    if [ -f "$dotenv" ]; then
+        eval export "$(cat "$dotenv")"
+        echo "Переменные окружения загружены из файла $dotenv"
+    else
+        echo "Файл с переменными окружения $dotenv не существует"
+        exit
+    fi
 }
 
 #######################################
@@ -45,7 +50,8 @@ function install_packages() {
         gnupg \
         locales \
         ca-certificates \
-        postgresql-client \
+        "postgresql-client-${POSTGRES_VERSION}" \
+        rsync \
         python3 \
         python3-pip \
         pipx \
@@ -65,12 +71,13 @@ function install_poetry() {
 }
 
 #######################################
-# Установить Node.js.
+# Установить Node.js. Версия Node.js 
+# определяется в переменных окружения.
 #######################################
 function install_node() {
     sudo mkdir -p /etc/apt/keyrings
     curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
-    echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list
+    echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_VERSION.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list
     sudo apt-get update
     sudo apt-get install -y nodejs
 }
@@ -100,11 +107,11 @@ function setup_gunicorn() {
 
 #######################################
 # Первоначальная установка Nginx. Устанавливает Nginx,
-# добавляет конфигурационные файлы Nginx, перезапускает Nginx и 
+# добавляет конфигурационные файлы Nginx, перезапускает Nginx и
 # разрешает доступ через Uncomplicated Firewall.
 #######################################
-function setup_nginx() {   
-    readonly NGINX_CONF_TEMPLATE="default.conf.template" 
+function setup_nginx() {
+    readonly NGINX_CONF_TEMPLATE="default.conf.template"
     readonly SITES_AVAILABLE="/etc/nginx/sites-available"
     readonly SITES_ENABLED="/etc/nginx/sites-enabled"
     readonly available_conf="$SITES_AVAILABLE/$WEBSITE_NAME"
@@ -120,7 +127,7 @@ function setup_nginx() {
     fi
 
     # Заполнить шаблон конфигурационного файла переменными окружения.
-    envsubst < "$config_dir/$NGINX_CONF_TEMPLATE" > $available_conf
+    envsubst <"$config_dir/$NGINX_CONF_TEMPLATE" >$available_conf
 
     # Удалить ссылку на конфигурационный файл, если она уже создана.
     if [ -L $enabled_conf ]; then
@@ -158,6 +165,13 @@ function setup_certbot() {
 }
 
 #######################################
+# Поставить скрипты на расписание в cron.
+#######################################
+function add_cronjobs() {
+    bash "$project_root"/personal_website/scripts/cronjobs.sh
+}
+
+#######################################
 # Последовательный вызов основных функций скрипта.
 #######################################
 function main() {
@@ -169,6 +183,7 @@ function main() {
     setup_gunicorn
     setup_nginx
     setup_certbot
+    add_cronjobs
 }
 
 main

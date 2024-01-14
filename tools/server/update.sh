@@ -6,11 +6,11 @@
 # 2. Обновление зависимостей.
 # 3. Миграция базы данных.
 # 4. Перезапуск Gunicorn.
-# 5. Перезапуск Nginx. 
+# 5. Перезапуск Nginx.
 # Адрес корневого каталога проекта определяется автоматически.
 # Актуально для развертывания серевисов в системе хоста.
 
-project_root="$(dirname "$(dirname "$(readlink -fm "$0")")")"
+project_root="$(dirname "$(dirname "$(dirname "$(readlink -fm "$0")")")")"
 readonly PROJECT_NAME="personal_website"
 readonly python="$project_root/.venv/bin/python"
 readonly manage="$project_root/$PROJECT_NAME/manage.py"
@@ -32,4 +32,4 @@ $python "$manage" migrate
 sudo cp -f "$gunicorn_socket" "$gunicorn_service" $DESTINATION_DIR
 
 bash "$project_root"/tools/server/restart.sh -f
-bash "$project_root"/tools/cronjobs.sh
+bash "$project_root"/personal_website/scripts/cronjobs.sh

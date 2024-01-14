@@ -8,6 +8,8 @@ services:
       dockerfile: ./personal_website/Dockerfile
       args:
         - WORK_DIR=/srv/website
+        - POSTGRES_VERSION=${POSTGRES_VERSION}
+        - NODE_VERSION=${NODE_VERSION}
       tags:
         - mikhpo/personal-website:latest
         - ghcr.io/mikhpo/personal-website:latest
@@ -21,8 +23,11 @@ services:
     ports:
       - ${DJANGO_PORT}:${DJANGO_PORT}
     volumes:
-      - website-storage:/srv/website/storage:rw
-      - website-static:/srv/website/static:rw
+      - ${STORAGE_ROOT}:/srv/website/storage:rw
+      - ${STATIC_ROOT}:/srv/website/static:rw
+      - ${BACKUP_ROOT}:/srv/website/backups:rw
+      - ${LOGS_ROOT}:/srv/website/logs:rw
+      - ${TEMP_ROOT}=/srv/website/temp:rw
     depends_on:
       - postgres
     restart: always
@@ -33,7 +38,7 @@ services:
 
   # Кластер PostgreSQL для веб-сайта. База данных создается автоматически.
   postgres:
-    image: postgres
+    image: postgres:${POSTGRES_VERSION}
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -60,8 +65,8 @@ services:
     volumes:
       - ./nginx/templates:/etc/nginx/templates:ro
       - ./nginx/conf.d:/etc/nginx/conf.d:rw
-      - website-storage:/srv/website/storage:ro
-      - website-static:/srv/website/static:ro
+      - ${STORAGE_ROOT}:/srv/website/storage:ro
+      - ${STATIC_ROOT}:/srv/website/static:ro
       - nginx-certs:/etc/letsencrypt/live/${DOMAIN_NAME}:rw
     depends_on:
       - website
@@ -72,10 +77,5 @@ services:
           path: ./nginx
 
 volumes:
-  website-storage:
-  website-static:
   postgres-data:
   nginx-certs:
-  
-
-

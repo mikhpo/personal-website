@@ -16,3 +16,4 @@ storage
 .env.example
 .markdownlint.json
 nginx/conf.d
+tools/server
