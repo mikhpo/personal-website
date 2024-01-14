@@ -1,9 +1,10 @@
 #!/bin/bash
 #
-# Скрипт для перезапуска компонентов сервера. 
+# Скрипт для перезапуска компонентов сервера.
 # Перезапускает Gunicorn, Nginx и PostgreSQL.
+# Актуально для развертывания вне контейнеров.
 
-mode='simple'
+mode="simple"
 
 #######################################
 # Выводит подсказку по бизнес-логике скрипта.
@@ -38,7 +39,7 @@ function restart_gunicorn() {
         sudo systemctl daemon-reload
         sudo systemctl restart gunicorn.socket gunicorn.service
     else
-        echo "Перезапуск Gunicorn" 
+        echo "Перезапуск Gunicorn"
         sudo systemctl restart gunicorn
     fi
 }
@@ -57,10 +58,9 @@ function restart_nginx() {
         sudo nginx -t
     else
         echo "Перезапуск Nginx"
-    fi 
+    fi
     sudo systemctl restart nginx
 }
-
 
 #######################################
 # Проверка на наличие опциональных аргументов, переданных скрипту.
@@ -68,21 +68,20 @@ function restart_nginx() {
 function get_options() {
     while getopts "hf" option; do
         case $option in
-                h)
-                    help
-                    exit
-                    ;;
-                f)
-                    mode='full'
-                    ;;
-                *)
-                    echo "Ошибка: некорректный аргумент"
-                    exit
-                    ;;
+        h)
+            help
+            exit
+            ;;
+        f)
+            mode="full"
+            ;;
+        *)
+            echo "Ошибка: некорректный аргумент"
+            exit
+            ;;
         esac
     done
 }
-
 
 #######################################
 # Основное тело скрипта.

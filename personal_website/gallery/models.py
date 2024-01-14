@@ -13,8 +13,8 @@ from imagekit.processors import ResizeToFit
 from PIL import Image as pImage
 from PIL.ExifTags import TAGS
 
+from personal_website.storages import select_storage
 from personal_website.utils import get_unique_slug
-from project.storages import select_storage
 
 from .managers import PublicAlbumManager, PublicPhotoManager
 from .utils import move_photo_image, photo_image_upload_path
@@ -27,15 +27,9 @@ current_timezone = get_current_timezone()
 
 
 class Tag(models.Model):
-    name = models.CharField(
-        verbose_name="Наименование", max_length=255, help_text="Наименование тэга"
-    )
-    slug = models.SlugField(
-        verbose_name="Слаг", unique=True, blank=True, help_text="Слаг тэга"
-    )
-    description = models.TextField(
-        verbose_name="Описание", blank=True, help_text="Описание тэга"
-    )
+    name = models.CharField(verbose_name="Наименование", max_length=255, help_text="Наименование тэга")
+    slug = models.SlugField(verbose_name="Слаг", unique=True, blank=True, help_text="Слаг тэга")
+    description = models.TextField(verbose_name="Описание", blank=True, help_text="Описание тэга")
 
     class Meta:
         verbose_name = "Тэг"
@@ -59,15 +53,9 @@ class Album(models.Model):
     Модель альбома с фотографиями.
     """
 
-    name = models.CharField(
-        verbose_name="Наименование", max_length=255, help_text="Наименование альбома"
-    )
-    description = models.TextField(
-        verbose_name="Описание", blank=True, help_text="Описание альбома"
-    )
-    slug = models.SlugField(
-        verbose_name="Слаг", blank=True, unique=True, help_text="Слаг альбома"
-    )
+    name = models.CharField(verbose_name="Наименование", max_length=255, help_text="Наименование альбома")
+    description = models.TextField(verbose_name="Описание", blank=True, help_text="Описание альбома")
+    slug = models.SlugField(verbose_name="Слаг", blank=True, unique=True, help_text="Слаг альбома")
     created_at = models.DateTimeField(
         verbose_name="Создан",
         auto_now_add=True,
@@ -78,9 +66,7 @@ class Album(models.Model):
         auto_now=True,
         help_text="Дата и время последнего обновления альбома",
     )
-    public = models.BooleanField(
-        verbose_name="Публичный", default=True, help_text="Альбом публичный"
-    )
+    public = models.BooleanField(verbose_name="Публичный", default=True, help_text="Альбом публичный")
     cover = models.OneToOneField(
         "Photo",
         on_delete=models.SET_NULL,
@@ -157,12 +143,8 @@ class Photo(models.Model):
         max_length=255,
         help_text="Наименование фотографии",
     )
-    description = models.TextField(
-        verbose_name="Описание", blank=True, help_text="Описание фотографии"
-    )
-    slug = models.SlugField(
-        verbose_name="Слаг", blank=True, unique=True, help_text="Слаг фотографии"
-    )
+    description = models.TextField(verbose_name="Описание", blank=True, help_text="Описание фотографии")
+    slug = models.SlugField(verbose_name="Слаг", blank=True, unique=True, help_text="Слаг фотографии")
     uploaded_at = models.DateTimeField(
         verbose_name="Загружена",
         auto_now_add=True,
@@ -173,9 +155,7 @@ class Photo(models.Model):
         auto_now=True,
         help_text="Дата и время последнего изменения фотографии",
     )
-    public = models.BooleanField(
-        verbose_name="Публичная", default=True, help_text="Фотография публичная"
-    )
+    public = models.BooleanField(verbose_name="Публичная", default=True, help_text="Фотография публичная")
     album = models.ForeignKey(
         Album,
         verbose_name="Альбом",

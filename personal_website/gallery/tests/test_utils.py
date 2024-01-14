@@ -4,11 +4,7 @@ from pathlib import Path
 from django.test import TestCase
 
 from gallery.models import Album, Photo
-from gallery.utils import (
-    move_photo_image,
-    photo_image_upload_full_path,
-    photo_image_upload_path,
-)
+from gallery.utils import move_photo_image, photo_image_upload_full_path, photo_image_upload_path
 from personal_website.utils import list_file_paths
 
 
@@ -74,10 +70,7 @@ class GalleryUtilsTests(TestCase):
             old_path = photo.image.path
             self.assertTrue(Path(old_path).exists())
 
-        with self.subTest(
-            "Файл по старому адресу более не существует,"
-            " но теперь существует по новому адресу"
-        ):
+        with self.subTest("Файл по старому адресу более не существует," " но теперь существует по новому адресу"):
             photo.album = self.langtang_album
             new_path = move_photo_image(photo, photo.image.path)
             self.assertFalse(Path(old_path).exists())

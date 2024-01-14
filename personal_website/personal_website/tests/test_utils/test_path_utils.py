@@ -1,7 +1,6 @@
 import os
 from pathlib import Path
 
-from django.conf import settings
 from django.test import SimpleTestCase
 from faker import Faker
 from faker_file.providers.jpeg_file import JpegFileProvider
@@ -42,10 +41,7 @@ class CalculatePathSizeTests(SimpleTestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
-        cls.files = [
-            JpegFileProvider(FAKER).jpeg_file(storage=FS_STORAGE, raw=False)
-            for _ in range(3)
-        ]
+        cls.files = [JpegFileProvider(FAKER).jpeg_file(storage=FS_STORAGE, raw=False) for _ in range(3)]
         return super().setUpClass()
 
     def test_file(self):

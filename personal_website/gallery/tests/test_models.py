@@ -10,15 +10,13 @@ from faker_file.providers.jpeg_file import JpegFileProvider
 from faker_file.storages.filesystem import FileSystemStorage
 
 from gallery.models import Album, Photo, Tag, photo_image_upload_path
+from personal_website.storages import select_storage
 from personal_website.utils import list_file_paths
-from project.storages import select_storage
 
 storage = select_storage()
 
 FAKER = Faker()
-FS_STORAGE = FileSystemStorage(
-    root_path=os.getenv("TEMP_ROOT"), rel_path="gallery/photos/test_models"
-)
+FS_STORAGE = FileSystemStorage(root_path=os.getenv("TEMP_ROOT"), rel_path="gallery/photos/test_models")
 
 
 class GalleryModelsTests(TestCase):

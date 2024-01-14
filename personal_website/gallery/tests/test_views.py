@@ -6,7 +6,6 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db.models import QuerySet
-from django.http import HttpResponse
 from django.test import TestCase
 from django.urls import resolve, reverse
 from django.utils.crypto import get_random_string
@@ -160,9 +159,7 @@ class GalleryViewsTest(TestCase):
         first_photo = Photo.objects.first()
         photo_slug = first_photo.slug
 
-        with self.subTest(
-            "Проверить переход по ссылке для детального просмотра фотографии"
-        ):
+        with self.subTest("Проверить переход по ссылке для детального просмотра фотографии"):
             photo_url = f"{PHOTO_DETAIL_URL}/{photo_slug}/"
             resolver_match = resolve(photo_url)
             response = self.client.get(photo_url)
@@ -170,9 +167,7 @@ class GalleryViewsTest(TestCase):
             self.assertEqual(photo_url_func, PhotoDetailView)
             self.assertEqual(response.status_code, HTTPStatus.OK)
 
-        with self.subTest(
-            "Проверить именную ссылку для детального просмотра фотографии"
-        ):
+        with self.subTest("Проверить именную ссылку для детального просмотра фотографии"):
             reverse_url = reverse(PHOTO_DETAIL_URL_NAME, args=(photo_slug,))
             reverse_resolver_match = resolve(reverse_url)
             reverse_response = self.client.get(reverse_url)
@@ -206,9 +201,7 @@ class GalleryViewsTest(TestCase):
         NEXT_PHOTO_LINK_ID = "next-photo-link"
         PREVIOUS_PHOTO_LINK_ID = "previous-photo-link"
 
-        with self.subTest(
-            "Для первой фотографии в альбоме доступа только ссылка на следующую фотографию"
-        ):
+        with self.subTest("Для первой фотографии в альбоме доступа только ссылка на следующую фотографию"):
             url = f"{PHOTO_DETAIL_URL}/{first_photo.slug}/"
             response = self.client.get(url)
             context = response.context
@@ -217,9 +210,7 @@ class GalleryViewsTest(TestCase):
             self.assertIsNone(context["previous_photo"])
             self.assertNotContains(response, PREVIOUS_PHOTO_LINK_ID)
 
-        with self.subTest(
-            "Для последней фотографии в альбоме доступна только ссылка на предыдущую фотографию"
-        ):
+        with self.subTest("Для последней фотографии в альбоме доступна только ссылка на предыдущую фотографию"):
             url = f"{PHOTO_DETAIL_URL}/{last_photo.slug}/"
             response = self.client.get(url)
             context = response.context
@@ -400,17 +391,13 @@ class GalleryViewsTest(TestCase):
         response = self.client.get(url)
         context = response.context
 
-        with self.subTest(
-            "Альбомы с данным тэгом содержатся в контексте представления"
-        ):
+        with self.subTest("Альбомы с данным тэгом содержатся в контексте представления"):
             albums = Album.objects.filter(tags=self.tag)
             for album in albums:
                 self.assertContains(response, album)
             self.assertEqual(albums.count(), len(context["albums"]))
 
-        with self.subTest(
-            "Фотографии с данным тэгом содержатся в контексте представления"
-        ):
+        with self.subTest("Фотографии с данным тэгом содержатся в контексте представления"):
             photos = Photo.objects.filter(tags=self.tag)
             for photo in photos:
                 self.assertContains(response, photo)
@@ -436,12 +423,8 @@ class UploadFormViewTests(TestCase):
     @classmethod
     def setUpTestData(cls) -> None:
         super().setUpTestData()
-        cls.user = User.objects.create_user(
-            username=cls.test_username, password=cls.test_password
-        )
-        cls.staff_user = User.objects.create_superuser(
-            username=cls.staff_username, password=cls.staff_password
-        )
+        cls.user = User.objects.create_user(username=cls.test_username, password=cls.test_password)
+        cls.staff_user = User.objects.create_superuser(username=cls.staff_username, password=cls.staff_password)
         os.makedirs(settings.MEDIA_ROOT, exist_ok=True)
         test_dir = os.getenv("TEMP_ROOT")
         test_images_dir = os.path.join(test_dir, "gallery", "photos")
@@ -505,16 +488,12 @@ class UploadFormViewTests(TestCase):
             response = self.client.get(GALLERY_URL)
             self.assertContains(response, UPLOAD_URL)
 
-        with self.subTest(
-            "Для пользователя с обычными правами не доступна ссылка на форму загрузки"
-        ):
+        with self.subTest("Для пользователя с обычными правами не доступна ссылка на форму загрузки"):
             self.client.login(username=self.test_username, password=self.test_password)
             response = self.client.get(GALLERY_URL)
             self.assertNotContains(response, UPLOAD_URL)
 
-        with self.subTest(
-            "Для пользователя, который не авторизован, не доступна ссылка на форму загрузки"
-        ):
+        with self.subTest("Для пользователя, который не авторизован, не доступна ссылка на форму загрузки"):
             self.client.logout()
             response = self.client.get(GALLERY_URL)
             self.assertNotContains(response, UPLOAD_URL)
@@ -555,8 +534,7 @@ class UploadFormViewTests(TestCase):
         url = self.album.get_absolute_url()
         name = self.album.name
         message = (
-            f"Загружено <b>{photo_count}</b> фотографий в альбом "
-            f'<a href="{url}" class="alert-link">{name}</a>'
+            f"Загружено <b>{photo_count}</b> фотографий в альбом " f'<a href="{url}" class="alert-link">{name}</a>'
         )
         self.assertContains(response, message)
 

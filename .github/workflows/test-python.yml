@@ -31,7 +31,7 @@ env:
   LANG: ru_RU.utf8
 
 jobs:
-  test_python_with_coverage:
+  test_python_with_pytest:
     runs-on: ubuntu-latest
 
     # Тесты использует службу PostgreSQL, развернутую в контейнере.
@@ -73,25 +73,29 @@ jobs:
         with:
           python-version: '3.12'
 
+      # Установка Node.js необходима для получения npm.
       - name: Setup Node.js environment
         uses: actions/setup-node@v4
         with:
           node-version: 'latest'
 
+      # Зависимости проекта устанавливаются через Poetry.
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
           pip install poetry
           poetry install
 
+      # Установка пакетов из npm требуется для сбора статических файлов.
       - name: Install Node.js dependencies
         run: |
           npm install
           npm ls
-      
+
+      # Выполнить сбор статических файлов административной командой Django.
       - name: Collect static files
         run: poetry run python personal_website/manage.py collectstatic --noinput
 
+      # Запустить тесты проекта Django при помощи Pytest.
       - name: Run Pytest
-        run: poetry run coverage run -m pytest
-      
+        run: poetry run pytest

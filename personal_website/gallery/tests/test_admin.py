@@ -21,9 +21,7 @@ class GalleryAdminTests(TestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
-        cls.superuser: User = User.objects.create_superuser(
-            username="testadmin", password="12345"
-        )
+        cls.superuser: User = User.objects.create_superuser(username="testadmin", password="12345")
         temp_dir = os.getenv("TEMP_ROOT")
         test_images_dir = os.path.join(temp_dir, "gallery", "photos")
         cls.image_path = list_file_paths(test_images_dir)[0]
@@ -76,9 +74,7 @@ class GalleryAdminTests(TestCase):
         with self.subTest("Отправка данных для изменения объекта"):
             new_slug = "new-slug"
             data = {
-                "image": SimpleUploadedFile(
-                    self.photo_image.name, self.photo_image.read()
-                ),
+                "image": SimpleUploadedFile(self.photo_image.name, self.photo_image.read()),
                 "name": photo.name,
                 "album": album.pk,
                 "slug": new_slug,

@@ -4,8 +4,12 @@
 FROM debian
 
 ARG WORK_DIR
+ARG POSTGRES_VERSION
+ARG NODE_VERSION
 
 # Обновление и установка общих системных пакетов.
+# Версия утилит PostgreSQL должна совпадать с версией кластера.
+ENV POSTGRES_VERSION=$POSTGRES_VERSION
 RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install -y \
@@ -14,8 +18,8 @@ RUN apt-get update && \
     gnupg \
     locales \
     ca-certificates \
-    postgresql-client \
-    python3 \
+    postgresql-client-${POSTGRES_VERSION} \
+    rsync \
     python3 \
     python3-pip \
     pipx \
@@ -28,10 +32,10 @@ ENV PATH="/root/.local/bin:$PATH"
 
 # Установить пакеты для подключения к репозиторию NodeSource,
 # после чего установить из репозитория заданную версию Node.js.
-ENV NODE_MAJOR=20
+ENV NODE_VERSION=$NODE_VERSION
 RUN mkdir -p /etc/apt/keyrings && \
     curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg && \
-    echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list && \
+    echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_VERSION.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list && \
     apt-get update && \
     apt-get install -y nodejs
 
@@ -52,7 +56,11 @@ RUN npm install
 COPY pyproject.toml poetry.toml poetry.lock ./
 RUN poetry install
 
+# Скопировать в контейнер основное содержимое проекта.
 COPY . .
+
+# Установить расписание запуска скриптов в cron.
+RUN bash personal_website/scripts/cronjobs.sh
 
 # Выполнить скрипт, запускающий сервер.
 ENV PYTHONPATH=.

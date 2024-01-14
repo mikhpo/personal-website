@@ -109,9 +109,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "description",
-                    models.TextField(
-                        blank=True, help_text="Описание тэга", verbose_name="Описание"
-                    ),
+                    models.TextField(blank=True, help_text="Описание тэга", verbose_name="Описание"),
                 ),
             ],
             options={
@@ -134,9 +132,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "image",
-                    models.ImageField(
-                        upload_to="gallery/photos/", verbose_name="Изображение"
-                    ),
+                    models.ImageField(upload_to="gallery/photos/", verbose_name="Изображение"),
                 ),
                 (
                     "name",

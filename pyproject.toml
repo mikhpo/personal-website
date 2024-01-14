@@ -35,18 +35,28 @@ pytest = "^7.4.3"
 pytest-subtests = "^0.11.0"
 pytest-django = "^4.6.0"
 pytest-cov = "^4.1.0"
+pyclean = "^2.7.6"
+pre-commit = "^3.6.0"
+ruff = "^0.1.13"
+
+[tool.black]
+line-length = 120
 
 [tool.isort]
-profile = "django"
+line_length = 120
+profile = "black"
 src_paths = ["personal_website"]
+
+[tool.ruff]
+line-length = 120
 
 [tool.djlint]
 ignore="H006,H013"
 
 [tool.pytest.ini_options]
-pythonpath = "personal_website ."
+pythonpath = "personal_website"
 python_files = ["tests.py", "test_*.py", "*_tests.py"]
-DJANGO_SETTINGS_MODULE = "project.settings"
+DJANGO_SETTINGS_MODULE = "personal_website.settings"
 testpaths = "personal_website"
 
 [tool.coverage.run]

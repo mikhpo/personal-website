@@ -12,8 +12,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="photo",
             name="image",
-            field=models.ImageField(
-                max_length=255, upload_to="gallery/photos/", verbose_name="Изображение"
-            ),
+            field=models.ImageField(max_length=255, upload_to="gallery/photos/", verbose_name="Изображение"),
         ),
     ]

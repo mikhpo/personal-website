@@ -19,12 +19,8 @@ class UserPersmissionsTest(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.user = User.objects.create_user(username="user", password="UserPassword")
-        cls.staff = User.objects.create_user(
-            username="staff", is_staff=True, password="StaffUserPassword"
-        )
-        cls.superuser = User.objects.create_superuser(
-            username="superuser", password="SuperUserSecretPassword"
-        )
+        cls.staff = User.objects.create_user(username="staff", is_staff=True, password="StaffUserPassword")
+        cls.superuser = User.objects.create_superuser(username="superuser", password="SuperUserSecretPassword")
 
     def test_header_elements(self):
         """
@@ -48,9 +44,7 @@ class UserPersmissionsTest(TestCase):
         self.assertNotContains(response, "Администрирование")
 
         # Проверить отображение блоков меню навигации для пользователя с правами администратора.
-        self.assertTrue(
-            self.client.login(username="staff", password="StaffUserPassword")
-        )
+        self.assertTrue(self.client.login(username="staff", password="StaffUserPassword"))
         response = self.client.get(self.url)
         self.assertContains(response, f"Вы вошли как {self.staff.username}")
         self.assertContains(response, "Выйти")
@@ -59,9 +53,7 @@ class UserPersmissionsTest(TestCase):
         self.assertNotContains(response, "Регистрация")
 
         # Проверить отобржаение блоков меню навигации для суперпользователя.
-        self.assertTrue(
-            self.client.login(username="superuser", password="SuperUserSecretPassword")
-        )
+        self.assertTrue(self.client.login(username="superuser", password="SuperUserSecretPassword"))
         response = self.client.get(self.url)
         self.assertContains(response, f"Вы вошли как {self.superuser.username}")
         self.assertContains(response, "Выйти")
@@ -86,9 +78,7 @@ class UserManagementRoutesTest(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        User.objects.create_user(
-            username="testuser", password="TestPassword123", email="test@example.com"
-        )
+        User.objects.create_user(username="testuser", password="TestPassword123", email="test@example.com")
 
     def test_login_url(self):
         """
@@ -148,9 +138,7 @@ class UserManagementRoutesTest(TestCase):
         """
 
         # Проверить успешность логина на сайте со старым паролем, после чего выйти с сайта.
-        self.assertTrue(
-            self.client.login(username="testuser", password="TestPassword123")
-        )
+        self.assertTrue(self.client.login(username="testuser", password="TestPassword123"))
         self.client.logout()
 
         # Запросить форму для сброса пароля и ввести адрес электронной почты.
@@ -162,9 +150,7 @@ class UserManagementRoutesTest(TestCase):
         self.assertTemplateUsed(response, "base.html")
         self.assertContains(response, "Адрес электронной почты")
         self.assertContains(response, "Сбросить")
-        response = self.client.post(
-            password_reset_form_url, data={"email": "test@example.com"}
-        )
+        response = self.client.post(password_reset_form_url, data={"email": "test@example.com"})
 
         # Проверить результат: переадресация на следующую страницу, генерация токена и отправка письма.
         self.assertRedirects(
@@ -204,7 +190,5 @@ class UserManagementRoutesTest(TestCase):
         )
 
         # Проверить, что со старым паролем авторизоваться не удается, но с новым паролем авторизоваться удается.
-        self.assertFalse(
-            self.client.login(username="testuser", password="TestPassword123")
-        )
+        self.assertFalse(self.client.login(username="testuser", password="TestPassword123"))
         self.assertTrue(self.client.login(username="testuser", password=new_password))

@@ -5,12 +5,7 @@ from django.utils.timezone import now
 
 from personal_website.utils import get_unique_slug
 
-from .managers import (
-    PublicArticleManager,
-    PublicGategoryManager,
-    PublicSeriesManager,
-    PublicTopicManager,
-)
+from .managers import PublicArticleManager, PublicGategoryManager, PublicSeriesManager, PublicTopicManager
 
 
 class Category(models.Model):
@@ -115,9 +110,7 @@ class Article(models.Model):
     title = models.CharField("Заголовок", max_length=255, unique=True)
     description = models.CharField("Описание", max_length=255, blank=True)
     content = models.TextField("Содержание")
-    published_at = models.DateTimeField(
-        "Дата публикации", blank=True, null=True, default=now
-    )
+    published_at = models.DateTimeField("Дата публикации", blank=True, null=True, default=now)
     modified_at = models.DateTimeField("Дата последнего изменения", auto_now=True)
     slug = models.SlugField("Слаг", blank=True, unique=True)
     series = models.ManyToManyField(Series, blank=True)
@@ -157,9 +150,7 @@ class Comment(models.Model):
     У одной статьи может быть много комментариев.
     """
 
-    article = models.ForeignKey(
-        Article, related_name="comments", on_delete=models.CASCADE
-    )
+    article = models.ForeignKey(Article, related_name="comments", on_delete=models.CASCADE)
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     content = models.TextField()
     posted = models.DateTimeField(auto_now_add=True)
