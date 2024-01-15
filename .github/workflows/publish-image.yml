@@ -19,6 +19,8 @@ on:
 env:
   DOCKER_REPOSITORY: personal-website
   WORK_DIR: /srv/website
+  POSTGRES_VERSION: 15
+  NODE_VERSION: 20
 
 jobs:
   push_image_to_registries:
@@ -65,6 +67,8 @@ jobs:
           file: ./personal_website/Dockerfile
           build-args: |
             - WORK_DIR=${{ env.WORK_DIR }}
+            - POSTGRES_VERSION=${{ env.POSTGRES_VERSION }}
+            - NODE_VERSION=${{ env.NODE_VERSION }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
