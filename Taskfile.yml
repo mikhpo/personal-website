@@ -1,12 +1,32 @@
 version: '3'
 
+dotenv: ['.env']
+
 tasks:
   commit:
     desc: Зафиксировать и отправить изменения в удаленный репозиторий
     summary: |
-      Команда вызывает bash-скрипт для подготовки, выполнения и отправки коммита в удаленный репозиторий git.
+      Команда вызывает Bash-скрипт для подготовки, выполнения и отправки коммита в удаленный репозиторий Git.
       При вызове команды можно передать сообщение для коммита через аргумент командной строки.
-      Пример использования с аргументом: task commit -- "Commit message"
-      Пример использования без аргумента: task commit
+      Пример использования с аргументом: `task commit -- "Commit message"`
+      Пример использования без аргумента: `task commit`
     cmds:
       - bash ./tools/commit.sh {{.CLI_ARGS}}
+
+  runserver:
+    desc: Запустить сервер приложения
+    summary: |
+      Запускает сервер приложения Django. Альтернатива команде `python manage.py runserver`.
+      Интерпретатор Python запускается через Poetry из виртуального окружения проекта.
+      Перед запуском сервера применяются миграции базы данных и собираются статические файлы.
+      Сервер PostgreSQL запускается в контейнере через Docker Compose.
+    preconditions:
+      - test -f compose.yaml
+      - test -f .env
+    env:
+      POSTGRES_HOST: localhost
+    cmds:
+      - docker-compose up -d postgres
+      - poetry run python ./personal_website/manage.py migrate
+      - poetry run python ./personal_website/manage.py collectstatic --noinput
+      - poetry run python ./personal_website/manage.py runserver
