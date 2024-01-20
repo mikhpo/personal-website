@@ -1,6 +1,6 @@
 ---
 name: Отчет о проблеме
-about: Создание отчета о проблеме
+about: Создание стандартного отчета о проблеме
 title: "[BUG]"
 labels: bug
 assignees: mikhpo
