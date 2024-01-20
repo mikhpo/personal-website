@@ -12,7 +12,7 @@ cd "$project_root" || exit
 # Если произошло изменение файлов, то коммит выполняется повторно.
 # Сообщение для коммита запрашивается только один раз.
 git status
-while [[ ! $(git status) == *"nothing to commit"* || ! $(git status) == *"нечего коммитить"* ]]; do
+while [[ ! $(git status) == **"nothing to commit"** || ! $(git status) == **"нечего коммитить"** ]]; do
     git add .
     git status
     if [ -z "$message" ]; then
