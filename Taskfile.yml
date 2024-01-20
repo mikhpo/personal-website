@@ -1,0 +1,7 @@
+version: '3'
+
+tasks:
+  commit:
+    desc: Зафиксировать и отправить изменения в удаленный репозиторий
+    cmds:
+      - bash ./tools/commit.sh
