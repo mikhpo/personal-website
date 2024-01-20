@@ -1,7 +1,7 @@
 ---
 name: Запрос на функцию
 about: Предолжить идею для доработки
-title: FEATURE
+title: "[FEATURE]"
 labels: enhancement
 assignees: mikhpo
 

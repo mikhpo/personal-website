@@ -1,7 +1,8 @@
 ---
 name: Общая задача
 about: Создание стандартной задачи общего характера
-
+title:
+labels:
 assignees: mikhpo
 
 ---
