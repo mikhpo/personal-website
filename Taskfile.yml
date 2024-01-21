@@ -29,4 +29,22 @@ tasks:
       - docker-compose up -d postgres
       - poetry run python ./personal_website/manage.py migrate
       - poetry run python ./personal_website/manage.py collectstatic --noinput
-      - poetry run python ./personal_website/manage.py runserver
+
+  test:
+    desc: Выполнить тесты
+    summary: |
+      Команда выполянет интеграционные тесты через Pytest и вызывает Bash-срипт,
+      который выполняет тесты проекта Python/Django через Pytest с формированием отчета Coverage в формате HTML
+      и тесты вспомогательных модулей Node.js. Интерпретатор Python запускается через Poetry из
+      виртуального окружения проекта. Сервер базы данных PostgreSQL и веб-сервер
+      Nginx запускаются в контейнере через Docker Compose.
+    preconditions:
+      - test -f compose.yaml
+      - test -f .env
+    env:
+      POSTGRES_HOST: localhost
+      NGINX_HOST: localhost
+    cmds:
+      - docker-compose up -d postgres nginx
+      - poetry run pytest ./tests
+      - bash ./personal_website/scripts/runtests.sh
