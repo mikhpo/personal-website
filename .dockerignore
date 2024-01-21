@@ -3,6 +3,7 @@ __pycache__
 .venv
 .vscode
 .git
+.github
 backups
 docs
 htmlcov
@@ -18,3 +19,4 @@ storage
 .ruff_cache
 nginx/conf.d
 tools/server
+Taskfile.yml
