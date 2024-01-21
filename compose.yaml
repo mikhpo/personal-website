@@ -27,7 +27,7 @@ services:
       - ${STATIC_ROOT}:/srv/website/static:rw
       - ${BACKUP_ROOT}:/srv/website/backups:rw
       - ${LOGS_ROOT}:/srv/website/logs:rw
-      - ${TEMP_ROOT}=/srv/website/temp:rw
+      - ${TEMP_ROOT}:/srv/website/temp:rw
     depends_on:
       - postgres
     restart: always

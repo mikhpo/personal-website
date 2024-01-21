@@ -1,0 +1,116 @@
+version: '3'
+
+dotenv: ['.env']
+
+tasks:
+  commit:
+    desc: Зафиксировать и отправить изменения в удаленный репозиторий
+    summary: |
+      Команда вызывает Bash-скрипт для подготовки, выполнения и отправки коммита в удаленный репозиторий Git.
+      При вызове команды можно передать сообщение для коммита через аргумент командной строки.
+      Пример использования с аргументом: `task commit -- "Commit message"`
+      Пример использования без аргумента: `task commit`
+    cmds:
+      - bash ./tools/commit.sh {{.CLI_ARGS}}
+
+  runserver:
+    desc: Запустить сервер приложения
+    summary: |
+      Запускает сервер приложения Django. Альтернатива команде `python manage.py runserver`.
+      Интерпретатор Python запускается через Poetry из виртуального окружения проекта.
+      Перед запуском сервера применяются миграции базы данных и собираются статические файлы.
+      Сервер PostgreSQL запускается в контейнере через Docker Compose.
+    preconditions:
+      - test -f compose.yaml
+      - test -f .env
+    env:
+      POSTGRES_HOST: localhost
+    cmds:
+      - docker-compose up -d postgres
+      - poetry run python ./personal_website/manage.py migrate
+      - poetry run python ./personal_website/manage.py collectstatic --noinput
+
+  test:
+    desc: Выполнить тесты
+    summary: |
+      Команда выполянет интеграционные тесты через Pytest и вызывает Bash-срипт,
+      который выполняет тесты проекта Python/Django через Pytest с формированием отчета Coverage в формате HTML
+      и тесты вспомогательных модулей Node.js. Интерпретатор Python запускается через Poetry из
+      виртуального окружения проекта. Сервер базы данных PostgreSQL и веб-сервер
+      Nginx запускаются в контейнере через Docker Compose.
+    preconditions:
+      - test -f compose.yaml
+      - test -f .env
+    env:
+      POSTGRES_HOST: localhost
+      NGINX_HOST: localhost
+    cmds:
+      - docker-compose up -d postgres nginx
+      - poetry run pytest ./tests
+      - bash ./personal_website/scripts/runtests.sh
+
+  install:
+    desc: Установить зависимости Python и Node.js
+    summary: |
+      Выполняет установку зависимостей Python при помощи Poetry и зависимостей Node.js при помощи npm.
+      Списки зависимостей считываются из файлов pyproject.toml и package.json.
+    preconditions:
+      - test -f pyproject.toml
+      - test -f package.json
+    cmds:
+      - poetry install
+      - npm install
+
+  build:
+    desc: Выполнить сборку образов контейнеров
+    summary: |
+      Выполняет сборку контейнеров Docker для сервисов приложения и Nginx, определенных в файле compose.yaml.
+      Инструкции по сборке образов определены в файлах Dockerfile для каждого сервиса.
+    preconditions:
+      - test -f compose.yaml
+      - test -f .env
+    cmds:
+      - docker-compose build
+
+  up:
+    desc: Запустить контейнеры в фоновом режиме
+    summary: |
+      Запускает контейнеры Docker сервисов, определенных в файле Compose, в фоновом режиме (detached).
+    preconditions:
+      - test -f compose.yaml
+      - test -f .env
+    cmds:
+      - docker-compose up -d website postgres
+      - docker-compose ps
+
+  restart:
+    desc: Перезапускает контейнеры сервисов
+    summary: |
+      Пересоздает и перезапускает контейнеры Docker сервисов, определенных в файле Compose,
+      в фоновом режиме (detached). Полезно в случае изменений переменных окружения.
+    preconditions:
+      - test -f compose.yaml
+      - test -f .env
+    cmds:
+      - docker-compose up --detach --force-recreate
+      - docker-compose ps
+
+  watch:
+    desc: Запустить контейнеры в фоновом режиме и отслеживать изменения кода
+    summary: |
+      Запускает контейнеры Docker в фоновом режиме и пересоздает контейнеры в случае изменений при помощи Compose Watch.
+    preconditions:
+      - test -f compose.yaml
+      - test -f .env
+    cmds:
+      - docker-compose up -d
+      - docker-compose watch
+
+  down:
+    desc: Остановить контейнеры и удалить остановленные контейнеры, тома и сети
+    summary: |
+      Аналог команды `docker-compose down`: останавливает запущенные контейнеры, удаляет контейнеры, тома и сети.
+    preconditions:
+      - test -f compose.yaml
+    cmds:
+      - docker-compose down --remove-orphans --volumes
