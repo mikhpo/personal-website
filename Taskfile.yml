@@ -48,3 +48,14 @@ tasks:
       - docker-compose up -d postgres nginx
       - poetry run pytest ./tests
       - bash ./personal_website/scripts/runtests.sh
+
+  build:
+    desc: Выполнить сборку образов контейнеров
+    summary: |
+      Выполняет сборку контейнеров Docker для сервисов приложения и nginx, определенных в файле compose.yaml.
+      Инструкции по сборке образов определены в файлах Dockerfile для каждого сервиса.
+    preconditions:
+      - test -f compose.yaml
+      - test -f .env
+    cmds:
+      - docker-compose build
