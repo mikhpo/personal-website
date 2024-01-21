@@ -80,7 +80,19 @@ tasks:
       - test -f compose.yaml
       - test -f .env
     cmds:
-      - docker-compose up -d
+      - docker-compose up -d website postgres
+      - docker-compose ps
+
+  restart:
+    desc: Перезапускает контейнеры сервисов
+    summary: |
+      Пересоздает и перезапускает контейнеры Docker сервисов, определенных в файле Compose,
+      в фоновом режиме (detached). Полезно в случае изменений переменных окружения.
+    preconditions:
+      - test -f compose.yaml
+      - test -f .env
+    cmds:
+      - docker-compose up --detach --force-recreate
       - docker-compose ps
 
   watch:
