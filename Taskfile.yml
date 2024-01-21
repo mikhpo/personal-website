@@ -52,10 +52,21 @@ tasks:
   build:
     desc: Выполнить сборку образов контейнеров
     summary: |
-      Выполняет сборку контейнеров Docker для сервисов приложения и nginx, определенных в файле compose.yaml.
+      Выполняет сборку контейнеров Docker для сервисов приложения и Nginx, определенных в файле compose.yaml.
       Инструкции по сборке образов определены в файлах Dockerfile для каждого сервиса.
     preconditions:
       - test -f compose.yaml
       - test -f .env
     cmds:
       - docker-compose build
+
+  watch:
+    desc: Запустить контейнеры в фоновом режиме и отслеживать изменения кода
+    summary: |
+      Запускает контейнеры Docker в фоновом режиме и пересоздает контейнеры в случае изменений при помощи Compose Watch.
+    preconditions:
+      - test -f compose.yaml
+      - test -f .env
+    cmds:
+      - docker-compose up -d
+      - docker-compose watch
