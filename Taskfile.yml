@@ -72,6 +72,17 @@ tasks:
     cmds:
       - docker-compose build
 
+  up:
+    desc: Запустить контейнеры в фоновом режиме
+    summary: |
+      Запускает контейнеры Docker сервисов, определенных в файле Compose, в фоновом режиме (detached).
+    preconditions:
+      - test -f compose.yaml
+      - test -f .env
+    cmds:
+      - docker-compose up -d
+      - docker-compose ps
+
   watch:
     desc: Запустить контейнеры в фоновом режиме и отслеживать изменения кода
     summary: |
