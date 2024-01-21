@@ -7,17 +7,15 @@ from dotenv import load_dotenv
 
 
 class TestNginx(unittest.TestCase):
-    """
-    Интеграционные тесты nginx.
-    """
+    """Интеграционные тесты Nginx."""
 
     @classmethod
     def setUpClass(cls) -> None:
-        super().setUpClass()
         load_dotenv()
         cls.host = os.getenv("NGINX_HOST")
         cls.port = os.getenv("NGINX_PORT")
         cls.url = "http://%s:%s" % (cls.host, cls.port)
+        return super().setUpClass()
 
     def test_root_response(self):
         """
@@ -34,9 +32,7 @@ class TestNginx(unittest.TestCase):
         self.assertIn("bootstrap", text.lower())
 
     def test_robots_txt(self):
-        """
-        Тест получения файла с параметрами индексирования для поисковых систем.
-        """
+        """Тест получения файла с параметрами индексирования для поисковых систем."""
         robots_txt_url = f"{self.url}/robots.txt"
         response = requests.get(robots_txt_url)
         status = response.status_code
@@ -45,9 +41,7 @@ class TestNginx(unittest.TestCase):
         self.assertIn("User-Agent", text)
 
     def test_favicon_ico(self):
-        """
-        Тест получения фавикона.
-        """
+        """Тест получения фавикона."""
         favicon_ico_url = f"{self.url}/favicon.ico"
         response = requests.get(favicon_ico_url)
         status = response.status_code

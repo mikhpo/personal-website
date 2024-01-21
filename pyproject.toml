@@ -25,6 +25,7 @@ faker = "^20.1.0"
 faker-file = "^0.17.11"
 model-bakery = "^1.17.0"
 requests = "^2.31.0"
+minio = "^7.2.3"
 
 [tool.poetry.group.dev.dependencies]
 coverage = "^7.3.2"
