@@ -54,6 +54,9 @@ tasks:
     summary: |
       Выполняет установку зависимостей Python при помощи Poetry и зависимостей Node.js при помощи npm.
       Списки зависимостей считываются из файлов pyproject.toml и package.json.
+    preconditions:
+      - test -f pyproject.toml
+      - test -f package.json
     cmds:
       - poetry install
       - npm install
@@ -79,3 +82,12 @@ tasks:
     cmds:
       - docker-compose up -d
       - docker-compose watch
+
+  down:
+    desc: Остановить контейнеры и удалить остановленные контейнеры, тома и сети
+    summary: |
+      Аналог команды `docker-compose down`: останавливает запущенные контейнеры, удаляет контейнеры, тома и сети.
+    preconditions:
+      - test -f compose.yaml
+    cmds:
+      - docker-compose down --remove-orphans --volumes
