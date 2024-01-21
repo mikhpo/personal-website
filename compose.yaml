@@ -6,10 +6,6 @@ services:
     build:
       context: .
       dockerfile: ./personal_website/Dockerfile
-      args:
-        - WORK_DIR=/srv/website
-        - POSTGRES_VERSION=${POSTGRES_VERSION}
-        - NODE_VERSION=${NODE_VERSION}
       tags:
         - mikhpo/personal-website:latest
         - ghcr.io/mikhpo/personal-website:latest
@@ -38,7 +34,7 @@ services:
 
   # Кластер PostgreSQL для веб-сайта. База данных создается автоматически.
   postgres:
-    image: postgres:${POSTGRES_VERSION}
+    image: postgres:15
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
