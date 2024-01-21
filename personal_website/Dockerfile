@@ -3,13 +3,9 @@
 # Определение базового образа.
 FROM debian
 
-ARG WORK_DIR
-ARG POSTGRES_VERSION
-ARG NODE_VERSION
-
 # Обновление и установка общих системных пакетов.
 # Версия утилит PostgreSQL должна совпадать с версией кластера.
-ENV POSTGRES_VERSION=$POSTGRES_VERSION
+ENV POSTGRES_VERSION=15
 RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install -y \
@@ -32,7 +28,7 @@ ENV PATH="/root/.local/bin:$PATH"
 
 # Установить пакеты для подключения к репозиторию NodeSource,
 # после чего установить из репозитория заданную версию Node.js.
-ENV NODE_VERSION=$NODE_VERSION
+ENV NODE_VERSION=20
 RUN mkdir -p /etc/apt/keyrings && \
     curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg && \
     echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_${NODE_VERSION}.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list && \
@@ -45,7 +41,7 @@ RUN rm -rf /var/lib/apt/lists/* && \
 ENV LANG=ru_RU.utf8
 
 # Создать каталог для проекта и перейти в него.
-ENV WORK_DIR=$WORK_DIR
+ENV WORK_DIR=/srv/website
 WORKDIR $WORK_DIR
 
 # Установить зависимости Node.js через npm.

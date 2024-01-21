@@ -12,8 +12,10 @@ readonly config_dir="$project_root/tools/server/config"
 readonly dotenv="$project_root/.env"
 cd "$project_root" || exit
 
-# Название проекта для конфигурации Nginx.
+# Определение параметров установки.
 readonly WEBSITE_NAME="personal-website"
+readonly POSTGRES_VERSION=15
+readonly NODE_VERSION=20
 
 #######################################
 # Запросить подтверждение готовности
