@@ -49,6 +49,15 @@ tasks:
       - poetry run pytest ./tests
       - bash ./personal_website/scripts/runtests.sh
 
+  install:
+    desc: Установить зависимости Python и Node.js
+    summary: |
+      Выполняет установку зависимостей Python при помощи Poetry и зависимостей Node.js при помощи npm.
+      Списки зависимостей считываются из файлов pyproject.toml и package.json.
+    cmds:
+      - poetry install
+      - npm install
+
   build:
     desc: Выполнить сборку образов контейнеров
     summary: |
