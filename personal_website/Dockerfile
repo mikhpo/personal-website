@@ -41,7 +41,7 @@ RUN rm -rf /var/lib/apt/lists/* && \
     localedef -i ru_RU -c -f UTF-8 -A /usr/share/locale/locale.alias ru_RU.UTF-8
 ENV LANG=ru_RU.utf8
 
-# Установить MinIO.
+# Установить клиент MinIO.
 RUN wget https://dl.min.io/client/mc/release/linux-amd64/mc && \
     chmod +x mc && \
     mv mc /usr/local/bin/mc
