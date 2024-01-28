@@ -33,7 +33,7 @@ fi
 # Массив задач на добавление.
 cron_jobs=(
     "0 23 * * * $bash $scripts/pgbackup.sh >> $logs/pgbackup.log 2>&1"
-    "1 23 * * * $bash $scripts/storagesync.sh >> $logs/storagesync.log 2>&1"
+    "1 23 * * * $bash $scripts/s3backup.sh >> $logs/s3backup.log 2>&1"
 )
 
 # Получение содержимого текущего crontab файла.
