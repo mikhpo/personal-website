@@ -19,6 +19,7 @@ RUN apt-get update && \
     python3 \
     python3-pip \
     pipx \
+    wget \
     wkhtmltopdf
 
 # Установить Poetry через pipx и обновить переменную PATH.
@@ -39,6 +40,11 @@ RUN mkdir -p /etc/apt/keyrings && \
 RUN rm -rf /var/lib/apt/lists/* && \
     localedef -i ru_RU -c -f UTF-8 -A /usr/share/locale/locale.alias ru_RU.UTF-8
 ENV LANG=ru_RU.utf8
+
+# Установить клиент MinIO.
+RUN wget https://dl.min.io/client/mc/release/linux-amd64/mc && \
+    chmod +x mc && \
+    mv mc /usr/local/bin/mc
 
 # Создать каталог для проекта и перейти в него.
 ENV WORK_DIR=/srv/website

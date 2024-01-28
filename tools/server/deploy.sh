@@ -87,6 +87,15 @@ function install_node() {
 }
 
 #######################################
+# Установить клиент MinIO.
+#######################################
+function install_minio() {
+    wget https://dl.min.io/client/mc/release/linux-amd64/mc && \
+    sudo chmod +x mc && \
+    sudo mv mc /usr/local/bin/mc
+}
+
+#######################################
 # Настроить системную локаль.
 #######################################
 function setup_locale() {
@@ -184,6 +193,7 @@ function main() {
     install_packages
     install_poetry
     install_node
+    install_minio
     setup_gunicorn
     setup_nginx
     setup_certbot

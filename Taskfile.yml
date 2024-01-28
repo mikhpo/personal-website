@@ -29,6 +29,7 @@ tasks:
       - docker-compose up -d postgres
       - poetry run python ./personal_website/manage.py migrate
       - poetry run python ./personal_website/manage.py collectstatic --noinput
+      - poetry run python ./personal_website/manage.py runserver
 
   test:
     desc: Выполнить тесты
@@ -44,10 +45,31 @@ tasks:
     env:
       POSTGRES_HOST: localhost
       NGINX_HOST: localhost
+      MINIO_SERVER_URL: http://127.0.0.1:9000
+      MINIO_BROWSER_REDIRECT_URL: http://127.0.0.1:9001
     cmds:
-      - docker-compose up -d postgres nginx
+      - docker-compose up -d postgres nginx minio
       - poetry run pytest ./tests
       - bash ./personal_website/scripts/runtests.sh
+
+  test-integration:
+    desc: Выполнить интеграционные тесты
+    summary: |
+      Команда выполняет только интеграционные тесты из папки tests в корневом каталоге
+      проекта через Pytest. Интерпретатор Python запускается через Poetry из виртуального
+      окружения проекта. Сервисы поднимаются в контейнерах Docker через Compose.
+    preconditions:
+      - test -f compose.yaml
+      - test -f .env
+    env:
+      POSTGRES_HOST: localhost
+      NGINX_HOST: localhost
+      MINIO_SERVER_URL: http://127.0.0.1:9000
+      MINIO_BROWSER_REDIRECT_URL: http://127.0.0.1:9001
+    cmds:
+      - docker-compose up -d postgres nginx minio
+      - poetry run pytest ./tests -s
+
 
   install:
     desc: Установить зависимости Python и Node.js
@@ -80,7 +102,7 @@ tasks:
       - test -f compose.yaml
       - test -f .env
     cmds:
-      - docker-compose up -d website postgres
+      - docker-compose up -d website postgres minio
       - docker-compose ps
 
   restart:
@@ -114,3 +136,15 @@ tasks:
       - test -f compose.yaml
     cmds:
       - docker-compose down --remove-orphans --volumes
+
+  minio-alias:
+    desc: Создать алиас для сервера MinIO
+    summary: |
+      Создает алиас сервера S3 для клиента MinIO (mc). Значения считываются из переменных окружения.
+    preconditions:
+      - test -f compose.yaml
+      - test -f .env
+    cmds:
+      - docker-compose up -d minio
+      - mc alias set ${MINIO_ALIAS} ${MINIO_SERVER_URL} ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD}
+      - mc admin info ${MINIO_ALIAS}

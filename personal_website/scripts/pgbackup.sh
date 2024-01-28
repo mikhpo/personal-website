@@ -18,11 +18,12 @@ if [ -f "$dotenv" ]; then
     echo "Переменные окружения загружены из файла $dotenv"
 fi
 
-# Определить полный путь дампа, состоящий из имени базы данных и текущей даты.
-readonly dump_dir=$BACKUP_ROOT/postgres/$POSTGRES_NAME
-readonly dump_path=$dump_dir/${POSTGRES_NAME}_${today}.dump
+# Определить имя и полный путь дампа, состоящий из имени базы данных и текущей даты.
+readonly dump_name="${POSTGRES_NAME}_${today}.dump"
+readonly dump_dir="database/$POSTGRES_NAME"
+readonly dump_path="$BACKUP_ROOT/$dump_dir/$dump_name"
 echo "Дамп базы данных будет сохранен по адресу $dump_path"
-mkdir -p "$dump_dir"
+mkdir -p "$BACKUP_ROOT/$dump_dir"
 
 # Если сегодня дамп уже создавался, то его следует удалить.
 if [ -f "$dump_path" ]; then
@@ -47,3 +48,21 @@ fi
 # Вывести размер дампа в человекочитаемой форме и без лишних пробелов.
 filesize=$(du -h "$dump_path" | cut -f 1 | tr -d ' ')
 echo "Размер дампа: $filesize"
+
+# Создать бакет в S3, если не существует.
+readonly S3_BUCKET="$MINIO_ALIAS/$BACKUP_BUCKET"
+mc mb --ignore-existing "$S3_BUCKET"
+
+# Скопировать файл дампа из локальной файловой системы в бакет S3.
+# Созданный ранее объект с тем же именем удаляется.
+readonly object_name="$dump_dir/$dump_name"
+readonly target_path="$S3_BUCKET/$object_name"
+if [[ $(mc ls "$target_path") ]]; then
+    mc rm "$target_path"
+fi
+mc cp "$dump_path" "$target_path"
+echo "Создан объект в S3 с именем $object_name"
+
+# Удалить локальный файл дампа.
+rm "$dump_path"
+echo "Удален локальный файл $dump_path"

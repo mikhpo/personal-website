@@ -57,6 +57,7 @@ function install_packages() {
 # - HTTPS
 # - rsync
 # - PostgreSQL
+# - MinIO
 #######################################
 function enable_ufw() {
     sudo ufw enable
@@ -65,6 +66,8 @@ function enable_ufw() {
     sudo ufw allow 443
     sudo ufw allow 873
     sudo ufw allow 5432
+    sudo ufw allow 9000
+    sudo ufw allow 9001
     sudo ufw status
 }
 

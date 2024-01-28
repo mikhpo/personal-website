@@ -8,6 +8,10 @@ set -e
 project_root="$(dirname "$(dirname "$(dirname "$(readlink -fm "$0")")")")"
 cd "$project_root" || exit
 
+# Создать резервную копию базы данных и загруженных файлов.
+bash "$project_root"/personal_website/scripts/pgbackup.sh
+bash "$project_root"/personal_website/scripts/pgrestore.sh
+
 # Вытянуть изменения основной ветки
 git fetch origin
 git checkout main
@@ -19,7 +23,6 @@ git pull
 docker-compose pull
 docker-compose up \
     --detach \
-    --build \
     --force-recreate \
     --remove-orphans
 docker-compose ps
