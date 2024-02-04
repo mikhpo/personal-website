@@ -4,12 +4,17 @@
   "description": "JavaScript dependencies for my personal website",
   "main": "index.js",
   "scripts": {
-    "test": "node --test personal_website/js_tests"
+    "test": "node --test personal_website/tests"
   },
   "author": "Mikhail Polyakov",
   "license": "ISC",
   "dependencies": {
     "bootstrap": "^5.3.2",
     "bootstrap-icons": "^1.11.1"
+  },
+  "devDependencies": {
+    "eslint": "^8.56.0",
+    "eslint-config-google": "^0.14.0",
+    "eslint-config-prettier": "^9.1.0"
   }
 }

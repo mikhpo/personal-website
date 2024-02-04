@@ -1,9 +1,10 @@
+"""Маршруты системы авторизации пользователей."""
 from django.urls import path
 
-from . import views
+from accounts.views import signup
 
 app_name = "accounts"
 
 urlpatterns = [
-    path("signup/", views.signup, name="signup"),
+    path("signup/", signup, name="signup"),
 ]

@@ -1,4 +1,6 @@
+"""Тесты форм галереи."""
 import os
+from pathlib import Path
 
 from django.test import TestCase
 
@@ -6,39 +8,35 @@ from gallery.forms import AlbumForm
 from gallery.models import Album, Photo
 from personal_website.utils import list_file_paths
 
+TEMP_DIR = os.getenv("TEMP_ROOT")
+
 
 class GalleryFormsTest(TestCase):
-    """
-    Тестирование форм приложения галереи.
-    """
+    """Тестирование форм приложения галереи."""
 
-    def test_no_cover_photos_for_new_album(self):
+    def test_no_cover_photos_for_new_album(self) -> None:
         """
-        Проверяет, что при создании нового альбома для выбора фотографии на обложку не доступно ни одной фотографии.
+        Проверяет, что при создании нового альбома для выбора
+        фотографии на обложку не доступно ни одной фотографии.
         """
         form = AlbumForm()
         self.assertEqual(form.instance.pk, None)
         self.assertQuerySetEqual(form.fields["cover"].queryset, Photo.objects.none())
 
-    def test_album_default_is_public(self):
-        """
-        Проверяет, что по умолчанию альбом создается публичным.
-        """
+    def test_album_default_is_public(self) -> None:
+        """Проверяет, что по умолчанию альбом создается публичным."""
         form = AlbumForm()
         public = form.fields["public"].initial
         self.assertEqual(public, True)
 
-    def test_cover_photos_from_album(self):
-        """
-        Проверяет, что для выбора обложки альбома доступны фотографии только из этого альбома.
-        """
+    def test_cover_photos_from_album(self) -> None:
+        """Проверяет, что для выбора обложки альбома доступны фотографии только из этого альбома."""
         # Создать альбом для размещения тосканских фотографий.
         tuscany_album = Album.objects.create(name="Тоскана")
         langtang_album = Album.objects.create(name="Лангтанг")
 
         # Создать фотографии в базе данных, загрузив их с диска.
-        TEMP_DIR = os.getenv("TEMP_ROOT")
-        test_images_dir = os.path.join(TEMP_DIR, "gallery", "photos")
+        test_images_dir = Path(TEMP_DIR) / "gallery" / "photos"
         images = list_file_paths(test_images_dir)
         for image in images:
             if "Tuscany" in image:
@@ -63,4 +61,4 @@ class GalleryFormsTest(TestCase):
             self.assertNotIn(langtang_photo, cover_choices)
 
         # Убедиться, что список фотографий для выбора соответствует полному списку фотографий из Тосканы.
-        self.assertQuerySetEqual(cover_choices, tuscany_photos)
+        self.assertQuerySetEqual(cover_choices, tuscany_photos, ordered=False)

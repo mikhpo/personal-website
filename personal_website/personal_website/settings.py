@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 
 from personal_website.utils import NoColorLogFormatter, str_to_bool
 
-# Прочитать переменные окружения из .os.getenv файла.
+# Прочитать переменные окружения из .env файла.
 load_dotenv()
 
 # Определяется абсолютный путь до текущих директорий для того,
@@ -31,7 +31,7 @@ DOMAIN_NAME = os.getenv("DOMAIN_NAME")
 # Список адресов, которые будет обслуживать Django проект.
 # Если не добавлять адрес в этот список, то запросы по данному адресу обрабатываться не будут.
 ALLOWED_HOSTS = [
-    "0.0.0.0",
+    "0.0.0.0",  # noqa: S104
     "127.0.0.1",
     "localhost",
     DOMAIN_NAME,
@@ -102,7 +102,8 @@ AUTH_PASSWORD_VALIDATORS = [
 
 SITE_ID = 1
 
-# Устанавливается язык проекта. В Django встроена русская локализация, которая дает перевод панели администрирования, стандартных форм и рассылки писем.
+# Устанавливается язык проекта. В Django встроена русская локализация,
+# которая дает перевод панели администрирования, стандартных форм и рассылки писем.
 LANGUAGE_CODE = "ru"
 
 # Устанавливается временная зона.
@@ -168,12 +169,12 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("POSTGRES_NAME"),
+        "NAME": os.getenv("POSTGRES_DB"),
         "USER": os.getenv("POSTGRES_USER"),
         "PASSWORD": os.getenv("POSTGRES_PASSWORD"),
         "HOST": os.getenv("POSTGRES_HOST"),
         "PORT": os.getenv("POSTGRES_PORT"),
-    }
+    },
 }
 
 # Настройки используемого шаблонизатора. Здесь также указан относительный путь до папки с шаблонами проекта.
@@ -181,7 +182,7 @@ TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
         "DIRS": [
-            os.path.join(BASE_DIR, "templates"),
+            Path(BASE_DIR) / "templates",
         ],
         "APP_DIRS": True,
         "OPTIONS": {
@@ -249,7 +250,7 @@ TINYMCE_DEFAULT_CONFIG = {
 Настройки логирования.
 """
 LOGS_ROOT = os.getenv("LOGS_ROOT")  # общая папка для сохранения логов
-LOG_DIR = os.path.join(LOGS_ROOT, PROJECT_NAME)
+LOG_DIR = Path(LOGS_ROOT) / PROJECT_NAME
 
 # Cоздать директорию для логов, если не существует.
 Path(LOG_DIR).mkdir(parents=True, exist_ok=True)
@@ -306,7 +307,7 @@ LOGGING = {
         PROJECT_NAME: {
             "level": "INFO",
             "class": "logging.handlers.TimedRotatingFileHandler",
-            "filename": os.path.join(LOG_DIR, f"{PROJECT_NAME}.log"),
+            "filename": LOG_DIR / f"{PROJECT_NAME}.log",
             "formatter": "simple",
             "when": "midnight",
             "backupCount": 7,

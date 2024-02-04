@@ -197,6 +197,12 @@ Poetry сконфигурирован таким образом, чтобы ви
 
     docker compose exec website poetry run pytest
 
+## Статический анализ
+
+Проект применяет Ruff для статического анализа кода Python и ESLint для статического анализа кода JavaScript. Для конфигурации Ruff используется [pyproject.toml](../pyproject.toml), для конфигурации ESLint - [.eslintrc.json](../.eslintrc.json). Проверки Ruff включены в CI/CD пайплайн. Для вызова проверок Ruff вручную можно использовать команду:
+
+    ruff check --fix
+
 ## Контейнеризация
 
 Проект использует Docker и Compose для контейнеризации. Настройки сборки приложения определены в [Dockerfile](../personal_website/Dockerfile), а в файле [compose.yaml](../compose.yaml) определены параметры запуска сервисов в контейнерах. Docker Compose поднимает следующие сервисы:

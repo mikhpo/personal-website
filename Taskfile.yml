@@ -34,23 +34,40 @@ tasks:
   test:
     desc: Выполнить тесты
     summary: |
-      Команда выполянет интеграционные тесты через Pytest и вызывает Bash-срипт,
-      который выполняет тесты проекта Python/Django через Pytest с формированием отчета Coverage в формате HTML
-      и тесты вспомогательных модулей Node.js. Интерпретатор Python запускается через Poetry из
-      виртуального окружения проекта. Сервер базы данных PostgreSQL и веб-сервер
-      Nginx запускаются в контейнере через Docker Compose.
+      Команда выполянет тесты проекта Python/Django через Pytest с формированием отчета Coverage в формате HTML
+      и тесты вспомогательных модулей Node.js. Интерпретатор Python запускается через Poetry из виртуального
+      окружения проекта. Сервер базы данных PostgreSQL запускается в контейнере через Docker Compose.
     preconditions:
       - test -f compose.yaml
+      - test -f pyproject.toml
       - test -f .env
     env:
       POSTGRES_HOST: localhost
-      NGINX_HOST: localhost
       MINIO_SERVER_URL: http://127.0.0.1:9000
       MINIO_BROWSER_REDIRECT_URL: http://127.0.0.1:9001
     cmds:
-      - docker-compose up -d postgres nginx minio
-      - poetry run pytest ./tests
-      - bash ./personal_website/scripts/runtests.sh
+      - defer: docker-compose down
+      - docker-compose up -d postgres
+      - npm test
+      - poetry run coverage run -m pytest {{.CLI_ARGS}}
+      - poetry run coverage html
+
+  test-container:
+    desc: Выполнить тесты в контейнере
+    summary: |
+      Команда выполняет в контейнере тесты проекта Python/Django через Pytest и тесты вспомогательных модулей Node.js.
+      Сервер базы данных PostgreSQL запускается в контейнере через Docker Compose.
+    preconditions:
+      - test -f compose.yaml
+      - test -f pyproject.toml
+      - test -f .env
+    env:
+      POSTGRES_HOST: postgres
+    cmds:
+      - defer: docker-compose down
+      - docker-compose up -d website postgres
+      - docker-compose exec website npm test
+      - docker-compose exec website poetry run pytest {{.CLI_ARGS}}
 
   test-integration:
     desc: Выполнить интеграционные тесты
@@ -60,16 +77,26 @@ tasks:
       окружения проекта. Сервисы поднимаются в контейнерах Docker через Compose.
     preconditions:
       - test -f compose.yaml
+      - test -f pyproject.toml
       - test -f .env
     env:
-      POSTGRES_HOST: localhost
-      NGINX_HOST: localhost
+      POSTGRES_HOST: postgres
       MINIO_SERVER_URL: http://127.0.0.1:9000
       MINIO_BROWSER_REDIRECT_URL: http://127.0.0.1:9001
     cmds:
+      - defer: docker-compose down
       - docker-compose up -d postgres nginx minio
-      - poetry run pytest ./tests -s
+      - poetry run pytest ./tests {{.CLI_ARGS}}
 
+
+  check:
+    desc: Выполнить статический анализ кода и проверки Django
+    summary: Команда запускает проверки Ruff
+    preconditions:
+      - test -f pyproject.toml
+    cmds:
+      - poetry run ruff check --fix
+      - poetry run python personal_website/manage.py check
 
   install:
     desc: Установить зависимости Python и Node.js
@@ -82,6 +109,19 @@ tasks:
     cmds:
       - poetry install
       - npm install
+
+  update:
+    desc: Обновить версии зависимостей Python и Node.js
+    summary: |
+      Обновляет до последних допустимых версий пакеты Python
+      при помощи плагина poetry-plugin-up и
+      зависимости Node.js при помощи npm.
+    preconditions:
+        - test -f pyproject.toml
+        - test -f package.json
+    cmds:
+      - poetry up --latest
+      - npm update
 
   build:
     desc: Выполнить сборку образов контейнеров

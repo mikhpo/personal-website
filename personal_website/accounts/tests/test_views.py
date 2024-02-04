@@ -1,3 +1,4 @@
+"""Тесты представлений системы авторизации пользователей."""
 from http import HTTPStatus
 
 from django.contrib.auth.models import User
@@ -10,22 +11,19 @@ from accounts.views import signup
 
 
 class UserPersmissionsTest(TestCase):
-    """
-    Проверка полномочий пользователя.
-    """
+    """Проверка полномочий пользователя."""
 
     url = "/main/"
 
     @classmethod
-    def setUpTestData(cls):
+    def setUpTestData(cls) -> None:
+        """Подготовка тестовых данных."""
         cls.user = User.objects.create_user(username="user", password="UserPassword")
         cls.staff = User.objects.create_user(username="staff", is_staff=True, password="StaffUserPassword")
         cls.superuser = User.objects.create_superuser(username="superuser", password="SuperUserSecretPassword")
 
-    def test_header_elements(self):
-        """
-        Проверка информации и ссылок, отображаемых в меню навигации в зависимости от статуса пользователя.
-        """
+    def test_header_elements(self) -> None:
+        """Проверка информации и ссылок, отображаемых в меню навигации в зависимости от статуса пользователя."""
         # Проверить отображение блоков меню навигации для неавторизованного пользователя.
         response = self.client.get(self.url)
         self.assertNotContains(response, "Администрирование")
@@ -72,18 +70,15 @@ class UserPersmissionsTest(TestCase):
 
 
 class UserManagementRoutesTest(TestCase):
-    """
-    Тестирование ссылок системы авторизации.
-    """
+    """Тестирование ссылок системы авторизации."""
 
     @classmethod
-    def setUpTestData(cls):
+    def setUpTestData(cls) -> None:
+        """Создать тестового пользователя."""
         User.objects.create_user(username="testuser", password="TestPassword123", email="test@example.com")
 
-    def test_login_url(self):
-        """
-        Тестирование ссылки для входа на сайт.
-        """
+    def test_login_url(self) -> None:
+        """Тестирование ссылки для входа на сайт."""
         url = "/accounts/login/"
         response = self.client.get(url)
         self.assertEqual(response.status_code, HTTPStatus.OK)
@@ -92,10 +87,8 @@ class UserManagementRoutesTest(TestCase):
         self.assertContains(response, "Вход на сайт")
         self.assertContains(response, "Забыли пароль?")
 
-    def test_logout_url(self):
-        """
-        Тестирование ссылки для выхода с сайта.
-        """
+    def test_logout_url(self) -> None:
+        """Тестирование ссылки для выхода с сайта."""
         url = "/accounts/logout/"
         response = self.client.post(url)
         self.assertEqual(response.status_code, HTTPStatus.FOUND)
@@ -106,10 +99,8 @@ class UserManagementRoutesTest(TestCase):
             target_status_code=HTTPStatus.MOVED_PERMANENTLY,
         )
 
-    def test_signup_url(self):
-        """
-        Тестирование ссылки для регистрации на сайте.
-        """
+    def test_signup_url(self) -> None:
+        """Тестирование ссылки для регистрации на сайте."""
         url = "/accounts/signup/"
         resolver = resolve(url)
         reverse_url = reverse("accounts:signup")
@@ -132,11 +123,8 @@ class UserManagementRoutesTest(TestCase):
         self.assertNotContains(response, "Зарегистрироваться")
         self.assertContains(response, "Вы уже зарегистрированы.")
 
-    def test_password_reset(self):
-        """
-        Тестирование ссылки для сброса пароля.
-        """
-
+    def test_password_reset(self) -> None:
+        """Тестирование ссылки для сброса пароля."""
         # Проверить успешность логина на сайте со старым паролем, после чего выйти с сайта.
         self.assertTrue(self.client.login(username="testuser", password="TestPassword123"))
         self.client.logout()
@@ -176,7 +164,8 @@ class UserManagementRoutesTest(TestCase):
             target_status_code=HTTPStatus.OK,
         )
 
-        # Ввести в форму новый пароль и подтверждение нового пароля, после чего проверить результат: должна быть переадресация на следующую страницу.
+        # Ввести в форму новый пароль и подтверждение нового пароля, после чего
+        # проверить результат: должна быть переадресация на следующую страницу.
         new_password = get_random_string(10)
         response = self.client.post(
             set_password_url,

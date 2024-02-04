@@ -1,5 +1,7 @@
+"""Тесты карты сайта для объектов галереи."""
 import os
 from http import HTTPStatus
+from pathlib import Path
 
 from django.test import TestCase
 from django.utils import timezone
@@ -8,18 +10,15 @@ from gallery.models import Album, Photo, Tag
 from personal_website.utils import list_file_paths
 
 SITEMAP_URL = "/sitemap.xml"
+TEMP_ROOT = os.getenv("TEMP_ROOT")
 
 
 class GallerySitemapTest(TestCase):
-    """
-    Тестирование карты галереи.
-    """
+    """Тестирование карты галереи."""
 
     @classmethod
-    def setUpTestData(cls):
-        """
-        Метод применяется один раз перед выполнением тестов класса.
-        """
+    def setUpTestData(cls) -> None:
+        """Метод применяется один раз перед выполнением тестов класса."""
         # Создать теги.
         for tag in ["Путешествия", "Италия", "Тоскана", "Непал", "Лангтанг"]:
             Tag.objects.create(name=tag)
@@ -37,8 +36,7 @@ class GallerySitemapTest(TestCase):
         )
 
         # Создать фотографии в базе данных из картинок в директории проекта.
-        TEMP_DIR = os.getenv("TEMP_ROOT")
-        test_images_dir = os.path.join(TEMP_DIR, "gallery", "photos")
+        test_images_dir = Path(TEMP_ROOT) / "gallery" / "photos"
         images = list_file_paths(test_images_dir)
         for image in images:
             if "Tuscany" in image:
@@ -46,10 +44,8 @@ class GallerySitemapTest(TestCase):
             else:
                 Photo.objects.create(image=image, public=False, album=cls.private_album)
 
-    def test_tag_sitemap(self):
-        """
-        Проверить, что все тэги добавляются в карту сайта.
-        """
+    def test_tag_sitemap(self) -> None:
+        """Проверить, что все тэги добавляются в карту сайта."""
         tags = Tag.objects.all()
         response = self.client.get(SITEMAP_URL)
         self.assertEqual(response.status_code, HTTPStatus.OK)
@@ -57,10 +53,8 @@ class GallerySitemapTest(TestCase):
         for tag in tags:
             self.assertTrue(tag.get_absolute_url() in content)
 
-    def test_album_sitemap(self):
-        """
-        Проверить, что альбомы присутствуют в карте сайта, но только публичные.
-        """
+    def test_album_sitemap(self) -> None:
+        """Проверить, что альбомы присутствуют в карте сайта, но только публичные."""
         response = self.client.get(SITEMAP_URL)
         self.assertEqual(response.status_code, HTTPStatus.OK)
         content = str(response.content)
@@ -70,10 +64,8 @@ class GallerySitemapTest(TestCase):
         self.assertFalse(self.private_album.get_absolute_url() in content)
         self.assertTrue(modified_at_date in content)
 
-    def test_photo_sitemap(self):
-        """
-        Проверить, что фотографии присутствуют в карте сайта, но только публичные.
-        """
+    def test_photo_sitemap(self) -> None:
+        """Проверить, что фотографии присутствуют в карте сайта, но только публичные."""
         public_photos = Photo.objects.filter(public=True)
         private_photos = Photo.objects.filter(public=False)
         response = self.client.get(SITEMAP_URL)
