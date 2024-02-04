@@ -1,16 +1,20 @@
+"""Тесты представлений галереи."""
 import os
 import random
 from http import HTTPStatus
+from pathlib import Path
+from typing import TYPE_CHECKING
 
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.db.models import QuerySet
 from django.test import TestCase
 from django.urls import resolve, reverse
 from django.utils.crypto import get_random_string
 
+from gallery.apps import GalleryConfig
 from gallery.models import Album, Photo, Tag
+from gallery.utils import is_image
 from gallery.views import (
     AlbumDetailView,
     AlbumListView,
@@ -22,7 +26,10 @@ from gallery.views import (
 )
 from personal_website.utils import list_file_paths
 
-APP_NAME = "gallery"
+if TYPE_CHECKING:
+    from django.db.models import QuerySet
+
+APP_NAME = GalleryConfig.name
 
 GALLERY_URL = f"/{APP_NAME}/"
 GALLERY_URL_NAME = f"{APP_NAME}:{APP_NAME}"
@@ -51,29 +58,28 @@ UPLOAD_TEMPLATE_NAME = f"{APP_NAME}/upload.html"
 
 
 class GalleryViewsTest(TestCase):
-    """
-    Тестирование представлений галереи.
-    """
+    """Тестирование представлений галереи."""
 
     @classmethod
-    def setUpTestData(cls):
+    def setUpTestData(cls) -> None:
+        """Создать первоначальные данные для проведения тестов."""
         cls.tag = Tag.objects.create(name="Test tag")
         cls.album = Album.objects.create(name="Test album")
         cls.album.tags.add(cls.tag)
         test_dir = os.getenv("TEMP_ROOT")
-        test_images_dir = os.path.join(test_dir, "gallery", "photos")
-        images = list_file_paths(test_images_dir)
+        test_images_dir = Path(test_dir) / "gallery" / "photos"
+        files = list_file_paths(test_images_dir)
+        images = [file for file in files if is_image(file)]
         for image in images:
             photo = Photo.objects.create(image=image, album=cls.album)
             photo.tags.add(cls.tag)
         first_photo = Photo.objects.first()
         cls.album.cover = first_photo
         cls.album.save()
+        return super().setUpTestData()
 
-    def test_gallery_home_url(self):
-        """
-        Проверить работоспособность ссылки на главную страницу галереи.
-        """
+    def test_gallery_home_url(self) -> None:
+        """Проверить работоспособность ссылки на главную страницу галереи."""
         with self.subTest("Проверка обычной ссылки"):
             resolver_match = resolve(GALLERY_URL)
             response = self.client.get(GALLERY_URL)
@@ -95,9 +101,8 @@ class GalleryViewsTest(TestCase):
             self.assertTemplateUsed(response, GALLERY_TEMPLATE_NAME)
             self.assertTemplateUsed(response, BASE_TEMPLATE_NAME)
 
-    def test_gallery_home_view_context(self):
-        """
-        Проверить, что в контекст представления домашней страницы галереи
+    def test_gallery_home_view_context(self) -> None:
+        """Проверить, что в контекст представления домашней страницы галереи
         автоматически добавляется контекст содержимого галереи.
         """
         response = self.client.get(GALLERY_URL)
@@ -114,10 +119,8 @@ class GalleryViewsTest(TestCase):
                 self.assertContains(response, tag)
             self.assertEqual(tags.count(), len(context["tags"]))
 
-    def test_photo_list_url(self):
-        """
-        Проверить работоспособность ссылки на просмотр всех фотографий.
-        """
+    def test_photo_list_url(self) -> None:
+        """Проверить работоспособность ссылки на просмотр всех фотографий."""
         with self.subTest("Проверка обычной ссылки на просмотр списка всех фотографий"):
             resolver_match = resolve(PHOTO_LIST_URL)
             response = self.client.get(PHOTO_LIST_URL)
@@ -139,11 +142,8 @@ class GalleryViewsTest(TestCase):
             self.assertTemplateUsed(response, PHOTO_LIST_TEMPLATE_NAME)
             self.assertTemplateUsed(response, BASE_TEMPLATE_NAME)
 
-    def test_photo_list_view_context(self):
-        """
-        Проверить, что в контекст списка всех фотографий
-        автоматически добавляется набор тэгов.
-        """
+    def test_photo_list_view_context(self) -> None:
+        """Проверить, что в контекст списка всех фотографий автоматически добавляется набор тэгов."""
         response = self.client.get(PHOTO_LIST_URL)
         context = response.context
         tags = Tag.objects.all()
@@ -151,11 +151,8 @@ class GalleryViewsTest(TestCase):
             self.assertContains(response, tag)
         self.assertEqual(tags.count(), len(context["tags"]))
 
-    def test_photo_detail_url(self):
-        """
-        Проверить работоспособность ссылки на детальный просмотр фотографии.
-        """
-        # Первичный ключ тестовой фотографии.
+    def test_photo_detail_url(self) -> None:
+        """Проверить работоспособность ссылки на детальный просмотр фотографии."""
         first_photo = Photo.objects.first()
         photo_slug = first_photo.slug
 
@@ -181,11 +178,8 @@ class GalleryViewsTest(TestCase):
             self.assertTemplateUsed(response, PHOTO_DETAIL_TEMPLATE_NAME)
             self.assertTemplateUsed(response, BASE_TEMPLATE_NAME)
 
-    def test_photo_detail_view_context(self):
-        """
-        Проверить содержание представления для детального просмотра фотографии.
-        """
-        # Получить фотографии, отсортированные по дате и времени съемки.
+    def test_photo_detail_view_context(self) -> None:
+        """Проверить содержание представления для детального просмотра фотографии."""
         all_photos = Photo.objects.all()
         sorted_photos = sorted(all_photos, key=lambda photo: photo.datetime_taken)
         first_photo = sorted_photos[0]
@@ -198,39 +192,39 @@ class GalleryViewsTest(TestCase):
         new_photo = Photo.objects.create(name="New photo", album=new_album)
 
         # Идентификаторы элементов, соответствующих ссылкам на следующую и предыдущую фотографию.
-        NEXT_PHOTO_LINK_ID = "next-photo-link"
-        PREVIOUS_PHOTO_LINK_ID = "previous-photo-link"
+        next_photo_link_id = "next-photo-link"
+        previous_photo_link_id = "previous-photo-link"
 
         with self.subTest("Для первой фотографии в альбоме доступа только ссылка на следующую фотографию"):
             url = f"{PHOTO_DETAIL_URL}/{first_photo.slug}/"
             response = self.client.get(url)
             context = response.context
             self.assertIsNotNone(context["next_photo"])
-            self.assertContains(response, NEXT_PHOTO_LINK_ID)
+            self.assertContains(response, next_photo_link_id)
             self.assertIsNone(context["previous_photo"])
-            self.assertNotContains(response, PREVIOUS_PHOTO_LINK_ID)
+            self.assertNotContains(response, previous_photo_link_id)
 
         with self.subTest("Для последней фотографии в альбоме доступна только ссылка на предыдущую фотографию"):
             url = f"{PHOTO_DETAIL_URL}/{last_photo.slug}/"
             response = self.client.get(url)
             context = response.context
             self.assertIsNotNone(context["previous_photo"])
-            self.assertContains(response, PREVIOUS_PHOTO_LINK_ID)
+            self.assertContains(response, previous_photo_link_id)
             self.assertIsNone(context["next_photo"])
-            self.assertNotContains(response, NEXT_PHOTO_LINK_ID)
+            self.assertNotContains(response, next_photo_link_id)
             self.assertNotContains(response, new_photo.get_absolute_url())
 
         with self.subTest(
             "Для фотографии в середине альбома доступны и ссылка на "
-            "следующую фотографию, и ссылка на предыдущую фотографию"
+            "следующую фотографию, и ссылка на предыдущую фотографию",
         ):
             url = f"{PHOTO_DETAIL_URL}/{middle_photo.slug}/"
             response = self.client.get(url)
             context = response.context
             self.assertIsNotNone(context["next_photo"])
-            self.assertContains(response, NEXT_PHOTO_LINK_ID)
+            self.assertContains(response, next_photo_link_id)
             self.assertIsNotNone(context["previous_photo"])
-            self.assertContains(response, PREVIOUS_PHOTO_LINK_ID)
+            self.assertContains(response, previous_photo_link_id)
 
         with self.subTest("Представление содержит список тэгов данной фотографии"):
             url = f"{PHOTO_DETAIL_URL}/{first_photo.slug}/"
@@ -241,11 +235,8 @@ class GalleryViewsTest(TestCase):
                 self.assertContains(response, tag)
             self.assertEqual(tags.count(), len(context["tags"]))
 
-    def test_album_detail_url(self):
-        """
-        Проверить работоспособность ссылки на детальный просмотр альбома.
-        """
-        # Слаг тестового альбома.
+    def test_album_detail_url(self) -> None:
+        """Проверить работоспособность ссылки на детальный просмотр альбома."""
         album_slug = self.album.slug
 
         with self.subTest("Проверить обычную ссылку на детальный просмотр альбома"):
@@ -270,9 +261,10 @@ class GalleryViewsTest(TestCase):
             self.assertTemplateUsed(response, ALBUM_DETAIL_TEMPLATE_NAME)
             self.assertTemplateUsed(response, BASE_TEMPLATE_NAME)
 
-    def test_album_detail_view_context(self):
+    def test_album_detail_view_context(self) -> None:
         """
         Проверить контекст ответа, полученного при запросе страницы детального просмотра альбома.
+
         В альбоме должны отображаться только публичные фотографии.
         """
         album_slug = self.album.slug
@@ -298,10 +290,8 @@ class GalleryViewsTest(TestCase):
                 self.assertContains(response, tag)
             self.assertEqual(tags.count(), len(context["tags"]))
 
-    def test_album_list_url(self):
-        """
-        Проверить работоспособность ссылки на просмотр всех альбомов.
-        """
+    def test_album_list_url(self) -> None:
+        """Проверить работоспособность ссылки на просмотр всех альбомов."""
         with self.subTest("Проверка обычной ссылки на просмотр списка всех альбомов"):
             resolver_match = resolve(ALBUM_LIST_URL)
             response = self.client.get(ALBUM_LIST_URL)
@@ -323,10 +313,8 @@ class GalleryViewsTest(TestCase):
             self.assertTemplateUsed(response, ALBUM_LIST_TEMPLATE_NAME)
             self.assertTemplateUsed(response, BASE_TEMPLATE_NAME)
 
-    def test_album_list_context(self):
-        """
-        В списке альбомов должны отображаться только публичные альбомы.
-        """
+    def test_album_list_context(self) -> None:
+        """В списке альбомов должны отображаться только публичные альбомы."""
         with self.subTest("Приватный альбом не отображается"):
             self.album.public = False
             self.album.save()
@@ -353,10 +341,8 @@ class GalleryViewsTest(TestCase):
                 self.assertContains(response, tag)
             self.assertEqual(tags.count(), len(context["tags"]))
 
-    def test_tag_detail_url(self):
-        """
-        Тестирование ссылки на детальный просмотр тега.
-        """
+    def test_tag_detail_url(self) -> None:
+        """Тестирование ссылки на детальный просмотр тега."""
         tag_slug = self.tag.slug
 
         with self.subTest("Проверить обычную ссылку на детальный просмотр тэга"):
@@ -381,7 +367,7 @@ class GalleryViewsTest(TestCase):
             self.assertTemplateUsed(response, TAG_DETAIL_TEMPLATE_NAME)
             self.assertTemplateUsed(response, BASE_TEMPLATE_NAME)
 
-    def test_tag_detail_view_context(self):
+    def test_tag_detail_view_context(self) -> None:
         """
         Проверка на то, что в контекст запроса детального просмотра
         тэга добавляются фотографии и альбомы по данному тэгу.
@@ -411,9 +397,7 @@ class GalleryViewsTest(TestCase):
 
 
 class UploadFormViewTests(TestCase):
-    """
-    Тесты формы для пакетной загрузки фотографий в альбом.
-    """
+    """Тесты формы для пакетной загрузки фотографий в альбом."""
 
     test_username = "test_username"
     staff_username = "staff_username"
@@ -422,46 +406,40 @@ class UploadFormViewTests(TestCase):
 
     @classmethod
     def setUpTestData(cls) -> None:
-        super().setUpTestData()
+        """Подготовить тестовые данные для выполнения тестов."""
         cls.user = User.objects.create_user(username=cls.test_username, password=cls.test_password)
         cls.staff_user = User.objects.create_superuser(username=cls.staff_username, password=cls.staff_password)
-        os.makedirs(settings.MEDIA_ROOT, exist_ok=True)
+        Path(settings.MEDIA_ROOT).mkdir(parents=True, exist_ok=True)
         test_dir = os.getenv("TEMP_ROOT")
-        test_images_dir = os.path.join(test_dir, "gallery", "photos")
+        test_images_dir = Path(test_dir) / "gallery" / "photos"
         cls.test_image_paths = list_file_paths(test_images_dir)
         cls.album = Album.objects.create(name="Тестовый альбом")
+        return super().setUpTestData()
 
     def setUp(self) -> None:
-        super().setUp()
+        """Авторизоваться под пользователем с правами персонала."""
         self.client.login(username=self.staff_username, password=self.staff_password)
+        return super().setUp()
 
-    def test_upload_url_resolve(self):
-        """
-        Стандартная ссылка корректно разрешается.
-        """
+    def test_upload_url_resolve(self) -> None:
+        """Стандартная ссылка корректно разрешается."""
         resolver_match = resolve(UPLOAD_URL)
         self.assertEqual(resolver_match.func.view_class, UploadFormView)
 
-    def test_upload_url_name_resolve(self):
-        """
-        Имя ссылки разрешается корректно.
-        """
+    def test_upload_url_name_resolve(self) -> None:
+        """Имя ссылки разрешается корректно."""
         url = reverse(UPLOAD_URL_NAME)
         resolver_match = resolve(url)
         self.assertEqual(resolver_match.func.view_class, UploadFormView)
 
-    def test_templates_used(self):
-        """
-        Проверка использованных представлением шаблонов.
-        """
+    def test_templates_used(self) -> None:
+        """Проверка использованных представлением шаблонов."""
         response = self.client.get(UPLOAD_URL)
         for template in (UPLOAD_TEMPLATE_NAME, BASE_TEMPLATE_NAME):
             self.assertTemplateUsed(response, template)
 
-    def test_response_status_code(self):
-        """
-        Проверить полученный статус HTTP-ответа.
-        """
+    def test_response_status_code(self) -> None:
+        """Проверить полученный статус HTTP-ответа."""
         with self.subTest("Статус ответа для пользователя с правами администратора"):
             response = self.client.get(UPLOAD_URL)
             self.assertEqual(response.status_code, HTTPStatus.OK)
@@ -476,10 +454,8 @@ class UploadFormViewTests(TestCase):
             response = self.client.get(UPLOAD_URL)
             self.assertNotEqual(response.status_code, HTTPStatus.OK)
 
-    def test_item_in_navbar(self):
-        """
-        Проверка показа ссылки на форму загрузки в навигационной панели.
-        """
+    def test_item_in_navbar(self) -> None:
+        """Проверка показа ссылки на форму загрузки в навигационной панели."""
         with self.subTest("С главной страницы не доступна ссылка на форму загрузки"):
             response = self.client.get("/main/")
             self.assertNotContains(response, UPLOAD_URL)
@@ -498,13 +474,11 @@ class UploadFormViewTests(TestCase):
             response = self.client.get(GALLERY_URL)
             self.assertNotContains(response, UPLOAD_URL)
 
-    def test_images_upload(self):
-        """
-        Проверка результатов загрузки фотографий через форму.
-        """
+    def test_images_upload(self) -> None:
+        """Проверка результатов загрузки фотографий через форму."""
         photos = []
         for image_path in self.test_image_paths:
-            with open(image_path, "rb") as image:
+            with Path(image_path).open("rb") as image:
                 file = SimpleUploadedFile(name=image.name, content=image.read())
                 photos.append(file)
 
@@ -516,13 +490,11 @@ class UploadFormViewTests(TestCase):
         for photo in Photo.objects.all():
             self.assertEqual(photo.album, self.album)
 
-    def test_upload_messages(self):
-        """
-        После загрузки фотографий появляется сообщение с результатом.
-        """
+    def test_upload_messages(self) -> None:
+        """После загрузки фотографий появляется сообщение с результатом."""
         photos = []
         for image_path in self.test_image_paths:
-            with open(image_path, "rb") as image:
+            with Path(image_path).open("rb") as image:
                 file = SimpleUploadedFile(name=image.name, content=image.read())
                 photos.append(file)
 
@@ -533,15 +505,11 @@ class UploadFormViewTests(TestCase):
         photo_count = len(photos)
         url = self.album.get_absolute_url()
         name = self.album.name
-        message = (
-            f"Загружено <b>{photo_count}</b> фотографий в альбом " f'<a href="{url}" class="alert-link">{name}</a>'
-        )
+        message = f'Загружено <b>{photo_count}</b> фотографий в альбом <a href="{url}" class="alert-link">{name}</a>'
         self.assertContains(response, message)
 
-    def test_upload_image_verify(self):
-        """
-        Загружаемое изображение проверяется на валидность.
-        """
+    def test_upload_image_verify(self) -> None:
+        """Загружаемое изображение проверяется на валидность."""
         file = SimpleUploadedFile(
             name="test.pdf",
             content=bytes(get_random_string(12).encode()),
@@ -556,10 +524,8 @@ class UploadFormViewTests(TestCase):
         photos = Photo.objects.filter(album=self.album)
         self.assertFalse(photos.exists())
 
-    def test_upload_view_context(self):
-        """
-        Представление содержит полный набор тэгов галереи.
-        """
+    def test_upload_view_context(self) -> None:
+        """Представление содержит полный набор тэгов галереи."""
         response = self.client.get(UPLOAD_URL)
         context = response.context
         tags = Tag.objects.all()

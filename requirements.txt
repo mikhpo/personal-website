@@ -26,9 +26,9 @@ argon2-cffi==23.1.0 ; python_version >= "3.11" and python_version < "4.0" \
 asgiref==3.7.2 ; python_version >= "3.11" and python_version < "4.0" \
     --hash=sha256:89b2ef2247e3b562a16eef663bc0e2e703ec6468e2fa8a5cd61cd449786d4f6e \
     --hash=sha256:9e0ce3aa93a819ba5b45120216b23878cf6e8525eb3848653452b4192b92afed
-certifi==2023.11.17 ; python_version >= "3.11" and python_version < "4.0" \
-    --hash=sha256:9b469f3a900bf28dc19b8cfbf8019bf47f7fdd1a65a1d4ffb98fc14166beb4d1 \
-    --hash=sha256:e036ab49d5b79556f99cfc2d9320b34cfbe5be05c5871b51de9329f0603b0474
+certifi==2024.2.2 ; python_version >= "3.11" and python_version < "4.0" \
+    --hash=sha256:0569859f95fc761b18b45ef421b1290a0f65f147e92a1e5eb3e635f9a5e4e66f \
+    --hash=sha256:dc383c07b76109f368f6106eee2b593b04a011ea4d55f652c6ca24a754d1cdd1
 cffi==1.16.0 ; python_version >= "3.11" and python_version < "4.0" \
     --hash=sha256:0c9ef6ff37e974b73c25eecc13952c55bceed9112be2d9d938ded8e856138bcc \
     --hash=sha256:131fd094d1065b19540c3d72594260f118b231090295d8c34e19a7bbcf2e860a \
@@ -182,9 +182,9 @@ django-admin-sortable2==2.1.10 ; python_version >= "3.11" and python_version < "
 django-appconf==1.0.6 ; python_version >= "3.11" and python_version < "4.0" \
     --hash=sha256:c3ae442fba1ff7ec830412c5184b17169a7a1e71cf0864a4c3f93cf4c98a1993 \
     --hash=sha256:cfe87ea827c4ee04b9a70fab90b86d704cb02f2981f89da8423cb0fabf88efbf
-django-cleanup==8.0.0 ; python_version >= "3.11" and python_version < "4.0" \
-    --hash=sha256:8cd8872d67fe1501b19a843d006cdb5673cfbb74ac3d6d8f2c60e8e7723a7f5b \
-    --hash=sha256:c739a05544e1e48dc848871c870dbf1595f8533d24523bc67360e43562edaf0d
+django-cleanup==8.1.0 ; python_version >= "3.11" and python_version < "4.0" \
+    --hash=sha256:70df905076a44e7a111b31198199af633dee08876e199e6dce36ca8dd6b8b10f \
+    --hash=sha256:7903873ea73b3f7e61e055340d27dba49b70634f60c87a573ad748e172836458
 django-crispy-forms==2.1 ; python_version >= "3.11" and python_version < "4.0" \
     --hash=sha256:4d7ec431933ad4d4b5c5a6de4a584d24613c347db9ac168723c9aaf63af4bb96 \
     --hash=sha256:d592044771412ae1bd539cc377203aa61d4eebe77fcbc07fbc8f12d3746d4f6b
@@ -197,15 +197,15 @@ django-imagekit==5.0.0 ; python_version >= "3.11" and python_version < "4.0" \
 django-tinymce==3.6.1 ; python_version >= "3.11" and python_version < "4.0" \
     --hash=sha256:6f4f6227c2c608052081a436a1e3054c441caae24c9e0c8c3010536e24749e29 \
     --hash=sha256:da5732413f51cf854352e3148f06f170b59d95a6c6a43fd9f7ccfdd1849f4bf9
-django==4.2.9 ; python_version >= "3.11" and python_version < "4.0" \
-    --hash=sha256:12498cc3cb8bc8038539fef9e90e95f507502436c1f0c3a673411324fa675d14 \
-    --hash=sha256:2cc2fc7d1708ada170ddd6c99f35cc25db664f165d3794bc7723f46b2f8c8984
+django==5.0.1 ; python_version >= "3.11" and python_version < "4.0" \
+    --hash=sha256:8c8659665bc6e3a44fefe1ab0a291e5a3fb3979f9a8230be29de975e57e8f854 \
+    --hash=sha256:f47a37a90b9bbe2c8ec360235192c7fddfdc832206fcf618bb849b39256affc1
 faker-file==0.17.11 ; python_version >= "3.11" and python_version < "4.0" \
     --hash=sha256:6ea67b5083b29edbe4f3d808d6aa13fea58bde5e01d306ec44af6f4aeff367cb \
     --hash=sha256:8a805d1731f98ae9cab580da4c5899e3669a531065534c2ca1d7edd51d434193
-faker==20.1.0 ; python_version >= "3.11" and python_version < "4.0" \
-    --hash=sha256:562a3a09c3ed3a1a7b20e13d79f904dfdfc5e740f72813ecf95e4cf71e5a2f52 \
-    --hash=sha256:aeb3e26742863d1e387f9d156f1c36e14af63bf5e6f36fb39b8c27f6a903be38
+faker==22.6.0 ; python_version >= "3.11" and python_version < "4.0" \
+    --hash=sha256:2b57f0256da6b45b7851dca87836ef5e2ae2fbb64d63d8697f1e47830d7b505d \
+    --hash=sha256:fa6d969728ef3da6229da91267a1bd4e6b902044c4822012d4fc46c71bb92b26
 gunicorn==21.2.0 ; python_version >= "3.11" and python_version < "4.0" \
     --hash=sha256:3213aa5e8c24949e792bcacfc176fef362e7aac80b76c56f6b5122bf350722f0 \
     --hash=sha256:88ec8bff1d634f98e61b9f65bc4bf3cd918a90806c6f5c48bc5603849ec81033
@@ -404,9 +404,9 @@ pycryptodome==3.20.0 ; python_version >= "3.11" and python_version < "4.0" \
 python-dateutil==2.8.2 ; python_version >= "3.11" and python_version < "4.0" \
     --hash=sha256:0123cacc1627ae19ddf3c27a5de5bd67ee4586fbdd6440d9748f8abb483d3e86 \
     --hash=sha256:961d03dc3453ebbc59dbdea9e4e11c5651520a876d0f4db161e8674aae935da9
-python-dotenv==1.0.0 ; python_version >= "3.11" and python_version < "4.0" \
-    --hash=sha256:a8df96034aae6d2d50a4ebe8216326c61c3eb64836776504fcca410e5937a3ba \
-    --hash=sha256:f5971a9226b701070a4bf2c38c89e5a3f0d64de8debda981d1db98583009122a
+python-dotenv==1.0.1 ; python_version >= "3.11" and python_version < "4.0" \
+    --hash=sha256:e324ee90a023d808f1959c46bcbc04446a10ced277783dc6ee09987c37ec10ca \
+    --hash=sha256:f7b63ef50f1b690dddf550d03497b66d609393b40b564ed0d674909a68ebf16a
 pytils==0.4.1 ; python_version >= "3.11" and python_version < "4.0" \
     --hash=sha256:aa109b1bc0ec4bdb7c9768520110348d8aeb0706600e6cf641272e6850e26eab
 requests==2.31.0 ; python_version >= "3.11" and python_version < "4.0" \
@@ -424,9 +424,9 @@ typing-extensions==4.9.0 ; python_version >= "3.11" and python_version < "4.0" \
 tzdata==2023.4 ; python_version >= "3.11" and python_version < "4.0" and sys_platform == "win32" \
     --hash=sha256:aa3ace4329eeacda5b7beb7ea08ece826c28d761cda36e747cfbf97996d39bf3 \
     --hash=sha256:dd54c94f294765522c77399649b4fefd95522479a664a0cec87f41bebc6148c9
-urllib3==2.1.0 ; python_version >= "3.11" and python_version < "4.0" \
-    --hash=sha256:55901e917a5896a349ff771be919f8bd99aff50b79fe58fec595eb37bbc56bb3 \
-    --hash=sha256:df7aa8afb0148fa78488e7899b2c59b5f4ffcfa82e6c54ccb9dd37c1d7b52d54
+urllib3==2.2.0 ; python_version >= "3.11" and python_version < "4.0" \
+    --hash=sha256:051d961ad0c62a94e50ecf1af379c3aba230c66c710493493560c0c223c49f20 \
+    --hash=sha256:ce3711610ddce217e6d113a2732fafad960a03fd0318c91faa79481e35c11224
 whitenoise==6.6.0 ; python_version >= "3.11" and python_version < "4.0" \
     --hash=sha256:8998f7370973447fac1e8ef6e8ded2c5209a7b1f67c1012866dbcd09681c3251 \
     --hash=sha256:b1f9db9bf67dc183484d760b99f4080185633136a273a03f6436034a41064146

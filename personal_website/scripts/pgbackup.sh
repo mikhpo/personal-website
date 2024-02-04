@@ -19,8 +19,8 @@ if [ -f "$dotenv" ]; then
 fi
 
 # Определить имя и полный путь дампа, состоящий из имени базы данных и текущей даты.
-readonly dump_name="${POSTGRES_NAME}_${today}.dump"
-readonly dump_dir="database/$POSTGRES_NAME"
+readonly dump_name="${POSTGRES_DB}_${today}.dump"
+readonly dump_dir="database/$POSTGRES_DB"
 readonly dump_path="$BACKUP_ROOT/$dump_dir/$dump_name"
 echo "Дамп базы данных будет сохранен по адресу $dump_path"
 mkdir -p "$BACKUP_ROOT/$dump_dir"
@@ -32,7 +32,7 @@ if [ -f "$dump_path" ]; then
 fi
 
 # Подстановка переменных окружения в параметры выполнения программы pg_dump.
-connection="host=$POSTGRES_HOST port=$POSTGRES_PORT dbname=$POSTGRES_NAME user=$POSTGRES_USER"
+connection="host=$POSTGRES_HOST port=$POSTGRES_PORT dbname=$POSTGRES_DB user=$POSTGRES_USER"
 echo "Выполнение программы pg_dump с параметрами подключения: $connection"
 export PGPASSWORD=$POSTGRES_PASSWORD
 pg_dump "$connection" --no-privileges --no-subscriptions --no-publications -Fc -f "$dump_path"

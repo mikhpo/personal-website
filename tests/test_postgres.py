@@ -1,5 +1,7 @@
+"""Интеграционное тестирование кластера PostgreSQL."""
 import os
 import unittest
+from typing import Optional
 
 import psycopg
 from dotenv import load_dotenv
@@ -9,33 +11,38 @@ class TestPostgres(unittest.TestCase):
     """Интеграционные тесты базы данных PostgreSQL."""
 
     @classmethod
-    def setUpClass(cls):
+    def setUpClass(cls) -> None:
         """Определить параметры подключения."""
         load_dotenv()
-        cls.host = os.environ["POSTGRES_HOST"]
+        cls.host = "localhost"
         cls.port = os.environ["POSTGRES_PORT"]
         cls.user = os.environ["POSTGRES_USER"]
         cls.password = os.environ["POSTGRES_PASSWORD"]
-        cls.dbname = os.environ["POSTGRES_NAME"]
+        cls.dbname = os.environ["POSTGRES_DB"]
         return super().setUpClass()
 
-    def connect_postgres(self):
+    def connect_postgres(self) -> psycopg.Connection[psycopg.connection.TupleRow]:
         """Подключиться к базе данных PostgreSQL."""
-        conn = psycopg.connect(
-            f"dbname={self.dbname} user={self.user} host={self.host} port={self.port} password={self.password} connect_timeout=1"
+        connifo = "dbname={} user={} host={} port={} password={} connect_timeout=1".format(
+            self.dbname,
+            self.user,
+            self.host,
+            self.port,
+            self.password,
         )
-        return conn
+        return psycopg.connect(connifo)
 
-    def postgres_connected(self):
+    def postgres_connected(self) -> Optional[bool]:
         """Подключиться к базе данных PostgreSQL и вернуть булево значение в зависимости от успешности подключения."""
         try:
             conn = self.connect_postgres()
             conn.close()
-            return True
         except psycopg.OperationalError:
             return False
+        else:
+            return True
 
-    def test_postgres_connection(self):
+    def test_postgres_connection(self) -> None:
         """Проверить подключение к основной базе данных PostgreSQL."""
         postgres_connected = self.postgres_connected()
         self.assertTrue(postgres_connected)

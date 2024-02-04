@@ -1,9 +1,10 @@
+"""Маршруты главного раздела сайта."""
 from django.urls import path
 
-from . import views
+from main.views import main
 
 app_name = "main"
 
 urlpatterns = [
-    path("", views.main, name="main"),
+    path("", main, name="main"),
 ]

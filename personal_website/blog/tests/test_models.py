@@ -1,3 +1,4 @@
+"""Тесты моделей блогов."""
 from django.contrib.auth.models import User
 from django.db.utils import IntegrityError
 from django.test import TestCase
@@ -8,12 +9,11 @@ from personal_website.utils import generate_random_text
 
 
 class ArticleModelTest(TestCase):
-    """
-    Тесты модели статьи.
-    """
+    """Тесты модели статьи."""
 
     @classmethod
-    def setUpTestData(cls):
+    def setUpTestData(cls) -> None:
+        """Подготовка тестовых данных."""
         cls.user_1 = User.objects.create_user(
             username="testuser-1",
             email="testuser-1@example.com",
@@ -21,14 +21,12 @@ class ArticleModelTest(TestCase):
         )
         cls.article = Article.objects.create(title="Test article", author=cls.user_1)
 
-    def test_article_title_unique(self):
-        """
-        Проверка на то, что невозможно создать несколько статей с одним заголовком.
-        """
+    def test_article_title_unique(self) -> None:
+        """Проверка на то, что невозможно создать несколько статей с одним заголовком."""
         with self.assertRaises(IntegrityError):
             Article.objects.create(title="Test article")
 
-    def test_article_auto_slug(self):
+    def test_article_auto_slug(self) -> None:
         """
         Проверка на то, что слаг статьи создается автоматически, когда не указан вручную,
         транслитерируется автоматически, уникальность достигается добавлением идентификатора.
@@ -42,28 +40,22 @@ class ArticleModelTest(TestCase):
         fourth_article = Article.objects.create(title="Third test article")
         self.assertEqual(fourth_article.slug, "third-test-article-2")
 
-    def test_article_absolute_url(self):
-        """
-        Проверяется корректность создания абсолютной ссылки на статью.
-        """
+    def test_article_absolute_url(self) -> None:
+        """Проверяется корректность создания абсолютной ссылки на статью."""
         url = "/blog/article/" + self.article.slug + "/"
         absolute_url = self.article.get_absolute_url()
         self.assertEqual(url, absolute_url)
 
-    def test_article_saved_on_author_delete(self):
-        """
-        Проверяет, что статья не удаляется при удалении автора статьи.
-        """
+    def test_article_saved_on_author_delete(self) -> None:
+        """Проверяет, что статья не удаляется при удалении автора статьи."""
         self.assertTrue(User.objects.filter(username="testuser-1").exists())
         self.assertTrue(Article.objects.filter(title="Test article").exists())
         self.user_1.delete()
         self.assertFalse(User.objects.filter(username="testuser-1").exists())
         self.assertTrue(Article.objects.filter(title="Test article").exists())
 
-    def test_comments_deleted_on_author_delete(self):
-        """
-        Проверяет, что комментарии удаляются при удалении автора комментариев.
-        """
+    def test_comments_deleted_on_author_delete(self) -> None:
+        """Проверяет, что комментарии удаляются при удалении автора комментариев."""
         user_2 = User.objects.create_user(
             username="testuser-2",
             email="testuser-2@example.com",
@@ -79,10 +71,8 @@ class ArticleModelTest(TestCase):
         self.assertFalse(User.objects.filter(username="testuser-2").exists())
         self.assertEqual(self.article.number_of_comments, 0)
 
-    def test_article_saved_on_series_delete(self):
-        """
-        Проверяет, что статья не удаляется при удалении cерии.
-        """
+    def test_article_saved_on_series_delete(self) -> None:
+        """Проверяет, что статья не удаляется при удалении cерии."""
         series = Series.objects.create(name="Test series")
         self.article.series.add(series)
         self.assertTrue(Series.objects.filter(name="Test series").exists())
@@ -93,10 +83,8 @@ class ArticleModelTest(TestCase):
         self.assertTrue(Article.objects.filter(title="Test article").exists())
         self.assertFalse(series in self.article.series.all())
 
-    def test_article_saved_on_topic_delete(self):
-        """
-        Проверяет, что статья не удаляется при удалении темы.
-        """
+    def test_article_saved_on_topic_delete(self) -> None:
+        """Проверяет, что статья не удаляется при удалении темы."""
         topic = Topic.objects.create(name="Test topic")
         self.article.topics.add(topic)
         self.assertTrue(Topic.objects.filter(name="Test topic").exists())
@@ -107,10 +95,8 @@ class ArticleModelTest(TestCase):
         self.assertTrue(Article.objects.filter(title="Test article").exists())
         self.assertFalse(topic in self.article.topics.all())
 
-    def test_article_saved_on_category_delete(self):
-        """
-        Проверяет, что статья не удаляется при удалении категории.
-        """
+    def test_article_saved_on_category_delete(self) -> None:
+        """Проверяет, что статья не удаляется при удалении категории."""
         category = Category.objects.create(name="Test category")
         self.article.categories.add(category)
         self.assertTrue(Category.objects.filter(name="Test category").exists())
@@ -121,10 +107,8 @@ class ArticleModelTest(TestCase):
         self.assertTrue(Article.objects.filter(title="Test article").exists())
         self.assertFalse(category in self.article.categories.all())
 
-    def test_comments_deleted_on_article_delete(self):
-        """
-        Проверяет, что комментарии удаляются при удалении статьи.
-        """
+    def test_comments_deleted_on_article_delete(self) -> None:
+        """Проверяет, что комментарии удаляются при удалении статьи."""
         user_3 = User.objects.create_user(
             username="testuser-3",
             email="testuser-3@example.com",
@@ -144,19 +128,15 @@ class ArticleModelTest(TestCase):
 
 
 class SeriesModelTest(TestCase):
-    """
-    Тесты модели серии статей.
-    """
+    """Тесты модели серии статей."""
 
-    def test_series_name_unique(self):
-        """
-        Проверка на то, что невозможно создать несколько серий с одним названием.
-        """
+    def test_series_name_unique(self) -> None:
+        """Проверка на то, что невозможно создать несколько серий с одним названием."""
         Series.objects.create(name="Test series")
         with self.assertRaises(IntegrityError):
             Series.objects.create(name="Test series")
 
-    def test_series_auto_slug(self):
+    def test_series_auto_slug(self) -> None:
         """
         Проверка на то, что слаг серии создается автоматически, когда не указан вручную,
         транслитерируется автоматически, уникальность достигается добавлением идентификатора.
@@ -170,10 +150,8 @@ class SeriesModelTest(TestCase):
         fourth_series = Series.objects.create(name="Third test series")
         self.assertEqual(fourth_series.slug, "third-test-series-2")
 
-    def test_series_absolute_url(self):
-        """
-        Проверяется корректность создания абсолютной ссылки на серию.
-        """
+    def test_series_absolute_url(self) -> None:
+        """Проверяется корректность создания абсолютной ссылки на серию."""
         series = Series.objects.create(name="Test series", slug="test-series")
         url = "/blog/series/" + series.slug + "/"
         absolute_url = series.get_absolute_url()
@@ -181,19 +159,15 @@ class SeriesModelTest(TestCase):
 
 
 class TopicModelTest(TestCase):
-    """
-    Тесты модели темы статей.
-    """
+    """Тесты модели темы статей."""
 
-    def test_topic_name_unique(self):
-        """
-        Проверка на то, что невозможно создать несколько тем с одним названием.
-        """
+    def test_topic_name_unique(self) -> None:
+        """Проверка на то, что невозможно создать несколько тем с одним названием."""
         Topic.objects.create(name="Test topic")
         with self.assertRaises(IntegrityError):
             Topic.objects.create(name="Test topic")
 
-    def test_topic_auto_slug(self):
+    def test_topic_auto_slug(self) -> None:
         """
         Проверка на то, что слаг темы создается автоматически, когда не указан вручную,
         транслитерируется автоматически, уникальность достигается добавлением идентификатора.
@@ -207,10 +181,8 @@ class TopicModelTest(TestCase):
         fourth_topic = Topic.objects.create(name="Third test topic")
         self.assertEqual(fourth_topic.slug, "third-test-topic-2")
 
-    def test_topic_absolute_url(self):
-        """
-        Проверяется корректность создания абсолютной ссылки на тему.
-        """
+    def test_topic_absolute_url(self) -> None:
+        """Проверяется корректность создания абсолютной ссылки на тему."""
         topic = Topic.objects.create(name="Test topic", slug="test-topic")
         url = "/blog/topic/" + topic.slug + "/"
         absolute_url = topic.get_absolute_url()
@@ -218,19 +190,15 @@ class TopicModelTest(TestCase):
 
 
 class CategoryModelTest(TestCase):
-    """
-    Тесты модели категории статей.
-    """
+    """Тесты модели категории статей."""
 
-    def test_category_name_unique(self):
-        """
-        Проверка на то, что невозможно создать несколько категорий с одним названием.
-        """
+    def test_category_name_unique(self) -> None:
+        """Проверка на то, что невозможно создать несколько категорий с одним названием."""
         Category.objects.create(name="Test category")
         with self.assertRaises(IntegrityError):
             Category.objects.create(name="Test category")
 
-    def test_category_auto_slug(self):
+    def test_category_auto_slug(self) -> None:
         """
         Проверка на то, что слаг категории создается автоматически, когда не указан вручную,
         транслитерируется автоматически, уникальность достигается добавлением идентификатора.
@@ -244,10 +212,8 @@ class CategoryModelTest(TestCase):
         fourth_category = Category.objects.create(name="Third test category")
         self.assertEqual(fourth_category.slug, "third-test-category-2")
 
-    def test_category_absolute_url(self):
-        """
-        Проверяется корректность создания абсолютной ссылки на категорию.
-        """
+    def test_category_absolute_url(self) -> None:
+        """Проверяется корректность создания абсолютной ссылки на категорию."""
         category = Category.objects.create(name="Test category", slug="test-category")
         url = "/blog/category/" + category.slug + "/"
         absolute_url = category.get_absolute_url()

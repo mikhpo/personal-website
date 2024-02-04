@@ -1,17 +1,15 @@
+"""Модели блога."""
 from django.contrib.auth.models import User
 from django.db import models
 from django.urls import reverse
 from django.utils.timezone import now
 
+from blog.managers import PublicArticleManager, PublicCategoryManager, PublicSeriesManager, PublicTopicManager
 from personal_website.utils import get_unique_slug
-
-from .managers import PublicArticleManager, PublicGategoryManager, PublicSeriesManager, PublicTopicManager
 
 
 class Category(models.Model):
-    """
-    Модель тематической категории.
-    """
+    """Модель тематической категории."""
 
     name = models.CharField("Категория", max_length=255, unique=True)
     description = models.CharField("Описание", max_length=255, blank=True)
@@ -20,27 +18,30 @@ class Category(models.Model):
     public = models.BooleanField("Опубликовано", default=False)
 
     objects = models.Manager()
-    published = PublicGategoryManager()
+    published = PublicCategoryManager()
 
-    class Meta:
-        ordering = ["name"]
+    class Meta:  # noqa: D106
+        ordering = ("name",)
         verbose_name_plural = "Категории"
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """Строкое представление категории возвращает название категории."""
         return self.name
 
-    def get_absolute_url(self):
-        return reverse("blog:category", args=[str(self.slug)])
-
-    def save(self, *args, **kwargs):
+    def save(self, *args, **kwargs) -> None:
+        """Если слаг категории не указан, то слаг определяется из названия категории."""
         if not self.slug:
             self.slug = get_unique_slug(self, self.name)
         super().save(*args, **kwargs)
 
+    def get_absolute_url(self) -> str:
+        """Абсолютная ссылка на категорию содержит слаг категории."""
+        return reverse("blog:category", args=[str(self.slug)])
+
 
 class Topic(models.Model):
-    """
-    Модель темы.
+    """Модель темы.
+
     Тема может относиться к нескольким категориям.
     """
 
@@ -53,25 +54,28 @@ class Topic(models.Model):
     objects = models.Manager()
     published = PublicTopicManager()
 
-    class Meta:
-        ordering = ["name"]
+    class Meta:  # noqa: D106
+        ordering = ("name",)
         verbose_name_plural = "Темы"
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """Строковое представление темы возвращает название темы."""
         return self.name
 
-    def get_absolute_url(self):
-        return reverse("blog:topic", args=[str(self.slug)])
-
-    def save(self, *args, **kwargs):
+    def save(self, *args, **kwargs) -> None:
+        """Если слаг не был указан, то слаг определяется из названия темы."""
         if not self.slug:
             self.slug = get_unique_slug(self, self.name)
         super().save(*args, **kwargs)
 
+    def get_absolute_url(self) -> str:
+        """Абсолютная ссылка на тему включает в себя слаг темы."""
+        return reverse("blog:topic", args=[str(self.slug)])
+
 
 class Series(models.Model):
-    """
-    Модель серии.
+    """Модель серии.
+
     Серия может быть на несколько тем.
     """
 
@@ -84,25 +88,28 @@ class Series(models.Model):
     objects = models.Manager()
     published = PublicSeriesManager()
 
-    class Meta:
-        ordering = ["name"]
+    class Meta:  # noqa: D106
+        ordering = ("name",)
         verbose_name_plural = "Серии"
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """Строкое представление серии совпадает с названием серии."""
         return self.name
 
-    def get_absolute_url(self):
-        return reverse("blog:series", args=[str(self.slug)])
-
-    def save(self, *args, **kwargs):
+    def save(self, *args, **kwargs) -> None:
+        """Если слаг серии не был указан, то слаг определиться автоматически по назанию."""
         if not self.slug:
             self.slug = get_unique_slug(self, self.name)
         super().save(*args, **kwargs)
 
+    def get_absolute_url(self) -> str:
+        """Абсолютная ссылка на серию содержит слаг серии."""
+        return reverse("blog:series", args=[str(self.slug)])
+
 
 class Article(models.Model):
-    """
-    Модель статьи.
+    """Модель статьи.
+
     Статья может быть частью серии.
     Статья связана с одним пользователем.
     """
@@ -123,29 +130,33 @@ class Article(models.Model):
     objects = models.Manager()
     published = PublicArticleManager()
 
-    class Meta:
-        ordering = ["-published_at"]
+    class Meta:  # noqa: D106
+        ordering = ("-published_at",)
         verbose_name_plural = "Статьи"
 
-    def get_absolute_url(self):
-        return reverse("blog:article", args=[str(self.slug)])
-
-    def __str__(self):
+    def __str__(self) -> str:
+        """Строковое представление статьи возвращает заголовок."""
         return self.title
 
-    @property
-    def number_of_comments(self):
-        return Comment.objects.filter(article=self).count()
-
-    def save(self, *args, **kwargs):
+    def save(self, *args, **kwargs) -> None:
+        """Если слаг не указан, то слаг определяется автоматически по заголовку."""
         if not self.slug:
             self.slug = get_unique_slug(self, self.title)
         super().save(*args, **kwargs)
 
+    def get_absolute_url(self) -> str:
+        """Абсолютная ссылка на статью определяется слагом статьи."""
+        return reverse("blog:article", args=[str(self.slug)])
+
+    @property
+    def number_of_comments(self) -> int:
+        """Количество комментариев."""
+        return Comment.objects.filter(article=self).count()
+
 
 class Comment(models.Model):
-    """
-    Модель комментария к статье.
+    """Модель комментария к статье.
+
     Комментарий связан с одной статьей и с одним пользователем.
     У одной статьи может быть много комментариев.
     """
@@ -155,9 +166,10 @@ class Comment(models.Model):
     content = models.TextField()
     posted = models.DateTimeField(auto_now_add=True)
 
-    class Meta:
-        ordering = ["posted"]
+    class Meta:  # noqa: D106
+        ordering = ("posted",)
         verbose_name_plural = "Комментарии"
 
-    def __str__(self):
-        return str(self.author) + ", " + self.article.title
+    def __str__(self) -> str:
+        """Строкое представление комментрия содержит автора комментария и статью, к которой был оставлен комментарий."""
+        return f"{self.author}, {self.article.title}"

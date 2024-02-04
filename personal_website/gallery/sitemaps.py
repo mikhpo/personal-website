@@ -1,33 +1,47 @@
-"""
-Модуль для построения карты сайта по объектам блога.
-"""
-from django.contrib.sitemaps import Sitemap
+"""Модуль для построения карты сайта по объектам галереи."""
+from datetime import datetime
 
-from .models import Album, Photo, Tag
+from django.contrib.sitemaps import Sitemap
+from django.db.models.manager import BaseManager
+
+from gallery.models import Album, Photo, Tag
+
+PROTOCOL = "https"
 
 
 class TagSitemap(Sitemap):
-    protocol = "https"
+    """Карта сайта для тэгов."""
 
-    def items(self):
+    protocol = PROTOCOL
+
+    def items(self) -> BaseManager[Tag]:
+        """Все тэги."""
         return Tag.objects.all()
 
 
 class AlbumSitemap(Sitemap):
-    protocol = "https"
+    """Карта сайта для альбомов."""
 
-    def items(self):
+    protocol = PROTOCOL
+
+    def items(self) -> BaseManager[Album]:
+        """Все публичные альбомы."""
         return Album.published.all()
 
-    def lastmod(self, obj: Album):
+    def lastmod(self, obj: Album) -> datetime:
+        """Время последнего изменения альбома."""
         return obj.updated_at
 
 
 class PhotoSitemap(Sitemap):
-    protocol = "https"
+    """Карта сайта для фотографий."""
 
-    def items(self):
+    protocol = PROTOCOL
+
+    def items(self) -> BaseManager[Photo]:
+        """Все публичные фотографии."""
         return Photo.published.all()
 
-    def lastmod(self, obj: Photo):
+    def lastmod(self, obj: Photo) -> datetime:
+        """Время последнего изменения фотографии."""
         return obj.modified_at

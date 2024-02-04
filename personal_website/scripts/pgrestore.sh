@@ -51,7 +51,7 @@ pg_restore \
     -h "$POSTGRES_HOST" \
     -U "$POSTGRES_USER" \
     -p "$POSTGRES_PORT" \
-    -d "$POSTGRES_NAME" \
+    -d "$POSTGRES_DB" \
     "$dump_path"
 
 echo "База данных PostgreSQL восстановлена из дампа"

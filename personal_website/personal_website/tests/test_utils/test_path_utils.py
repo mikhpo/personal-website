@@ -1,3 +1,4 @@
+"""Тесты вспомогательных функций для работы с файлами и файловой системой."""
 import os
 from pathlib import Path
 
@@ -19,35 +20,28 @@ FS_STORAGE = FileSystemStorage(
 
 
 class ListFilePathTests(SimpleTestCase):
-    """
-    Тестирование утилиты поиска абсолютных путей тестовых фотографий.
-    """
+    """Тестирование утилиты поиска абсолютных путей тестовых фотографий."""
 
-    def test_paths_exist(self):
-        """
-        Проверить, что возвращенные пути существуют.
-        """
-        test_images_dir = os.path.join(temp_root, "gallery", "photos")
+    def test_paths_exist(self) -> None:
+        """Проверить, что возвращенные пути существуют."""
+        test_images_dir = Path(temp_root) / "gallery" / "photos"
         image_paths_list = list_file_paths(test_images_dir)
         self.assertIsInstance(image_paths_list, list)
         for image_path in image_paths_list:
-            self.assertTrue(os.path.exists(image_path))
+            image_exists = Path(image_path).exists()
+            self.assertTrue(image_exists)
 
 
 class CalculatePathSizeTests(SimpleTestCase):
-    """
-    Тесты утилиты определения размера занимаего на диске места.
-    """
+    """Тесты утилиты определения размера занимаего на диске места."""
 
     @classmethod
-    def setUpClass(cls) -> None:
+    def setUpClass(cls) -> None:  # noqa: D102
         cls.files = [JpegFileProvider(FAKER).jpeg_file(storage=FS_STORAGE, raw=False) for _ in range(3)]
         return super().setUpClass()
 
-    def test_file(self):
-        """
-        Проверка определения размера файла.
-        """
+    def test_file(self) -> None:
+        """Проверка определения размера файла."""
         filepath = FS_STORAGE.abspath(self.files[0])
         filesize = calculate_path_size(filepath)
         self.assertIsInstance(filesize, dict)
@@ -59,10 +53,8 @@ class CalculatePathSizeTests(SimpleTestCase):
         self.assertIn(str(value), message)
         self.assertIn(unit, message)
 
-    def test_dir(self):
-        """
-        Проверка определения размера каталога.
-        """
-        dir_path = os.path.join(FS_STORAGE.root_path, FS_STORAGE.rel_path)
+    def test_dir(self) -> None:
+        """Проверка определения размера каталога."""
+        dir_path = Path(FS_STORAGE.root_path) / FS_STORAGE.rel_path
         filesize = calculate_path_size(dir_path)
         self.assertIsInstance(filesize, dict)

@@ -1,6 +1,4 @@
-"""
-Стандартный модуль, в котором зарегистрированы используемые в проекте веб-адреса.
-"""
+"""Стандартный модуль, в котором зарегистрированы используемые в проекте веб-адреса."""
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin

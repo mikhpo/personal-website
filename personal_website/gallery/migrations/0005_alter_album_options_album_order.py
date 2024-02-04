@@ -4,6 +4,7 @@ from django.db import migrations, models
 
 
 def reorder_albums(apps, schema_editor):
+    """Изменить порядок сортировки альбомов."""
     Album = apps.get_model("gallery", "Album")
     for order, item in enumerate(Album.objects.all(), 1):
         item.order = order

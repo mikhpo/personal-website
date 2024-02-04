@@ -4,16 +4,13 @@
     "main"
   ],
   "[python]": {
-    "editor.defaultFormatter": "ms-python.black-formatter",
     "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
-      "source.organizeImports": "explicit"
+      "source.fixAll": true,
+      "source.organizeImports": true
     },
+    "editor.defaultFormatter": "charliermarsh.ruff"
   },
-  "isort.args": [
-    "--profile",
-    "black"
-  ],
   "python.testing.unittestArgs": [
     "-v",
     "-s",
@@ -27,5 +24,7 @@
   "python.terminal.activateEnvInCurrentTerminal": false,
   "python.testing.pytestArgs": [
     "."
-  ]
+  ],
+  "ruff.lint.args": ["--config=${workspaceFolder}/pyproject.toml"],
+  "ruff.format.args": ["--config=${workspaceFolder}/pyproject.toml"],
 }

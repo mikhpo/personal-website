@@ -24,7 +24,7 @@ env:
   POSTGRES_PASSWORD: postgres
   POSTGRES_HOST: localhost
   POSTGRES_PORT: 5432
-  POSTGRES_NAME: personal_website
+  POSTGRES_DB: personal_website
   EMAIL_HOST_USER: ${{ secrets.EMAIL_HOST_USER }}
   EMAIL_HOST_PASSWORD: ${{ secrets.EMAIL_HOST_PASSWORD }}
   DOMAIN_NAME: ${{ secrets.DOMAIN_NAME }}
@@ -41,7 +41,7 @@ jobs:
         env:
           POSTGRES_USER: ${{ env.POSTGRES_USER }}
           POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
-          POSTGRES_DB: ${{ env.POSTGRES_NAME }}
+          POSTGRES_DB: ${{ env.POSTGRES_DB }}
         ports:
           - 5432:5432
         options: >-
@@ -91,6 +91,10 @@ jobs:
         run: |
           npm install
           npm ls
+
+      # Выполнить статический анализ кода Python при помощи Ruff.
+      - name: Check Ruff linter
+        run: poetry run ruff check
 
       # Выполнить сбор статических файлов административной командой Django.
       - name: Collect static files

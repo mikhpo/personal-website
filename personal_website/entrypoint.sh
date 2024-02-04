@@ -45,7 +45,6 @@ function get_port() {
 # Параметры алиаса зависят из переменных окружения.
 #######################################
 function set_minio_alias() {
-    # TODO: проверить корректность выполнения
     mc alias set \
     "${MINIO_ALIAS}" \
     "${MINIO_SERVER_URL}" \

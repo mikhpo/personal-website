@@ -1,10 +1,12 @@
+"""Представления для системы авторизации пользователей."""
 from django.contrib.auth import authenticate, login
+from django.http import HttpRequest, HttpResponse, HttpResponsePermanentRedirect, HttpResponseRedirect
 from django.shortcuts import redirect, render
 
-from .forms import SignUpForm
+from accounts.forms import SignUpForm
 
 
-def signup(request):
+def signup(request: HttpRequest) -> HttpResponseRedirect | HttpResponsePermanentRedirect | HttpResponse:
     """
     Представление для регистрации нового пользователя.
     После завершения регистрации автоматически происходит авторизация.

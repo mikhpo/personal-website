@@ -1,12 +1,16 @@
+"""Представления блога."""
 import logging
+from typing import Any
 
 from django.conf import settings
-from django.core.paginator import Paginator
+from django.core.paginator import Page, Paginator
+from django.db.models.manager import BaseManager
+from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render
 from django.views.generic.detail import DetailView
 
-from .forms import NewCommentForm
-from .models import Article, Category, Comment, Series, Topic
+from blog.forms import NewCommentForm
+from blog.models import Article, Category, Comment, Series, Topic
 
 logger = logging.getLogger(settings.PROJECT_NAME)
 
@@ -19,7 +23,8 @@ class ArticleDetailView(DetailView):
 
     model = Article
 
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, **kwargs) -> dict[str, Any]:
+        """В контекст ответа добавляются комментарии к статье и форма создания комментария."""
         data = super().get_context_data(**kwargs)
 
         # Добавляются комментарии к статье, отсортированные в порядке от старых к новым.
@@ -32,31 +37,28 @@ class ArticleDetailView(DetailView):
 
         return data
 
-    def post(self, request, *args, **kwargs):
-        """
-        Функция для добавления комментариев к статьям.
-        """
+    def post(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
+        """Функция для добавления комментариев к статьям."""
         new_comment = Comment(
             content=request.POST.get("content"),
             author=self.request.user,
             article=self.get_object(),
         )
         new_comment.save()
-        logger.info(f'Пользователь {self.request.user} оставил комментарий к статье "{self.get_object()}"')
+        user = self.request.user
+        article = self.get_object()
+        logger.info(f"Пользователь {user} оставил комментарий к статье {article}")
         return self.get(self, request, *args, **kwargs)
 
 
-def paginate(request, objects):
-    """
-    Фукнция для разбивки отображения списка объектов по страницам.
-    """
+def paginate(request: HttpRequest, objects: BaseManager) -> Page:
+    """Фукнция для разбивки отображения списка объектов по страницам."""
     paginator = Paginator(objects, 5)
     page_number = request.GET.get("page")
-    page_obj = paginator.get_page(page_number)
-    return page_obj
+    return paginator.get_page(page_number)
 
 
-def blog(request):
+def blog(request: HttpRequest) -> HttpResponse:
     """
     Функция, определяющая порядок отображения статей на главной странице блога.
     Добавлена разбивка по страницам. Здесь указано количество статей на страницу.
@@ -66,28 +68,22 @@ def blog(request):
     return render(request, "blog/article_list.html", {"page_obj": paginate(request, content)})
 
 
-def category(request, slug):
-    """
-    Вывод всех статей, соответствующих определенной категории.
-    """
+def category(request: HttpRequest, slug: str) -> HttpResponse:
+    """Вывод всех статей, соответствующих определенной категории."""
     category = Category.objects.get(slug=slug)
     articles = category.article_set.filter(public=True)
     return render(request, "blog/article_list.html", {"page_obj": paginate(request, articles)})
 
 
-def series(request, slug):
-    """
-    Вывод всех статей, соответствующих определенной серии.
-    """
+def series(request: HttpRequest, slug: str) -> HttpResponse:
+    """Вывод всех статей, соответствующих определенной серии."""
     series = Series.objects.get(slug=slug)
     articles = series.article_set.filter(public=True)
     return render(request, "blog/article_list.html", {"page_obj": paginate(request, articles)})
 
 
-def topic(request, slug):
-    """
-    Вывод всех статей, соответствующих определенной теме.
-    """
+def topic(request: HttpRequest, slug: str) -> HttpResponse:
+    """Вывод всех статей, соответствующих определенной теме."""
     topic = Topic.objects.get(slug=slug)
     articles = topic.article_set.filter(public=True)
     return render(request, "blog/article_list.html", {"page_obj": paginate(request, articles)})
