@@ -48,7 +48,7 @@ function load_dotenv() {
 function install_packages() {
     sudo apt-get update
     sudo apt-get upgrade -y
-    sudo apt-get install \
+    sudo apt-get install -y \
         cron \
         curl \
         gnupg \

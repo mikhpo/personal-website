@@ -3,12 +3,16 @@ services:
   # Веб-сайт на Django. Запускается либо через Gunicorn, либо через команду runserver.
   # Способ запуска и параметры запуска определяются скриптом entrypoint.sh.
   website:
+    image: ${DOCKER_REGISTRY}/mikhpo/personal-website:latest
+    platform: "linux/amd64"
     build:
       context: .
       dockerfile: ./personal_website/Dockerfile
       tags:
         - mikhpo/personal-website:latest
         - ghcr.io/mikhpo/personal-website:latest
+      platforms:
+        - "linux/amd64"
     environment:
       - STORAGE_ROOT=/srv/website/storage
       - STATIC_ROOT=/srv/website/static
@@ -36,7 +40,7 @@ services:
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:${DJANGO_PORT}"]
       interval: 5s
-      timeout: 5s
+      timeout: 5scompose
       retries: 5
     develop:
       watch:
