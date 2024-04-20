@@ -41,7 +41,7 @@ function load_dotenv() {
 function install_packages() {
     sudo apt-get update
     sudo apt-get upgrade -y
-    sudo apt-get install \
+    sudo apt-get install -y \
         cron \
         ufw \
         ca-certificates \
@@ -89,7 +89,7 @@ function install_docker() {
     sudo apt-get update
 
     # Установить пакеты Docker.
-    sudo apt-get install \
+    sudo apt-get install -y \
         docker-ce \
         docker-ce-cli \
         containerd.io \
@@ -99,6 +99,8 @@ function install_docker() {
     # Установить авто-запуск службы Docker.
     sudo systemctl enable docker.service
     sudo systemctl enable containerd.service
+
+    sudo chmod 666 /var/run/docker.sock
 }
 
 #######################################
@@ -120,10 +122,9 @@ function login_docker() {
 # и выполнив сборку остальных контейнеров.
 #######################################
 function compose_up() {
-    docker-compose pull
-    docker-compose build
-    docker-compose up -d
-    docker-compose ps
+    docker compose pull
+    docker compose up -d
+    docker compose ps
 }
 
 #######################################
