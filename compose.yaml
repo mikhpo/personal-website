@@ -35,12 +35,11 @@ services:
       minio:
         condition: service_healthy
         restart: true
-
     restart: always
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:${DJANGO_PORT}"]
       interval: 5s
-      timeout: 5scompose
+      timeout: 5s
       retries: 5
     develop:
       watch:
