@@ -1,5 +1,6 @@
 server {
     listen ${NGINX_PORT};
+
     server_name ${DOMAIN_NAME};
 
     location /media/ {

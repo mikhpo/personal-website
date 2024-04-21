@@ -60,10 +60,30 @@ function install_packages() {
         python3-pip \
         pipx \
         wkhtmltopdf \
-        nginx \
-        ufw \
-        certbot \
-        python3-certbot-nginx
+        nginx
+}
+
+#######################################
+# Выполнить настройку ufw (Uncomplicated Firewall).
+# Разрешить трафик через следующие порты:
+# - SSH
+# - HTTP
+# - HTTPS
+# - rsync
+# - PostgreSQL
+# - MinIO
+#######################################
+function enable_ufw() {
+    sudo apt-get install -y ufw
+    sudo ufw enable
+    sudo ufw allow 22
+    sudo ufw allow 80
+    sudo ufw allow 443
+    sudo ufw allow 873
+    sudo ufw allow 5432
+    sudo ufw allow 9000
+    sudo ufw allow 9001
+    sudo ufw status
 }
 
 #######################################
@@ -131,8 +151,6 @@ function setup_nginx() {
     readonly enabled_conf="$SITES_ENABLED/$WEBSITE_NAME"
 
     sudo systemctl enable nginx
-    sudo ufw enable
-    sudo ufw status
 
     # Если конфигурационный файл уже существует, то удалить его.
     if [ -f $available_conf ]; then
@@ -140,7 +158,12 @@ function setup_nginx() {
     fi
 
     # Заполнить шаблон конфигурационного файла переменными окружения.
-    envsubst <"$config_dir/$NGINX_CONF_TEMPLATE" >$available_conf
+    export NGINX_PORT=$NGINX_PORT
+    export DOMAIN_NAME=$DOMAIN_NAME
+    export STORAGE_ROOT=$STORAGE_ROOT
+    export STATIC_ROOT=$STATIC_ROOT
+    export DJANGO_PORT=$DJANGO_PORT
+    envsubst < "$config_dir/$NGINX_CONF_TEMPLATE" > $available_conf
 
     # Удалить ссылку на конфигурационный файл, если она уже создана.
     if [ -L $enabled_conf ]; then
@@ -152,14 +175,16 @@ function setup_nginx() {
 
     sudo nginx -t
     sudo systemctl restart nginx
-    sudo ufw allow 'Nginx Full'
-    sudo ufw status
 }
 
 #######################################
 # Установка сертификата Let's Encrypt при помощи Certbot.
 #######################################
 function setup_certbot() {
+    sudo apt-get install -y \
+        certbot \
+        python3-certbot-nginx
+
     # Получить SSL сертификат.
     sudo certbot \
         --nginx \
@@ -191,6 +216,7 @@ function main() {
     confirm_dotenv
     load_dotenv
     install_packages
+    enable_ufw
     install_poetry
     install_node
     install_minio
