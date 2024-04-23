@@ -108,11 +108,24 @@ function install_node() {
 
 #######################################
 # Установить клиент MinIO.
+# Клиент скачивается с официального сайта MinIO.
+# После установки путь добавляетя в переменную PATH.
 #######################################
 function install_minio() {
+    # Скачать MinIO Client и скопировать по указанному пути.
     wget https://dl.min.io/client/mc/release/linux-amd64/mc && \
     sudo chmod +x mc && \
     sudo mv mc /usr/local/bin/mc
+
+    # Проверить наличие пути к клиенту MinIO в файле .bashrc.
+    if grep -q "/usr/local/bin/mc" ~/.bashrc; then
+        echo "Путь MinIO уже добавлен в PATH."
+    else
+        # Добавить пустую строку.
+        echo '' >> ~/.bashrc
+        # shellcheck disable=SC2016
+        echo 'export PATH="$PATH:/usr/local/bin/mc"' >> ~/.bashrc
+    fi
 }
 
 #######################################
