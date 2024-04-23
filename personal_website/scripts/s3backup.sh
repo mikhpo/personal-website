@@ -9,9 +9,6 @@ set -e
 now=$(date '+%Y-%m-%d %H:%M:%S')
 echo "Cоздание бэкапа файлового хранилища. Дата и время выполнения: $now"
 
-# Определение полного пути клиента Minio.
-mc=$(which mc)
-
 # Прочитать переменные окружения из файла .env в корневом каталоге проекта.
 project_root="$(dirname "$(dirname "$(dirname "$(readlink -f "$0")")")")"
 readonly dotenv="$project_root/.env"
@@ -30,13 +27,13 @@ echo "Размер файлового хранилища: $storage_size"
 
 # Создать бакет в S3, если не существует.
 readonly S3_BUCKET="$MINIO_ALIAS/$BACKUP_BUCKET"
-$mc mb --ignore-existing "$S3_BUCKET"
+mc mb --ignore-existing "$S3_BUCKET"
 readonly TARGET="$S3_BUCKET/storage"
 
 # Выполнить резервное копирование.
 # Файлы, отсутствующие в источнике, удаляются в целевом ресурсе.
 echo "Выполнение резервного копирования в $TARGET"
-$mc mirror \
+mc mirror \
     --overwrite \
     --remove \
     "$SOURCE" \

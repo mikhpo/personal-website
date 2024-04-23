@@ -10,9 +10,6 @@ today=$(date '+%Y-%m-%d')
 now=$(date '+%Y-%m-%d %H:%M:%S')
 echo "Cоздание бэкапа базы данных PostgreSQL. Дата и время выполнения: $now"
 
-# Определение полного пути клиента Minio.
-mc=$(which mc)
-
 # Прочитать переменные окружения из файла .env в корневом каталоге проекта.
 project_root="$(dirname "$(dirname "$(dirname "$(readlink -f "$0")")")")"
 readonly dotenv="$project_root/.env"
@@ -54,16 +51,16 @@ echo "Размер дампа: $filesize"
 
 # Создать бакет в S3, если не существует.
 readonly S3_BUCKET="$MINIO_ALIAS/$BACKUP_BUCKET"
-$mc mb --ignore-existing "$S3_BUCKET"
+mc mb --ignore-existing "$S3_BUCKET"
 
 # Скопировать файл дампа из локальной файловой системы в бакет S3.
 # Созданный ранее объект с тем же именем удаляется.
 readonly object_name="$dump_dir/$dump_name"
 readonly target_path="$S3_BUCKET/$object_name"
-if [[ $($mc ls "$target_path") ]]; then
-    $mc rm "$target_path"
+if [[ $(mc ls "$target_path") ]]; then
+    mc rm "$target_path"
 fi
-$mc cp "$dump_path" "$target_path"
+mc cp "$dump_path" "$target_path"
 echo "Создан объект в S3 с именем $object_name"
 
 # Удалить локальный файл дампа.

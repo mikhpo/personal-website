@@ -5,9 +5,6 @@
 # Выйти в случае ошибки.
 set -e
 
-# Определение полного пути клиента Minio.
-mc=$(which mc)
-
 # Прочитать переменные окружения из файла .env в корневом каталоге проекта.
 project_root="$(dirname "$(dirname "$(dirname "$(readlink -f "$0")")")")"
 readonly dotenv="$project_root/.env"
@@ -24,7 +21,7 @@ echo "Адрес файлового хранилища: $TARGET"
 
 # Выполнить копирование резервной копии в локальную систему.
 echo "Копирование бэкапа в $TARGET"
-$mc mirror \
+mc mirror \
     --limit-download 100M \
     "$SOURCE" \
     "$TARGET"
