@@ -27,13 +27,13 @@ echo "Размер файлового хранилища: $storage_size"
 
 # Создать бакет в S3, если не существует.
 readonly S3_BUCKET="$MINIO_ALIAS/$BACKUP_BUCKET"
-mc mb --ignore-existing "$S3_BUCKET"
+$MC_PATH mb --ignore-existing "$S3_BUCKET"
 readonly TARGET="$S3_BUCKET/storage"
 
 # Выполнить резервное копирование.
 # Файлы, отсутствующие в источнике, удаляются в целевом ресурсе.
 echo "Выполнение резервного копирования в $TARGET"
-mc mirror \
+$MC_PATH mirror \
     --overwrite \
     --remove \
     "$SOURCE" \

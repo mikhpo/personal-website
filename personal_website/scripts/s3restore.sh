@@ -21,7 +21,7 @@ echo "Адрес файлового хранилища: $TARGET"
 
 # Выполнить копирование резервной копии в локальную систему.
 echo "Копирование бэкапа в $TARGET"
-mc mirror \
+$MC_PATH mirror \
     --limit-download 100M \
     "$SOURCE" \
     "$TARGET"
