@@ -188,3 +188,10 @@ tasks:
       - docker-compose up -d minio
       - mc alias set ${MINIO_ALIAS} ${MINIO_SERVER_URL} ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD}
       - mc admin info ${MINIO_ALIAS}
+
+  delete-branches:
+    desc: Удалить все ветки, кроме основной
+    summary: |
+      Выполняет команду `git branch -D` для всех веток, кроме main и текущей.
+    cmds:
+      - git branch | grep -v "main" | xargs git branch -D
