@@ -189,9 +189,9 @@ Poetry сконфигурирован таким образом, чтобы ви
 
     npm test
 
-Также для выполнения всех тестов можно запустить bash-скрипт `runtests.sh`. Скрипт `runtests.sh` запускает тесты Node.js, тесты Pytest и создает отчет Coverage в формате HTML. Для запуска скрипта `runtests.sh` необходимо воспользоваться командой:
+Также для выполнения всех тестов можно запустить bash-скрипт [runtests.sh](./tools/runtests.sh). Скрипт `runtests.sh` запускает тесты Node.js, тесты Pytest и создает отчет Coverage в формате HTML. Для запуска скрипта `runtests.sh` необходимо воспользоваться командой:
 
-    bash runtests.sh
+    bash tools/runtests.sh
 
 Для запуска pytest в контейнере используется команда:
 

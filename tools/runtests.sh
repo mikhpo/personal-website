@@ -14,14 +14,28 @@ function print_line() {
 # Смена директории на корневую директорию проекта.
 #######################################
 function change_dir() {
-    repository_root="$(dirname "$(dirname "$(dirname "$(readlink -f "$0")")")")"
+    repository_root="$(dirname "$(dirname "$(readlink -f "$0")")")"
     cd "$repository_root" || exit
 }
 
 #######################################
-# Запустить тесты Node.js.
+# Собрать, создать и запустить контейнеры сервиса.
 #######################################
-function run_npm_test() {
+function containers_up() {
+    docker-compose up --detach --wait --force-recreate postgres
+}
+
+#######################################
+# Остановить и удалить контейнеры сервиса.
+#######################################
+function containers_down() {
+    docker-compose down
+}
+
+#######################################
+# Запустить тесты JavaScript (Node.js).
+#######################################
+function run_javascript_tests() {
     print_line
     echo "Выполнение тестов Node.js"
     npm test
@@ -30,9 +44,9 @@ function run_npm_test() {
 #######################################
 # Запустить тесты проекта Django при помощи Pytest.
 #######################################
-function run_project_tests() {
+function run_python_tests() {
     print_line
-    echo "Выполнение тестов Django"
+    echo "Выполнение тестов Python/Django"
     poetry run coverage run -m pytest
     poetry run coverage html
 }
@@ -42,8 +56,10 @@ function run_project_tests() {
 #######################################
 function main() {
     change_dir
-    run_npm_test
-    run_project_tests
+    run_javascript_tests
+    containers_up
+    run_python_tests
+    containers_down
 }
 
 main "$@"
