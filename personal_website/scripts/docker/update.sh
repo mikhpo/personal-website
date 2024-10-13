@@ -5,7 +5,7 @@
 # Выйти в случае ошибки.
 set -e
 
-project_root="$(dirname "$(dirname "$(dirname "$(readlink -fm "$0")")")")"
+project_root="$(dirname "$(dirname "$(dirname "$(dirname "$(readlink -f "$0")")")")")"
 cd "$project_root" || exit
 
 # Создать резервную копию базы данных и загруженных файлов.

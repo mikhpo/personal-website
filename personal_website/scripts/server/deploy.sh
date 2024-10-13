@@ -7,8 +7,8 @@
 set -e
 
 # Определение рабочих файлов проекта.
-project_root="$(dirname "$(dirname "$(dirname "$(readlink -f "$0")")")")"
-readonly config_dir="$project_root/tools/server/config"
+project_root="$(dirname "$(dirname "$(dirname "$(dirname "$(readlink -f "$0")")")")")"
+readonly config_dir="$project_root/personal_website/config"
 readonly dotenv="$project_root/.env"
 cd "$project_root" || exit
 
@@ -130,8 +130,9 @@ function setup_locale() {
 # Активирует сокет и создает службу.
 #######################################
 function setup_gunicorn() {
-    readonly socket="$config_dir/gunicorn.socket"
-    readonly service="$config_dir/gunicorn.service"
+    readonly gunicorn_dir="$config_dir/gunicorn"
+    readonly socket="$gunicorn_dir/gunicorn.socket"
+    readonly service="$gunicorn_dir/gunicorn.service"
     readonly DESTINATION_DIR="/etc/systemd/system/"
 
     # Скопировать конфигурационные файлы и включить Gunicorn.
@@ -146,7 +147,7 @@ function setup_gunicorn() {
 # разрешает доступ через Uncomplicated Firewall.
 #######################################
 function setup_nginx() {
-    readonly NGINX_CONF_TEMPLATE="default.conf.template"
+    readonly NGINX_CONF_TEMPLATE="nginx/default.conf.template"
     readonly SITES_AVAILABLE="/etc/nginx/sites-available"
     readonly SITES_ENABLED="/etc/nginx/sites-enabled"
     readonly available_conf="$SITES_AVAILABLE/$WEBSITE_NAME"
