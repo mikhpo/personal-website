@@ -37,6 +37,7 @@ tasks:
     env:
       POSTGRES_HOST: localhost
     cmds:
+      - defer: docker-compose down
       - docker-compose up -d postgres
       - poetry run python ./personal_website/manage.py migrate
       - poetry run python ./personal_website/manage.py collectstatic --noinput

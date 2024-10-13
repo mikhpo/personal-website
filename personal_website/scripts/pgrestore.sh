@@ -45,8 +45,8 @@ echo "Выполнение программы pg_restore"
 export PGPASSWORD=$POSTGRES_PASSWORD
 pg_restore \
     -Fc \
-    --single-transaction \
     --no-owner \
+    --create \
     --clean \
     -h "$POSTGRES_HOST" \
     -U "$POSTGRES_USER" \

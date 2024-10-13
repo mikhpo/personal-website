@@ -35,7 +35,13 @@ fi
 connection="host=$POSTGRES_HOST port=$POSTGRES_PORT dbname=$POSTGRES_DB user=$POSTGRES_USER"
 echo "Выполнение программы pg_dump с параметрами подключения: $connection"
 export PGPASSWORD=$POSTGRES_PASSWORD
-pg_dump "$connection" --no-privileges --no-subscriptions --no-publications -Fc -f "$dump_path"
+pg_dump \
+    "$connection" \
+    -Fc \
+    --no-privileges \
+    --no-subscriptions \
+    --no-publications \
+    -f "$dump_path"
 
 # Проверить успешность создания дампа.
 if [ -f "$dump_path" ]; then
