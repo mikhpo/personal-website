@@ -6,7 +6,7 @@
 set -e
 
 # Определение рабочих файлов проекта.
-project_root="$(dirname "$(dirname "$(dirname "$(readlink -f "$0")")")")"
+project_root="$(dirname "$(dirname "$(dirname "$(dirname "$(readlink -f "$0")")")")")"
 readonly dotenv="$project_root/.env"
 cd "$project_root" || exit
 

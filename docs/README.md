@@ -322,8 +322,8 @@ Certbot используется для получения и обновлени
 1. Сменить рабочую директорию на `/srv/personal-website`
 1. Заполнить файл .env с конфигурационными параметрами: `nano .env`
 1. Запустить скрипт для развертывания:
-    * `bash tools/docker/deploy.sh` для развертывания в контейнере
-    * `bash tools/server/deploy.sh` для развертывание в ОС хоста
+    * `bash personal_website/scripts/docker/deploy.sh` для развертывания в контейнере
+    * `bash personal_website/scripts/server/deploy.sh` для развертывание в ОС хоста
 
 ### Добавление SSH-ключей хоста в GitHub
 
