@@ -7,7 +7,7 @@
 if [ -n "$1" ]; then
     branch_name=$1
 else
-    read -rp "Сообщение для коммита: " branch_name
+    read -rp "Имя ветки: " branch_name
 fi
 
 # Извлечь состояние удаленного репозитория.
