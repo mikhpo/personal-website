@@ -28,6 +28,7 @@ services:
       - ${BACKUP_ROOT}:/srv/website/backups:rw
       - ${LOGS_ROOT}:/srv/website/logs:rw
       - ${TEMP_ROOT}:/srv/website/temp:rw
+      - ./htmlcov/:/srv/website/htmlcov:rw
     depends_on:
       postgres:
         condition: service_healthy

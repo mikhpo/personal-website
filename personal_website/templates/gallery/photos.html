@@ -1,12 +1,15 @@
 <!-- Список фотографий в представлении карточек Bootstrap. -->
+{% load file_tags %}
 <div class="row row-cols-1 row-cols-md-4 g-4 justify-content-center">
     {% for photo in photos %}
         <div class="col">
             <a href="{{ photo.get_absolute_url }}">
                 <div class="card shadow bg-white rounded text-center">
-                    <img class="card-img"
-                         src="{{ photo.image_preview.url }}"
-                         alt="{{ photo.name }}">
+                    {% if photo.image.name|file_exists %}
+                        <img class="card-img"
+                             src="{{ photo.image_preview.url }}"
+                             alt="{{ photo.name }}">
+                    {% endif %}
                 </div>
             </a>
         </div>

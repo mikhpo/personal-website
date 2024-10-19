@@ -58,6 +58,7 @@ class SignUpForm(UserCreationForm):
             с однимадресом электронной почты.
         - Не совпадают ли имя и фамилия пользователя. Нельзя зарегистрировать пользователя,
             если его имя и фамилия совпадают.
+        - Прочие проверки, предусмотренные стандартной формой создания пользовтеля Django.
         """
         first_name = self.cleaned_data.get("first_name")
         last_name = self.cleaned_data.get("last_name")
@@ -68,4 +69,4 @@ class SignUpForm(UserCreationForm):
         if first_name == last_name:
             msg = "У вас совпадают имя и фамилия!"
             raise ValidationError(msg)
-        return self.cleaned_data
+        return super().clean()

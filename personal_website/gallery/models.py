@@ -218,16 +218,17 @@ class Photo(models.Model):
     def exif(self) -> dict:
         """Получить данные EXIF при помощи библиотеки PIL."""
         exif_data = {}
-        self.image.open()
-        with pImage.open(self.image) as img:
-            if hasattr(img, "_getexif"):
-                info = img._getexif()  # noqa: SLF001
-                if not info:
-                    return {}
-                for tag, value in info.items():
-                    decoded = TAGS.get(tag, tag)
-                    exif_data[decoded] = value
-            img.close()
+        storage = select_storage()
+        if storage.exists(self.image.name):
+            with pImage.open(self.image) as img:
+                if hasattr(img, "_getexif"):
+                    info = img._getexif()  # noqa: SLF001
+                    if not info:
+                        return {}
+                    for tag, value in info.items():
+                        decoded = TAGS.get(tag, tag)
+                        exif_data[decoded] = value
+                img.close()
         return exif_data
 
     @cached_property

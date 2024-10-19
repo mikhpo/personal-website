@@ -64,11 +64,11 @@ class NoColorLogFormatter(logging.Formatter):
 def list_file_paths(files_dir: str) -> list[str]:
     """Определить пути набора набора файлов в указанном каталоге.
 
-    Аргументы:
+    Args:
         files_dir (str): путь до файлов.
 
-    Возвращает:
-        Список полных путей до файлов.
+    Returns:
+        list: список полных путей до файлов.
     """
     names = os.listdir(files_dir)
     paths = [Path(files_dir).joinpath(name) for name in names]
@@ -78,16 +78,16 @@ def list_file_paths(files_dir: str) -> list[str]:
 def calculate_path_size(path: str) -> dict | None:
     """Определение размера файла или каталога по указанному пути с автоматическим определением единцы измерения.
 
-    Аргументы:
+    Args:
         path (str): путь до файла или каталога.
 
-    Возвращает:
-        Словарь, содержащий значение, единицу измерения и сообщение.
+    Returns:
+        dict: словарь, содержащий значение, единицу измерения и сообщение.
 
-    Пример:
-    ```python
-    {"value": 500, "unit": "КБ", "message": "500 КБ"}
-    ```
+    Examples:
+        ```
+        {"value": 500, "unit": "КБ", "message": "500 КБ"}
+        ```
     """
     units = ("Б", "КБ", "МБ", "ГБ", "ТБ")
     binary_thousand = 1024
