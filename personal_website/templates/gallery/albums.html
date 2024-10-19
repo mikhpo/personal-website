@@ -1,4 +1,5 @@
 {% comment %} Список альбомов в представлении карточек Bootstrap. {% endcomment %}
+{% load file_tags %}
 <h4>
     <p align="center">Альбомы</p>
 </h4>
@@ -8,7 +9,9 @@
             <div class="col">
                 <div class="card shadow bg-white rounded text-center">
                     <a href="{{ album.get_absolute_url }}">
-                        <img src="{{ album.cover.image_preview.url }}" alt="{{ album.name }}">
+                        {% if album.cover.image_preview.name|file_exists %}
+                            <img src="{{ album.cover.image_preview.url }}" alt="{{ album.name }}">
+                        {% endif %}
                     </a>
                     <div class="card-body">
                         {% if album.name %}

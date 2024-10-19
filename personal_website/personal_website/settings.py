@@ -193,6 +193,9 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 "django.template.context_processors.i18n",
             ],
+            "libraries": {
+                "file_tags": "personal_website.templatetags.file_tags",
+            },
         },
     },
 ]

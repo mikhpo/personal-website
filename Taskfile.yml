@@ -100,7 +100,6 @@ tasks:
       - docker-compose up -d postgres nginx minio
       - poetry run pytest ./tests {{.CLI_ARGS}}
 
-
   check:
     desc: Выполнить статический анализ кода и проверки Django
     summary: Команда запускает проверки Ruff
@@ -146,7 +145,7 @@ tasks:
     cmds:
       - docker-compose build
 
-  up:
+  up-detached:
     desc: Запустить контейнеры в фоновом режиме
     summary: |
       Запускает контейнеры Docker сервисов, определенных в файле Compose, в фоновом режиме (detached).
@@ -188,6 +187,17 @@ tasks:
       - test -f compose.yaml
     cmds:
       - docker-compose down --remove-orphans --volumes
+
+  postgres:
+    desc: Запустить контейнер PostgreSQL
+    summary: |
+      Запускает контейнер сервиса PostgreSQL, определенного в файле Compose, в фоновом режиме (detached).
+    preconditions:
+      - test -f compose.yaml
+      - test -f .env
+    cmds:
+      - docker-compose up -d postgres
+      - docker-compose ps
 
   minio-alias:
     desc: Создать алиас для сервера MinIO

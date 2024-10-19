@@ -1,12 +1,15 @@
 {% extends "gallery/gallery_home.html" %}
 {% load static %}
+{% load file_tags %}
 {% block title %}
     {{ photo.album.name }} - {{ photo.name }}
 {% endblock title %}
 {% block gallery %}
     <div class="container">
         <div class="card shadow bg-white rounded justify-content">
-            <img class="card-img" src="{{ photo.image.url }}" alt="{{ photo.name }}">
+            {% if photo.image.name|file_exists %}
+                <img class="card-img" src="{{ photo.image.url }}" alt="{{ photo.name }}">
+            {% endif %}
             <div class="card-footer" align="center">
                 <div class="btn-group" role="group" aria-label="Photo navigation buttons">
                     {% if previous_photo %}
