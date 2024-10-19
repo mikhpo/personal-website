@@ -248,6 +248,7 @@ TINYMCE_DEFAULT_CONFIG = {
     "menubar": True,
     "statusbar": True,
     "relative_urls": False,
+    "width": "100%",
 }
 
 """

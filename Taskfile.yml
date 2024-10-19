@@ -61,8 +61,7 @@ tasks:
       - defer: docker-compose down
       - docker-compose up -d postgres
       - npm test
-      - poetry run coverage run -m pytest {{.CLI_ARGS}}
-      - poetry run coverage html
+      - poetry run pytest {{.CLI_ARGS}}
 
   test-container:
     desc: Выполнить тесты в контейнере
