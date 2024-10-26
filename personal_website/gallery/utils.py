@@ -39,9 +39,10 @@ def move_photo_image(photo: Model, source_path: str) -> str:
 def is_image(file: Any) -> bool:  # noqa: ANN401
     """Проверяет, является ли файл изображением.
 
-    Возвращает:
-        - Если файл является изображением, то True.
-        - Если файл не является изображением, то False.
+    Returns:
+        bool:
+            - Если файл является изображением, то True.
+            - Если файл не является изображением, то False.
     """
     try:
         image = Image.open(file)

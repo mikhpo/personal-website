@@ -230,6 +230,9 @@ django-tinymce==4.1.0 ; python_version >= "3.11" and python_version < "4.0" \
 django==5.1.2 ; python_version >= "3.11" and python_version < "4.0" \
     --hash=sha256:bd7376f90c99f96b643722eee676498706c9fd7dc759f55ebfaf2c08ebcdf4f0 \
     --hash=sha256:f11aa87ad8d5617171e3f77e1d5d16f004b79a2cf5d2e1d2b97a6a1f8e9ba5ed
+factory-boy==3.3.1 ; python_version >= "3.11" and python_version < "4.0" \
+    --hash=sha256:7b1113c49736e1e9995bc2a18f4dbf2c52cf0f841103517010b1d825712ce3ca \
+    --hash=sha256:8317aa5289cdfc45f9cae570feb07a6177316c82e34d14df3c2e1f22f26abef0
 faker-file==0.17.12 ; python_version >= "3.11" and python_version < "4.0" \
     --hash=sha256:a6d40b4ad664fd2c1d2c42c1a7e0cb8b2524e861a7ea48c6abfd2d0d34972c9e \
     --hash=sha256:fb2c8981985ea775597e11b35853e0816fc98ad73b5e58e93592fc2ee1b52c8c
