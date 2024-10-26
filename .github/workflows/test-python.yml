@@ -92,6 +92,10 @@ jobs:
           npm install
           npm ls
 
+      # Проверить, что отсутствуют изменения в моделях, для которых не подготовлено миграций.
+      - name: Check Django migrations
+        run: poetry run python personal_website/manage.py makemigrations --dry-run --check
+
       # Выполнить статический анализ кода Python при помощи Ruff.
       - name: Check Ruff linter
         run: poetry run ruff check
