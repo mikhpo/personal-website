@@ -39,6 +39,8 @@ pytest-cov = "^5.0.0"
 pyclean = "^3.0.0"
 pre-commit = "^4.0.1"
 ruff = "^0.1.13"
+pyparsing = "^3.2.0"
+pydot = "^3.0.2"
 
 [tool.black]
 line-length = 120

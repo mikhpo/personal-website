@@ -247,6 +247,20 @@ Certbot используется для получения и обновлени
 
  В проекте используется стандартная библиотека логирования `logging`. Логи записываются в папку `logs` в корневой директории проекта с ежедневной ротацией файлов и хранением логов в течение недели.
 
+## Генерация схем моделей
+
+Для генерации схемы модели данных можно использовать команду [graph_models](https://django-extensions.readthedocs.io/en/latest/graph_models.html) библиотеки [django-extensions](https://django-extensions.readthedocs.io/en/latest/). Для выполнения команды в системе должен быть установлен пакет [Graphviz](https://www.graphviz.org/). Пример установки для macOS:
+
+    brew install graphviz
+
+Пример генерации схемы моделей всех приложений проекта в формате PNG:
+
+    poetry run python personal_website/manage.py graph_models -a -g -o docs/images/project_models.png
+
+В связи с тем, что имеет смысл создавать диаграммы разного уровня детализации (для проекта, приложений, каждого приложения), целесообразнее запускать скрипт [graphmodels.sh](../tools/graphmodels.sh) для генерации диаграмм моделей:
+
+    bash tools/graphmodels.sh
+
 ## Решение проблем
 
 ### Ошибка 413 Request Entity Too Large

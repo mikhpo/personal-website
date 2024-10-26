@@ -233,9 +233,9 @@ django==5.1.2 ; python_version >= "3.11" and python_version < "4.0" \
 faker-file==0.17.12 ; python_version >= "3.11" and python_version < "4.0" \
     --hash=sha256:a6d40b4ad664fd2c1d2c42c1a7e0cb8b2524e861a7ea48c6abfd2d0d34972c9e \
     --hash=sha256:fb2c8981985ea775597e11b35853e0816fc98ad73b5e58e93592fc2ee1b52c8c
-faker==30.6.0 ; python_version >= "3.11" and python_version < "4.0" \
-    --hash=sha256:37b5ab951f7367ea93edb865120e9717a7a649d6a4b223f1e4a47a8a20d9e85f \
-    --hash=sha256:be0e548352c1be6f6d9c982003848a0d305868f160bb1fb7f945acffc347e676
+faker==30.8.1 ; python_version >= "3.11" and python_version < "4.0" \
+    --hash=sha256:4f7f133560b9d4d2a915581f4ba86f9a6a83421b89e911f36c4c96cff58135a5 \
+    --hash=sha256:93e8b70813f76d05d98951154681180cb795cfbcff3eced7680d963bcc0da2a9
 gunicorn==23.0.0 ; python_version >= "3.11" and python_version < "4.0" \
     --hash=sha256:ec400d38950de4dfd418cff8328b2c8faed0edb0d517d3394e457c317908ca4d \
     --hash=sha256:f014447a0101dc57e294f6c18ca6b40227a4c90e9bdb586042628030cba004ec
@@ -245,9 +245,9 @@ idna==3.10 ; python_version >= "3.11" and python_version < "4.0" \
 imgkit==1.2.3 ; python_version >= "3.11" and python_version < "4.0" \
     --hash=sha256:c9ade93d0281277c898b983c959f11f0cc1cb4a5fed144560dfa4d273fb50cd8 \
     --hash=sha256:cba8e3f67da6e0a5c87345a8b41605337851f9b9b75719500fa6810ecff84791
-minio==7.2.9 ; python_version >= "3.11" and python_version < "4.0" \
-    --hash=sha256:a83c2fcd981944602a8dc11e8e07543ed9cda0a9462264e3f46a13171c56bccb \
-    --hash=sha256:fe5523d9c4a4d6cfc07e96905852841bccdb22b22770e1efca4bf5ae8b65774b
+minio==7.2.10 ; python_version >= "3.11" and python_version < "4.0" \
+    --hash=sha256:418c31ac79346a580df04a0e14db1becbc548a6e7cca61f9bc4ef3bcd336c449 \
+    --hash=sha256:5961c58192b1d70d3a2a362064b8e027b8232688998a6d1251dadbb02ab57a7d
 model-bakery==1.20.0 ; python_version >= "3.11" and python_version < "4.0" \
     --hash=sha256:875326466f5982ee8f0281abdfa774d78893d5473562575dfd5a9304ac7c5b8c \
     --hash=sha256:ec9dc846b9a00b20f92df38fac310263323ab61b59b6eeebf77a4aefb0412724

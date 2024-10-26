@@ -43,6 +43,23 @@ tasks:
       - poetry run python ./personal_website/manage.py collectstatic --noinput
       - poetry run python ./personal_website/manage.py runserver
 
+  migrate:
+    desc: Подготовить и выполнить миграции, экспортировать новые диаграммы моделей
+    summary: |
+      Проверить изменения во всех моделях, сгенерировать миграции,
+      применить миграции к базе данных и экспортировать актуальные диаграммы моделей.
+    preconditions:
+      - test -f compose.yaml
+      - test -f .env
+    env:
+      POSTGRES_HOST: localhost
+    cmds:
+      - defer: docker-compose down
+      - docker-compose up -d postgres
+      - poetry run python ./personal_website/manage.py makemigrations
+      - poetry run python ./personal_website/manage.py migrate
+      - task: graph-models
+
   test:
     desc: Выполнить тесты
     summary: |
@@ -221,3 +238,28 @@ tasks:
       Выполняет команду `git branch -D` для всех веток, кроме main и текущей.
     cmds:
       - git branch | grep -v "main" | xargs git branch -D
+
+  graph-models:
+    desc: Экспортировать диаграммы моделей проекта
+    summary: |
+      Выполняет команду grap_models из пакета django-extensions для всего проекта,
+      приложений проекта в совокупности и каждого приложения в отдельности.
+    cmds:
+      - bash ./tools/graphmodels.sh
+
+  check-migrations:
+    desc: Проверить проект на отсутствующие миграции
+    summary: |
+      Проверить, что отсутствуют изменения в моделях, для которых не подготовлено миграций.
+      Выполняет команду makemigrations с аргументами --dry-run и --check.
+      Возвращает не нулевой код ответа в случае отсутствия миграций.
+    preconditions:
+      - test -f pyproject.toml
+      - test -f compose.yaml
+      - test -f .env
+    env:
+      POSTGRES_HOST: localhost
+    cmds:
+      - defer: docker-compose down
+      - docker-compose up -d postgres
+      - poetry run python personal_website/manage.py makemigrations --dry-run --check
