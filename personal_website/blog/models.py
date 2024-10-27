@@ -9,7 +9,12 @@ from personal_website.utils import get_unique_slug
 
 
 class Category(models.Model):
-    """Модель тематической категории."""
+    """Модель тематической категории статьи в блоге.
+
+    Примеры:
+    - Разработка
+    - Путешествия
+    """
 
     name = models.CharField("Категория", max_length=255, unique=True)
     description = models.CharField("Описание", max_length=255, blank=True)
@@ -40,9 +45,11 @@ class Category(models.Model):
 
 
 class Topic(models.Model):
-    """Модель темы.
+    """Модель темы статьи в блоге.
 
-    Тема может относиться к нескольким категориям.
+    Примеры:
+    - Горы
+    - Дети
     """
 
     name = models.CharField("Тема", max_length=255, unique=True)
@@ -74,9 +81,11 @@ class Topic(models.Model):
 
 
 class Series(models.Model):
-    """Модель серии.
+    """Модель серии статей в блоге.
 
-    Серия может быть на несколько тем.
+    Примеры:
+    - Лангтанг-трек
+    - Путешествие по осенней Тоскане
     """
 
     name = models.CharField("Серия", max_length=255, unique=True)
@@ -108,10 +117,10 @@ class Series(models.Model):
 
 
 class Article(models.Model):
-    """Модель статьи.
+    """Модель статьи в блоге.
 
-    Статья может быть частью серии.
-    Статья связана с одним пользователем.
+    Статья может быть связана с одной или несколькими сериями, темами и категориями.
+    У статьи может быть один автор.
     """
 
     title = models.CharField("Заголовок", max_length=255, unique=True)
