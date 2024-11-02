@@ -1,10 +1,11 @@
 """Тесты фабрик для генерации экземпляров моделей со случайными данными."""
 from typing import TYPE_CHECKING
 
+from django.contrib.auth.models import User
 from django.test import TestCase
 
-from blog.factories import ArticleFactory, CategoryFactory, SeriesFactory, TopicFactory
-from blog.models import Article, Category, Series, Topic
+from blog.factories import ArticleFactory, CategoryFactory, CommentFactory, SeriesFactory, TopicFactory
+from blog.models import Article, Category, Comment, Series, Topic
 from gallery.utils import is_image
 
 if TYPE_CHECKING:
@@ -90,3 +91,18 @@ class TestArticleFactory(TestCase):
         article = ArticleFactory.create(categories=categories)
         category_qs: QuerySet[Topic] = article.categories.all()
         self.assertTrue(category_qs.exists())
+
+
+class TestCommentFactory(TestCase):
+    """Тесты фабрики для создания комментариев к статьям."""
+
+    def test_comment_factory_instance(self) -> None:
+        """Фабрика возвращает объект комментария."""
+        comment = CommentFactory()
+        self.assertIsInstance(comment, Comment)
+
+    def test_comment_factory_subfactories(self) -> None:
+        """Фабрика комментария создает статью и автора через подфабрики."""
+        comment = CommentFactory()
+        self.assertIsInstance(comment.article, Article)
+        self.assertIsInstance(comment.author, User)

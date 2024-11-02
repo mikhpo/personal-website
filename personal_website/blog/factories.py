@@ -3,7 +3,7 @@ import factory
 from django.utils.timezone import now
 
 from accounts.factories import UserFactory
-from blog.models import Article, Category, Series, Topic
+from blog.models import Article, Category, Comment, Series, Topic
 
 
 class CategoryFactory(factory.django.DjangoModelFactory):
@@ -126,4 +126,20 @@ class ArticleFactory(factory.django.DjangoModelFactory):
 
     def __new__(cls, *args, **kwargs) -> "Article":
         """Возвращается объект Article."""
+        return super().__new__(*args, **kwargs)
+
+
+class CommentFactory(factory.django.DjangoModelFactory):
+    """Фабрика для генерации объектов комментариев к статьям."""
+
+    class Meta:  # noqa: D106
+        model = Comment
+
+    article = factory.SubFactory(ArticleFactory)
+    author = factory.SubFactory(UserFactory)
+    content = factory.Faker("text")
+    posted = factory.LazyFunction(now)
+
+    def __new__(cls, *args, **kwargs) -> "Comment":
+        """Возвращается объект Comment."""
         return super().__new__(*args, **kwargs)
