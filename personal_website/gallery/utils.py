@@ -27,7 +27,9 @@ def move_photo_image(photo: Model, source_path: str) -> str:
     """
     Переместить изображение фотографии с адреса источника по адресу,
     определенному в соответствии с внутренней бизнес-логикой модели.
-    Возвращает полный адрес, по которому было перемещено изображение.
+
+    Returns:
+        str: полный адрес, по которому было перемещено изображение.
     """
     file_name = Path(source_path).name
     new_path = photo_image_upload_full_path(photo, file_name)
