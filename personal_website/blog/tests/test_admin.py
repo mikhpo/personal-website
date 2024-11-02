@@ -8,6 +8,7 @@ from faker import Faker
 from faker_file.providers.jpeg_file import JpegFileProvider
 
 from blog.apps import BlogConfig
+from blog.factories import ArticleFactory, CategoryFactory, CommentFactory, SeriesFactory, TopicFactory
 from blog.models import Article, Category, Comment, Series, Topic
 from personal_website.utils import format_local_datetime, generate_random_text
 
@@ -23,19 +24,11 @@ class BlogAdminTest(TestCase):
     def setUpTestData(cls) -> None:
         """Подготовка тестовых данных."""
         cls.superuser: User = User.objects.create_superuser(username="testadmin", password="12345")
-        cls.series: Series = Series.objects.create(name="Test series")
-        cls.topic: Topic = Topic.objects.create(name="Test topic")
-        cls.category: Category = Category.objects.create(name="Test category")
-        cls.article: Article = Article.objects.create(
-            title="Test article",
-            content=generate_random_text(50),
-            author=cls.superuser,
-        )
-        cls.comment: Comment = Comment.objects.create(
-            article=cls.article,
-            author=cls.superuser,
-            content=generate_random_text(10),
-        )
+        cls.series: Series = SeriesFactory(image=None)
+        cls.topic: Topic = TopicFactory(image=None)
+        cls.category: Category = CategoryFactory(image=None)
+        cls.article: Article = ArticleFactory(author=cls.superuser)
+        cls.comment: Comment = CommentFactory(article=cls.article, author=cls.superuser)
         cls.jpeg_raw = JpegFileProvider(FAKER).jpeg_file(raw=True)
 
     def setUp(self) -> None:
@@ -201,22 +194,29 @@ class BlogAdminTest(TestCase):
         self.assertEqual(response.status_code, HTTPStatus.FOUND)
         self.assertTrue(Series.objects.filter(name="Test series 2").exists())
 
-    def test_series_image_uploaded(self) -> None:
-        """Проверка на корректность загрузки обложки серии."""
+    def test_series_fields_changed(self) -> None:
+        """Проверка на корректность обновления полей и обложки серии."""
         # Проверить начальный статус - отсутствие изображения.
         self.assertFalse(bool(self.series.image))
 
-        # Загрузить изображение через административный интерфейс.
+        # Отправить форму с новыми данными и изображением через административный интерфейс.
         series_change_url = self.ADMIN_URL + f"blog/series/{self.series.pk}/change/"
+        new_series_data: Series = SeriesFactory.build()
         response = self.client.post(
             series_change_url,
-            data={"image": SimpleUploadedFile(FAKER.word(), self.jpeg_raw)},
+            data={
+                "name": new_series_data.name,
+                "description": new_series_data.description,
+                "public": new_series_data.public,
+                "image": SimpleUploadedFile(name=FAKER.file_name(category="image"), content=self.jpeg_raw),
+            },
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
 
-        # Проверить обновленное значение обложки.
+        # Проверить обновленные значения полей.
         self.series.refresh_from_db()
-        self.assertFalse(bool(self.series.image))
+        self.assertEqual(self.series.name, new_series_data.name)
+        self.assertTrue(bool(self.series.image))
 
     def test_topic_created_via_admin(self) -> None:
         """Проверяет успешность добавления темы через административную панель."""
@@ -224,22 +224,29 @@ class BlogAdminTest(TestCase):
         self.assertEqual(response.status_code, HTTPStatus.FOUND)
         self.assertTrue(Topic.objects.filter(name="Test topic 2").exists())
 
-    def test_topic_image_uploaded(self) -> None:
-        """Проверка на корректность загрузки обложки темы."""
+    def test_topic_fields_changed(self) -> None:
+        """Проверка на корректность обновления полей и обложки темы."""
         # Проверить начальный статус - отсутствие изображения.
         self.assertFalse(bool(self.topic.image))
 
-        # Загрузить изображение через административный интерфейс.
+        # Отправить форму с новыми данными и изображением через административный интерфейс.
         topic_change_url = self.ADMIN_URL + f"blog/topic/{self.topic.pk}/change/"
+        new_topic_data: Topic = TopicFactory.build()
         response = self.client.post(
             topic_change_url,
-            data={"image": SimpleUploadedFile(FAKER.word(), self.jpeg_raw)},
+            data={
+                "name": new_topic_data.name,
+                "description": new_topic_data.description,
+                "public": new_topic_data.public,
+                "image": SimpleUploadedFile(name=FAKER.file_name(category="image"), content=self.jpeg_raw),
+            },
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
 
-        # Проверить обновленное значение обложки.
+        # Проверить обновленные значения полей.
         self.topic.refresh_from_db()
-        self.assertFalse(bool(self.series.image))
+        self.assertEqual(self.topic.name, new_topic_data.name)
+        self.assertTrue(bool(self.topic.image))
 
     def test_category_created_via_admin(self) -> None:
         """Проверяет успешность добавления категории через административную панель."""
@@ -247,19 +254,26 @@ class BlogAdminTest(TestCase):
         self.assertEqual(response.status_code, HTTPStatus.FOUND)
         self.assertTrue(Category.objects.filter(name="Test category 2").exists())
 
-    def test_category_image_uploaded(self) -> None:
-        """Проверка на корректность загрузки обложки категории."""
+    def test_category_fields_changed(self) -> None:
+        """Проверка на корректность обновления полей и обложки категории."""
         # Проверить начальный статус - отсутствие изображения.
         self.assertFalse(bool(self.category.image))
 
-        # Загрузить изображение через административный интерфейс.
+        # Отправить форму с новыми данными и изображением через административный интерфейс.
         category_change_url = self.ADMIN_URL + f"blog/category/{self.category.pk}/change/"
+        new_category_data: Category = CategoryFactory.build()
         response = self.client.post(
             category_change_url,
-            data={"image": SimpleUploadedFile(FAKER.word(), self.jpeg_raw)},
+            data={
+                "name": new_category_data.name,
+                "description": new_category_data.description,
+                "public": new_category_data.public,
+                "image": SimpleUploadedFile(name=FAKER.file_name(category="image"), content=self.jpeg_raw),
+            },
         )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
 
-        # Проверить обновленное значение обложки.
+        # Проверить обновленные значения полей.
         self.category.refresh_from_db()
-        self.assertFalse(bool(self.series.image))
+        self.assertEqual(self.category.name, new_category_data.name)
+        self.assertTrue(bool(self.category.image))
