@@ -1,5 +1,4 @@
 """Тесты представлений блога."""
-import random
 from http import HTTPStatus
 from pathlib import Path
 
@@ -7,13 +6,16 @@ from django.contrib.auth import get_user
 from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import resolve, reverse
-from django.utils.crypto import get_random_string
+from faker import Faker
 
 from blog.apps import BlogConfig
-from blog.models import Article, Category, Comment, Series, Topic
+from blog.factories import ArticleFactory, CategoryFactory, CommentFactory, SeriesFactory, TopicFactory
+from blog.models import Article, Comment
 from blog.views import ArticleDetailView, blog, category, series, topic
 from personal_website.settings import PROJECT_NAME, TEMPLATES
 from personal_website.utils import generate_random_text
+
+fake = Faker(locale="ru_RU")
 
 APP_NAME = BlogConfig.name
 
@@ -43,11 +45,7 @@ class BlogIndexPageTests(TestCase):
     def setUpTestData(cls) -> None:
         """Создать тестовые статьи."""
         for n in range(21):
-            Article.objects.create(
-                title=f"Article {n}",
-                slug=f"article-{n}",
-                public=random.choice([True, False]),
-            )
+            ArticleFactory(title=f"Article {n}", slug=f"article-{n}")
 
     def test_article_list_url(self) -> None:
         """Тестирование ссылки на главную страницу блога."""
@@ -96,12 +94,7 @@ class BlogIndexPageTests(TestCase):
     def test_article_list_text_truncated(self) -> None:
         """Проверяет, что текст статьи скрыт за катом, если длина текста более 200 слов."""
         Article.objects.filter(public=True).update(public=False)
-        Article.objects.create(
-            title="Long article",
-            slug="long-article",
-            public=True,
-            content=generate_random_text(201),
-        )
+        ArticleFactory(title="Long article", slug="long-article", public=True, content=generate_random_text(201))
         response = self.client.get(ARTICLE_LIST_URL)
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertContains(response, ">Читать дальше<")
@@ -109,12 +102,7 @@ class BlogIndexPageTests(TestCase):
     def test_article_list_text_not_truncated(self) -> None:
         """Проверяет, что текст статьи не скрыт за катом, если длина текста менее 200 слов."""
         Article.objects.filter(public=True).update(public=False)
-        Article.objects.create(
-            title="Short article",
-            slug="short-article",
-            public=True,
-            content=generate_random_text(101),
-        )
+        ArticleFactory(title="Short article", slug="short-article", public=True)
         response = self.client.get(ARTICLE_LIST_URL)
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertNotContains(response, ">Читать дальше<")
@@ -146,7 +134,7 @@ class ArticleDetailPageTests(TestCase):
     def setUpTestData(cls) -> None:
         """Подготовить тестовые данные."""
         User.objects.create_user(username="testuser", email="testuser@example.com", password="12345")
-        Article.objects.create(title="Test article", slug="article-test", content=get_random_string(250))
+        ArticleFactory(title="Test article", slug="article-test")
 
     def test_article_detail_url(self) -> None:
         """Тестирование ссылки на детальный просмотр статьи блога."""
@@ -240,7 +228,7 @@ class ArticleDetailPageTests(TestCase):
         article = Article.objects.get(title="Test article")
         user = User.objects.get(username="testuser")
         for i in range(1, 6):
-            Comment.objects.create(article=article, author=user, content=f"test comment {i}")
+            CommentFactory(article=article, author=user, content=f"test comment {i}")
         url = reverse(ARTICLE_DETAIL_URL_NAME, args=(article.slug,))
         response = self.client.get(url)
         target_comments = Comment.objects.filter(article=article).order_by("posted")
@@ -262,13 +250,9 @@ class CategoryPageTests(TestCase):
     @classmethod
     def setUpTestData(cls) -> None:
         """Подготовить тестовые данные."""
-        cls.test_category = Category.objects.create(name="Test category", slug="test-category")
+        cls.test_category = CategoryFactory(name="Test category", slug="test-category")
         for n in range(20):
-            article = Article.objects.create(
-                title=f"Article {n}",
-                slug=f"article-{n}",
-                public=random.choice([True, False]),
-            )
+            article = ArticleFactory(title=f"Article {n}", slug=f"article-{n}")
             article.categories.add(cls.test_category)
 
     def test_category_url(self) -> None:
@@ -324,7 +308,7 @@ class CategoryPageTests(TestCase):
     def test_category_page_text_truncated(self) -> None:
         """Проверяет, что текст статьи в категории скрыт за катом, если длина текста более 200 слов."""
         Article.objects.filter(public=True, categories=self.test_category).update(public=False)
-        article = Article.objects.create(
+        article = ArticleFactory(
             title="Long article",
             slug="long-article",
             public=True,
@@ -339,12 +323,7 @@ class CategoryPageTests(TestCase):
     def test_category_page_text_not_truncated(self) -> None:
         """Проверяет, что текст статьи в категории не скрыт за катом, если длина текста менее 200 слов."""
         Article.objects.filter(public=True, categories=self.test_category).update(public=False)
-        article = Article.objects.create(
-            title="Short article",
-            slug="short-article",
-            public=True,
-            content=generate_random_text(101),
-        )
+        article = ArticleFactory(title="Short article", slug="short-article", public=True)
         article.categories.add(self.test_category)
         url = reverse(CATEGORY_URL_NAME, args=(self.test_category.slug,))
         response = self.client.get(url)
@@ -375,13 +354,9 @@ class TopicPageTests(TestCase):
     @classmethod
     def setUpTestData(cls) -> None:
         """Подготовить тестовые данные."""
-        cls.test_topic = Topic.objects.create(name="Test topic", slug="test-topic")
+        cls.test_topic = TopicFactory(name="Test topic", slug="test-topic")
         for n in range(20):
-            article = Article.objects.create(
-                title=f"Article {n}",
-                slug=f"article-{n}",
-                public=random.choice([True, False]),
-            )
+            article = ArticleFactory(title=f"Article {n}", slug=f"article-{n}")
             article.topics.add(cls.test_topic)
 
     def test_topic_url(self) -> None:
@@ -437,7 +412,7 @@ class TopicPageTests(TestCase):
     def test_topic_page_text_truncated(self) -> None:
         """Проверяет, что текст статьи по теме скрыт за катом, если длина текста более 200 слов."""
         Article.objects.filter(public=True, topics=self.test_topic).update(public=False)
-        article = Article.objects.create(
+        article = ArticleFactory(
             title="Long article",
             slug="long-article",
             public=True,
@@ -452,12 +427,7 @@ class TopicPageTests(TestCase):
     def test_topic_page_text_not_truncated(self) -> None:
         """Проверяет, что текст статьи по теме не скрыт за катом, если длина текста менее 200 слов."""
         Article.objects.filter(public=True, topics=self.test_topic).update(public=False)
-        article = Article.objects.create(
-            title="Short article",
-            slug="short-article",
-            public=True,
-            content=generate_random_text(101),
-        )
+        article = ArticleFactory(title="Short article", slug="short-article", public=True)
         article.topics.add(self.test_topic)
         url = reverse(TOPIC_URL_NAME, args=(self.test_topic.slug,))
         response = self.client.get(url)
@@ -486,13 +456,9 @@ class SeriesPageTests(TestCase):
     @classmethod
     def setUpTestData(cls) -> None:
         """Подготовить тестовые данные."""
-        cls.test_series = Series.objects.create(name="Test series", slug="test-series")
+        cls.test_series = SeriesFactory(name="Test series", slug="test-series")
         for n in range(20):
-            article = Article.objects.create(
-                title=f"Article {n}",
-                slug=f"article-{n}",
-                public=random.choice([True, False]),
-            )
+            article = ArticleFactory(title=f"Article {n}", slug=f"article-{n}")
             article.series.add(cls.test_series)
 
     def test_series_url(self) -> None:
@@ -548,7 +514,7 @@ class SeriesPageTests(TestCase):
     def test_series_page_text_truncated(self) -> None:
         """Проверяет, что текст статьи из серии скрыт за катом, если длина текста более 200 слов."""
         Article.objects.filter(public=True, series=self.test_series).update(public=False)
-        article = Article.objects.create(
+        article = ArticleFactory(
             title="Long article",
             slug="long-article",
             public=True,
@@ -563,12 +529,7 @@ class SeriesPageTests(TestCase):
     def test_series_page_text_not_truncated(self) -> None:
         """Проверяет, что текст статьи из серии не скрыт за катом, если длина текста менее 200 слов."""
         Article.objects.filter(public=True, series=self.test_series).update(public=False)
-        article = Article.objects.create(
-            title="Short article",
-            slug="short-article",
-            public=True,
-            content=generate_random_text(101),
-        )
+        article = ArticleFactory(title="Short article", slug="short-article", public=True)
         article.series.add(self.test_series)
         url = reverse(SERIES_URL_NAME, args=(self.test_series.slug,))
         response = self.client.get(url)

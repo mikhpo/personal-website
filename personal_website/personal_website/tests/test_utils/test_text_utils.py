@@ -1,7 +1,20 @@
 """Тесты вспомогательных функций для работы с текстом."""
+import random
+
 from django.test import SimpleTestCase
 
-from personal_website.utils import get_slug, has_cyrillic
+from personal_website.utils import generate_random_text, get_slug, has_cyrillic
+
+
+class TestGenerateRandomText(SimpleTestCase):
+    """Тесты утилиты для генерации случайного текста."""
+
+    def test_generate_random_text(self) -> None:
+        """Утилита возвращает текст, состоящий из заданного количества слова, разделенных пробелами."""
+        random_count = random.randint(1, 50)
+        random_text = generate_random_text(random_count)
+        words = random_text.split(" ")
+        self.assertEqual(random_count, len(words))
 
 
 class HasCyrrillicTests(SimpleTestCase):

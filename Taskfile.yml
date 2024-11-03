@@ -271,3 +271,10 @@ tasks:
       - docker-compose up -d postgres
       - docker-compose ps
       - poetry run python personal_website/manage.py makemigrations --dry-run --check
+
+  clean-cache:
+    desc: Удалить файлы кэша
+    summary: |
+      Удаляет все папки __pycache__ и файлы c расширением .pyc из дерева каталогов проекта.
+    cmds:
+      - find . | grep -E "(/__pycache__$|\.pyc$|\.pyo$)" | xargs rm -rf
