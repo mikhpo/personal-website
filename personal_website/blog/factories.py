@@ -62,6 +62,7 @@ class ArticleFactory(factory.django.DjangoModelFactory):
 
     class Meta:  # noqa: D106
         model = Article
+        skip_postgeneration_save = True
 
     title = factory.Faker("sentence")
     description = factory.Faker("paragraph")
@@ -80,11 +81,6 @@ class ArticleFactory(factory.django.DjangoModelFactory):
         Если класс фабрики вызывается как ArticleFactory() или вызывается метод ArticleFactory.build(),
         то серии не добавляются. Если вызывается метод фабрики ArticleFactory.create(),
         то аргументу series можно передать последовательность объектов серий.
-
-        Examples:
-            ```
-            ArticleFactory.create(series=(series1, series2, series3))
-            ```
         """
         if not create or not extracted:
             return
@@ -97,11 +93,6 @@ class ArticleFactory(factory.django.DjangoModelFactory):
         Если класс фабрики вызывается как ArticleFactory() или вызывается метод ArticleFactory.build(),
         то темы не добавляются. Если вызывается метод фабрики ArticleFactory.create(),
         то аргументу topics можно передать последовательность объектов тем.
-
-        Examples:
-            ```
-            ArticleFactory.create(topics=(topic1, topic2, topic3))
-            ```
         """
         if not create or not extracted:
             return
@@ -114,11 +105,6 @@ class ArticleFactory(factory.django.DjangoModelFactory):
         Если класс фабрики вызывается как ArticleFactory() или вызывается метод ArticleFactory.build(),
         то категории не добавляются. Если вызывается метод фабрики ArticleFactory.create(),
         то аргументу categories можно передать последовательность объектов тем.
-
-        Examples:
-            ```
-            ArticleFactory.create(categories=(category1, category2, category3))
-            ```
         """
         if not create or not extracted:
             return
