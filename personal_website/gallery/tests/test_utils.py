@@ -9,7 +9,8 @@ from faker_file.providers.txt_file import TxtFileProvider
 from faker_file.storages.filesystem import FileSystemStorage
 
 from gallery.apps import GalleryConfig
-from gallery.models import Album, Photo
+from gallery.factories import AlbumFactory, PhotoFactory
+from gallery.models import Photo
 from gallery.utils import is_image, move_photo_image, photo_image_upload_full_path, photo_image_upload_path
 from personal_website.utils import list_file_paths
 
@@ -23,15 +24,8 @@ class GalleryUtilsTests(TestCase):
     @classmethod
     def setUpTestData(cls) -> None:
         """Подготовить тестовые данные."""
-        cls.tuscany_album = Album.objects.create(
-            name="Тоскана",
-            description="Фотографии из путешествия по Тоскане осенью 2013 года",
-            slug="tuscany",
-        )
-        cls.langtang_album = Album.objects.create(
-            name="Лангтанг",
-            description="Фотографии из путешествия по Лангтангу весной 2014 года",
-        )
+        cls.tuscany_album = AlbumFactory(name="Тоскана")
+        cls.langtang_album = AlbumFactory(name="Лангтанг")
 
         # Создать фотографии в базе данных из картинок в директории проекта.
         test_dir = os.getenv("TEMP_ROOT")
@@ -45,7 +39,7 @@ class GalleryUtilsTests(TestCase):
             else:
                 msg = "Нужно создать новый тестовый альбом"
                 raise Exception(msg)  # noqa: TRY002
-            Photo.objects.create(image=image, album=album)
+            PhotoFactory(image=image, name=None, album=album)
 
         return super().setUpTestData()
 

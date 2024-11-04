@@ -13,6 +13,7 @@ from django.urls import resolve, reverse
 from django.utils.crypto import get_random_string
 
 from gallery.apps import GalleryConfig
+from gallery.factories import AlbumFactory, PhotoFactory, TagFactory
 from gallery.models import Album, Photo, Tag
 from gallery.utils import is_image
 from gallery.views import (
@@ -63,15 +64,15 @@ class GalleryViewsTest(TestCase):
     @classmethod
     def setUpTestData(cls) -> None:
         """Создать первоначальные данные для проведения тестов."""
-        cls.tag = Tag.objects.create(name="Test tag")
-        cls.album = Album.objects.create(name="Test album")
+        cls.tag = TagFactory()
+        cls.album = AlbumFactory()
         cls.album.tags.add(cls.tag)
         test_dir = os.getenv("TEMP_ROOT")
         test_images_dir = Path(test_dir) / "gallery" / "photos"
         files = list_file_paths(test_images_dir)
         images = [file for file in files if is_image(file)]
         for image in images:
-            photo = Photo.objects.create(image=image, album=cls.album)
+            photo = PhotoFactory(image=image, name=None, album=cls.album)
             photo.tags.add(cls.tag)
         first_photo = Photo.objects.first()
         cls.album.cover = first_photo
@@ -188,8 +189,8 @@ class GalleryViewsTest(TestCase):
         middle_photo = random.choice(middle_photos)
 
         # Создать новый альбом и фотографию в нем.
-        new_album = Album.objects.create(name="New test album")
-        new_photo = Photo.objects.create(name="New photo", album=new_album)
+        new_album = AlbumFactory()
+        new_photo = PhotoFactory(album=new_album)
 
         # Идентификаторы элементов, соответствующих ссылкам на следующую и предыдущую фотографию.
         next_photo_link_id = "next-photo-link"
@@ -413,7 +414,7 @@ class UploadFormViewTests(TestCase):
         test_dir = os.getenv("TEMP_ROOT")
         test_images_dir = Path(test_dir) / "gallery" / "photos"
         cls.test_image_paths = list_file_paths(test_images_dir)
-        cls.album = Album.objects.create(name="Тестовый альбом")
+        cls.album = AlbumFactory()
         return super().setUpTestData()
 
     def setUp(self) -> None:

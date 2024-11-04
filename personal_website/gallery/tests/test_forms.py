@@ -4,8 +4,9 @@ from pathlib import Path
 
 from django.test import TestCase
 
+from gallery.factories import AlbumFactory, PhotoFactory
 from gallery.forms import AlbumForm
-from gallery.models import Album, Photo
+from gallery.models import Photo
 from personal_website.utils import list_file_paths
 
 TEMP_DIR = os.getenv("TEMP_ROOT")
@@ -32,17 +33,19 @@ class GalleryFormsTest(TestCase):
     def test_cover_photos_from_album(self) -> None:
         """Проверяет, что для выбора обложки альбома доступны фотографии только из этого альбома."""
         # Создать альбом для размещения тосканских фотографий.
-        tuscany_album = Album.objects.create(name="Тоскана")
-        langtang_album = Album.objects.create(name="Лангтанг")
+        tuscany_album = AlbumFactory(name="Тоскана")
+        langtang_album = AlbumFactory(name="Лангтанг")
 
         # Создать фотографии в базе данных, загрузив их с диска.
         test_images_dir = Path(TEMP_DIR) / "gallery" / "photos"
         images = list_file_paths(test_images_dir)
         for image in images:
+            # Если в названии файла фотографии есть Tuscany, то создать фотографию в тосканском альбоме.
             if "Tuscany" in image:
-                Photo.objects.create(image=image, public=True, album=tuscany_album)
+                PhotoFactory(image=image, name=None, public=True, album=tuscany_album)
+            # В ином случае создать фотографию в лангатангском альбоме.
             else:
-                Photo.objects.create(image=image, public=False, album=langtang_album)
+                PhotoFactory(image=image, name=None, public=False, album=langtang_album)
         tuscany_photos = Photo.objects.filter(name__contains="Tuscany")
         langtang_photos = Photo.objects.filter(name__contains="Langtang")
 
