@@ -1,4 +1,5 @@
 """Менеджеры блога."""
+
 from personal_website.managers import PublicManager
 
 

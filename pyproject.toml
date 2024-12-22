@@ -54,7 +54,7 @@ profile = "black"
 src_paths = ["personal_website"]
 
 [tool.ruff]
-select = ["ALL"]
+
 line-length = 120
 unsafe-fixes = true
 src = ["personal_website"]
@@ -63,7 +63,6 @@ src = ["personal_website"]
 "__init__.py" = ["D104"] # __init__.py могут быть пустыми
 "**/migrations/**.py" = [
     "ANN001",
-    "ANN101",
     "ANN201",
     "ARG001",
     "D100",
@@ -74,6 +73,7 @@ src = ["personal_website"]
 "**/signals.py" = ["ANN401", "ARG001"]
 
 [tool.ruff.lint]
+select = ["ALL"]
 fixable = ["ALL"]
 ignore = [
     "ANN002",

@@ -1,4 +1,5 @@
 """Тесты фабрик для моделей приложения авторизации и управления пользователями."""
+
 from django.contrib.auth.models import User
 from django.test import TestCase
 from faker import Faker

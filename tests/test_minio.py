@@ -1,4 +1,5 @@
 """Интеграционное тестирование S3-совместимого хранилища при помощи MinIO."""
+
 import os
 import re
 import unittest

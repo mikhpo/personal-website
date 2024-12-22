@@ -1,4 +1,5 @@
 """Тесты главного раздела сайта."""
+
 from http import HTTPStatus
 
 from django.contrib.sitemaps.views import sitemap

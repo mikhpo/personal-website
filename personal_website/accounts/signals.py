@@ -1,4 +1,5 @@
 """Логирование действий пользователей по авторизации на сайте через сигналы."""
+
 import logging
 from typing import Any
 
@@ -36,5 +37,5 @@ def post_login_fail(sender: Any, credentials: dict, request: HttpRequest, **kwar
     """После ошибки авторизации."""
     if request:
         ip = request.META.get("HTTP_X_REAL_IP")
-        username = credentials.get("username", None)
+        username = credentials.get("username")
         logger.warning(f"Неудачная попытка авторизации пользователя {username} с IP-адреса {ip}")

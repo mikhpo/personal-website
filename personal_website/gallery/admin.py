@@ -1,4 +1,5 @@
 """Представления объектов галереи в административной панели Django."""
+
 from adminsortable2.admin import SortableAdminMixin
 from django.contrib import admin
 from django.db import models

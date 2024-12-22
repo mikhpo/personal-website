@@ -1,4 +1,5 @@
 """Представления для системы авторизации пользователей."""
+
 from django.contrib.auth import authenticate, login
 from django.http import HttpRequest, HttpResponse, HttpResponsePermanentRedirect, HttpResponseRedirect
 from django.shortcuts import redirect, render

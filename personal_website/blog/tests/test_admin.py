@@ -1,4 +1,5 @@
 """Тесты представлений блога в административном интерфейсе Django."""
+
 from http import HTTPStatus
 
 from django.contrib.auth.models import User

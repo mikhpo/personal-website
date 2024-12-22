@@ -1,4 +1,5 @@
 """Модуль для построения карты сайта по объектам галереи."""
+
 from datetime import datetime
 
 from django.contrib.sitemaps import Sitemap

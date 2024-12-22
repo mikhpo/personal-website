@@ -1,4 +1,5 @@
 """Тесты форм блога."""
+
 from django.test import TestCase
 
 from blog.forms import NewCommentForm

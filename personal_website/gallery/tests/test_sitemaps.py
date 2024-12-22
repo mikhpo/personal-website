@@ -1,4 +1,5 @@
 """Тесты карты сайта для объектов галереи."""
+
 import os
 from http import HTTPStatus
 from pathlib import Path

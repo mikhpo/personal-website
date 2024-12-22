@@ -1,4 +1,5 @@
 """Интеграционное тестирование прокси-сервера Nginx."""
+
 import os
 import unittest
 from http import HTTPStatus

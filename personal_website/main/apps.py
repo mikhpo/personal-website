@@ -1,4 +1,5 @@
 """Конфигурация приложения главного раздела сайта."""
+
 from django.apps import AppConfig
 
 

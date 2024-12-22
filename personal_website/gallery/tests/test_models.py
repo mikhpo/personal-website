@@ -1,4 +1,5 @@
 """Тесты моделей галереи."""
+
 import datetime
 import os
 from http import HTTPStatus

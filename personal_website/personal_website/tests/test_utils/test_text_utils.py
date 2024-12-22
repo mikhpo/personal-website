@@ -1,4 +1,5 @@
 """Тесты вспомогательных функций для работы с текстом."""
+
 import random
 
 from django.test import SimpleTestCase

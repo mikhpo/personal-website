@@ -1,4 +1,5 @@
 """Конфигурация приложения галереи."""
+
 from django.apps import AppConfig
 
 

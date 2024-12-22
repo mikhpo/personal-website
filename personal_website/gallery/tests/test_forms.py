@@ -1,4 +1,5 @@
 """Тесты форм галереи."""
+
 import os
 from pathlib import Path
 

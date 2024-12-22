@@ -1,4 +1,5 @@
 """Тесты представлений блога."""
+
 from http import HTTPStatus
 from pathlib import Path
 

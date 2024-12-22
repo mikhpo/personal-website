@@ -1,4 +1,5 @@
 """Фабрики для генерации экземпляров классов с фейковыми данными для тестирования."""
+
 import factory
 from django.utils.timezone import now
 

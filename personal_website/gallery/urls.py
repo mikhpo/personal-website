@@ -1,4 +1,5 @@
 """Маршруты галереи."""
+
 from django.urls import path
 
 from gallery.views import (

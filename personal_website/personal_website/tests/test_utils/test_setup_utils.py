@@ -1,4 +1,5 @@
 """Тесты вспомогательных функци для конфигурирования проекта."""
+
 from django.test import SimpleTestCase
 from django.utils.crypto import get_random_string
 

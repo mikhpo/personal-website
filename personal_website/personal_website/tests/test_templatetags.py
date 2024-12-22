@@ -1,4 +1,5 @@
 """Тесты кастомных тэгов."""
+
 import os
 from pathlib import Path
 

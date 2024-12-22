@@ -1,4 +1,5 @@
 """Тесты представлений галереи в административной панели Django."""
+
 import os
 from http import HTTPStatus
 from pathlib import Path

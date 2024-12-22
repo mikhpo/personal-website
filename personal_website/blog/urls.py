@@ -1,4 +1,5 @@
 """Маршруты блога."""
+
 from django.urls import path
 
 from blog.views import ArticleDetailView, blog, category, series, topic

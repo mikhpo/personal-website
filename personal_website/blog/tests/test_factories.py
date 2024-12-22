@@ -1,4 +1,5 @@
 """Тесты фабрик для генерации экземпляров моделей со случайными данными."""
+
 from typing import TYPE_CHECKING
 
 from django.contrib.auth.models import User

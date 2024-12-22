@@ -1,4 +1,5 @@
 """Представления блога."""
+
 import logging
 from typing import Any
 

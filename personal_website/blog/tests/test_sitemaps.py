@@ -1,4 +1,5 @@
 """Тесты карты объектов блога."""
+
 from http import HTTPStatus
 
 from django.test import TestCase

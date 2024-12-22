@@ -1,4 +1,5 @@
 """Фабрики для создания объектов приложения авторизации и управления пользователями."""
+
 import factory
 from django.contrib.auth.models import User
 

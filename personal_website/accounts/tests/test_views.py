@@ -1,4 +1,5 @@
 """Тесты представлений системы авторизации пользователей."""
+
 from http import HTTPStatus
 
 from django.contrib.auth.models import User
