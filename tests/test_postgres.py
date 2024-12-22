@@ -1,4 +1,5 @@
 """Интеграционное тестирование кластера PostgreSQL."""
+
 import os
 import unittest
 from typing import Optional
@@ -14,22 +15,16 @@ class TestPostgres(unittest.TestCase):
     def setUpClass(cls) -> None:
         """Определить параметры подключения."""
         load_dotenv()
-        cls.host = "localhost"
-        cls.port = os.environ["POSTGRES_PORT"]
-        cls.user = os.environ["POSTGRES_USER"]
-        cls.password = os.environ["POSTGRES_PASSWORD"]
-        cls.dbname = os.environ["POSTGRES_DB"]
         return super().setUpClass()
 
     def connect_postgres(self) -> psycopg.Connection[psycopg.connection.TupleRow]:
         """Подключиться к базе данных PostgreSQL."""
-        connifo = "dbname={} user={} host={} port={} password={} connect_timeout=1".format(
-            self.dbname,
-            self.user,
-            self.host,
-            self.port,
-            self.password,
-        )
+        host = "localhost"
+        port = os.environ["POSTGRES_PORT"]
+        user = os.environ["POSTGRES_USER"]
+        password = os.environ["POSTGRES_PASSWORD"]
+        dbname = os.environ["POSTGRES_DB"]
+        connifo = f"dbname={dbname} user={user} host={host} port={port} password={password} connect_timeout=1"
         return psycopg.connect(connifo)
 
     def postgres_connected(self) -> Optional[bool]:
