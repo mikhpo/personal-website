@@ -1,4 +1,5 @@
 """Тесты представлений галереи."""
+
 import os
 import random
 from http import HTTPStatus
@@ -196,45 +197,43 @@ class GalleryViewsTest(TestCase):
         next_photo_link_id = "next-photo-link"
         previous_photo_link_id = "previous-photo-link"
 
-        with self.subTest("Для первой фотографии в альбоме доступа только ссылка на следующую фотографию"):
-            url = f"{PHOTO_DETAIL_URL}/{first_photo.slug}/"
-            response = self.client.get(url)
-            context = response.context
-            self.assertIsNotNone(context["next_photo"])
-            self.assertContains(response, next_photo_link_id)
-            self.assertIsNone(context["previous_photo"])
-            self.assertNotContains(response, previous_photo_link_id)
+        # Для первой фотографии в альбоме доступа только ссылка на следующую фотографию").
+        url = f"{PHOTO_DETAIL_URL}/{first_photo.slug}/"
+        response = self.client.get(url)
+        context = response.context
+        self.assertIsNotNone(context["next_photo"])
+        self.assertContains(response, next_photo_link_id)
+        self.assertIsNone(context["previous_photo"])
+        self.assertNotContains(response, previous_photo_link_id)
 
-        with self.subTest("Для последней фотографии в альбоме доступна только ссылка на предыдущую фотографию"):
-            url = f"{PHOTO_DETAIL_URL}/{last_photo.slug}/"
-            response = self.client.get(url)
-            context = response.context
-            self.assertIsNotNone(context["previous_photo"])
-            self.assertContains(response, previous_photo_link_id)
-            self.assertIsNone(context["next_photo"])
-            self.assertNotContains(response, next_photo_link_id)
-            self.assertNotContains(response, new_photo.get_absolute_url())
+        # Для последней фотографии в альбоме доступна только ссылка на предыдущую фотографию").
+        url = f"{PHOTO_DETAIL_URL}/{last_photo.slug}/"
+        response = self.client.get(url)
+        context = response.context
+        self.assertIsNotNone(context["previous_photo"])
+        self.assertContains(response, previous_photo_link_id)
+        self.assertIsNone(context["next_photo"])
+        self.assertNotContains(response, next_photo_link_id)
+        self.assertNotContains(response, new_photo.get_absolute_url())
 
-        with self.subTest(
-            "Для фотографии в середине альбома доступны и ссылка на "
-            "следующую фотографию, и ссылка на предыдущую фотографию",
-        ):
-            url = f"{PHOTO_DETAIL_URL}/{middle_photo.slug}/"
-            response = self.client.get(url)
-            context = response.context
-            self.assertIsNotNone(context["next_photo"])
-            self.assertContains(response, next_photo_link_id)
-            self.assertIsNotNone(context["previous_photo"])
-            self.assertContains(response, previous_photo_link_id)
+        # Для фотографии в середине альбома доступны и ссылка на следующую фотографию,
+        # и ссылка на предыдущую фотографию.
+        url = f"{PHOTO_DETAIL_URL}/{middle_photo.slug}/"
+        response = self.client.get(url)
+        context = response.context
+        self.assertIsNotNone(context["next_photo"])
+        self.assertContains(response, next_photo_link_id)
+        self.assertIsNotNone(context["previous_photo"])
+        self.assertContains(response, previous_photo_link_id)
 
-        with self.subTest("Представление содержит список тэгов данной фотографии"):
-            url = f"{PHOTO_DETAIL_URL}/{first_photo.slug}/"
-            response = self.client.get(url)
-            context = response.context
-            tags = Tag.objects.all()
-            for tag in tags:
-                self.assertContains(response, tag)
-            self.assertEqual(tags.count(), len(context["tags"]))
+        # Представление содержит список тэгов данной фотографии.
+        url = f"{PHOTO_DETAIL_URL}/{first_photo.slug}/"
+        response = self.client.get(url)
+        context = response.context
+        tags = Tag.objects.all()
+        for tag in tags:
+            self.assertContains(response, tag)
+        self.assertEqual(tags.count(), len(context["tags"]))
 
     def test_album_detail_url(self) -> None:
         """Проверить работоспособность ссылки на детальный просмотр альбома."""

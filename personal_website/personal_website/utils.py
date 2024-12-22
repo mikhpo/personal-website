@@ -1,4 +1,5 @@
 """Коллекция вспомогательных фукнций и классов."""
+
 import datetime
 import locale
 import logging
@@ -124,10 +125,11 @@ def get_slug(text: str) -> str:
     return slugify(text)
 
 
-def get_unique_slug(instance: Model, text: str) -> str:
+def get_unique_slug(instance: Model, text: str, max_length: int = 50) -> str:
     """Создает уникальный слаг, уникальный для данного класса."""
     model = instance.__class__
-    slug = get_slug(text)
+    truncated_text = text if len(text) <= max_length else text[:max_length]
+    slug = get_slug(truncated_text)
     n = 1
     while model.objects.filter(slug=slug).exists():
         n += 1

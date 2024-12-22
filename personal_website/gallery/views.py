@@ -1,4 +1,5 @@
 """Представления раздела галереи."""
+
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -59,7 +60,6 @@ class PhotoDetailView(DetailView):
                 sorted(album_photos, key=lambda photo: photo.datetime_taken, reverse=True),
             ),
         )
-
         context["next_photo"] = next_photos[0] if next_photos else None
         context["previous_photo"] = previous_photos[0] if previous_photos else None
         context["tags"] = obj.tags.all()
