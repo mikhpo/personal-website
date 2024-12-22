@@ -2,10 +2,11 @@
 
 from typing import TYPE_CHECKING
 
-from django.test import TestCase
+from django.test import SimpleTestCase, TestCase
 
-from gallery.factories import AlbumFactory, PhotoFactory, TagFactory
+from gallery.factories import AlbumFactory, ExifDataFactory, PhotoFactory, TagFactory
 from gallery.models import Album, Photo, Tag
+from gallery.schemas import ExifData
 
 if TYPE_CHECKING:
     from django.db.models import QuerySet
@@ -56,3 +57,12 @@ class TestPhotoFactory(TestCase):
         photo = PhotoFactory()
         self.assertIsNotNone(photo.album)
         self.assertIsInstance(photo.album, Album)
+
+
+class TestExifDataFactory(SimpleTestCase):
+    """Тест фабрики данных EXIF."""
+
+    def test_exif_data_factory(self) -> None:
+        """Фабрика создает экземпляр модели данных Exif."""
+        exif_data = ExifDataFactory()
+        self.assertIsInstance(exif_data, ExifData)

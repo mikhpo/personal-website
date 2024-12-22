@@ -1,12 +1,20 @@
 """Вспомогательные функции галереи."""
+
+from io import BytesIO
 from pathlib import Path
 from typing import Any
 
 from django.db.models import Model
+from exif import Image as ExifImage
+from faker import Faker
 from PIL import Image, UnidentifiedImageError
+from PIL.ExifTags import TAGS
 
 from gallery.apps import GalleryConfig
+from gallery.schemas import ExifData
 from personal_website.storages import select_storage
+
+fake = Faker(locale="ru_RU")
 
 
 def photo_image_upload_path(instance: Model, filename: str) -> str:
@@ -53,3 +61,47 @@ def is_image(file: Any) -> bool:  # noqa: ANN401
         return False
     else:
         return True
+
+
+def read_exif(image: str | Path | BytesIO) -> ExifData:
+    """Прочитать данные EXIF изображения.
+
+    Args:
+        image (str | Path | BytesIO): Изображение, EXIF данные которого необходимо прочитать.
+
+    Returns:
+        ExifData: Словарь с данными EXIF (модель Pydantic).
+    """
+    exif_data = {}
+    with Image.open(image) as img:
+        if exif := img.getexif():
+            for tag, value in exif.items():
+                decoded = TAGS.get(tag, tag)
+                exif_data[decoded] = value
+        img.close()
+    return ExifData.model_validate(exif_data)
+
+
+def write_exif(image: str | Path | BytesIO, exif_data: ExifData) -> None:
+    """Записать данные EXIF в изображение.
+
+    Args:
+        image (str | Path | BytesIO): Изображение, EXIF данные которого необходимо записать.
+        exif_data (ExifData): объект модели Pydantic, содержащий все данные EXIF.
+    """
+    # Преобразовать объект в словарь. Ключи словаря должны соответствовать схеме атрибутов библиотеки exif.
+    exif_dict = exif_data.model_dump(mode="json")
+
+    # Прочитать содержимое изображения и получить объект exif.Image.
+    with Path(image).open(mode="rb") as image_file:
+        image_bytes = image_file.read()
+    exif_image = ExifImage(image_bytes)
+
+    # Обновить атрибуты EXIF изображения переданными значениями.
+    for key, value in exif_dict.items():
+        if value:
+            exif_image.set(key, value)
+
+    # Перезаписать файл изображения с обновленными атрибутами.
+    with Path(image).open(mode="wb") as img:
+        img.write(exif_image.get_file())

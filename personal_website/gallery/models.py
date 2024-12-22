@@ -1,4 +1,5 @@
 """Модели галереи."""
+
 from datetime import datetime
 from pathlib import Path
 from typing import Self
@@ -240,7 +241,7 @@ class Photo(models.Model):
     def camera_model(self) -> str:
         """Модель камеры."""
         manufacturer = self.camera_manufacturer
-        model = self.exif.get("Model", "")
+        model: str = self.exif.get("Model", "")
         if manufacturer in model:
             model = model.replace(manufacturer, "")
             return model.strip()
@@ -259,11 +260,12 @@ class Photo(models.Model):
         return self.exif.get("LensModel", "")
 
     @cached_property
-    def aperture(self) -> int | None:
+    def aperture(self) -> str | None:
         """Диафрагменное число."""
-        aperture = self.exif.get("FNumber", None)
-        if aperture:
-            return int(aperture)
+        if f_number := self.exif.get("FNumber", None):
+            aperture = float(f_number)
+            formatted_aperture = int(aperture) if aperture.is_integer() else round(aperture, 2)
+            return f"F/{formatted_aperture}"
         return None
 
     @cached_property
@@ -272,8 +274,7 @@ class Photo(models.Model):
         if "ExposureTime" in self.exif:
             exposure_time: float = self.exif["ExposureTime"]
             if exposure_time <= 1:
-                numenator = exposure_time.numerator
-                denominator = exposure_time.denominator
+                numenator, denominator = exposure_time.as_integer_ratio()
                 return f"{numenator}/{denominator}"
             return str(int(exposure_time))
         return ""
@@ -281,16 +282,14 @@ class Photo(models.Model):
     @cached_property
     def iso(self) -> int | None:
         """Светочувствительность."""
-        iso = self.exif.get("ISOSpeedRatings", None)
-        if iso:
+        if iso := self.exif.get("ISOSpeedRatings", None):
             return int(iso)
         return None
 
     @cached_property
     def focal_length(self) -> int | None:
         """Фокусное расстояние."""
-        focal_length = self.exif.get("FocalLength", None)
-        if focal_length:
+        if focal_length := self.exif.get("FocalLength", None):
             return int(focal_length)
         return None
 

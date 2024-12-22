@@ -89,7 +89,7 @@ class PhotoAdmin(admin.ModelAdmin):
                 </tr>
                 <tr>
                     <td>Диафрагма</td>
-                    <td>F/{obj.aperture}</td>
+                    <td>{obj.aperture}</td>
                 </tr>
                 <tr>
                     <td>Выдержка</td>
