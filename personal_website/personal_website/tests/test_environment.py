@@ -1,4 +1,5 @@
 """Тесты переменных окружения."""
+
 import os
 from pathlib import Path
 from unittest import skipIf

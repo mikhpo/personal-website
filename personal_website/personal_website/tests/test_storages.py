@@ -1,4 +1,5 @@
 """Тесты файловых хранилищ."""
+
 import os
 from pathlib import Path
 

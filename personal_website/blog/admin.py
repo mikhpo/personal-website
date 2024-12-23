@@ -1,4 +1,5 @@
 """Представления блога в административном сайте Django."""
+
 from typing import Any
 
 from django.contrib import admin

@@ -1,4 +1,5 @@
 """Представления объектов галереи в административной панели Django."""
+
 from adminsortable2.admin import SortableAdminMixin
 from django.contrib import admin
 from django.db import models
@@ -89,7 +90,7 @@ class PhotoAdmin(admin.ModelAdmin):
                 </tr>
                 <tr>
                     <td>Диафрагма</td>
-                    <td>F/{obj.aperture}</td>
+                    <td>{obj.aperture}</td>
                 </tr>
                 <tr>
                     <td>Выдержка</td>

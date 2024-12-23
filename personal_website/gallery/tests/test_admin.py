@@ -1,4 +1,5 @@
 """Тесты представлений галереи в административной панели Django."""
+
 import os
 from http import HTTPStatus
 from pathlib import Path
@@ -8,6 +9,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 
 from gallery.apps import GalleryConfig
+from gallery.factories import AlbumFactory, PhotoFactory
 from gallery.models import Album, Photo, Tag
 from personal_website.utils import list_file_paths
 
@@ -57,13 +59,14 @@ class GalleryAdminTests(TestCase):
     def test_photo_change_page_rendered(self) -> None:
         """Проверяет корректность отображения страницы изменения фотографии."""
         with self.subTest("Получение страницы детального просмотра и изменения"):
-            album = Album.objects.create(name="Test album")
-            photo = Photo.objects.create(name="Test photo", album=album)
+            album = AlbumFactory(name="Test album")
+            photo = PhotoFactory(name="Test photo", album=album, image=None)
             slug = "test-photo"
             url = ADMIN_URL + f"gallery/photo/{photo.pk}/change/"
             response = self.client.get(url)
             self.assertEqual(response.status_code, HTTPStatus.OK)
             self.assertEqual(photo.slug, slug)
+            self.assertIsNone(photo.image.name)
 
         with self.subTest("Отправка данных для изменения объекта"):
             new_slug = "new-slug"
@@ -77,6 +80,7 @@ class GalleryAdminTests(TestCase):
                 response = self.client.post(url, data)
             photo.refresh_from_db()
             self.assertEqual(photo.slug, new_slug)
+            self.assertIsNotNone(photo.image.name)
 
     def test_album_admin_list_page_displayed(self) -> None:
         """Проверяет, что в административной панели отображается модель альбома."""
@@ -103,7 +107,7 @@ class GalleryAdminTests(TestCase):
     def test_photo_add_via_admin(self) -> None:
         """Проверяет успешность добавления фотографии через административную панель."""
         # Создать альбом, в который будет добавляться фотография.
-        album = Album.objects.create(name="Тестовый альбом")
+        album = AlbumFactory(name="Тестовый альбом")
         photo_name = Path(self.image_path).stem
 
         # Ссылка на форму добавления фотографии в административной панели.
@@ -168,7 +172,7 @@ class GalleryAdminTests(TestCase):
     def test_album_admin_change(self) -> None:
         """Проверка представления для изменения альбома."""
         with self.subTest("Получение страницы GET-методом"):
-            album = Album.objects.create(name="Test album")
+            album = AlbumFactory(name="Test album")
             url = ADMIN_URL + f"gallery/album/{album.pk}/change/"
             response = self.client.get(url)
             self.assertEqual(response.status_code, HTTPStatus.OK)

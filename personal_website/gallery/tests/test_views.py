@@ -1,4 +1,5 @@
 """Тесты представлений галереи."""
+
 import os
 import random
 from http import HTTPStatus
@@ -13,6 +14,7 @@ from django.urls import resolve, reverse
 from django.utils.crypto import get_random_string
 
 from gallery.apps import GalleryConfig
+from gallery.factories import AlbumFactory, PhotoFactory, TagFactory
 from gallery.models import Album, Photo, Tag
 from gallery.utils import is_image
 from gallery.views import (
@@ -63,15 +65,15 @@ class GalleryViewsTest(TestCase):
     @classmethod
     def setUpTestData(cls) -> None:
         """Создать первоначальные данные для проведения тестов."""
-        cls.tag = Tag.objects.create(name="Test tag")
-        cls.album = Album.objects.create(name="Test album")
+        cls.tag = TagFactory()
+        cls.album = AlbumFactory()
         cls.album.tags.add(cls.tag)
         test_dir = os.getenv("TEMP_ROOT")
         test_images_dir = Path(test_dir) / "gallery" / "photos"
         files = list_file_paths(test_images_dir)
         images = [file for file in files if is_image(file)]
         for image in images:
-            photo = Photo.objects.create(image=image, album=cls.album)
+            photo = PhotoFactory(image=image, name=None, album=cls.album, public=True)
             photo.tags.add(cls.tag)
         first_photo = Photo.objects.first()
         cls.album.cover = first_photo
@@ -182,58 +184,58 @@ class GalleryViewsTest(TestCase):
         """Проверить содержание представления для детального просмотра фотографии."""
         all_photos = Photo.objects.all()
         sorted_photos = sorted(all_photos, key=lambda photo: photo.datetime_taken)
+        for _photo in sorted_photos:
+            pass
         first_photo = sorted_photos[0]
         last_photo = sorted_photos[-1]
         middle_photos = all_photos.exclude(pk__in=[first_photo.pk, last_photo.pk])
         middle_photo = random.choice(middle_photos)
 
         # Создать новый альбом и фотографию в нем.
-        new_album = Album.objects.create(name="New test album")
-        new_photo = Photo.objects.create(name="New photo", album=new_album)
+        new_album = AlbumFactory()
+        new_photo = PhotoFactory(album=new_album)
 
         # Идентификаторы элементов, соответствующих ссылкам на следующую и предыдущую фотографию.
         next_photo_link_id = "next-photo-link"
         previous_photo_link_id = "previous-photo-link"
 
-        with self.subTest("Для первой фотографии в альбоме доступа только ссылка на следующую фотографию"):
-            url = f"{PHOTO_DETAIL_URL}/{first_photo.slug}/"
-            response = self.client.get(url)
-            context = response.context
-            self.assertIsNotNone(context["next_photo"])
-            self.assertContains(response, next_photo_link_id)
-            self.assertIsNone(context["previous_photo"])
-            self.assertNotContains(response, previous_photo_link_id)
+        # Для первой фотографии в альбоме доступа только ссылка на следующую фотографию.
+        url = f"{PHOTO_DETAIL_URL}/{first_photo.slug}/"
+        response = self.client.get(url)
+        context = response.context
+        self.assertIsNotNone(context["next_photo"])
+        self.assertContains(response, next_photo_link_id)
+        self.assertIsNone(context["previous_photo"])
+        self.assertNotContains(response, previous_photo_link_id)
 
-        with self.subTest("Для последней фотографии в альбоме доступна только ссылка на предыдущую фотографию"):
-            url = f"{PHOTO_DETAIL_URL}/{last_photo.slug}/"
-            response = self.client.get(url)
-            context = response.context
-            self.assertIsNotNone(context["previous_photo"])
-            self.assertContains(response, previous_photo_link_id)
-            self.assertIsNone(context["next_photo"])
-            self.assertNotContains(response, next_photo_link_id)
-            self.assertNotContains(response, new_photo.get_absolute_url())
+        # Для последней фотографии в альбоме доступна только ссылка на предыдущую фотографию.
+        url = f"{PHOTO_DETAIL_URL}/{last_photo.slug}/"
+        response = self.client.get(url)
+        context = response.context
+        self.assertIsNotNone(context["previous_photo"])
+        self.assertContains(response, previous_photo_link_id)
+        self.assertIsNone(context["next_photo"])
+        self.assertNotContains(response, next_photo_link_id)
+        self.assertNotContains(response, new_photo.get_absolute_url())
 
-        with self.subTest(
-            "Для фотографии в середине альбома доступны и ссылка на "
-            "следующую фотографию, и ссылка на предыдущую фотографию",
-        ):
-            url = f"{PHOTO_DETAIL_URL}/{middle_photo.slug}/"
-            response = self.client.get(url)
-            context = response.context
-            self.assertIsNotNone(context["next_photo"])
-            self.assertContains(response, next_photo_link_id)
-            self.assertIsNotNone(context["previous_photo"])
-            self.assertContains(response, previous_photo_link_id)
+        # Для фотографии в середине альбома доступны и ссылка на следующую фотографию,
+        # и ссылка на предыдущую фотографию.
+        url = f"{PHOTO_DETAIL_URL}/{middle_photo.slug}/"
+        response = self.client.get(url)
+        context = response.context
+        self.assertIsNotNone(context["next_photo"])
+        self.assertContains(response, next_photo_link_id)
+        self.assertIsNotNone(context["previous_photo"])
+        self.assertContains(response, previous_photo_link_id)
 
-        with self.subTest("Представление содержит список тэгов данной фотографии"):
-            url = f"{PHOTO_DETAIL_URL}/{first_photo.slug}/"
-            response = self.client.get(url)
-            context = response.context
-            tags = Tag.objects.all()
-            for tag in tags:
-                self.assertContains(response, tag)
-            self.assertEqual(tags.count(), len(context["tags"]))
+        # Представление содержит список тэгов данной фотографии.
+        url = f"{PHOTO_DETAIL_URL}/{first_photo.slug}/"
+        response = self.client.get(url)
+        context = response.context
+        tags = Tag.objects.all()
+        for tag in tags:
+            self.assertContains(response, tag)
+        self.assertEqual(tags.count(), len(context["tags"]))
 
     def test_album_detail_url(self) -> None:
         """Проверить работоспособность ссылки на детальный просмотр альбома."""
@@ -413,7 +415,7 @@ class UploadFormViewTests(TestCase):
         test_dir = os.getenv("TEMP_ROOT")
         test_images_dir = Path(test_dir) / "gallery" / "photos"
         cls.test_image_paths = list_file_paths(test_images_dir)
-        cls.album = Album.objects.create(name="Тестовый альбом")
+        cls.album = AlbumFactory()
         return super().setUpTestData()
 
     def setUp(self) -> None:

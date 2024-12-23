@@ -26,6 +26,8 @@ faker-file = "^0.17.11"
 model-bakery = "^1.20.0"
 requests = "^2.32.3"
 minio = "^7.2.9"
+factory-boy = "^3.3.1"
+pydantic = "^2.10.4"
 
 [tool.poetry.group.dev.dependencies]
 coverage = "^7.6.3"
@@ -38,7 +40,7 @@ pytest-django = "^4.9.0"
 pytest-cov = "^5.0.0"
 pyclean = "^3.0.0"
 pre-commit = "^4.0.1"
-ruff = "^0.1.13"
+ruff = "^0.8.2"
 pyparsing = "^3.2.0"
 pydot = "^3.0.2"
 
@@ -51,15 +53,15 @@ profile = "black"
 src_paths = ["personal_website"]
 
 [tool.ruff]
-select = ["ALL"]
+
 line-length = 120
+unsafe-fixes = true
 src = ["personal_website"]
 
 [tool.ruff.per-file-ignores]
 "__init__.py" = ["D104"] # __init__.py могут быть пустыми
 "**/migrations/**.py" = [
     "ANN001",
-    "ANN101",
     "ANN201",
     "ARG001",
     "D100",
@@ -70,6 +72,7 @@ src = ["personal_website"]
 "**/signals.py" = ["ANN401", "ARG001"]
 
 [tool.ruff.lint]
+select = ["ALL"]
 fixable = ["ALL"]
 ignore = [
     "ANN002",

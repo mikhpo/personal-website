@@ -1,4 +1,5 @@
 """Базовый модуль настроек Django-проекта."""
+
 import os
 import sys
 from pathlib import Path

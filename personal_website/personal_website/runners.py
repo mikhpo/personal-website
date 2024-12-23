@@ -1,4 +1,5 @@
 """Настройки запуска тестов при помощи модуля django.test."""
+
 import os
 import shutil
 from pathlib import Path

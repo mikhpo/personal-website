@@ -1,17 +1,19 @@
 """Коллекция вспомогательных фукнций и классов."""
+
 import datetime
 import locale
 import logging
 import os
-import random
 import re
 from pathlib import Path
 
 from django.db.models import Model
 from django.utils import timezone
-from django.utils.crypto import get_random_string
 from django.utils.text import slugify
+from faker import Faker
 from pytils import translit
+
+fake = Faker(locale="ru_RU")
 
 
 def str_to_bool(val: str) -> bool:
@@ -123,10 +125,11 @@ def get_slug(text: str) -> str:
     return slugify(text)
 
 
-def get_unique_slug(instance: Model, text: str) -> str:
+def get_unique_slug(instance: Model, text: str, max_length: int = 50) -> str:
     """Создает уникальный слаг, уникальный для данного класса."""
     model = instance.__class__
-    slug = get_slug(text)
+    truncated_text = text if len(text) <= max_length else text[:max_length]
+    slug = get_slug(truncated_text)
     n = 1
     while model.objects.filter(slug=slug).exists():
         n += 1
@@ -135,7 +138,10 @@ def get_unique_slug(instance: Model, text: str) -> str:
 
 
 def generate_random_text(word_count: int) -> str:
-    """Генерирует случайный текст, состоящий из заданного количества слов."""
-    random_length = random.randint(5, 50)  # noqa: S311
-    random_word = get_random_string(random_length)
-    return (random_word + " ") * word_count
+    """Генерирует случайный текст, состоящий из заданного количества слов.
+
+    Args:
+        word_count (int): количество слов в тексте.
+    """
+    random_words = fake.words(word_count)
+    return " ".join(random_words)

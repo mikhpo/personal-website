@@ -1,4 +1,5 @@
 """Маршруты системы авторизации пользователей."""
+
 from django.urls import path
 
 from accounts.views import signup

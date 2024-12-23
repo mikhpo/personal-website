@@ -1,4 +1,5 @@
 """Маршруты главного раздела сайта."""
+
 from django.urls import path
 
 from main.views import main

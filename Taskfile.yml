@@ -39,6 +39,7 @@ tasks:
     cmds:
       - defer: docker-compose down
       - docker-compose up -d postgres
+      - docker-compose ps
       - poetry run python ./personal_website/manage.py migrate
       - poetry run python ./personal_website/manage.py collectstatic --noinput
       - poetry run python ./personal_website/manage.py runserver
@@ -56,6 +57,7 @@ tasks:
     cmds:
       - defer: docker-compose down
       - docker-compose up -d postgres
+      - docker-compose ps
       - poetry run python ./personal_website/manage.py makemigrations
       - poetry run python ./personal_website/manage.py migrate
       - task: graph-models
@@ -77,6 +79,7 @@ tasks:
     cmds:
       - defer: docker-compose down
       - docker-compose up -d postgres
+      - docker-compose ps
       - npm test
       - poetry run pytest {{.CLI_ARGS}}
 
@@ -94,6 +97,7 @@ tasks:
     cmds:
       - defer: docker-compose down
       - docker-compose up -d website postgres
+      - docker-compose ps
       - docker-compose exec website npm test
       - docker-compose exec website poetry run pytest {{.CLI_ARGS}}
 
@@ -114,6 +118,7 @@ tasks:
     cmds:
       - defer: docker-compose down
       - docker-compose up -d postgres nginx minio
+      - docker-compose ps
       - poetry run pytest ./tests {{.CLI_ARGS}}
 
   check:
@@ -197,6 +202,7 @@ tasks:
       MINIO_BROWSER_REDIRECT_URL: http://minio:9001
     cmds:
       - docker-compose up -d
+      - docker-compose ps
       - docker-compose watch
 
   down:
@@ -229,6 +235,7 @@ tasks:
     cmds:
       - defer: docker-compose down
       - docker-compose up -d minio
+      - docker-compose ps
       - mc alias set ${MINIO_ALIAS} ${MINIO_SERVER_URL} ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD}
       - mc admin info ${MINIO_ALIAS}
 
@@ -262,4 +269,12 @@ tasks:
     cmds:
       - defer: docker-compose down
       - docker-compose up -d postgres
+      - docker-compose ps
       - poetry run python personal_website/manage.py makemigrations --dry-run --check
+
+  clean-cache:
+    desc: Удалить файлы кэша
+    summary: |
+      Удаляет все папки __pycache__ и файлы c расширением .pyc из дерева каталогов проекта.
+    cmds:
+      - find . | grep -E "(/__pycache__$|\.pyc$|\.pyo$)" | xargs rm -rf

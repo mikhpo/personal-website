@@ -1,4 +1,5 @@
 """Менеджеры галереи."""
+
 from personal_website.managers import PublicManager
 
 

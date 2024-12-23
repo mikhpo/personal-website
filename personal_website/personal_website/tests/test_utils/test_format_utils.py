@@ -1,4 +1,5 @@
 """Тесты вспомогательных функций для операций форматирования."""
+
 import datetime
 
 from django.test import SimpleTestCase

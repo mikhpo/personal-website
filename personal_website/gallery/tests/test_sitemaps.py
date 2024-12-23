@@ -1,4 +1,5 @@
 """Тесты карты сайта для объектов галереи."""
+
 import os
 from http import HTTPStatus
 from pathlib import Path
@@ -6,7 +7,8 @@ from pathlib import Path
 from django.test import TestCase
 from django.utils import timezone
 
-from gallery.models import Album, Photo, Tag
+from gallery.factories import AlbumFactory, PhotoFactory, TagFactory
+from gallery.models import Photo, Tag
 from personal_website.utils import list_file_paths
 
 SITEMAP_URL = "/sitemap.xml"
@@ -21,28 +23,20 @@ class GallerySitemapTest(TestCase):
         """Метод применяется один раз перед выполнением тестов класса."""
         # Создать теги.
         for tag in ["Путешествия", "Италия", "Тоскана", "Непал", "Лангтанг"]:
-            Tag.objects.create(name=tag)
+            TagFactory(name=tag)
 
         # Создать альбомы.
-        cls.public_album = Album.objects.create(
-            name="Тоскана",
-            description="Фотографии из путешествия по Тоскане осенью 2013 года",
-            public=True,
-        )
-        cls.private_album = Album.objects.create(
-            name="Лангтанг",
-            description="Фотографии из путешествия по Лангтангу весной 2014 года",
-            public=False,
-        )
+        cls.public_album = AlbumFactory(public=True)
+        cls.private_album = AlbumFactory(public=False)
 
         # Создать фотографии в базе данных из картинок в директории проекта.
         test_images_dir = Path(TEMP_ROOT) / "gallery" / "photos"
         images = list_file_paths(test_images_dir)
         for image in images:
             if "Tuscany" in image:
-                Photo.objects.create(image=image, public=True, album=cls.public_album)
+                PhotoFactory(image=image, name=None, public=True, album=cls.public_album)
             else:
-                Photo.objects.create(image=image, public=False, album=cls.private_album)
+                PhotoFactory(image=image, name=None, public=False, album=cls.private_album)
 
     def test_tag_sitemap(self) -> None:
         """Проверить, что все тэги добавляются в карту сайта."""
