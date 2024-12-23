@@ -233,9 +233,6 @@ django-tinymce==4.1.0 ; python_version >= "3.11" and python_version < "4.0" \
 django==5.1.4 ; python_version >= "3.11" and python_version < "4.0" \
     --hash=sha256:236e023f021f5ce7dee5779de7b286565fdea5f4ab86bae5338e3f7b69896cf0 \
     --hash=sha256:de450c09e91879fa5a307f696e57c851955c910a438a35e6b4c895e86bedc82a
-exif==1.6.1 ; python_version >= "3.11" and python_version < "4.0" \
-    --hash=sha256:2879830e2d8f0e5f1503110736bceb83a1e9c2121b32c23208c04284be5afbec \
-    --hash=sha256:763599b89b9b67495713060a703f32d1874abf8f0628c9d77711c2c06a5f44c8
 factory-boy==3.3.1 ; python_version >= "3.11" and python_version < "4.0" \
     --hash=sha256:7b1113c49736e1e9995bc2a18f4dbf2c52cf0f841103517010b1d825712ce3ca \
     --hash=sha256:8317aa5289cdfc45f9cae570feb07a6177316c82e34d14df3c2e1f22f26abef0
@@ -342,9 +339,6 @@ pillow==11.0.0 ; python_version >= "3.11" and python_version < "4.0" \
     --hash=sha256:fba162b8872d30fea8c52b258a542c5dfd7b235fb5cb352240c8d63b414013eb \
     --hash=sha256:fbbcb7b57dc9c794843e3d1258c0fbf0f48656d46ffe9e09b63bbd6e8cd5d0a2 \
     --hash=sha256:fcb4621042ac4b7865c179bb972ed0da0218a076dc1820ffc48b1d74c1e37fe9
-plum-py==0.8.7 ; python_version >= "3.11" and python_version < "4.0" \
-    --hash=sha256:40a25a70f7fd213f57cdd1decc65874df2d213d19d63478a1addcca748c13c4e \
-    --hash=sha256:d791f059ef159adbe3c3b036557b5b431fa07db226a9de106a74e5e57441741d
 psycopg-binary==3.2.3 ; implementation_name != "pypy" and python_version >= "3.11" and python_version < "4.0" \
     --hash=sha256:0463a11b1cace5a6aeffaf167920707b912b8986a9c7920341c75e3686277920 \
     --hash=sha256:05a1bdce30356e70a05428928717765f4a9229999421013f41338d9680d03a63 \

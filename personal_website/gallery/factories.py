@@ -130,9 +130,10 @@ class ExifDataFactory(factory.Factory):
     f_number = factory.Faker("pyfloat", right_digits=1, positive=True, min_value=1, max_value=22)
     iso_speed = factory.Faker("pyint", min_value=40, max_value=3200, step=100)
     focal_length = factory.Faker("pyint", min_value=14, max_value=200)
+    datetime_original = factory.Faker("past_datetime")
 
     @factory.lazy_attribute
-    def exposure_time(self) -> None:  # noqa: D102
+    def exposure_time(self) -> int | float:  # noqa: D102
         greater_than_second = fake.pybool()
         if greater_than_second:
             return fake.pyint(min_value=60, max_value=1800, step=60)

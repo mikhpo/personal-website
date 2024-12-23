@@ -73,7 +73,7 @@ class GalleryViewsTest(TestCase):
         files = list_file_paths(test_images_dir)
         images = [file for file in files if is_image(file)]
         for image in images:
-            photo = PhotoFactory(image=image, name=None, album=cls.album)
+            photo = PhotoFactory(image=image, name=None, album=cls.album, public=True)
             photo.tags.add(cls.tag)
         first_photo = Photo.objects.first()
         cls.album.cover = first_photo
@@ -184,6 +184,8 @@ class GalleryViewsTest(TestCase):
         """Проверить содержание представления для детального просмотра фотографии."""
         all_photos = Photo.objects.all()
         sorted_photos = sorted(all_photos, key=lambda photo: photo.datetime_taken)
+        for _photo in sorted_photos:
+            pass
         first_photo = sorted_photos[0]
         last_photo = sorted_photos[-1]
         middle_photos = all_photos.exclude(pk__in=[first_photo.pk, last_photo.pk])
@@ -197,7 +199,7 @@ class GalleryViewsTest(TestCase):
         next_photo_link_id = "next-photo-link"
         previous_photo_link_id = "previous-photo-link"
 
-        # Для первой фотографии в альбоме доступа только ссылка на следующую фотографию").
+        # Для первой фотографии в альбоме доступа только ссылка на следующую фотографию.
         url = f"{PHOTO_DETAIL_URL}/{first_photo.slug}/"
         response = self.client.get(url)
         context = response.context
@@ -206,7 +208,7 @@ class GalleryViewsTest(TestCase):
         self.assertIsNone(context["previous_photo"])
         self.assertNotContains(response, previous_photo_link_id)
 
-        # Для последней фотографии в альбоме доступна только ссылка на предыдущую фотографию").
+        # Для последней фотографии в альбоме доступна только ссылка на предыдущую фотографию.
         url = f"{PHOTO_DETAIL_URL}/{last_photo.slug}/"
         response = self.client.get(url)
         context = response.context

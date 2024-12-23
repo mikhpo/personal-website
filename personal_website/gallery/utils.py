@@ -5,10 +5,9 @@ from pathlib import Path
 from typing import Any
 
 from django.db.models import Model
-from exif import Image as ExifImage
 from faker import Faker
 from PIL import Image, UnidentifiedImageError
-from PIL.ExifTags import TAGS
+from PIL.ExifTags import TAGS, Base
 
 from gallery.apps import GalleryConfig
 from gallery.schemas import ExifData
@@ -89,19 +88,10 @@ def write_exif(image: str | Path | BytesIO, exif_data: ExifData) -> None:
         image (str | Path | BytesIO): Изображение, EXIF данные которого необходимо записать.
         exif_data (ExifData): объект модели Pydantic, содержащий все данные EXIF.
     """
-    # Преобразовать объект в словарь. Ключи словаря должны соответствовать схеме атрибутов библиотеки exif.
-    exif_dict = exif_data.model_dump(mode="json")
-
-    # Прочитать содержимое изображения и получить объект exif.Image.
-    with Path(image).open(mode="rb") as image_file:
-        image_bytes = image_file.read()
-    exif_image = ExifImage(image_bytes)
-
-    # Обновить атрибуты EXIF изображения переданными значениями.
-    for key, value in exif_dict.items():
-        if value:
-            exif_image.set(key, value)
-
-    # Перезаписать файл изображения с обновленными атрибутами.
-    with Path(image).open(mode="wb") as img:
-        img.write(exif_image.get_file())
+    exif_dict = exif_data.model_dump(mode="json", by_alias=True)
+    with Image.open(image) as img:
+        exif = img.getexif()
+        for key, value in exif_dict.items():
+            exif_tag = Base[key]
+            exif.__setitem__(exif_tag, value)
+        img.save(image, exif=exif)
