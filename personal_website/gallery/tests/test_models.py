@@ -8,8 +8,8 @@ from typing import TYPE_CHECKING
 
 from django.test import TestCase
 from faker import Faker
-from faker_file.providers.jpeg_file import JpegFileProvider
-from faker_file.storages.filesystem import FileSystemStorage
+from faker_file.providers.jpeg_file import JpegFileProvider  # type: ignore[import-untyped]
+from faker_file.storages.filesystem import FileSystemStorage  # type: ignore[import-untyped]
 
 from gallery.models import Album, Photo, Tag, photo_image_upload_path
 from personal_website.storages import select_storage
@@ -95,17 +95,23 @@ class GalleryModelsTests(TestCase):
         # Убедиться, что слаги фотографий создаются из названий с переводом
         # в нижний регистр и заменой специальных символов.
         photo = Photo.objects.filter(name__contains="Tuscany").first()
-        self.assertIsNotNone(photo.slug)
+        self.assertIsNotNone(photo)
+        if photo:
+            self.assertIsNotNone(photo.slug)
 
     def test_photo_exif(self) -> None:
         """Проверить, что данные EXIF считываются корректно."""
         photo = Photo.objects.first()
-        self.assertIsNotNone(photo.exif)
+        self.assertIsNotNone(photo)
+        if photo:
+            self.assertIsNotNone(photo.exif)
 
     def test_photo_camera(self) -> None:
         """Проверить, что данные EXIF считываются корректно."""
         photo = Photo.objects.first()
-        self.assertIsNotNone(photo.camera)
+        self.assertIsNotNone(photo)
+        if photo:
+            self.assertIsNotNone(photo.camera)
 
     def test_photo_album_relations(self) -> None:
         """Проверить отношения между моделью фотографии и моделью альбома."""
@@ -119,7 +125,9 @@ class GalleryModelsTests(TestCase):
 
         # Удалить последнюю тосканскую фотографию и проверить, что в тосканском альбоме осталось две фотографии.
         last_tuscany_photo = tuscany_photos.last()
-        last_tuscany_photo.delete()
+        self.assertIsNotNone(last_tuscany_photo)
+        if last_tuscany_photo:
+            last_tuscany_photo.delete()
         photos_in_album.all()
         self.assertEqual(photos_in_album.count(), 2)
         self.assertEqual(self.tuscany_album.photos_count, 2)
@@ -127,8 +135,10 @@ class GalleryModelsTests(TestCase):
         # Сделать одну из фотографий непубличной и убедиться,
         # что счетчик публичных фотографий меньше счетчика фотографий.
         photo = photos_in_album.first()
-        photo.public = False
-        photo.save()
+        self.assertIsNotNone(photo)
+        if photo:
+            photo.public = False
+            photo.save()
         self.assertEqual(self.tuscany_album.public_photos_count, 1)
 
         # Удалить альбом и проверить, что все фотографии из него были также удалены.
@@ -197,15 +207,19 @@ class GalleryModelsTests(TestCase):
 
         # Удалить последнюю тосканскую фотографию и убедиться, что уменьшилось количество фотографий у тосканского тэга.
         last_tuscany_photo = tuscany_photos.last()
-        last_tuscany_photo.delete()
+        self.assertIsNotNone(last_tuscany_photo)
+        if last_tuscany_photo:
+            last_tuscany_photo.delete()
         self.assertEqual(tuscany_tag.tag_photos.count(), 2)
 
         # Удалить непальский тэг у последней лангтангской фотографии и убедиться,
         # что количество тэгов у фотографии уменьшилось.
         last_langtang_photo = langtang_photos.last()
-        self.assertEqual(last_langtang_photo.tags.count(), 2)
-        last_langtang_photo.tags.remove(nepal_tag)
-        self.assertEqual(last_langtang_photo.tags.count(), 1)
+        self.assertIsNotNone(last_langtang_photo)
+        if last_langtang_photo:
+            self.assertEqual(last_langtang_photo.tags.count(), 2)
+            last_langtang_photo.tags.remove(nepal_tag)
+            self.assertEqual(last_langtang_photo.tags.count(), 1)
 
         # Добавить тэги албомам разными способами и проверить количество тэгов у альбомов и количество альбомов у тэгов.
         tuscany_tag.tag_albums.add(self.tuscany_album)
@@ -224,68 +238,80 @@ class GalleryModelsTests(TestCase):
         # Установить обложку для альбома из фотографии в этом альбоме.
         # Убедиться, что обложка установлена и является экземпляром класса фотографии.
         test_album = Album.objects.first()
-        test_photos: QuerySet = test_album.photo_set.all()
-        test_album.cover = test_photos.first()
-        test_album.save()
-        self.assertNotEqual(test_album.cover, None)
-        self.assertIsInstance(test_album.cover, Photo)
+        self.assertIsNotNone(test_album)
+        if test_album:
+            test_photos: QuerySet = test_album.photo_set.all()
+            test_album.cover = test_photos.first()
+            test_album.save()
+            self.assertNotEqual(test_album.cover, None)
+            self.assertIsInstance(test_album.cover, Photo)
 
-        # Удалить фотографию, служащую обложкой и перезагрузить из БД атрибуты альбома.
-        # Убедиться, что альбом сохранен, а обложка не установлена.
-        cover_photo: Photo = test_album.cover
-        cover_photo.delete()
-        test_album.refresh_from_db()
-        self.assertEqual(test_album.cover, None)
-        self.assertNotIsInstance(test_album.cover, Photo)
+            # Удалить фотографию, служащую обложкой и перезагрузить из БД атрибуты альбома.
+            # Убедиться, что альбом сохранен, а обложка не установлена.
+            cover_photo: Photo = test_album.cover  # type: ignore[assignment]
+            cover_photo.delete()
+            test_album.refresh_from_db()
+            self.assertEqual(test_album.cover, None)
+            self.assertNotIsInstance(test_album.cover, Photo)
 
     def test_photo_get_absolute_url(self) -> None:
         """Проверить корректность определения абсолютной ссылки для просмотра фотографии."""
         photo = Photo.objects.first()
-        url = photo.get_absolute_url()
-        response = self.client.get(url)
-        status_code = response.status_code
-        self.assertEqual(status_code, HTTPStatus.OK)
+        self.assertIsInstance(photo, Photo)
+        if photo:
+            url = photo.get_absolute_url()
+            response = self.client.get(url)
+            status_code = response.status_code
+            self.assertEqual(status_code, HTTPStatus.OK)
 
     def test_album_get_absolute_url(self) -> None:
         """Проверить корректность определения абсолютной ссылки для просмотра альбома."""
         album = Album.objects.first()
-        url = album.get_absolute_url()
-        self.assertIsInstance(url, str)
-        self.assertIn(album.slug, url)
+        self.assertIsInstance(album, Album)
+        if album:
+            url = album.get_absolute_url()
+            self.assertIsInstance(url, str)
+            self.assertIn(album.slug, url)
 
     def test_tag_get_absolute_url(self) -> None:
         """Проверить корректность определения абсолютной ссылки для просмотра тега."""
         tag = Tag.objects.first()
-        url = tag.get_absolute_url()
-        response = self.client.get(url)
-        status_code = response.status_code
-        self.assertEqual(status_code, HTTPStatus.OK)
+        self.assertIsInstance(tag, Tag)
+        if tag:
+            url = tag.get_absolute_url()
+            response = self.client.get(url)
+            status_code = response.status_code
+            self.assertEqual(status_code, HTTPStatus.OK)
 
     def test_datetime_taken(self) -> None:
         """Проверка получения даты и времени съемки фотографии."""
         first_photo = Photo.objects.first()
-        datetime_taken = first_photo.datetime_taken
-        self.assertIsInstance(datetime_taken, datetime.datetime)
+        self.assertIsInstance(first_photo, Photo)
+        if first_photo:
+            datetime_taken = first_photo.datetime_taken
+            self.assertIsInstance(datetime_taken, datetime.datetime)
 
     def test_photo_album_changed(self) -> None:
         """Путь фотографии изменяется после изменения альбома фотографии."""
         # Файл по изначальному адресу существует.
         photo = Photo.objects.filter(album=self.tuscany_album).last()
-        old_path = photo.image.path
-        old_path_exists = Path(old_path).exists()
-        self.assertTrue(old_path_exists)
+        self.assertIsInstance(photo, Photo)
+        if photo:
+            old_path = photo.image.path
+            old_path_exists = Path(old_path).exists()
+            self.assertTrue(old_path_exists)
 
-        # Изменить альбом и сохранить фотографию.
-        old_relative_path = photo.image.name
-        file_name = Path(old_relative_path).name
-        photo.album = self.langtang_album
-        photo.save()
+            # Изменить альбом и сохранить фотографию.
+            old_relative_path = photo.image.name
+            file_name = Path(old_relative_path).name
+            photo.album = self.langtang_album
+            photo.save()
 
-        # Адрес файла был изменен корректно.
-        new_name_is_absolute = Path(photo.image.name).is_absolute()
-        new_path_exists = Path(photo.image.path).exists()
-        upload_path = photo_image_upload_path(photo, file_name)
-        self.assertFalse(new_name_is_absolute)
-        self.assertNotEqual(old_relative_path, photo.image.name)
-        self.assertEqual(photo.image.name, upload_path)
-        self.assertTrue(new_path_exists)
+            # Адрес файла был изменен корректно.
+            new_name_is_absolute = Path(photo.image.name).is_absolute()
+            new_path_exists = Path(photo.image.path).exists()
+            upload_path = photo_image_upload_path(photo, file_name)
+            self.assertFalse(new_name_is_absolute)
+            self.assertNotEqual(old_relative_path, photo.image.name)
+            self.assertEqual(photo.image.name, upload_path)
+            self.assertTrue(new_path_exists)

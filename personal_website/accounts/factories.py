@@ -1,6 +1,6 @@
 """Фабрики для создания объектов приложения авторизации и управления пользователями."""
 
-import factory
+import factory  # type: ignore[import-untyped]
 from django.contrib.auth.models import User
 
 

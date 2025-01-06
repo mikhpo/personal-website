@@ -1,48 +1,54 @@
-[tool.poetry]
+[project]
 name = "personal-website"
 version = "0.1.0"
 description = "My personal website"
-authors = ["Mikhail Polyakov <mikhpo@outlook.com>"]
+authors = [{ name = "Mikhail Polyakov", email = "mikhpo@outlook.com" }]
+dynamic = ["requires-python", "dependencies"]
+
+[tool.poetry]
+package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.11"
-Django = "^5.1.2"
+Django = "^5.1.4"
 django-tinymce = "^4.1.0"
 django-cleanup = "^9.0.0"
 django-imagekit = "^5.0.0"
-django-admin-sortable2 = "^2.2.3"
+django-admin-sortable2 = "^2.2.4"
 django-extensions = "^3.2.3"
 django-crispy-forms = "^2.3"
 crispy-bootstrap5 = "^2024.10"
-whitenoise = "^6.7.0"
+whitenoise = "^6.8.2"
 gunicorn = "^23.0.0"
 python-dotenv = "^1.0.1"
 pytils = "^0.4.1"
 pillow = "^11.0.0"
 imgkit = "^1.2.3"
 psycopg = { extras = ["binary"], version = "^3.2.3" }
-faker = "^30.6.0"
+faker = "^33.1.0"
 faker-file = "^0.17.11"
 model-bakery = "^1.20.0"
 requests = "^2.32.3"
-minio = "^7.2.9"
+minio = "^7.2.13"
 factory-boy = "^3.3.1"
 pydantic = "^2.10.4"
 
 [tool.poetry.group.dev.dependencies]
-coverage = "^7.6.3"
+coverage = "^7.6.10"
 black = "^24.10.0"
 isort = "^5.13.2"
-djlint = "^1.35.2"
-pytest = "^8.3.3"
+djlint = "^1.36.4"
+pytest = "^8.3.4"
 pytest-subtests = "^0.11.0"
 pytest-django = "^4.9.0"
-pytest-cov = "^5.0.0"
+pytest-cov = "^6.0.0"
 pyclean = "^3.0.0"
 pre-commit = "^4.0.1"
 ruff = "^0.8.2"
 pyparsing = "^3.2.0"
-pydot = "^3.0.2"
+pydot = "^3.0.3"
+django-stubs = { extras = ["compatible-mypy"], version = "^5.1.1" }
+types-requests = "^2.32.0.20241016"
 
 [tool.black]
 line-length = 120
@@ -53,31 +59,15 @@ profile = "black"
 src_paths = ["personal_website"]
 
 [tool.ruff]
-
 line-length = 120
 unsafe-fixes = true
 src = ["personal_website"]
-
-[tool.ruff.per-file-ignores]
-"__init__.py" = ["D104"] # __init__.py могут быть пустыми
-"**/migrations/**.py" = [
-    "ANN001",
-    "ANN201",
-    "ARG001",
-    "D100",
-    "D101",
-    "RUF012",
-] # файлы миграций создаются модулем Django
-"**/tests/**.py" = ["S105", "S106", "S311"]
-"**/signals.py" = ["ANN401", "ARG001"]
 
 [tool.ruff.lint]
 select = ["ALL"]
 fixable = ["ALL"]
 ignore = [
     "ANN002",
-    "ANN101",
-    "ANN102",
     "ANN003",
     "D205",
     "D206",
@@ -93,6 +83,19 @@ ignore = [
     "S308",
     "W191",
 ]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["D104"] # __init__.py могут быть пустыми
+"**/migrations/**.py" = [
+    "ANN001",
+    "ANN201",
+    "ARG001",
+    "D100",
+    "D101",
+    "RUF012",
+] # файлы миграций создаются модулем Django
+"**/tests/**.py" = ["S105", "S106", "S311"]
+"**/signals.py" = ["ANN401", "ARG001"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "pep257" # Варианты: "google", "numpy", "pep257".
@@ -126,6 +129,10 @@ omit = [
     "asgi.py",
     "runners.py",
 ]
+
+[tool.mypy]
+exclude = ["venv", ".venv", "static"]
+disable_error_code = ["attr-defined", "var-annotated", "misc"]
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

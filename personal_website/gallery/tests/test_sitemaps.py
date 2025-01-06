@@ -4,6 +4,7 @@ import os
 from http import HTTPStatus
 from pathlib import Path
 
+from django.conf import settings
 from django.test import TestCase
 from django.utils import timezone
 
@@ -12,7 +13,7 @@ from gallery.models import Photo, Tag
 from personal_website.utils import list_file_paths
 
 SITEMAP_URL = "/sitemap.xml"
-TEMP_ROOT = os.getenv("TEMP_ROOT")
+TEMP_ROOT = os.getenv("TEMP_ROOT", default=settings.PROJECT_DIR / "temp")
 
 
 class GallerySitemapTest(TestCase):

@@ -3,11 +3,12 @@
 import os
 from pathlib import Path
 
+from django.conf import settings
 from django.test import SimpleTestCase, TestCase
 from faker import Faker
-from faker_file.providers.jpeg_file import JpegFileProvider
-from faker_file.providers.txt_file import TxtFileProvider
-from faker_file.storages.filesystem import FileSystemStorage
+from faker_file.providers.jpeg_file import JpegFileProvider  # type: ignore[import-untyped]
+from faker_file.providers.txt_file import TxtFileProvider  # type: ignore[import-untyped]
+from faker_file.storages.filesystem import FileSystemStorage  # type: ignore[import-untyped]
 
 from gallery.apps import GalleryConfig
 from gallery.factories import AlbumFactory, ExifDataFactory, PhotoFactory
@@ -37,7 +38,7 @@ class GalleryUtilsTests(TestCase):
         cls.langtang_album = AlbumFactory(name="Лангтанг")
 
         # Создать фотографии в базе данных из картинок в директории проекта.
-        test_dir = os.getenv("TEMP_ROOT")
+        test_dir = os.getenv("TEMP_ROOT", default=settings.PROJECT_DIR / "temp")
         test_images_dir = Path(test_dir) / "gallery" / "photos"
         images = list_file_paths(test_images_dir)
         for image in images:
@@ -55,31 +56,37 @@ class GalleryUtilsTests(TestCase):
     def test_photo_image_upload_path(self) -> None:
         """Проверка функции получения относительного пути загрузки файла изображения."""
         first_photo = Photo.objects.first()
-        relative_path = photo_image_upload_path(first_photo, "test.jpg")
-        self.assertIsInstance(relative_path, str)
-        absolute = Path(relative_path).is_absolute()
-        self.assertFalse(absolute)
+        self.assertIsInstance(first_photo, Photo)
+        if first_photo:
+            relative_path = photo_image_upload_path(first_photo, "test.jpg")
+            self.assertIsInstance(relative_path, str)
+            absolute = Path(relative_path).is_absolute()
+            self.assertFalse(absolute)
 
     def test_photo_image_upload_full_path(self) -> None:
         """Проверка функции получения абсолютного пути загрузки файла изображения."""
         first_photo = Photo.objects.first()
-        relative_path = photo_image_upload_full_path(first_photo, "test.jpg")
-        absolute = Path(relative_path).is_absolute()
-        self.assertIsInstance(relative_path, str)
-        self.assertTrue(absolute)
+        self.assertIsInstance(first_photo, Photo)
+        if first_photo:
+            relative_path = photo_image_upload_full_path(first_photo, "test.jpg")
+            absolute = Path(relative_path).is_absolute()
+            self.assertIsInstance(relative_path, str)
+            self.assertTrue(absolute)
 
     def test_move_photo_image(self) -> None:
         """Проверка функции перемещения фотографии по новому адресу."""
         with self.subTest("Файл по старому адресу существует"):
             photo = Photo.objects.filter(album=self.tuscany_album).first()
-            old_path = photo.image.path
-            self.assertTrue(Path(old_path).exists())
+            self.assertIsInstance(photo, Photo)
+            if photo:
+                old_path = photo.image.path
+                self.assertTrue(Path(old_path).exists())
 
-        with self.subTest("Файл по старому адресу более не существует, но теперь существует по новому адресу"):
-            photo.album = self.langtang_album
-            new_path = move_photo_image(photo, photo.image.path)
-            self.assertFalse(Path(old_path).exists())
-            self.assertTrue(Path(new_path).exists())
+                with self.subTest("Файл по старому адресу более не существует, но теперь существует по новому адресу"):
+                    photo.album = self.langtang_album
+                    new_path = move_photo_image(photo, photo.image.path)
+                    self.assertFalse(Path(old_path).exists())
+                    self.assertTrue(Path(new_path).exists())
 
 
 class TestIsImage(SimpleTestCase):

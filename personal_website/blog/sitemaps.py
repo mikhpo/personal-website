@@ -3,8 +3,8 @@
 from datetime import datetime
 
 from django.contrib.sitemaps import Sitemap
+from django.db.models import QuerySet
 
-from blog.managers import PublicArticleManager, PublicCategoryManager, PublicSeriesManager, PublicTopicManager
 from blog.models import Article, Category, Series, Topic
 
 PROTOCOL = "https"
@@ -15,7 +15,7 @@ class ArticleSitemap(Sitemap):
 
     protocol = PROTOCOL
 
-    def items(self) -> PublicArticleManager:
+    def items(self) -> QuerySet[Article]:
         """Публичные статьи."""
         return Article.published.all()
 
@@ -29,7 +29,7 @@ class SeriesSitemap(Sitemap):
 
     protocol = PROTOCOL
 
-    def items(self) -> PublicSeriesManager:
+    def items(self) -> QuerySet[Series]:
         """Публичные серии."""
         return Series.published.all()
 
@@ -39,7 +39,7 @@ class TopicSitemap(Sitemap):
 
     protocol = PROTOCOL
 
-    def items(self) -> PublicTopicManager:
+    def items(self) -> QuerySet[Topic]:
         """Публичные темы."""
         return Topic.published.all()
 
@@ -49,6 +49,6 @@ class CategorySitemap(Sitemap):
 
     protocol = PROTOCOL
 
-    def items(self) -> PublicCategoryManager:
+    def items(self) -> QuerySet[Category]:
         """Публичные категории."""
         return Category.published.all()

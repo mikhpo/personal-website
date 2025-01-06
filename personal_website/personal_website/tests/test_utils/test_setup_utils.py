@@ -11,7 +11,7 @@ class StrToBollTests(SimpleTestCase):
 
     def test_none_value_returns_false(self) -> None:
         """Проверить, что отсутствие значения преобразуется в ложь."""
-        self.assertFalse(str_to_bool(None))
+        self.assertFalse(str_to_bool(None))  # type: ignore[arg-type]
 
     def test_positive_value_returns_true(self) -> None:
         """Проверить, что положительные значения преобразуются в истину."""

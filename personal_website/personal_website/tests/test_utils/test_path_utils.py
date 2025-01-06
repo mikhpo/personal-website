@@ -3,14 +3,15 @@
 import os
 from pathlib import Path
 
+from django.conf import settings
 from django.test import SimpleTestCase
 from faker import Faker
-from faker_file.providers.jpeg_file import JpegFileProvider
-from faker_file.storages.filesystem import FileSystemStorage
+from faker_file.providers.jpeg_file import JpegFileProvider  # type: ignore[import-untyped]
+from faker_file.storages.filesystem import FileSystemStorage  # type: ignore[import-untyped]
 
 from personal_website.utils import calculate_path_size, list_file_paths
 
-temp_root = os.getenv("TEMP_ROOT")
+temp_root = os.getenv("TEMP_ROOT", default=settings.PROJECT_DIR / "temp")
 test_dir = Path(__file__).resolve().stem
 
 FAKER = Faker()
@@ -46,13 +47,14 @@ class CalculatePathSizeTests(SimpleTestCase):
         filepath = FS_STORAGE.abspath(self.files[0])
         filesize = calculate_path_size(filepath)
         self.assertIsInstance(filesize, dict)
-        value = filesize.get("value")
-        unit = filesize.get("unit")
-        message = filesize.get("message")
-        self.assertIsInstance(message, str)
-        self.assertIsInstance(value, int)
-        self.assertIn(str(value), message)
-        self.assertIn(unit, message)
+        if filesize:
+            value = filesize["value"]
+            unit = filesize["unit"]
+            message = filesize["message"]
+            self.assertIsInstance(message, str)
+            self.assertIsInstance(value, int)
+            self.assertIn(str(value), message)
+            self.assertIn(unit, message)
 
     def test_dir(self) -> None:
         """Проверка определения размера каталога."""

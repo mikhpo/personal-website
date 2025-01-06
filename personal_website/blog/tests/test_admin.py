@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from faker import Faker
-from faker_file.providers.jpeg_file import JpegFileProvider
+from faker_file.providers.jpeg_file import JpegFileProvider  # type: ignore[import-untyped]
 
 from blog.apps import BlogConfig
 from blog.factories import ArticleFactory, CategoryFactory, CommentFactory, SeriesFactory, TopicFactory
@@ -53,7 +53,7 @@ class BlogAdminTest(TestCase):
         self.assertNotEqual(articles_verbose_name, None)
         response = self.client.get(self.ADMIN_URL)
         self.assertEqual(response.status_code, HTTPStatus.OK)
-        self.assertContains(response, articles_verbose_name)
+        self.assertContains(response, str(articles_verbose_name))
         response = self.client.get(self.ADMIN_URL + "blog/article/")
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
@@ -63,7 +63,7 @@ class BlogAdminTest(TestCase):
         self.assertNotEqual(comments_verbose_name, None)
         response = self.client.get(self.ADMIN_URL)
         self.assertEqual(response.status_code, HTTPStatus.OK)
-        self.assertContains(response, comments_verbose_name)
+        self.assertContains(response, str(comments_verbose_name))
         response = self.client.get(self.ADMIN_URL + "blog/comment/")
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
@@ -73,7 +73,7 @@ class BlogAdminTest(TestCase):
         self.assertNotEqual(series_verbose_name, None)
         response = self.client.get(self.ADMIN_URL)
         self.assertEqual(response.status_code, HTTPStatus.OK)
-        self.assertContains(response, series_verbose_name)
+        self.assertContains(response, str(series_verbose_name))
         response = self.client.get(self.ADMIN_URL + "blog/series/")
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
@@ -83,7 +83,7 @@ class BlogAdminTest(TestCase):
         self.assertNotEqual(topics_verbose_name, None)
         response = self.client.get(self.ADMIN_URL)
         self.assertEqual(response.status_code, HTTPStatus.OK)
-        self.assertContains(response, topics_verbose_name)
+        self.assertContains(response, str(topics_verbose_name))
         response = self.client.get(self.ADMIN_URL + "blog/topic/")
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
@@ -93,7 +93,7 @@ class BlogAdminTest(TestCase):
         self.assertNotEqual(categories_verbose_name, None)
         response = self.client.get(self.ADMIN_URL)
         self.assertEqual(response.status_code, HTTPStatus.OK)
-        self.assertContains(response, categories_verbose_name)
+        self.assertContains(response, str(categories_verbose_name))
         response = self.client.get(self.ADMIN_URL + "blog/category/")
         self.assertEqual(response.status_code, HTTPStatus.OK)
 

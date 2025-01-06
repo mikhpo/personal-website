@@ -8,7 +8,7 @@ from typing import Any
 from django.conf import settings
 from django.test.runner import DiscoverRunner
 
-temp_dir = os.getenv("TEMP_ROOT")
+temp_dir = os.getenv("TEMP_ROOT", default=Path(settings.PROJECT_DIR) / "temp")
 
 
 class CustomRunner(DiscoverRunner):

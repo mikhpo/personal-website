@@ -17,7 +17,7 @@ def manage_temp_dir() -> Generator[str, Any, None]:
     удалить временный каталог после завершения тестовой сессии.
     """
     # Получить адрес папки для временных файлов из переменных окружения.
-    temp_dir = os.getenv("TEMP_ROOT")
+    temp_dir = os.getenv("TEMP_ROOT", default="./temp")
 
     # Создать папку для временных файлов перед глобальным запуском тестов.
     Path(temp_dir).mkdir(parents=True, exist_ok=True)

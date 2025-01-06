@@ -73,7 +73,7 @@ class PhotoListView(ListView):
     template_name = "gallery/photo_list.html"
     paginate_by = 40
 
-    def get_queryset(self) -> list[Photo]:
+    def get_queryset(self) -> list[Photo]:  # type: ignore[override]
         """Отсортировать набор фотографий от новых к старым."""
         photos = Photo.published.all()
         return sorted(photos, key=lambda photo: photo.datetime_taken, reverse=True)

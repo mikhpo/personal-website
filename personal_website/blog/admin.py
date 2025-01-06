@@ -5,13 +5,11 @@ from typing import Any
 from django.contrib import admin
 from django.db import models
 from django.http import HttpRequest
-from tinymce.widgets import TinyMCE
+from tinymce.widgets import TinyMCE  # type: ignore[import-untyped]
 
 from blog.models import Article, Category, Comment, Series, Topic
 
-FORMFIELD_OVERRIDES = {
-    models.TextField: {"widget": TinyMCE()},
-}
+FORMFIELD_OVERRIDES = {models.TextField: {"widget": TinyMCE()}}
 
 
 @admin.register(Article)
@@ -21,7 +19,7 @@ class ArticleAdmin(admin.ModelAdmin):
     model = Article
 
     # Стандартная форма тектового поля заменена на HTML форму TinyMCE.
-    formfield_overrides = FORMFIELD_OVERRIDES
+    formfield_overrides = FORMFIELD_OVERRIDES  # type: ignore[assignment]
 
     list_display = ("title", "published_at", "modified_at", "public")
     list_filter = ("series", "topics", "categories", "public")
@@ -86,6 +84,6 @@ class CommentAdmin(admin.ModelAdmin):
     """Настройки отображения модели комментариев в панели администрирования Django."""
 
     model = Comment
-    formfield_overrides = FORMFIELD_OVERRIDES
+    formfield_overrides = FORMFIELD_OVERRIDES  # type: ignore[assignment]
     list_display = ("article", "author", "posted")
     list_filter = ("article", "author")

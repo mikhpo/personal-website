@@ -1,6 +1,6 @@
 """Фабрики для генерации объектов галереи со случайными данными."""
 
-import factory
+import factory  # type: ignore[import-untyped]
 from django.utils.timezone import now
 from faker import Faker
 
@@ -37,7 +37,7 @@ class AlbumFactory(factory.django.DjangoModelFactory):
     slug = factory.LazyAttribute(lambda _: None)
     created_at = factory.LazyFunction(now)
     updated_at = factory.LazyFunction(now)
-    public = factory.Faker("pybool")
+    public = factory.LazyAttribute(lambda _: True)
     cover = factory.LazyAttribute(lambda _: None)
     order = factory.Sequence(lambda n: n + 1)
 
@@ -71,7 +71,7 @@ class PhotoFactory(factory.django.DjangoModelFactory):
     slug = factory.LazyAttribute(lambda _: None)
     uploaded_at = factory.LazyFunction(now)
     modified_at = factory.LazyFunction(now)
-    public = factory.Faker("pybool")
+    public = factory.LazyAttribute(lambda _: True)
     album = factory.SubFactory(AlbumFactory)
 
     @factory.post_generation
@@ -140,6 +140,6 @@ class ExifDataFactory(factory.Factory):
         denominator = fake.pyint(min_value=10, max_value=400, step=10)
         return 1 / denominator
 
-    def __new__(cls, *args, **kwargs) -> "Meta.model":
+    def __new__(cls, *args, **kwargs) -> ExifData:
         """Фабрика данных EXIF."""
         return super().__new__(*args, **kwargs)

@@ -11,7 +11,7 @@ from django.db.models import Model
 from django.utils import timezone
 from django.utils.text import slugify
 from faker import Faker
-from pytils import translit
+from pytils import translit  # type: ignore[import-untyped]
 
 fake = Faker(locale="ru_RU")
 
@@ -60,10 +60,10 @@ class NoColorLogFormatter(logging.Formatter):
         return super().format(record)
 
     def uses_asctime(self) -> bool:  # noqa: D102
-        return self._fmt.find("{asctime}") >= 0
+        return self._fmt.find("{asctime}") >= 0  # type: ignore[union-attr]
 
 
-def list_file_paths(files_dir: str) -> list[str]:
+def list_file_paths(files_dir: Path) -> list[str]:
     """Определить пути набора набора файлов в указанном каталоге.
 
     Args:
@@ -93,10 +93,10 @@ def calculate_path_size(path: str) -> dict | None:
     """
     units = ("Б", "КБ", "МБ", "ГБ", "ТБ")
     binary_thousand = 1024
+    size: float | int = 0
 
     # Способ определения размера дампа зависит от типа пути: файл или каталог.
     if Path(path).is_dir():
-        size = 0
         for _path, _, files in os.walk(path):
             for file in files:
                 filepath = Path(_path) / file
@@ -120,7 +120,7 @@ def has_cyrillic(text: str) -> bool:
 
 def get_slug(text: str) -> str:
     """Создает слаг из текста."""
-    if has_cyrillic:
+    if has_cyrillic(text):
         return translit.slugify(text)
     return slugify(text)
 
