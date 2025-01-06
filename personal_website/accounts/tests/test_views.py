@@ -148,8 +148,9 @@ class UserManagementRoutesTest(TestCase):
             status_code=HTTPStatus.FOUND,
             target_status_code=HTTPStatus.OK,
         )
-        token = response.context[0]["token"]
-        uid = response.context[0]["uid"]
+        context: list | dict = response.context
+        token = context[0]["token"]
+        uid = context[0]["uid"]
         reset_url = f"/accounts/reset/{uid}/{token}/"
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(mail.outbox[0].subject, "Сброс пароля на example.com")

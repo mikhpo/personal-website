@@ -6,6 +6,7 @@ from typing import Optional
 
 import psycopg
 from dotenv import load_dotenv
+from psycopg.connection import Connection
 
 
 class TestPostgres(unittest.TestCase):
@@ -17,7 +18,7 @@ class TestPostgres(unittest.TestCase):
         load_dotenv()
         return super().setUpClass()
 
-    def connect_postgres(self) -> psycopg.Connection[psycopg.connection.TupleRow]:
+    def connect_postgres(self) -> Connection:
         """Подключиться к базе данных PostgreSQL."""
         host = "localhost"
         port = os.environ["POSTGRES_PORT"]

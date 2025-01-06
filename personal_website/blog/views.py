@@ -5,7 +5,7 @@ from typing import Any
 
 from django.conf import settings
 from django.core.paginator import Page, Paginator
-from django.db.models.manager import BaseManager
+from django.db.models import QuerySet
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render
 from django.views.generic.detail import DetailView
@@ -49,12 +49,12 @@ class ArticleDetailView(DetailView):
         user = self.request.user
         article = self.get_object()
         logger.info(f"Пользователь {user} оставил комментарий к статье {article}")
-        return self.get(self, request, *args, **kwargs)
+        return self.get(request, *args, **kwargs)
 
 
-def paginate(request: HttpRequest, objects: BaseManager) -> Page:
+def paginate(request: HttpRequest, objects: QuerySet) -> Page:
     """Фукнция для разбивки отображения списка объектов по страницам."""
-    paginator = Paginator(objects, 5)
+    paginator = Paginator(object_list=objects, per_page=5)
     page_number = request.GET.get("page")
     return paginator.get_page(page_number)
 

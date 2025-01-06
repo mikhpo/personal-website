@@ -4,6 +4,8 @@
 Новая модель пользователя подменяет собой стандартную модель пользователя Django.
 """
 
+from typing import Any
+
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
@@ -51,7 +53,7 @@ class SignUpForm(UserCreationForm):
             "Пароль не может состоять только из цифр."
         )
 
-    def clean(self) -> dict:
+    def clean(self) -> dict[str, Any] | None:
         """
         При регистрации нового пользователя проверяется:
         - Не зарегистрирован ли уже пользователь с этой почтой. Нельзя зарегистрировать несколько пользователей

@@ -121,13 +121,30 @@ tasks:
       - docker-compose ps
       - poetry run pytest ./tests {{.CLI_ARGS}}
 
-  check:
-    desc: Выполнить статический анализ кода и проверки Django
-    summary: Команда запускает проверки Ruff
+  ruff:
+    desc: Выполнить статический анализ кода при помощи утилиты Ruff
+    summary: Команда запускает проверки Ruff с автоматически исправлением ошибок
     preconditions:
       - test -f pyproject.toml
     cmds:
       - poetry run ruff check --fix
+
+  mypy:
+    desc: Выполнить статический анализ кода при помощи утилиты Mypy
+    summary: Команда запускает проверки типов Mypy
+    preconditions:
+      - test -f pyproject.toml
+    cmds:
+      - poetry run mypy .
+
+  check:
+    desc: Выполнить статический анализ кода и проверки Django
+    summary: Команда запускает проверки Ruff, Mypy и Django
+    preconditions:
+      - test -f pyproject.toml
+    cmds:
+      - task: ruff
+      - task: mypy
       - poetry run python personal_website/manage.py check
 
   install:

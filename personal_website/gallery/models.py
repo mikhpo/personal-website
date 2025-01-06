@@ -9,8 +9,8 @@ from django.db import models
 from django.urls import reverse
 from django.utils.functional import cached_property
 from django.utils.timezone import get_current_timezone, now
-from imagekit.models import ImageSpecField
-from imagekit.processors import ResizeToFit
+from imagekit.models import ImageSpecField  # type: ignore[import-untyped]
+from imagekit.processors import ResizeToFit  # type: ignore[import-untyped]
 from PIL import Image as pImage
 from PIL.ExifTags import TAGS
 

@@ -1,7 +1,7 @@
 """Формы блога."""
 
 from django import forms
-from tinymce.widgets import TinyMCE
+from tinymce.widgets import TinyMCE  # type: ignore[import-untyped]
 
 from blog.models import Comment
 

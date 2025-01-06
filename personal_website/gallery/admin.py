@@ -1,18 +1,16 @@
 """Представления объектов галереи в административной панели Django."""
 
-from adminsortable2.admin import SortableAdminMixin
+from adminsortable2.admin import SortableAdminMixin  # type: ignore[import-untyped]
 from django.contrib import admin
 from django.db import models
 from django.utils.safestring import SafeText, mark_safe
-from tinymce.widgets import TinyMCE
+from tinymce.widgets import TinyMCE  # type: ignore[import-untyped]
 
 from gallery.forms import AlbumForm
 from gallery.models import Album, Photo, Tag
 from personal_website.utils import format_local_datetime
 
-FORMFIELD_OVERRIDES = {
-    models.TextField: {"widget": TinyMCE()},
-}
+FORMFIELD_OVERRIDES = {models.TextField: {"widget": TinyMCE()}}
 
 
 @admin.register(Photo)
@@ -20,7 +18,7 @@ class PhotoAdmin(admin.ModelAdmin):
     """Настройки отображения модели фотографии в панели администрирования Django."""
 
     model = Photo
-    formfield_overrides = FORMFIELD_OVERRIDES
+    formfield_overrides = FORMFIELD_OVERRIDES  # type: ignore[assignment]
     fields = (
         "image",
         "name",
@@ -133,7 +131,7 @@ class AlbumAdmin(SortableAdminMixin, admin.ModelAdmin):
 
     inlines = (PhotoInline,)
     form = AlbumForm
-    formfield_overrides = FORMFIELD_OVERRIDES
+    formfield_overrides = FORMFIELD_OVERRIDES  # type: ignore[assignment]
     fields = (
         "name",
         "description",
@@ -199,5 +197,5 @@ class TagAdmin(admin.ModelAdmin):
     """Настройки отображения модели тэга в панели администрирования Django."""
 
     model = Tag
-    formfield_overrides = FORMFIELD_OVERRIDES
+    formfield_overrides = FORMFIELD_OVERRIDES  # type: ignore[assignment]
     list_display = ("name",)

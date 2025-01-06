@@ -21,7 +21,7 @@ PROJECT_NAME = BASE_DIR.name
 TEST = any((("test" in sys.argv), ("pytest" in sys.modules)))
 
 # Режим запуска сервера.
-DEBUG = str_to_bool(os.getenv("DEBUG"))
+DEBUG = str_to_bool(os.getenv("DEBUG", default="False"))
 
 # Ключ проекта Django (генерируется автоматически).
 SECRET_KEY = os.getenv("SECRET_KEY")
@@ -255,7 +255,7 @@ TINYMCE_DEFAULT_CONFIG = {
 """
 Настройки логирования.
 """
-LOGS_ROOT = os.getenv("LOGS_ROOT")  # общая папка для сохранения логов
+LOGS_ROOT = os.getenv("LOGS_ROOT", default=PROJECT_DIR / "logs")  # общая папка для сохранения логов
 LOG_DIR = Path(LOGS_ROOT) / PROJECT_NAME
 
 # Cоздать директорию для логов, если не существует.

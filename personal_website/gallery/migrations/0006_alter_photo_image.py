@@ -13,7 +13,7 @@ from gallery.utils import move_photo_image, photo_image_upload_path
 def update_image_paths(apps, schema_editor):
     """Пересохранить адреса изображений в соответствии с новой бизнес-логикой."""
     app_name = GalleryConfig.name
-    Photo: models.Model = apps.get_model(app_name, "Photo")
+    Photo: models.Model = apps.get_model(app_name, "Photo")  # type: ignore[annotation-unchecked]
     all_photos = Photo.objects.all()
     for photo in all_photos:
         old_path = photo.image.path

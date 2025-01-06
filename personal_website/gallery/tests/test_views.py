@@ -68,7 +68,7 @@ class GalleryViewsTest(TestCase):
         cls.tag = TagFactory()
         cls.album = AlbumFactory()
         cls.album.tags.add(cls.tag)
-        test_dir = os.getenv("TEMP_ROOT")
+        test_dir = os.getenv("TEMP_ROOT", default=settings.PROJECT_DIR)
         test_images_dir = Path(test_dir) / "gallery" / "photos"
         files = list_file_paths(test_images_dir)
         images = [file for file in files if is_image(file)]
@@ -112,13 +112,13 @@ class GalleryViewsTest(TestCase):
         with self.subTest("Альбомы галереи содержатся в контексте представления"):
             albums = Album.objects.all()
             for album in albums:
-                self.assertContains(response, album)
+                self.assertContains(response, str(album))
             self.assertEqual(albums.count(), len(context["albums"]))
 
         with self.subTest("Тэги галереи содержатся в контексте представления"):
             tags = Tag.objects.all()
             for tag in tags:
-                self.assertContains(response, tag)
+                self.assertContains(response, str(tag))
             self.assertEqual(tags.count(), len(context["tags"]))
 
     def test_photo_list_url(self) -> None:
@@ -150,35 +150,37 @@ class GalleryViewsTest(TestCase):
         context = response.context
         tags = Tag.objects.all()
         for tag in tags:
-            self.assertContains(response, tag)
+            self.assertContains(response, str(tag))
         self.assertEqual(tags.count(), len(context["tags"]))
 
     def test_photo_detail_url(self) -> None:
         """Проверить работоспособность ссылки на детальный просмотр фотографии."""
         first_photo = Photo.objects.first()
-        photo_slug = first_photo.slug
+        self.assertIsNotNone(first_photo)
+        if first_photo:
+            photo_slug = first_photo.slug
 
-        with self.subTest("Проверить переход по ссылке для детального просмотра фотографии"):
-            photo_url = f"{PHOTO_DETAIL_URL}/{photo_slug}/"
-            resolver_match = resolve(photo_url)
-            response = self.client.get(photo_url)
-            photo_url_func = resolver_match.func.view_class
-            self.assertEqual(photo_url_func, PhotoDetailView)
-            self.assertEqual(response.status_code, HTTPStatus.OK)
+            with self.subTest("Проверить переход по ссылке для детального просмотра фотографии"):
+                photo_url = f"{PHOTO_DETAIL_URL}/{photo_slug}/"
+                resolver_match = resolve(photo_url)
+                response = self.client.get(photo_url)
+                photo_url_func = resolver_match.func.view_class
+                self.assertEqual(photo_url_func, PhotoDetailView)
+                self.assertEqual(response.status_code, HTTPStatus.OK)
 
-        with self.subTest("Проверить именную ссылку для детального просмотра фотографии"):
-            reverse_url = reverse(PHOTO_DETAIL_URL_NAME, args=(photo_slug,))
-            reverse_resolver_match = resolve(reverse_url)
-            reverse_response = self.client.get(reverse_url)
-            photo_url_name_func = reverse_resolver_match.func.view_class
-            self.assertEqual(photo_url_name_func, PhotoDetailView)
-            self.assertEqual(reverse_response.status_code, HTTPStatus.OK)
-            self.assertEqual(photo_url_func, photo_url_name_func)
+            with self.subTest("Проверить именную ссылку для детального просмотра фотографии"):
+                reverse_url = reverse(PHOTO_DETAIL_URL_NAME, args=(photo_slug,))
+                reverse_resolver_match = resolve(reverse_url)
+                reverse_response = self.client.get(reverse_url)
+                photo_url_name_func = reverse_resolver_match.func.view_class
+                self.assertEqual(photo_url_name_func, PhotoDetailView)
+                self.assertEqual(reverse_response.status_code, HTTPStatus.OK)
+                self.assertEqual(photo_url_func, photo_url_name_func)
 
-        with self.subTest("Проверить шаблоны, использованные в представлении"):
-            self.assertEqual(response.templates, reverse_response.templates)
-            self.assertTemplateUsed(response, PHOTO_DETAIL_TEMPLATE_NAME)
-            self.assertTemplateUsed(response, BASE_TEMPLATE_NAME)
+            with self.subTest("Проверить шаблоны, использованные в представлении"):
+                self.assertEqual(response.templates, reverse_response.templates)
+                self.assertTemplateUsed(response, PHOTO_DETAIL_TEMPLATE_NAME)
+                self.assertTemplateUsed(response, BASE_TEMPLATE_NAME)
 
     def test_photo_detail_view_context(self) -> None:
         """Проверить содержание представления для детального просмотра фотографии."""
@@ -234,7 +236,7 @@ class GalleryViewsTest(TestCase):
         context = response.context
         tags = Tag.objects.all()
         for tag in tags:
-            self.assertContains(response, tag)
+            self.assertContains(response, str(tag))
         self.assertEqual(tags.count(), len(context["tags"]))
 
     def test_album_detail_url(self) -> None:
@@ -273,24 +275,26 @@ class GalleryViewsTest(TestCase):
         url = f"{ALBUM_DETAIL_URL}/{album_slug}/"
         all_photos: QuerySet[Photo] = self.album.photo_set.all()
         private_photo = all_photos.last()
-        private_photo.public = False
-        private_photo.save()
-        public_photos = Photo.objects.filter(album=self.album, public=True)
-        response = self.client.get(url)
-        context = response.context
+        self.assertIsNotNone(private_photo)
+        if private_photo:
+            private_photo.public = False
+            private_photo.save()
+            public_photos = Photo.objects.filter(album=self.album, public=True)
+            response = self.client.get(url)
+            context = response.context
 
-        with self.subTest("Представление содержит только публичные фотографии"):
-            context_photos: QuerySet[Photo] = context["photos"]
-            for photo in public_photos:
-                self.assertContains(response, photo)
-            self.assertNotContains(response, private_photo)
-            self.assertEqual(len(context_photos), public_photos.count())
+            with self.subTest("Представление содержит только публичные фотографии"):
+                context_photos: QuerySet[Photo] = context["photos"]
+                for photo in public_photos:
+                    self.assertContains(response, str(photo))
+                self.assertNotContains(response, str(private_photo))
+                self.assertEqual(len(context_photos), public_photos.count())
 
-        with self.subTest("Представление содержит список тэгов данного альбома"):
-            tags = Tag.objects.all()
-            for tag in tags:
-                self.assertContains(response, tag)
-            self.assertEqual(tags.count(), len(context["tags"]))
+            with self.subTest("Представление содержит список тэгов данного альбома"):
+                tags = Tag.objects.all()
+                for tag in tags:
+                    self.assertContains(response, str(tag))
+                self.assertEqual(tags.count(), len(context["tags"]))
 
     def test_album_list_url(self) -> None:
         """Проверить работоспособность ссылки на просмотр всех альбомов."""
@@ -340,7 +344,7 @@ class GalleryViewsTest(TestCase):
             context = response.context
             tags = Tag.objects.all()
             for tag in tags:
-                self.assertContains(response, tag)
+                self.assertContains(response, str(tag))
             self.assertEqual(tags.count(), len(context["tags"]))
 
     def test_tag_detail_url(self) -> None:
@@ -382,19 +386,19 @@ class GalleryViewsTest(TestCase):
         with self.subTest("Альбомы с данным тэгом содержатся в контексте представления"):
             albums = Album.objects.filter(tags=self.tag)
             for album in albums:
-                self.assertContains(response, album)
+                self.assertContains(response, str(album))
             self.assertEqual(albums.count(), len(context["albums"]))
 
         with self.subTest("Фотографии с данным тэгом содержатся в контексте представления"):
             photos = Photo.objects.filter(tags=self.tag)
             for photo in photos:
-                self.assertContains(response, photo)
+                self.assertContains(response, str(photo))
             self.assertEqual(photos.count(), len(context["photos"]))
 
         with self.subTest("Представление содержит полный набор тэгов галереи"):
             tags = Tag.objects.all()
             for tag in tags:
-                self.assertContains(response, tag)
+                self.assertContains(response, str(tag))
             self.assertEqual(tags.count(), len(context["tags"]))
 
 
@@ -412,7 +416,7 @@ class UploadFormViewTests(TestCase):
         cls.user = User.objects.create_user(username=cls.test_username, password=cls.test_password)
         cls.staff_user = User.objects.create_superuser(username=cls.staff_username, password=cls.staff_password)
         Path(settings.MEDIA_ROOT).mkdir(parents=True, exist_ok=True)
-        test_dir = os.getenv("TEMP_ROOT")
+        test_dir = os.getenv("TEMP_ROOT", default=settings.PROJECT_DIR / "temp")
         test_images_dir = Path(test_dir) / "gallery" / "photos"
         cls.test_image_paths = list_file_paths(test_images_dir)
         cls.album = AlbumFactory()
@@ -532,5 +536,5 @@ class UploadFormViewTests(TestCase):
         context = response.context
         tags = Tag.objects.all()
         for tag in tags:
-            self.assertContains(response, tag)
+            self.assertContains(response, str(tag))
         self.assertEqual(tags.count(), len(context["tags"]))

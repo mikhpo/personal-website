@@ -3,6 +3,7 @@
 import os
 from pathlib import Path
 
+from django.conf import settings
 from django.core.files.storage import FileSystemStorage
 from django.test import SimpleTestCase
 
@@ -18,7 +19,7 @@ class FileSystemStorageTests(SimpleTestCase):
 
     def test_storage_dir_location(self) -> None:
         """Проверить, что директория хранилища существует."""
-        storage_dir = os.getenv("STORAGE_ROOT")
+        storage_dir = os.getenv("STORAGE_ROOT", default=settings.PROJECT_DIR / "storage")
         path_exists = Path(storage_dir).exists()
         self.assertTrue(path_exists)
 

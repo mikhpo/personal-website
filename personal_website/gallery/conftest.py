@@ -7,9 +7,10 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from django.conf import settings
 from faker import Faker
-from faker_file.providers.jpeg_file import JpegFileProvider
-from faker_file.storages.filesystem import FileSystemStorage
+from faker_file.providers.jpeg_file import JpegFileProvider  # type: ignore[import-untyped]
+from faker_file.storages.filesystem import FileSystemStorage  # type: ignore[import-untyped]
 
 from gallery.factories import ExifDataFactory
 from gallery.utils import write_exif
@@ -24,7 +25,7 @@ def manage_test_images() -> Generator[str, Any, None]:
     """
     # Получить адрес папки для тестовых изображений.
 
-    root_path = os.getenv("TEMP_ROOT")
+    root_path = os.getenv("TEMP_ROOT", default=Path(settings.PROJECT_DIR) / "temp")
     relative_path = "gallery/photos"
     test_images_dir = Path(root_path) / relative_path
 

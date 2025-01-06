@@ -3,6 +3,7 @@
 from http import HTTPStatus
 from pathlib import Path
 
+from django.conf import settings
 from django.contrib.auth import get_user
 from django.contrib.auth.models import User
 from django.test import TestCase
@@ -13,7 +14,6 @@ from blog.apps import BlogConfig
 from blog.factories import ArticleFactory, CategoryFactory, CommentFactory, SeriesFactory, TopicFactory
 from blog.models import Article, Comment
 from blog.views import ArticleDetailView, blog, category, series, topic
-from personal_website.settings import PROJECT_NAME, TEMPLATES
 from personal_website.utils import generate_random_text
 
 fake = Faker(locale="ru_RU")
@@ -110,7 +110,7 @@ class BlogIndexPageTests(TestCase):
 
     def test_article_list_content_safe(self) -> None:
         """Проверяет, что в HTML-шаблоне блога содержание статей показывается без HTML-разметки."""
-        templates_dir = TEMPLATES[0]["DIRS"][0]
+        templates_dir = settings.TEMPLATES[0]["DIRS"][0]
         template_location = Path(templates_dir) / ARTICLE_LIST_TEMPLATE
         with Path(template_location).open() as f:
             self.assertIn("article.content|safe", f.read())
@@ -216,11 +216,11 @@ class ArticleDetailPageTests(TestCase):
         article = Article.objects.get(title="Test article")
         url = reverse(ARTICLE_DETAIL_URL_NAME, args=(article.slug,))
         self.client.login(username="testuser", password="12345")
-        with self.assertLogs(logger=PROJECT_NAME, level="INFO") as cm:
+        with self.assertLogs(logger=settings.PROJECT_NAME, level="INFO") as cm:
             response = self.client.post(url, data={"content": "test comment"})
             user = response.context["user"]
             self.assertIn(
-                f"INFO:{PROJECT_NAME}:Пользователь {user} оставил комментарий к статье {article}",
+                f"INFO:{settings.PROJECT_NAME}:Пользователь {user} оставил комментарий к статье {article}",
                 cm.output,
             )
 
@@ -239,7 +239,7 @@ class ArticleDetailPageTests(TestCase):
 
     def test_article_content_safe(self) -> None:
         """Проверяет, что в HTML-шаблоне статьи содержание статьи показывается."""
-        templates_dir = TEMPLATES[0]["DIRS"][0]
+        templates_dir = settings.TEMPLATES[0]["DIRS"][0]
         template_location = Path(templates_dir) / ARTICLE_DETAIL_TEMPLATE
         with Path(template_location).open() as f:
             self.assertIn("article.content|safe", f.read())
@@ -333,7 +333,7 @@ class CategoryPageTests(TestCase):
 
     def test_category_content_safe(self) -> None:
         """Проверяет, что в HTML-шаблоне списка статей в категории содержание статей показывается без HTML-разметки."""
-        templates_dir = TEMPLATES[0]["DIRS"][0]
+        templates_dir = settings.TEMPLATES[0]["DIRS"][0]
         template_location = Path(templates_dir) / CATEGORY_TEMPLATE
         with Path(template_location).open() as f:
             self.assertIn("article.content|safe", f.read())
@@ -437,7 +437,7 @@ class TopicPageTests(TestCase):
 
     def test_topic_content_safe(self) -> None:
         """Проверяет, что в HTML-шаблоне списка статей по теме содержание статей показывается без HTML-разметки."""
-        templates_dir = TEMPLATES[0]["DIRS"][0]
+        templates_dir = settings.TEMPLATES[0]["DIRS"][0]
         template_location = Path(templates_dir) / TOPIC_TEMPLATE
         with Path(template_location).open() as f:
             self.assertIn("article.content|safe", f.read())
@@ -539,7 +539,7 @@ class SeriesPageTests(TestCase):
 
     def test_series_content_safe(self) -> None:
         """Проверяет, что в HTML-шаблоне списка статей из серии содержание статей показывается без HTML-разметки."""
-        templates_dir = TEMPLATES[0]["DIRS"][0]
+        templates_dir = settings.TEMPLATES[0]["DIRS"][0]
         template_location = Path(templates_dir) / SERIES_TEMPLATE
         with Path(template_location).open() as f:
             self.assertIn("article.content|safe", f.read())

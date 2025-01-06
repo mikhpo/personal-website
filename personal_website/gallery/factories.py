@@ -1,6 +1,6 @@
 """Фабрики для генерации объектов галереи со случайными данными."""
 
-import factory
+import factory  # type: ignore[import-untyped]
 from django.utils.timezone import now
 from faker import Faker
 
@@ -140,6 +140,6 @@ class ExifDataFactory(factory.Factory):
         denominator = fake.pyint(min_value=10, max_value=400, step=10)
         return 1 / denominator
 
-    def __new__(cls, *args, **kwargs) -> "Meta.model":
+    def __new__(cls, *args, **kwargs) -> ExifData:
         """Фабрика данных EXIF."""
         return super().__new__(*args, **kwargs)

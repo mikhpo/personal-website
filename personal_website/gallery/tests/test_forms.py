@@ -3,6 +3,7 @@
 import os
 from pathlib import Path
 
+from django.conf import settings
 from django.test import TestCase
 
 from gallery.factories import AlbumFactory, PhotoFactory
@@ -10,7 +11,7 @@ from gallery.forms import AlbumForm
 from gallery.models import Photo
 from personal_website.utils import list_file_paths
 
-TEMP_DIR = os.getenv("TEMP_ROOT")
+TEMP_DIR = os.getenv("TEMP_ROOT", default=settings.PROJECT_DIR / "temp")
 
 
 class GalleryFormsTest(TestCase):
@@ -23,7 +24,9 @@ class GalleryFormsTest(TestCase):
         """
         form = AlbumForm()
         self.assertEqual(form.instance.pk, None)
-        self.assertQuerySetEqual(form.fields["cover"].queryset, Photo.objects.none())
+        form_cover_qs = form.fields["cover"].queryset
+        none_photo_qs = Photo.objects.none()
+        self.assertQuerySetEqual(form_cover_qs, none_photo_qs)  # type: ignore[arg-type]
 
     def test_album_default_is_public(self) -> None:
         """Проверяет, что по умолчанию альбом создается публичным."""
@@ -65,4 +68,4 @@ class GalleryFormsTest(TestCase):
             self.assertNotIn(langtang_photo, cover_choices)
 
         # Убедиться, что список фотографий для выбора соответствует полному списку фотографий из Тосканы.
-        self.assertQuerySetEqual(cover_choices, tuscany_photos, ordered=False)
+        self.assertQuerySetEqual(cover_choices, tuscany_photos, ordered=False)  # type: ignore[arg-type]

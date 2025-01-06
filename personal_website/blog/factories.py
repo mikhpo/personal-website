@@ -1,6 +1,6 @@
 """Фабрики для генерации экземпляров классов с фейковыми данными для тестирования."""
 
-import factory
+import factory  # type: ignore[import-untyped]
 from django.utils.timezone import now
 
 from accounts.factories import UserFactory

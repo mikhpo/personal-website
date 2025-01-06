@@ -4,6 +4,7 @@ import os
 from http import HTTPStatus
 from pathlib import Path
 
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
@@ -23,7 +24,7 @@ class GalleryAdminTests(TestCase):
     def setUpTestData(cls) -> None:
         """Подготовить тестовые данные для выполнения тестов."""
         cls.superuser: User = User.objects.create_superuser(username="testadmin", password="12345")
-        temp_dir = os.getenv("TEMP_ROOT")
+        temp_dir = os.getenv("TEMP_ROOT", default=settings.PROJECT_DIR / "temp")
         test_images_dir = Path(temp_dir) / "gallery" / "photos"
         cls.image_path = list_file_paths(test_images_dir)[0]
         return super().setUpTestData()
@@ -49,10 +50,10 @@ class GalleryAdminTests(TestCase):
         """Проверяет, что в административной панели отображается модель фотографии."""
         url = ADMIN_URL + "gallery/photo/"
         photos_verbose_name = Photo._meta.verbose_name_plural  # noqa: SLF001
-        self.assertNotEqual(photos_verbose_name, None)
+        self.assertIsNotNone(photos_verbose_name)
         response = self.client.get(ADMIN_URL)
         self.assertEqual(response.status_code, HTTPStatus.OK)
-        self.assertContains(response, photos_verbose_name)
+        self.assertContains(response, str(photos_verbose_name))
         response = self.client.get(url)
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
@@ -85,10 +86,10 @@ class GalleryAdminTests(TestCase):
     def test_album_admin_list_page_displayed(self) -> None:
         """Проверяет, что в административной панели отображается модель альбома."""
         albums_verbose_name = Album._meta.verbose_name_plural  # noqa: SLF001
-        self.assertNotEqual(albums_verbose_name, None)
+        self.assertIsNotNone(albums_verbose_name)
         response = self.client.get(ADMIN_URL)
         self.assertEqual(response.status_code, HTTPStatus.OK)
-        self.assertContains(response, albums_verbose_name)
+        self.assertContains(response, str(albums_verbose_name))
         url = ADMIN_URL + "gallery/album/"
         response = self.client.get(url)
         self.assertEqual(response.status_code, HTTPStatus.OK)
@@ -96,10 +97,10 @@ class GalleryAdminTests(TestCase):
     def test_tag_admin_list_page_displayed(self) -> None:
         """Проверяет, что в административной панели отображается модель тэга."""
         tags_verbose_name = Tag._meta.verbose_name_plural  # noqa: SLF001
-        self.assertNotEqual(tags_verbose_name, None)
+        self.assertIsNotNone(tags_verbose_name)
         response = self.client.get(ADMIN_URL)
         self.assertEqual(response.status_code, HTTPStatus.OK)
-        self.assertContains(response, tags_verbose_name)
+        self.assertContains(response, str(tags_verbose_name))
         url = ADMIN_URL + "gallery/tag/"
         response = self.client.get(url)
         self.assertEqual(response.status_code, HTTPStatus.OK)
@@ -144,7 +145,9 @@ class GalleryAdminTests(TestCase):
         queryset = Tag.objects.filter(name=test_tag_name)
         self.assertTrue(queryset.exists())
         tag = queryset.first()
-        self.assertEqual(tag.slug, "test")
+        self.assertIsNotNone(tag)
+        if tag:
+            self.assertEqual(tag.slug, "test")
 
     def test_album_add_via_admin(self) -> None:
         """Проверяет, что альбомы можно успешно добавлять через административную панель."""
@@ -164,10 +167,11 @@ class GalleryAdminTests(TestCase):
 
         # Проверить, что альбом с указанным именем существует в базе данных и что слаг автоматически создан.
         albums = Album.objects.all()
-        album: Album = albums.first()
+        album = albums.first()
         self.assertTrue(albums.exists())
-        self.assertEqual(album.name, test_album_name)
-        self.assertEqual(album.slug, "test-album")
+        if album:
+            self.assertEqual(album.name, test_album_name)
+            self.assertEqual(album.slug, "test-album")
 
     def test_album_admin_change(self) -> None:
         """Проверка представления для изменения альбома."""
