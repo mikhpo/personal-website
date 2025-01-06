@@ -36,7 +36,8 @@ jobs:
     name: Ruff check
     runs-on: ubuntu-latest
     steps:
-      - uses: ./.github/workflows/reusable-steps.yml
+      - name: Setup steps
+        uses: ./.github/actions/setup-steps.yml
       - name: Check Ruff linter
         run: poetry run ruff check
 
@@ -44,7 +45,8 @@ jobs:
     name: Mypy check
     runs-on: ubuntu-latest
     steps:
-      - uses: ./.github/workflows/reusable-steps.yml
+      - name: Setup steps
+        uses: ./.github/actions/setup-steps.yml
       - name: Run Mypy tool
         run: poetry run mypy .
 
@@ -69,7 +71,8 @@ jobs:
           --health-retries 5
 
     steps:
-      - uses: ./.github/workflows/reusable-steps.yml
+      - name: Setup steps
+        uses: ./.github/actions/setup-steps.yml
 
       # Пакет wkhtmltopdf необходим для создания фейковых изображений.
       - name: Install wkhtmltopdf
