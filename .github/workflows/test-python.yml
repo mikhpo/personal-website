@@ -29,9 +29,47 @@ env:
   EMAIL_HOST_PASSWORD: ${{ secrets.EMAIL_HOST_PASSWORD }}
   DOMAIN_NAME: ${{ secrets.DOMAIN_NAME }}
   LANG: ru_RU.utf8
+  PYTHON_VERSION: '3.12'
 
 jobs:
+  ruff_check:
+    name: Выполнить статический анализ кода Python при помощи Ruff.
+    runs-on: ubuntu-latest
+    steps:
+        - name: Checkout code
+          uses: actions/checkout@v4
+        - name: Setup Python
+          uses: actions/setup-python@v5
+          with:
+            python-version: ${{ env.PYTHON_VERSION }}
+        - name: Install Python dependencies
+          run: |
+            python -m pip install --upgrade pip
+            pip install poetry
+            poetry install
+        - name: Check Ruff linter
+          run: poetry run ruff check
+
+  mypy_check:
+    name: Выполнить статический анализ типов Python при помощи Mypy.
+    runs-on: ubuntu-latest
+    steps:
+        - name: Checkout code
+          uses: actions/checkout@v4
+        - name: Setup Python
+          uses: actions/setup-python@v5
+          with:
+            python-version: ${{ env.PYTHON_VERSION }}
+        - name: Install Python dependencies
+          run: |
+            python -m pip install --upgrade pip
+            pip install poetry
+            poetry install
+        - name: Run Mypy tool
+          run: poetry run mypy .
+
   test_python_with_pytest:
+    name: Выполнить тесты Python при помощи Pytest.
     runs-on: ubuntu-latest
 
     # Тесты использует службу PostgreSQL, развернутую в контейнере.
@@ -71,7 +109,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: ${{ env.PYTHON_VERSION }}
 
       # Установка Node.js необходима для получения npm.
       - name: Setup Node.js environment
@@ -95,10 +133,6 @@ jobs:
       # Проверить, что отсутствуют изменения в моделях, для которых не подготовлено миграций.
       - name: Check Django migrations
         run: poetry run python personal_website/manage.py makemigrations --dry-run --check
-
-      # Выполнить статический анализ кода Python при помощи Ruff.
-      - name: Check Ruff linter
-        run: poetry run ruff check
 
       # Выполнить сбор статических файлов административной командой Django.
       - name: Collect static files
