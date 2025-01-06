@@ -33,43 +33,23 @@ env:
 
 jobs:
   ruff_check:
-    name: Выполнить статический анализ кода Python при помощи Ruff.
+    name: Ruff check
     runs-on: ubuntu-latest
     steps:
-        - name: Checkout code
-          uses: actions/checkout@v4
-        - name: Setup Python
-          uses: actions/setup-python@v5
-          with:
-            python-version: ${{ env.PYTHON_VERSION }}
-        - name: Install Python dependencies
-          run: |
-            python -m pip install --upgrade pip
-            pip install poetry
-            poetry install
-        - name: Check Ruff linter
-          run: poetry run ruff check
+      - uses: ./.github/workflows/reusable-steps.yml
+      - name: Check Ruff linter
+        run: poetry run ruff check
 
   mypy_check:
-    name: Выполнить статический анализ типов Python при помощи Mypy.
+    name: Mypy check
     runs-on: ubuntu-latest
     steps:
-        - name: Checkout code
-          uses: actions/checkout@v4
-        - name: Setup Python
-          uses: actions/setup-python@v5
-          with:
-            python-version: ${{ env.PYTHON_VERSION }}
-        - name: Install Python dependencies
-          run: |
-            python -m pip install --upgrade pip
-            pip install poetry
-            poetry install
-        - name: Run Mypy tool
-          run: poetry run mypy .
+      - uses: ./.github/workflows/reusable-steps.yml
+      - name: Run Mypy tool
+        run: poetry run mypy .
 
   test_python_with_pytest:
-    name: Выполнить тесты Python при помощи Pytest.
+    name: Run Pytest
     runs-on: ubuntu-latest
 
     # Тесты использует службу PostgreSQL, развернутую в контейнере.
@@ -89,8 +69,7 @@ jobs:
           --health-retries 5
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: ./.github/workflows/reusable-steps.yml
 
       # Пакет wkhtmltopdf необходим для создания фейковых изображений.
       - name: Install wkhtmltopdf
@@ -106,23 +85,11 @@ jobs:
           sudo rm -rf /var/lib/apt/lists/*
           sudo localedef -i ru_RU -c -f UTF-8 -A /usr/share/locale/locale.alias ${{ env.LANG }}
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
       # Установка Node.js необходима для получения npm.
       - name: Setup Node.js environment
         uses: actions/setup-node@v4
         with:
           node-version: 'latest'
-
-      # Зависимости проекта устанавливаются через Poetry.
-      - name: Install Python dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install poetry
-          poetry install
 
       # Установка пакетов из npm требуется для сбора статических файлов.
       - name: Install Node.js dependencies

@@ -1,0 +1,22 @@
+# Переиспользуемые экшены
+on:
+  workflow_call:
+
+env:
+  PYTHON_VERSION: '3.12'
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+        - name: Checkout code
+          uses: actions/checkout@v4
+        - name: Setup Python
+          uses: actions/setup-python@v5
+          with:
+            python-version: ${{ env.PYTHON_VERSION }}
+        - name: Install Python dependencies
+          run: |
+            python -m pip install --upgrade pip
+            pip install poetry
+            poetry install

@@ -37,7 +37,7 @@ class AlbumFactory(factory.django.DjangoModelFactory):
     slug = factory.LazyAttribute(lambda _: None)
     created_at = factory.LazyFunction(now)
     updated_at = factory.LazyFunction(now)
-    public = factory.Faker("pybool")
+    public = factory.LazyAttribute(lambda _: True)
     cover = factory.LazyAttribute(lambda _: None)
     order = factory.Sequence(lambda n: n + 1)
 
@@ -71,7 +71,7 @@ class PhotoFactory(factory.django.DjangoModelFactory):
     slug = factory.LazyAttribute(lambda _: None)
     uploaded_at = factory.LazyFunction(now)
     modified_at = factory.LazyFunction(now)
-    public = factory.Faker("pybool")
+    public = factory.LazyAttribute(lambda _: True)
     album = factory.SubFactory(AlbumFactory)
 
     @factory.post_generation

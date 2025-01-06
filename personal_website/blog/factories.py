@@ -17,7 +17,7 @@ class CategoryFactory(factory.django.DjangoModelFactory):
     description = factory.Faker("sentence")
     slug = factory.LazyAttribute(lambda _: None)
     image = factory.django.ImageField()
-    public = factory.Faker("boolean")
+    public = factory.LazyAttribute(lambda _: True)
 
     def __new__(cls, *args, **kwargs) -> "Category":
         """Возвращается объект Category."""
@@ -34,7 +34,7 @@ class TopicFactory(factory.django.DjangoModelFactory):
     description = factory.Faker("sentence")
     slug = factory.LazyAttribute(lambda _: None)
     image = factory.django.ImageField()
-    public = factory.Faker("boolean")
+    public = factory.LazyAttribute(lambda _: True)
 
     def __new__(cls, *args, **kwargs) -> "Topic":
         """Возвращается объект Topic."""
@@ -51,7 +51,7 @@ class SeriesFactory(factory.django.DjangoModelFactory):
     description = factory.Faker("sentence")
     slug = factory.LazyAttribute(lambda _: None)
     image = factory.django.ImageField()
-    public = factory.Faker("boolean")
+    public = factory.LazyAttribute(lambda _: True)
 
     def __new__(cls, *args, **kwargs) -> "Series":
         """Возвращается объект Series."""
@@ -72,7 +72,7 @@ class ArticleFactory(factory.django.DjangoModelFactory):
     modified_at = factory.LazyFunction(now)
     slug = factory.LazyAttribute(lambda _: None)
     image = factory.django.ImageField()
-    public = factory.Faker("boolean")
+    public = factory.LazyAttribute(lambda _: True)
     author = factory.SubFactory(UserFactory)
 
     @factory.post_generation
