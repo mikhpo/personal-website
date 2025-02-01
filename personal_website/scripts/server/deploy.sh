@@ -135,8 +135,13 @@ function setup_gunicorn() {
     readonly service="$gunicorn_dir/gunicorn.service"
     readonly DESTINATION_DIR="/etc/systemd/system/"
 
-    # Скопировать конфигурационные файлы и включить Gunicorn.
-    sudo cp "$socket" "$service" $DESTINATION_DIR
+    # Скопировать файл сокета Gunicorn.
+    sudo cp "$socket" $DESTINATION_DIR
+
+    # Заполнить файл сервиса Gunicorn из шаблона переменными окружения.
+    envsubst < "$service" > "$DESTINATION_DIR"/gunicorn.service
+
+    # Включить Gunicorn.
     sudo systemctl start gunicorn.socket
     sudo systemctl enable gunicorn.socket
 }
