@@ -139,6 +139,7 @@ function setup_gunicorn() {
     sudo cp "$socket" $DESTINATION_DIR
 
     # Заполнить файл сервиса Gunicorn из шаблона переменными окружения.
+    export WORK_DIR="$project_root"
     envsubst < "$service" > "$DESTINATION_DIR"/gunicorn.service
 
     # Включить Gunicorn.
