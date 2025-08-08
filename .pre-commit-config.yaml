@@ -1,9 +1,6 @@
 # См. https://pre-commit.com для дополнительной информации
 # См. https://pre-commit.com/hooks.html для доступных хуков
 
-default_language_version:
-  python: python3.12
-
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
