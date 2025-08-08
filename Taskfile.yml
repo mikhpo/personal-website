@@ -295,3 +295,21 @@ tasks:
       Удаляет все папки __pycache__ и файлы c расширением .pyc из дерева каталогов проекта.
     cmds:
       - find . | grep -E "(/__pycache__$|\.pyc$|\.pyo$)" | xargs rm -rf
+
+  stop-containers:
+    desc: Остановить все запущенные контейнеры
+    summary: |
+      Эквивалент команды docker stop для всех запущенных в данный момент контейнеров (docker ps -a).
+    cmds:
+      - docker ps -a
+      - docker stop $(docker ps -a -q)
+      - docker ps -a
+
+  remove-containers:
+    desc: Остановить все запущенные контейнеры
+    summary: |
+      Эквивалент команды docker rm для всех запущенных в данный момент контейнеров (docker ps -a).
+    cmds:
+      - docker ps -a
+      - docker rm $(docker ps -a -q)
+      - docker ps -a

@@ -4,9 +4,12 @@
 
 ## Функциональность сайта
 
-Для сайта созданы следующий функционал:
+![context](./diagrams/out/context/context.svg)
+
+Для сайта реализован следующий функционал:
 
 * Блог: статьи и комментарии.
+* Галерея: альбомы и фотографии.
 * Скрипты: ручной и автоматический запуск, просмотр логов.
 * Пользователи: регистрация и авторизация.
 * Администрирование: CRUD, настройка ролей.
@@ -25,36 +28,38 @@
 * [Nginx](https://nginx.org/) (прокси-сервер)
 * [Docker](https://www.docker.com/) (контейнеризация)
 
+![container](./diagrams/out/container/container.svg)
+
 ## Структура проекта
 
 Проект использует стандартную структуру каталогов, сформированную командой `django-admin startproject personal_website`:
 
-    personal-website/ <-- корневая директория репозитория
-        .git/
-        .venv/
-        .gitignore
-        requirements.txt
-        pyproject.toml
-        package.json
-        tools/ <-- вспомогательные скрипты для разработки
-        tests/ <-- пакет интеграционных тестов
-        nginx/ <-- файлы для сборки Nginx в контейнере
-        personal_website/ <-- базовая директория проекта Django
-            manage.py
-            Dockerfile <-- параметры сборки контейнера приложения
-            entrypoint.sh <-- скрипт для запуска приложения в контейнере
-            scripts/ <-- скрипты для рантайма
-            config/ <-- шаблоны конфигурационных файлов для рантайма
-            personal_website/ <-- директория с настройками проекта
-                __init__.py
-                settings.py
-                urls.py
-                asgi.py
-                wsgi.py
-            app1/ <-- приложение Django
-                tests/ <-- пакет тестов приложения Django
-            app2/ <-- приложение Django
-                tests/ <-- пакет тестов приложения Django
+    personal-website/           # корневая директория репозитория
+    ├── .git/
+    ├── .venv/
+    ├── .gitignore
+    ├── requirements.txt
+    ├── pyproject.toml
+    ├── package.json
+    ├── tools/                  # вспомогательные скрипты для разработки
+    ├── tests/                  # пакет интеграционных тестов
+    ├── nginx/                  # файлы для сборки Nginx в контейнере
+    └── personal_website/       # базовая директория проекта Django
+        ├── manage.py
+        ├── Dockerfile          # параметры сборки контейнера приложения
+        ├── entrypoint.sh       # скрипт для запуска приложения в контейнере
+        ├── scripts/            # скрипты для рантайма
+        ├── config/             # шаблоны конфигурационных файлов для рантайма
+        ├── personal_website/   # директория с настройками проекта
+        │   ├── __init__.py
+        │   ├── settings.py
+        │   ├── urls.py
+        │   ├── asgi.py
+        │   └── wsgi.py
+        ├── app1/               # приложение Django
+        │   └── tests/          # пакет тестов приложения Django
+        └── app2/               # приложение Django
+            └── tests/          # пакет тестов приложения Django
 
 ## Административные команды
 

@@ -1,0 +1,17 @@
+@startuml context
+
+!include <C4/C4_Context>
+
+title Контекст проекта
+
+Person(user, "Пользователь")
+Person(admin, "Администратор")
+System(website, "Персональный сайт", "Блог и галерея")
+System_Ext(smtp, "SMTP-сервер", "Внешний сервис электронной почты")
+
+Rel(admin, website, "Публикует и управляет")
+Rel(user, website, "Читает и комментирует")
+Rel(website, smtp, "Почтовые рассылки")
+Rel(smtp, user, "Доставка почты")
+
+@enduml
