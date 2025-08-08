@@ -1,0 +1,31 @@
+@startuml container
+
+!include <C4/C4_Container>
+
+title Архитектура проекта
+
+Person(user, "Пользователь")
+Person(admin, "Администратор")
+System_Boundary(project, "Персональный сайт") {
+    Container(nginx, "Обратный прокси-сервер", "Nginx", "Принимает HTTP-запросы, обслуживает статические и медиа-файлы")
+    Container(gunicorn, "WSGI-сервер", "Gunicorn", "Запускает воркеры с приложением, передает HTTP-запросы и обратно")
+    Container(app, "Веб-приложение", "Python/Django + Bootstrap", "Включает в себя бэкенд, фронтенд и админку")
+    Container(scripts, "Скрипты", "Bash", "Запускаются вручную и по расписанию из crontab")
+    ContainerDb(db, "База данных", "PostgreSQL", "Хранит информацию о пользователях, сессиях, миграциях, объектах приложений и т.д.")
+    ContainerDb(s3, "Объектное хранилище", "S3", "Бэкапы файлового хранилища и БД")
+}
+System_Ext(smtp, "SMTP-сервер", "Внешний сервис электронной почты")
+
+Rel(admin, nginx, "Публикует и редактирует", "HTTPS")
+Rel(admin, scripts, "Управляет развертыванием", "SSH")
+Rel(user, nginx, "Читает и комментирует", "HTTPS")
+Rel(app, smtp, "Почтовые рассылки", "SMTP")
+Rel(smtp, user, "Доставка почты")
+Rel(nginx, gunicorn, "Проксирует запросы", "HTTPS")
+Rel(gunicorn, app, "Обрабатывает запросы", "HTTPS")
+Rel(app, db, "Читает и записывает данные")
+Rel(scripts, app, "Запускает и обновляет")
+Rel(scripts, db, "Создает и восстанавливает бэкапы", "pg_dump/pg_restore")
+Rel(scripts, s3, "Резервное копирование медиа-файлов и базы данных", "MinIO Client")
+
+@enduml
