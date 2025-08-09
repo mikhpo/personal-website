@@ -30,6 +30,7 @@ env:
   DOMAIN_NAME: ${{ secrets.DOMAIN_NAME }}
   LANG: ru_RU.utf8
   PYTHON_VERSION: '3.12'
+  TEST_IMAGE_NAME: ghcr.io/${{ github.repository }}:test-latest
 
 jobs:
 
@@ -132,6 +133,7 @@ jobs:
           path: htmlcov/
 
   # Сборка Docker-образа приложения.
+  # Образ публикуется в реестр после сборки.
   build_docker_image:
     name: Build Docker image
     runs-on: ubuntu-latest
@@ -140,15 +142,26 @@ jobs:
         uses: actions/checkout@v4
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build Docker image
         run: |
           docker build -t personal-website-test:latest -f personal_website/Dockerfile .
+      - name: Push Docker image to GitHub Container Registry
+        run: |
+          docker tag personal-website-test:latest ${{ env.TEST_IMAGE_NAME }}
+          docker push ${{ env.TEST_IMAGE_NAME }}
 
   # Тестирование контейнеризованного приложения.
+  # Собранный ранее образ скачивается и используется для запуска тестов.
+  # Тесты запускаются только после успешной сборки Docker-образа.
   test_docker_container:
     name: Test in Docker container
     runs-on: ubuntu-latest
-    # Тесты запускаются только после успешной сборки Docker-образа.
     needs: build_docker_image
     services:
       postgres:
@@ -167,6 +180,14 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Pull Docker image from GHCR
+        run: docker pull ${{ env.TEST_IMAGE_NAME }}
       - name: Run tests inside Docker container
         run: |
           docker run --rm \
@@ -174,4 +195,4 @@ jobs:
             --env POSTGRES_PASSWORD=${{ env.POSTGRES_PASSWORD }} \
             --env POSTGRES_DB=${{ env.POSTGRES_DB }} \
             --env POSTGRES_HOST=host.docker.internal \
-            personal-website-test:latest poetry run pytest
+            ${{ env.TEST_IMAGE_NAME }} poetry run pytest
