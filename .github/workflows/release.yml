@@ -3,29 +3,33 @@
 # - Docker Hub
 name: Publish Docker image
 
-# Выполняется после того, как закрыт Pull Request в ветку "main",
-# если изменения в файлах не касаются только путей из перечня исключений.
+
 on:
+  # Выполняется после того, как закрыт Pull Request в ветку "main",
+  # если изменения в файлах не касаются только путей из перечня исключений.
   pull_request:
     types:
       - closed
     branches:
-      - 'main'
+      - "main"
     paths-ignore:
-      - 'docs/**'
-      - 'nginx/**'
-      - '.vscode/**'
+      - "docs/**"
+      - "nginx/**"
+      - ".vscode/**"
+  # Может быть запущено вручную.
   workflow_dispatch:
 
 env:
-  TEST_IMAGE_NAME: ghcr.io/${{ github.repository }}:test-latest
-  GITHUB_RELEASE_IMAGE_NAME: ghcr.io/${{ github.repository }}:latest
-  DOCKER_RELEASE_IMAGE_NAME: ${{ secrets.DOCKER_USERNAME }}/personal-website:latest
+  TESTED_TAG: tested
+  RELEASE_TAG: latest
+  TESTED_IMAGE_NAME: ghcr.io/${{ github.repository }}:${TESTED_TAG}
+  GITHUB_RELEASE_IMAGE_NAME: ghcr.io/${{ github.repository }}:${RELEASE_TAG}
+  DOCKER_RELEASE_IMAGE_NAME: ${{ secrets.DOCKER_USERNAME }}/${{ github.repository }}:${RELEASE_TAG}
 
 jobs:
 
+  # Перетегировать протестированный образ и опубликовать его в Docker Hub и GHCR.
   retag_and_push_image:
-    # Запускается только если PR был смержен или workflow запущен вручную.
     if: github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
     name: Retag and push tested Docker image to Docker Hub and GHCR
     runs-on: ubuntu-latest
@@ -49,17 +53,18 @@ jobs:
       # Получение тестового образа из GHCR
       - name: Pull test image from GHCR
         run: |
-          docker pull ${{ env.TEST_IMAGE_NAME }}
+          docker pull ${{ env.TESTED_IMAGE_NAME }}
 
       # Перетегирование тестового образа как "latest" для GHCR
       - name: Tag image as latest for GHCR
         run: |
-          docker tag ${{ env.TEST_IMAGE_NAME }} ${{ env.GITHUB_RELEASE_IMAGE_NAME }}
+          docker tag ${{ env.TESTED_IMAGE_NAME }} ghcr.io/${{ github.repository }}:${{ env.TESTED_TAG }}
+          docker tag ${{ env.TESTED_IMAGE_NAME }} ${{ env.GITHUB_RELEASE_IMAGE_NAME }}
 
       # Перетегирование тестового образа для Docker Hub
       - name: Tag image for Docker Hub
         run: |
-          docker tag ${{ env.TEST_IMAGE_NAME }} ${{ env.DOCKER_RELEASE_IMAGE_NAME }}
+          docker tag ${{ env.TESTED_IMAGE_NAME }} ${{ env.DOCKER_RELEASE_IMAGE_NAME }}
 
       # Публикация образа с тегом "latest" в GHCR
       - name: Push image to GHCR with latest tag
@@ -71,9 +76,9 @@ jobs:
         run: |
           docker push ${{ env.DOCKER_RELEASE_IMAGE_NAME }}
 
-      # Удаление тестового тега из GHCR для очистки реестра
-      - name: Delete test tag from GHCR
-        run: |
-          if docker manifest inspect ${{ env.TEST_IMAGE_NAME }} > /dev/null 2>&1; then
-            docker manifest rm ${{ env.TEST_IMAGE_NAME }}
-          fi
+      # Удаление старого тега из GHCR
+      - name: Delete tested tag from GHCR
+        uses: dataaxiom/ghcr-cleanup-action@v1
+        with:
+          token: ${{ secrets.GHCR_DELETE_TOKEN }}
+          delete-tags: ${{ env.TESTED_TAG }}
