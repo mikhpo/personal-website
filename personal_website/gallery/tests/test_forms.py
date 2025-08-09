@@ -1,6 +1,5 @@
 """Тесты форм галереи."""
 
-import os
 from pathlib import Path
 
 from django.conf import settings
@@ -10,8 +9,6 @@ from gallery.factories import AlbumFactory, PhotoFactory
 from gallery.forms import AlbumForm
 from gallery.models import Photo
 from personal_website.utils import list_file_paths
-
-TEMP_DIR = os.getenv("TEMP_ROOT", default=settings.PROJECT_DIR / "temp")
 
 
 class GalleryFormsTest(TestCase):
@@ -41,7 +38,7 @@ class GalleryFormsTest(TestCase):
         langtang_album = AlbumFactory(name="Лангтанг")
 
         # Создать фотографии в базе данных, загрузив их с диска.
-        test_images_dir = Path(TEMP_DIR) / "gallery" / "photos"
+        test_images_dir = Path(settings.TEMP_ROOT) / "gallery" / "photos"
         images = list_file_paths(test_images_dir)
         for image in images:
             # Если в названии файла фотографии есть Tuscany, то создать фотографию в тосканском альбоме.

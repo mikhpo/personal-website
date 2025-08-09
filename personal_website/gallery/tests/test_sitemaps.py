@@ -1,6 +1,5 @@
 """Тесты карты сайта для объектов галереи."""
 
-import os
 from http import HTTPStatus
 from pathlib import Path
 
@@ -13,7 +12,6 @@ from gallery.models import Photo, Tag
 from personal_website.utils import list_file_paths
 
 SITEMAP_URL = "/sitemap.xml"
-TEMP_ROOT = os.getenv("TEMP_ROOT", default=settings.PROJECT_DIR / "temp")
 
 
 class GallerySitemapTest(TestCase):
@@ -31,7 +29,7 @@ class GallerySitemapTest(TestCase):
         cls.private_album = AlbumFactory(public=False)
 
         # Создать фотографии в базе данных из картинок в директории проекта.
-        test_images_dir = Path(TEMP_ROOT) / "gallery" / "photos"
+        test_images_dir = Path(settings.TEMP_ROOT) / "gallery" / "photos"
         images = list_file_paths(test_images_dir)
         for image in images:
             if "Tuscany" in image:

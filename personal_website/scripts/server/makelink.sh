@@ -5,7 +5,7 @@
 
 repository_root="$(dirname "$(dirname "$(dirname "$(dirname "$(readlink -f "$0")")")")")"
 readonly PROJECT_NAME="personal_website"
-readonly source_path=$repository_root/$PROJECT_NAME/static/node_modules
+readonly source_path=$repository_root/$PROJECT_NAME/staticfiles/node_modules
 readonly destination_path=$repository_root/node_modules
 
 echo "Создание символической ссылки на директорию node_modules"

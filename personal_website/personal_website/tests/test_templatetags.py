@@ -1,8 +1,8 @@
 """Тесты кастомных тэгов."""
 
-import os
 from pathlib import Path
 
+from django.conf import settings
 from django.test import SimpleTestCase
 from faker import Faker
 from faker_file.providers.txt_file import TxtFileProvider  # type: ignore[import-untyped]
@@ -20,7 +20,7 @@ class TestFileExistsTag(SimpleTestCase):
         """Файл действительно существует."""
         txt_file: str = TxtFileProvider(fake).txt_file(
             storage=FileSystemStorage(
-                root_path=os.getenv("TEMP_ROOT"),
+                root_path=settings.TEMP_ROOT,
                 rel_path=Path(__file__).resolve().stem,
             ),
             raw=False,
