@@ -188,4 +188,5 @@ jobs:
             --env POSTGRES_PASSWORD=${{ env.POSTGRES_PASSWORD }} \
             --env POSTGRES_DB=${{ env.POSTGRES_DB }} \
             --env POSTGRES_HOST=${{ env.POSTGRES_HOST }} \
+            --entrypoint "" \
             ${{ env.TEST_IMAGE_NAME }} poetry run pytest
