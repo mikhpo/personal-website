@@ -80,8 +80,8 @@ jobs:
     permissions:
       packages: write
     steps:
-      - name: Instal GitHub CLI
-        uses: actions/setup-gh-release@v1
+      - name: Setup GitHub CLI
+        uses: sersoft-gmbh/setup-gh-cli-action@v2.0.1
 
       - name: Log in to GitHub CLI
         run: gh auth login --github-token ${{ secrets.GHCR_DELETE_TOKEN }}
