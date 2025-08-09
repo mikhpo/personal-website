@@ -80,11 +80,8 @@ function main() {
     # Загрузить переменные окружения из .env файла.
     eval export "$(cat "$dotenv")"
 
-    # Установить алиас для сервера MinIO, кроме случаев,
-    # когда скрипт выполняется в GitHub Actions.
-    if [ "$GITHUB_ACTIONS" != "true" ]; then
-        set_minio_alias
-    fi
+    # Установить алиас для сервера MinIO.
+    set_minio_alias
 
     # В зависимости от значения переменной окружения DEBUG определить способ запуска.
     debug_bool=$(str_to_bool "$DEBUG")

@@ -162,7 +162,6 @@ jobs:
     env:
     # Используется IP-адрес шлюза Docker-сети — обычно это 172.17.0.1.
       POSTGRES_HOST: '172.17.0.1'
-      GITHUB_ACTIONS: 'true'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -183,7 +182,7 @@ jobs:
       - name: Run tests inside Docker container
         run: |
           docker run --rm \
-            --env GITHUB_ACTIONS=${{ env.GITHUB_ACTIONS }} \
+            --env SECRET_KEY="${{ secrets.SECRET_KEY }}" \
             --env POSTGRES_USER=${{ env.POSTGRES_USER }} \
             --env POSTGRES_PASSWORD=${{ env.POSTGRES_PASSWORD }} \
             --env POSTGRES_DB=${{ env.POSTGRES_DB }} \
