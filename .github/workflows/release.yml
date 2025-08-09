@@ -58,7 +58,7 @@ jobs:
       # Перетегирование тестового образа как "latest" для GHCR
       - name: Tag image as latest for GHCR
         run: |
-          docker tag ${{ env.TESTED_IMAGE_NAME }} ghcr.io/${{ github.repository }}:${TESTED_TAG}
+          docker tag ${{ env.TESTED_IMAGE_NAME }} ghcr.io/${{ github.repository }}:${{ env.TESTED_TAG }}
           docker tag ${{ env.TESTED_IMAGE_NAME }} ${{ env.GITHUB_RELEASE_IMAGE_NAME }}
 
       # Перетегирование тестового образа для Docker Hub
@@ -78,5 +78,7 @@ jobs:
 
       # Удаление старого тега из GHCR
       - name: Delete tested tag from GHCR
-        run: |
-          gh container registry delete ${{ env.GITHUB_RELEASE_IMAGE_NAME }} --tag ${TESTED_TAG}
+        uses: dataaxiom/ghcr-cleanup-action@v1
+        with:
+          token: ${{ secrets.GHCR_DELETE_TOKEN }}
+          delete-tags: ${{ env.TESTED_TAG }}
