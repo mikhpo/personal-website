@@ -24,7 +24,7 @@ env:
   DOMAIN_NAME: ${{ secrets.DOMAIN_NAME }}
   LANG: ru_RU.utf8
   PYTHON_VERSION: '3.12'
-  TEST_IMAGE_NAME: ghcr.io/${{ github.repository }}:test-latest
+  TEST_IMAGE_NAME: ghcr.io/${{ github.repository }}:test
 
 jobs:
 
