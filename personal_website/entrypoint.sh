@@ -110,8 +110,11 @@ function main() {
     # Загрузить переменные окружения из .env файла.
     eval export "$(cat "$dotenv")"
 
-    # Установить алиас для сервера MinIO.
-    set_minio_alias
+    # Установить алиас для сервера MinIO, кроме случаев,
+    # когда скрипт выполняется в GitHub Actions.
+    if [ "$GITHUB_ACTIONS" != "true" ]; then
+        set_minio_alias
+    fi
 
     # Определить адрес хоста и номер порта.
     host=$(get_host "$1")
