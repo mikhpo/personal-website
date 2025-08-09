@@ -20,8 +20,8 @@ on:
 env:
   TEST_TAG: test-latest
   RELEASE_TAG: latest
-  TEST_IMAGE_NAME: ghcr.io/${{ github.repository }}:${{ env.TEST_TAG }}
-  GITHUB_RELEASE_IMAGE_NAME: ghcr.io/${{ github.repository }}:${{ env.RELEASE_TAG }}
+  TEST_IMAGE_NAME: ghcr.io/${{ github.repository }}:${TEST_TAG}
+  GITHUB_RELEASE_IMAGE_NAME: ghcr.io/${{ github.repository }}:${RELEASE_TAG}
   DOCKER_RELEASE_IMAGE_NAME: ${{ secrets.DOCKER_USERNAME }}/personal-website:${{ env.RELEASE_TAG }}
 
 jobs:
