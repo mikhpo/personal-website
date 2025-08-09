@@ -163,7 +163,7 @@ jobs:
     env:
     # Используется IP-адрес шлюза Docker-сети — обычно это 172.17.0.1.
       POSTGRES_HOST: '172.17.0.1'
-      GITHUB_ACTIONS: ${{ github.actions }}
+      GITHUB_ACTIONS: 'true'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
