@@ -3,18 +3,20 @@
 # - Docker Hub
 name: Publish Docker image
 
-# Выполняется после того, как закрыт Pull Request в ветку "main",
-# если изменения в файлах не касаются только путей из перечня исключений.
+
 on:
+  # Выполняется после того, как закрыт Pull Request в ветку "main",
+  # если изменения в файлах не касаются только путей из перечня исключений.
   pull_request:
     types:
       - closed
     branches:
-      - 'main'
+      - "main"
     paths-ignore:
-      - 'docs/**'
-      - 'nginx/**'
-      - '.vscode/**'
+      - "docs/**"
+      - "nginx/**"
+      - ".vscode/**"
+  # Может быть запущено вручную.
   workflow_dispatch:
 
 env:
@@ -26,8 +28,8 @@ env:
 
 jobs:
 
+  # Перетегировать протестированный образ и опубликовать его в Docker Hub и GHCR.
   retag_and_push_image:
-    # Запускается только если PR был смержен или workflow запущен вручную.
     if: github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
     name: Retag and push tested Docker image to Docker Hub and GHCR
     runs-on: ubuntu-latest
@@ -73,6 +75,7 @@ jobs:
         run: |
           docker push ${{ env.DOCKER_RELEASE_IMAGE_NAME }}
 
+  # Удалить тестовый тэг из GHCR.
   delete-test-tag:
     if: github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
     runs-on: ubuntu-latest
@@ -80,13 +83,17 @@ jobs:
     permissions:
       packages: write
     steps:
-      - name: Setup GitHub CLI
-        uses: sersoft-gmbh/setup-gh-cli-action@v2.0.1
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Log in to GitHub CLI
-        run: gh auth login --github-token ${{ secrets.GHCR_DELETE_TOKEN }}
-
-      - name: Delete test tag from GitHub Container Registry
+      - name: Log in to GitHub Container Registry
         run: |
-          gh api -X DELETE /orgs/${{ github.repository_owner }}/packages/container/${{ github.repository }}/versions \
-            --input <(echo -n '{"container_tags":["'"${{ env.TEST_TAG }}"'"]}')
+          echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+          gh auth setup-git
+
+      - name: Delete container image by tag
+        run: |
+          gh package delete container "ghcr.io/${{ github.repository }}" --package-version "${{ env.TEST_TAG }}" --yes || {
+            echo "Failed to delete ${{ env.TEST_IMAGE_NAME }}. It may not exist."
+            exit 1
+          }
