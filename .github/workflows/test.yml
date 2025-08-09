@@ -176,11 +176,17 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Pull Docker image from GHCR
         run: docker pull ${{ env.TEST_IMAGE_NAME }}
+      - name: Wait for PostgreSQL
+        run: |
+          for i in {1..10}; do
+            pg_isready -h ${{ env.POSTGRES_HOST }} -p ${{ env.POSTGRES_PORT }} && break
+            sleep 2
+          done
       - name: Run tests inside Docker container
         run: |
           docker run --rm \
             --env POSTGRES_USER=${{ env.POSTGRES_USER }} \
             --env POSTGRES_PASSWORD=${{ env.POSTGRES_PASSWORD }} \
             --env POSTGRES_DB=${{ env.POSTGRES_DB }} \
-            --env POSTGRES_HOST=localhost \
+            --env POSTGRES_HOST=${{ env.POSTGRES_HOST }} \
             ${{ env.TEST_IMAGE_NAME }} poetry run pytest
