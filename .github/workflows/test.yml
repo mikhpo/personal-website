@@ -12,7 +12,6 @@ on:
 
 env:
   DEBUG: True
-  DJANGO_PORT: 8000
   SECRET_KEY: ${{ secrets.SECRET_KEY }}
   PROJECT_NAME: personal_website
   POSTGRES_USER: postgres

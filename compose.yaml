@@ -21,7 +21,7 @@ services:
       - TEMP_ROOT=/srv/website/temp
     env_file: .env
     ports:
-      - ${DJANGO_PORT}:${DJANGO_PORT}
+      - 8000:8000
     volumes:
       - ${STORAGE_ROOT}:/srv/website/storage:rw
       - ${STATIC_ROOT}:/srv/website/static:rw
@@ -38,7 +38,7 @@ services:
         restart: true
     restart: always
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:${DJANGO_PORT}"]
+      test: ["CMD", "curl", "-f", "http://localhost:8000"]
       interval: 5s
       timeout: 5s
       retries: 5

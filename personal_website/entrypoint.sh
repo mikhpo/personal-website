@@ -7,38 +7,8 @@
 set -e
 
 # Значения по умолчанию для адреса хоста и номера порта.
-readonly DEFAULT_HOST="0.0.0.0"
-readonly DEFAULT_PORT="8000"
-
-#######################################
-# Адрес хоста определяются из аргумента командной строки или устанавливается
-# в соответствии со значением по умолчанию, если аргумент не передан.
-# Глобальная переменная: DEFAULT_HOST - адрес хоста по умолчанию.
-# Возвращаает: адрес хоста.
-#######################################
-function get_host() {
-    if [ -z "$1" ]; then
-        local host=$DEFAULT_HOST
-    else
-        local host="$1"
-    fi
-    echo "$host"
-}
-
-#######################################
-# Номер порта определяются из аргумента командной строки или устанавливается
-# в соответствии со значением по умолчанию, если аргумент не передан.
-# Глобальная переменная: DEFAULT_PORT - номер порта по умолчанию.
-# Возвращаает: номер порта.
-#######################################
-function get_port() {
-    if [ -z "$1" ]; then
-        local port=$DEFAULT_PORT
-    else
-        local port="$1"
-    fi
-    echo "$port"
-}
+readonly DJANGO_HOST="0.0.0.0"
+readonly DJANGO_PORT="8000"
 
 #######################################
 # Установить алиас для сервера MinIO.
@@ -116,18 +86,14 @@ function main() {
         set_minio_alias
     fi
 
-    # Определить адрес хоста и номер порта.
-    host=$(get_host "$1")
-    port=$(get_port "$2")
-
     # В зависимости от значения переменной окружения DEBUG определить способ запуска.
     debug_bool=$(str_to_bool "$DEBUG")
     if $debug_bool; then
-        $python "$manage" runserver "$host":"$port"
+        $python "$manage" runserver "$DJANGO_HOST":"$DJANGO_PORT"
     else
         num_workers=$(calculate_worker_count)
         $gunicorn \
-            --bind="$host":"$port" \
+            --bind="$DJANGO_HOST":"$DJANGO_PORT" \
             --workers="$num_workers" \
             --pythonpath="$website_dir" \
             "personal_website.wsgi:application"
