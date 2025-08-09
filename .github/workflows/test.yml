@@ -162,7 +162,7 @@ jobs:
       postgres: *postgres_service
     env:
     # Используется IP-адрес шлюза Docker-сети — обычно это 172.17.0.1.
-      POSTGRES_HOST: postgres
+      POSTGRES_HOST: 172.17.0.1
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
