@@ -1,6 +1,5 @@
 """Тесты вспомогательных утилит галереи."""
 
-import os
 from pathlib import Path
 
 from django.conf import settings
@@ -25,7 +24,7 @@ from gallery.utils import (
 from personal_website.utils import list_file_paths
 
 FAKER = Faker()
-FS_STORAGE = FileSystemStorage(root_path=os.getenv("TEMP_ROOT"), rel_path=GalleryConfig.name)
+FS_STORAGE = FileSystemStorage(root_path=settings.TEMP_ROOT, rel_path=GalleryConfig.name)
 
 
 class GalleryUtilsTests(TestCase):
@@ -38,8 +37,7 @@ class GalleryUtilsTests(TestCase):
         cls.langtang_album = AlbumFactory(name="Лангтанг")
 
         # Создать фотографии в базе данных из картинок в директории проекта.
-        test_dir = os.getenv("TEMP_ROOT", default=settings.PROJECT_DIR / "temp")
-        test_images_dir = Path(test_dir) / "gallery" / "photos"
+        test_images_dir = Path(settings.TEMP_ROOT) / "gallery" / "photos"
         images = list_file_paths(test_images_dir)
         for image in images:
             if "Tuscany" in image:

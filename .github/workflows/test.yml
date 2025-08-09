@@ -14,11 +14,6 @@ env:
   DEBUG: True
   DJANGO_PORT: 8000
   SECRET_KEY: ${{ secrets.SECRET_KEY }}
-  STORAGE_ROOT: ${{ github.workspace }}/storage
-  STATIC_ROOT: ${{ github.workspace }}/static
-  BACKUP_ROOT: ${{ github.workspace }}/backups
-  LOGS_ROOT: ${{ github.workspace }}/logs
-  TEMP_ROOT: ${{ github.workspace }}/temp
   PROJECT_NAME: personal_website
   POSTGRES_USER: postgres
   POSTGRES_PASSWORD: postgres
@@ -167,7 +162,7 @@ jobs:
       postgres: *postgres_service
     env:
     # Используется IP-адрес шлюза Docker-сети — обычно это 172.17.0.1.
-      POSTGRES_HOST: 172.17.0.1
+      POSTGRES_HOST: postgres
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

@@ -1,6 +1,5 @@
 """Фикстуры тестов галереи."""
 
-import os
 import shutil
 from collections.abc import Generator
 from pathlib import Path
@@ -24,16 +23,14 @@ def manage_test_images() -> Generator[str, Any, None]:
     Удаляет тестоыве изображения после завершения выполнения тестов.
     """
     # Получить адрес папки для тестовых изображений.
-
-    root_path = os.getenv("TEMP_ROOT", default=Path(settings.PROJECT_DIR) / "temp")
     relative_path = "gallery/photos"
-    test_images_dir = Path(root_path) / relative_path
+    test_images_dir = Path(settings.TEMP_ROOT) / relative_path
 
     # Создать папку для тестовых изображений перед запуском тестов галереи.
     Path(test_images_dir).mkdir(parents=True, exist_ok=True)
 
     fake = Faker()
-    gallery_storage = FileSystemStorage(root_path=root_path, rel_path=relative_path)
+    gallery_storage = FileSystemStorage(root_path=settings.TEMP_ROOT, rel_path=relative_path)
 
     # Создать фотографии для альбома Тосканы.
     for i in range(3):

@@ -1,6 +1,5 @@
 """Тесты представлений галереи в административной панели Django."""
 
-import os
 from http import HTTPStatus
 from pathlib import Path
 
@@ -24,8 +23,7 @@ class GalleryAdminTests(TestCase):
     def setUpTestData(cls) -> None:
         """Подготовить тестовые данные для выполнения тестов."""
         cls.superuser: User = User.objects.create_superuser(username="testadmin", password="12345")
-        temp_dir = os.getenv("TEMP_ROOT", default=settings.PROJECT_DIR / "temp")
-        test_images_dir = Path(temp_dir) / "gallery" / "photos"
+        test_images_dir = Path(settings.TEMP_ROOT) / "gallery" / "photos"
         cls.image_path = list_file_paths(test_images_dir)[0]
         return super().setUpTestData()
 

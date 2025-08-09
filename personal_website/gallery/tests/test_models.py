@@ -1,11 +1,11 @@
 """Тесты моделей галереи."""
 
 import datetime
-import os
 from http import HTTPStatus
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from django.conf import settings
 from django.test import TestCase
 from faker import Faker
 from faker_file.providers.jpeg_file import JpegFileProvider  # type: ignore[import-untyped]
@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 storage = select_storage()
 
 FAKER = Faker()
-FS_STORAGE = FileSystemStorage(root_path=os.getenv("TEMP_ROOT"), rel_path="gallery/photos/test_models")
+FS_STORAGE = FileSystemStorage(root_path=settings.TEMP_ROOT, rel_path="gallery/photos/test_models")
 
 
 class GalleryModelsTests(TestCase):
