@@ -18,9 +18,11 @@ on:
   workflow_dispatch:
 
 env:
-  TEST_IMAGE_NAME: ghcr.io/${{ github.repository }}:test-latest
-  GITHUB_RELEASE_IMAGE_NAME: ghcr.io/${{ github.repository }}:latest
-  DOCKER_RELEASE_IMAGE_NAME: ${{ secrets.DOCKER_USERNAME }}/personal-website:latest
+  TEST_TAG: test-latest
+  RELEASE_TAG: latest
+  TEST_IMAGE_NAME: ghcr.io/${{ github.repository }}:${{ env.TEST_TAG }}
+  GITHUB_RELEASE_IMAGE_NAME: ghcr.io/${{ github.repository }}:${{ env.RELEASE_TAG }}
+  DOCKER_RELEASE_IMAGE_NAME: ${{ secrets.DOCKER_USERNAME }}/personal-website:${{ env.RELEASE_TAG }}
 
 jobs:
 
@@ -71,9 +73,20 @@ jobs:
         run: |
           docker push ${{ env.DOCKER_RELEASE_IMAGE_NAME }}
 
-      # Удаление тестового тега из GHCR для очистки реестра
-      - name: Delete test tag from GHCR
+  delete-test-tag:
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    needs: retag_and_push_image
+    permissions:
+      packages: write
+    steps:
+      - name: Instal GitHub CLI
+        uses: actions/setup-gh-release@v1
+
+      - name: Log in to GitHub CLI
+        run: gh auth login --github-token ${{ secrets.GHCR_DELETE_TOKEN }}
+
+      - name: Delete test tag from GitHub Container Registry
         run: |
-          if docker manifest inspect ${{ env.TEST_IMAGE_NAME }} > /dev/null 2>&1; then
-            docker manifest rm ${{ env.TEST_IMAGE_NAME }}
-          fi
+          gh api -X DELETE /orgs/${{ github.repository_owner }}/packages/container/${{ github.repository }}/versions \
+            --input <(echo -n '{"container_tags":["'"${{ env.TEST_TAG }}"'"]}')
