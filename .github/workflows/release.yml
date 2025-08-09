@@ -20,10 +20,9 @@ on:
   workflow_dispatch:
 
 env:
-  TEST_TAG: test
   TESTED_TAG: tested
   RELEASE_TAG: latest
-  TEST_IMAGE_NAME: ghcr.io/${{ github.repository }}:${TEST_TAG}
+  TESTED_IMAGE_NAME: ghcr.io/${{ github.repository }}:${TESTED_TAG}
   GITHUB_RELEASE_IMAGE_NAME: ghcr.io/${{ github.repository }}:${RELEASE_TAG}
   DOCKER_RELEASE_IMAGE_NAME: ${{ secrets.DOCKER_USERNAME }}/${{ github.repository }}:${RELEASE_TAG}
 
@@ -54,18 +53,18 @@ jobs:
       # Получение тестового образа из GHCR
       - name: Pull test image from GHCR
         run: |
-          docker pull ${{ env.TEST_IMAGE_NAME }}
+          docker pull ${{ env.TESTED_IMAGE_NAME }}
 
       # Перетегирование тестового образа как "latest" для GHCR
       - name: Tag image as latest for GHCR
         run: |
-          docker tag ${{ env.TEST_IMAGE_NAME }} ghcr.io/${{ github.repository }}:${TESTED_TAG}
-          docker tag ${{ env.TEST_IMAGE_NAME }} ${{ env.GITHUB_RELEASE_IMAGE_NAME }}
+          docker tag ${{ env.TESTED_IMAGE_NAME }} ghcr.io/${{ github.repository }}:${TESTED_TAG}
+          docker tag ${{ env.TESTED_IMAGE_NAME }} ${{ env.GITHUB_RELEASE_IMAGE_NAME }}
 
       # Перетегирование тестового образа для Docker Hub
       - name: Tag image for Docker Hub
         run: |
-          docker tag ${{ env.TEST_IMAGE_NAME }} ${{ env.DOCKER_RELEASE_IMAGE_NAME }}
+          docker tag ${{ env.TESTED_IMAGE_NAME }} ${{ env.DOCKER_RELEASE_IMAGE_NAME }}
 
       # Публикация образа с тегом "latest" в GHCR
       - name: Push image to GHCR with latest tag
@@ -78,6 +77,6 @@ jobs:
           docker push ${{ env.DOCKER_RELEASE_IMAGE_NAME }}
 
       # Удаление старого тега из GHCR
-      - name: Delete test tag from GHCR
+      - name: Delete tested tag from GHCR
         run: |
-          gh container registry delete ${{ env.GITHUB_RELEASE_IMAGE_NAME }} --tag ${{ env.TEST_TAG }}
+          gh container registry delete ${{ env.GITHUB_RELEASE_IMAGE_NAME }} --tag ${TESTED_TAG}

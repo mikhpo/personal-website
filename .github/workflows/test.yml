@@ -24,7 +24,10 @@ env:
   DOMAIN_NAME: ${{ secrets.DOMAIN_NAME }}
   LANG: ru_RU.utf8
   PYTHON_VERSION: '3.12'
-  TEST_IMAGE_NAME: ghcr.io/${{ github.repository }}:test
+  TEST_TAG: test
+  TESTED_TAG: tested
+  TEST_IMAGE_NAME: ghcr.io/${{ github.repository }}:${TEST_TAG}
+  TESTED_IMAGE_NAME: ghcr.io/${{ github.repository }}:${TESTED_TAG}
 
 jobs:
 
@@ -196,3 +199,14 @@ jobs:
               poetry run python personal_website/manage.py collectstatic --noinput && \
               poetry run pytest \
             "
+      # Если тестирование пройдено успешно, то перетегировать образ как протестированный.
+      - name: Tag image as tested for GHCR
+        run: |
+          docker tag ${{ env.TEST_IMAGE_NAME }} ${{ env.TESTED_IMAGE_NAME }}
+      - name: Push image to GHCR with tested tag
+        run: |
+          docker push ${{ env.TESTED_IMAGE_NAME }}
+      # Удаление старого тега из GHCR
+      - name: Delete test tag from GHCR
+        run: |
+          gh container registry delete ghcr.io/${{ github.repository }} --tag test
