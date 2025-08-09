@@ -23,10 +23,6 @@ env:
   EMAIL_HOST_USER: ${{ secrets.EMAIL_HOST_USER }}
   EMAIL_HOST_PASSWORD: ${{ secrets.EMAIL_HOST_PASSWORD }}
   DOMAIN_NAME: ${{ secrets.DOMAIN_NAME }}
-  MINIO_ALIAS: 'local'
-  MINIO_SERVER_URL: 'http://localhost:9000'
-  MINIO_ACCESS_KEY: 'minioadmin'
-  MINIO_SECRET_KEY: 'minioadmin'
   LANG: ru_RU.utf8
   PYTHON_VERSION: '3.12'
   TEST_IMAGE_NAME: ghcr.io/${{ github.repository }}:test-latest
@@ -166,7 +162,11 @@ jobs:
       postgres: *postgres_service
     env:
     # Используется IP-адрес шлюза Docker-сети — обычно это 172.17.0.1.
-      POSTGRES_HOST: 172.17.0.1
+      POSTGRES_HOST: '172.17.0.1'
+      MINIO_ALIAS: 'local'
+      MINIO_SERVER_URL: 'http://172.17.0.1:9000'
+      MINIO_ACCESS_KEY: 'minioadmin'
+      MINIO_SECRET_KEY: 'minioadmin'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
