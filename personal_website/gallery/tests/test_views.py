@@ -1,6 +1,5 @@
 """Тесты представлений галереи."""
 
-import os
 import random
 from http import HTTPStatus
 from pathlib import Path
@@ -68,8 +67,7 @@ class GalleryViewsTest(TestCase):
         cls.tag = TagFactory()
         cls.album = AlbumFactory()
         cls.album.tags.add(cls.tag)
-        test_dir = os.getenv("TEMP_ROOT", default=settings.PROJECT_DIR)
-        test_images_dir = Path(test_dir) / "gallery" / "photos"
+        test_images_dir = Path(settings.TEMP_ROOT) / "gallery" / "photos"
         files = list_file_paths(test_images_dir)
         images = [file for file in files if is_image(file)]
         for image in images:
@@ -416,8 +414,7 @@ class UploadFormViewTests(TestCase):
         cls.user = User.objects.create_user(username=cls.test_username, password=cls.test_password)
         cls.staff_user = User.objects.create_superuser(username=cls.staff_username, password=cls.staff_password)
         Path(settings.MEDIA_ROOT).mkdir(parents=True, exist_ok=True)
-        test_dir = os.getenv("TEMP_ROOT", default=settings.PROJECT_DIR / "temp")
-        test_images_dir = Path(test_dir) / "gallery" / "photos"
+        test_images_dir = Path(settings.TEMP_ROOT) / "gallery" / "photos"
         cls.test_image_paths = list_file_paths(test_images_dir)
         cls.album = AlbumFactory()
         return super().setUpTestData()

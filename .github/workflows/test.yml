@@ -12,13 +12,7 @@ on:
 
 env:
   DEBUG: True
-  DJANGO_PORT: 8000
   SECRET_KEY: ${{ secrets.SECRET_KEY }}
-  STORAGE_ROOT: ${{ github.workspace }}/storage
-  STATIC_ROOT: ${{ github.workspace }}/static
-  BACKUP_ROOT: ${{ github.workspace }}/backups
-  LOGS_ROOT: ${{ github.workspace }}/logs
-  TEMP_ROOT: ${{ github.workspace }}/temp
   PROJECT_NAME: personal_website
   POSTGRES_USER: postgres
   POSTGRES_PASSWORD: postgres
@@ -30,10 +24,11 @@ env:
   DOMAIN_NAME: ${{ secrets.DOMAIN_NAME }}
   LANG: ru_RU.utf8
   PYTHON_VERSION: '3.12'
+  TEST_IMAGE_NAME: ghcr.io/${{ github.repository }}:test-latest
 
 jobs:
 
-  # Статический анализ кода Python при помощи Ruff
+  # Статический анализ кода Python при помощи Ruff.
   ruff_check:
     name: Ruff lint
     runs-on: ubuntu-latest
@@ -76,7 +71,7 @@ jobs:
     name: Pytest run
     runs-on: ubuntu-latest
     services:
-      postgres:
+      postgres: &postgres_service
         image: postgres
         env:
           POSTGRES_USER: ${{ env.POSTGRES_USER }}
@@ -130,3 +125,74 @@ jobs:
         with:
           name: coverage-html-report
           path: htmlcov/
+
+  # Сборка Docker-образа приложения.
+  # Образ публикуется в реестр после сборки.
+  build_docker_image:
+    name: Build Docker image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build Docker image
+        run: |
+          set -e
+          docker build -t ${{ env.TEST_IMAGE_NAME }} -f personal_website/Dockerfile .
+      - name: Push Docker image to GitHub Container Registry
+        run: |
+          set -e
+          docker push ${{ env.TEST_IMAGE_NAME }}
+
+  # Тестирование контейнеризованного приложения.
+  # Собранный ранее образ скачивается и используется для запуска тестов.
+  # Тесты запускаются только после успешной сборки Docker-образа.
+  test_docker_container:
+    name: Test in Docker container
+    runs-on: ubuntu-latest
+    needs: build_docker_image
+    services:
+      postgres: *postgres_service
+    env:
+    # Используется IP-адрес шлюза Docker-сети — обычно это 172.17.0.1.
+      POSTGRES_HOST: '172.17.0.1'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Pull Docker image from GHCR
+        run: docker pull ${{ env.TEST_IMAGE_NAME }}
+      # Ожидание готовности сервиса PostgreSQL перед запуском тестов.
+      # Этот шаг необходим, чтобы убедиться, что база данных доступна для приложения.
+      - name: Wait for PostgreSQL
+        run: |
+          for i in {1..10}; do
+            pg_isready -h ${{ env.POSTGRES_HOST }} -p ${{ env.POSTGRES_PORT }} && break
+            sleep 2
+          done
+      - name: Run tests inside Docker container
+        run: |
+          docker run --rm \
+            --env SECRET_KEY="${{ secrets.SECRET_KEY }}" \
+            --env POSTGRES_USER=${{ env.POSTGRES_USER }} \
+            --env POSTGRES_PASSWORD=${{ env.POSTGRES_PASSWORD }} \
+            --env POSTGRES_DB=${{ env.POSTGRES_DB }} \
+            --env POSTGRES_HOST=${{ env.POSTGRES_HOST }} \
+            --entrypoint "" \
+            ${{ env.TEST_IMAGE_NAME }} \
+            /bin/bash -c "\
+              poetry run python personal_website/manage.py collectstatic --noinput && \
+              poetry run pytest \
+            "

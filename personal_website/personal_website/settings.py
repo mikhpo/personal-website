@@ -119,10 +119,10 @@ USE_TZ = True
 STATIC_URL = "/static/"
 
 # Абсолютный путь до папки, в которой собраны статические файлы.
-STATIC_ROOT = os.getenv("STATIC_ROOT")
+STATIC_ROOT = os.getenv("STATIC_ROOT", default=PROJECT_DIR / "static")
 
 # NPM-зависимости в корневом каталоге проекта.
-STATICFILES_DIRS = [BASE_DIR / "static", PROJECT_DIR / "node_modules"]
+STATICFILES_DIRS = [BASE_DIR / "staticfiles", PROJECT_DIR / "node_modules"]
 
 # На проде статические файлы раздаются через WhiteNoise.
 WHITENOISE_ROOT = STATIC_ROOT
@@ -131,10 +131,10 @@ WHITENOISE_ROOT = STATIC_ROOT
 MEDIA_URL = "/media/"
 
 # Абсолютный путь до папки с медиа-файлами.
-MEDIA_ROOT = os.getenv("STORAGE_ROOT")
+MEDIA_ROOT = os.getenv("STORAGE_ROOT", default=PROJECT_DIR / "storage")
 
 # Адрес временной папки для тестирования.
-TEMP_ROOT = os.getenv("TEMP_ROOT")
+TEMP_ROOT = os.getenv("TEMP_ROOT", default=PROJECT_DIR / "temp")
 
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},

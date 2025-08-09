@@ -1,6 +1,5 @@
 """Тесты вспомогательных функций для работы с файлами и файловой системой."""
 
-import os
 from pathlib import Path
 
 from django.conf import settings
@@ -11,13 +10,10 @@ from faker_file.storages.filesystem import FileSystemStorage  # type: ignore[imp
 
 from personal_website.utils import calculate_path_size, list_file_paths
 
-temp_root = os.getenv("TEMP_ROOT", default=settings.PROJECT_DIR / "temp")
-test_dir = Path(__file__).resolve().stem
-
 FAKER = Faker()
 FS_STORAGE = FileSystemStorage(
-    root_path=temp_root,
-    rel_path=test_dir,
+    root_path=settings.TEMP_ROOT,
+    rel_path=Path(__file__).resolve().stem,
 )
 
 
@@ -26,7 +22,7 @@ class ListFilePathTests(SimpleTestCase):
 
     def test_paths_exist(self) -> None:
         """Проверить, что возвращенные пути существуют."""
-        test_images_dir = Path(temp_root) / "gallery" / "photos"
+        test_images_dir = Path(settings.TEMP_ROOT) / "gallery" / "photos"
         image_paths_list = list_file_paths(test_images_dir)
         self.assertIsInstance(image_paths_list, list)
         for image_path in image_paths_list:
