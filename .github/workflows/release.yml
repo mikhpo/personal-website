@@ -22,7 +22,7 @@ env:
   RELEASE_TAG: latest
   TEST_IMAGE_NAME: ghcr.io/${{ github.repository }}:${TEST_TAG}
   GITHUB_RELEASE_IMAGE_NAME: ghcr.io/${{ github.repository }}:${RELEASE_TAG}
-  DOCKER_RELEASE_IMAGE_NAME: ${{ secrets.DOCKER_USERNAME }}/personal-website:${{ env.RELEASE_TAG }}
+  DOCKER_RELEASE_IMAGE_NAME: ${{ secrets.DOCKER_USERNAME }}/personal-website:${RELEASE_TAG}
 
 jobs:
 
