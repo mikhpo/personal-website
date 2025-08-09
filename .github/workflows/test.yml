@@ -185,7 +185,6 @@ jobs:
         run: |
           docker run --rm \
             --env GITHUB_ACTIONS=${{ env.GITHUB_ACTIONS }} \
-            --env SECRET_KEY=${{ secrets.SECRET_KEY }} \
             --env POSTGRES_USER=${{ env.POSTGRES_USER }} \
             --env POSTGRES_PASSWORD=${{ env.POSTGRES_PASSWORD }} \
             --env POSTGRES_DB=${{ env.POSTGRES_DB }} \
