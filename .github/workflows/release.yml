@@ -15,6 +15,7 @@ on:
       - 'docs/**'
       - 'nginx/**'
       - '.vscode/**'
+  workflow_dispatch:
 
 env:
   TEST_IMAGE_NAME: ghcr.io/${{ github.repository }}:test-latest
@@ -24,8 +25,8 @@ env:
 jobs:
 
   retag_and_push_image:
-    # Запускается только если PR был смержен.
-    if: github.event.pull_request.merged == true
+    # Запускается только если PR был смержен или workflow запущен вручную.
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
     name: Retag and push tested Docker image to Docker Hub and GHCR
     runs-on: ubuntu-latest
     permissions:
