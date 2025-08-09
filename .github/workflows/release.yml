@@ -20,8 +20,8 @@ env:
   DOCKER_REPOSITORY: personal-website
 
 jobs:
-  push_image_to_registries:
 
+  push_image_to_registries:
     # Выполняется в том случае, если Pull Request завершен положительно.
     if: github.event.pull_request.merged == true
     name: Push website Docker image to multiple registries
