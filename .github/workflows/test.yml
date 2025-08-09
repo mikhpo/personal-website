@@ -144,10 +144,11 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build Docker image
         run: |
-          docker build -t personal-website-test:latest -f personal_website/Dockerfile .
+          set -e
+          docker build -t ${{ env.TEST_IMAGE_NAME }} -f personal_website/Dockerfile .
       - name: Push Docker image to GitHub Container Registry
         run: |
-          docker tag personal-website-test:latest ${{ env.TEST_IMAGE_NAME }}
+          set -e
           docker push ${{ env.TEST_IMAGE_NAME }}
 
   # Тестирование контейнеризованного приложения.
@@ -173,6 +174,8 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Pull Docker image from GHCR
         run: docker pull ${{ env.TEST_IMAGE_NAME }}
+      # Ожидание готовности сервиса PostgreSQL перед запуском тестов.
+      # Этот шаг необходим, чтобы убедиться, что база данных доступна для приложения.
       - name: Wait for PostgreSQL
         run: |
           for i in {1..10}; do

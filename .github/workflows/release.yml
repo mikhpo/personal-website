@@ -17,54 +17,62 @@ on:
       - '.vscode/**'
 
 env:
-  DOCKER_REPOSITORY: personal-website
+  TEST_IMAGE_NAME: ghcr.io/${{ github.repository }}:test-latest
+  GITHUB_RELEASE_IMAGE_NAME: ghcr.io/${{ github.repository }}:latest
+  DOCKER_RELEASE_IMAGE_NAME: ${{ secrets.DOCKER_USERNAME }}/personal-website:latest
 
 jobs:
 
-  push_image_to_registries:
-    # Выполняется в том случае, если Pull Request завершен положительно.
+  retag_and_push_image:
+    # Запускается только если PR был смержен.
     if: github.event.pull_request.merged == true
-    name: Push website Docker image to multiple registries
+    name: Retag and push tested Docker image to Docker Hub and GHCR
     runs-on: ubuntu-latest
     permissions:
       packages: write
       contents: read
     steps:
-      - name: Check out the repo
-        uses: actions/checkout@v4
-
-      - name: Docker Setup Buildx
-        uses: docker/setup-buildx-action@v3
-
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Log in to the Container registry
+      - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract metadata (tags, labels) for Docker
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: |
-            ${{ secrets.DOCKER_USERNAME }}/${{ env.DOCKER_REPOSITORY }}
-            ghcr.io/${{ github.repository }}
-          tags: |
-            type=raw,value=latest,enable={{is_default_branch}}
+      # Получение тестового образа из GHCR
+      - name: Pull test image from GHCR
+        run: |
+          docker pull ${{ env.TEST_IMAGE_NAME }}
 
-      # Параметры сборки аналогичны параметрам для Docker Compose.
-      - name: Build and push Docker images
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./personal_website/Dockerfile
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+      # Перетегирование тестового образа как "latest" для GHCR
+      - name: Tag image as latest for GHCR
+        run: |
+          docker tag ${{ env.TEST_IMAGE_NAME }} ${{ env.GITHUB_RELEASE_IMAGE_NAME }}
+
+      # Перетегирование тестового образа для Docker Hub
+      - name: Tag image for Docker Hub
+        run: |
+          docker tag ${{ env.TEST_IMAGE_NAME }} ${{ env.DOCKER_RELEASE_IMAGE_NAME }}
+
+      # Публикация образа с тегом "latest" в GHCR
+      - name: Push image to GHCR with latest tag
+        run: |
+          docker push ${{ env.GITHUB_RELEASE_IMAGE_NAME }}
+
+      # Публикация образа в Docker Hub
+      - name: Push image to Docker Hub
+        run: |
+          docker push ${{ env.DOCKER_RELEASE_IMAGE_NAME }}
+
+      # Удаление тестового тега из GHCR для очистки реестра
+      - name: Delete test tag from GHCR
+        run: |
+          curl -X DELETE \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            "https://ghcr.io/v2/${{ github.repository }}/manifests/test-latest"
