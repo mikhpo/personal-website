@@ -74,6 +74,6 @@ jobs:
       # Удаление тестового тега из GHCR для очистки реестра
       - name: Delete test tag from GHCR
         run: |
-          curl -X DELETE \
-            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            "https://ghcr.io/v2/${{ github.repository }}/manifests/test-latest"
+          if docker manifest inspect ${{ env.TEST_IMAGE_NAME }} > /dev/null 2>&1; then
+            docker manifest rm ${{ env.TEST_IMAGE_NAME }}
+          fi
