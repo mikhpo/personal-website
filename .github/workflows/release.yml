@@ -1,7 +1,7 @@
 # Опубликовать образ контейнера основного сервиса в несколько реестров:
 # - GitHub Container registry
 # - Docker Hub
-name: Publish Docker image
+name: Release image
 
 
 on:
@@ -23,6 +23,8 @@ env:
   TESTED_TAG: tested
   LATEST_TAG: latest
   TESTED_IMAGE_NAME: ghcr.io/${{ github.repository }}:${TESTED_TAG}
+  GITHUB_RELEASE_IMAGE_NAME: ghcr.io/${{ github.repository }}:${LATEST_TAG}
+  DOCKER_RELEASE_IMAGE_NAME: ${{ secrets.DOCKER_USERNAME }}/${{ github.repository }}:${LATEST_TAG}
 
 jobs:
 
@@ -48,20 +50,25 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Получение тестового образа из GHCR.
+      # Получение тестового образа из GHCR
       - name: Pull test image from GitHub Container Registry
         run: |
           docker pull ${{ env.TESTED_IMAGE_NAME }}
 
-      # Публикация образа в реестрах c перетегированием.
-      - name: Push latest image
-        uses: docker/build-push-action@v6
-        with:
-          push: true
-          tags: ${{ env.LATEST_TAG }}
+      # Перетегирование тестового образа как "latest"
+      - name: Tag image as latest
+        run: |
+          docker tag ${{ env.TESTED_IMAGE_NAME }} ${{ env.GITHUB_RELEASE_IMAGE_NAME }}
+          docker tag ${{ env.TESTED_IMAGE_NAME }} ${{ env.DOCKER_RELEASE_IMAGE_NAME }}
 
-      # Удаление старого тега из GHCR.
-      - name: Delete tested tag from GitHub Container Registry
+      # Публикация образа с тегом "latest" в реестрах
+      - name: Push image with latest tag
+        run: |
+          docker push ${{ env.GITHUB_RELEASE_IMAGE_NAME }}
+          docker push ${{ env.DOCKER_RELEASE_IMAGE_NAME }}
+
+      # Удаление старого тега из GHCR
+      - name: Delete tested tag from GHCR
         uses: dataaxiom/ghcr-cleanup-action@v1
         with:
           token: ${{ secrets.GHCR_DELETE_TOKEN }}

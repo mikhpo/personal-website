@@ -1,5 +1,5 @@
 # Выполнить Python тесты веб-сайта.
-name: Test Python code
+name: Test code
 
 # Рабочий процесс выполняется при открытии и переоткрытии Pull Request,
 # а также при добавлении новых коммитов в Pull Request.
