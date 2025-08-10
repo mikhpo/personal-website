@@ -3,7 +3,6 @@
 # - Docker Hub
 name: Release image
 
-
 on:
   # Выполняется после того, как закрыт Pull Request в ветку "main",
   # если изменения в файлах не касаются только путей из перечня исключений.
@@ -11,11 +10,11 @@ on:
     types:
       - closed
     branches:
-      - "main"
+      - main
     paths-ignore:
-      - "docs/**"
-      - "nginx/**"
-      - ".vscode/**"
+      - 'docs/**'
+      - 'nginx/**'
+      - '.vscode/**'
   # Может быть запущено вручную.
   workflow_dispatch:
 

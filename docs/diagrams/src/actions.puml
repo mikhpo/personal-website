@@ -27,4 +27,11 @@ note right of test
   - .vscode/**
 end note
 
+note right of release
+  Если изменения не в путях:
+  - docs/**
+  - nginx/**
+  - .vscode/**
+end note
+
 @enduml
