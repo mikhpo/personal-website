@@ -21,10 +21,8 @@ on:
 
 env:
   TESTED_TAG: tested
-  RELEASE_TAG: latest
+  LATEST_TAG: latest
   TESTED_IMAGE_NAME: ghcr.io/${{ github.repository }}:${TESTED_TAG}
-  GITHUB_RELEASE_IMAGE_NAME: ghcr.io/${{ github.repository }}:${RELEASE_TAG}
-  DOCKER_RELEASE_IMAGE_NAME: ${{ secrets.DOCKER_USERNAME }}/${{ github.repository }}:${RELEASE_TAG}
 
 jobs:
 
@@ -50,34 +48,20 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Получение тестового образа из GHCR
-      - name: Pull test image from GHCR
+      # Получение тестового образа из GHCR.
+      - name: Pull test image from GitHub Container Registry
         run: |
           docker pull ${{ env.TESTED_IMAGE_NAME }}
 
-      # Перетегирование тестового образа как "latest" для GHCR
-      - name: Tag image as latest for GHCR
-        run: |
-          docker tag ${{ env.TESTED_IMAGE_NAME }} ghcr.io/${{ github.repository }}:${{ env.TESTED_TAG }}
-          docker tag ${{ env.TESTED_IMAGE_NAME }} ${{ env.GITHUB_RELEASE_IMAGE_NAME }}
+      # Публикация образа в реестрах c перетегированием.
+      - name: Push latest image
+        uses: docker/build-push-action@v6
+        with:
+          push: true
+          tags: ${{ env.LATEST_TAG }}
 
-      # Перетегирование тестового образа для Docker Hub
-      - name: Tag image for Docker Hub
-        run: |
-          docker tag ${{ env.TESTED_IMAGE_NAME }} ${{ env.DOCKER_RELEASE_IMAGE_NAME }}
-
-      # Публикация образа с тегом "latest" в GHCR
-      - name: Push image to GHCR with latest tag
-        run: |
-          docker push ${{ env.GITHUB_RELEASE_IMAGE_NAME }}
-
-      # Публикация образа в Docker Hub
-      - name: Push image to Docker Hub
-        run: |
-          docker push ${{ env.DOCKER_RELEASE_IMAGE_NAME }}
-
-      # Удаление старого тега из GHCR
-      - name: Delete tested tag from GHCR
+      # Удаление старого тега из GHCR.
+      - name: Delete tested tag from GitHub Container Registry
         uses: dataaxiom/ghcr-cleanup-action@v1
         with:
           token: ${{ secrets.GHCR_DELETE_TOKEN }}
