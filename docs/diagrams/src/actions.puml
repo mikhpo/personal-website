@@ -20,18 +20,4 @@ release : - Удаление тэга tested из GHCR
 
 release --> [*]
 
-note right of test
-  Если изменения не в путях:
-  - docs/**
-  - nginx/**
-  - .vscode/**
-end note
-
-note right of release
-  Если изменения не в путях:
-  - docs/**
-  - nginx/**
-  - .vscode/**
-end note
-
 @enduml

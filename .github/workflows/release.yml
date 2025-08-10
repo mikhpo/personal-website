@@ -11,10 +11,6 @@ on:
       - closed
     branches:
       - main
-    paths-ignore:
-      - 'docs/**'
-      - 'nginx/**'
-      - '.vscode/**'
   # Может быть запущено вручную.
   workflow_dispatch:
 
