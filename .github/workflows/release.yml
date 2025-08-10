@@ -55,16 +55,17 @@ jobs:
         run: |
           docker pull ${{ env.TESTED_IMAGE_NAME }}
 
-      # Перетегирование тестового образа как "latest"
-      - name: Tag image as latest
+      # Перетегирование тестового образа как "latest" для GHCR.
+      - name: Retag and push image for GitHub Container Registry
         run: |
           docker tag ${{ env.TESTED_IMAGE_NAME }} ${{ env.GITHUB_RELEASE_IMAGE_NAME }}
-          docker tag ${{ env.TESTED_IMAGE_NAME }} ${{ env.DOCKER_RELEASE_IMAGE_NAME }}
-
-      # Публикация образа с тегом "latest" в реестрах
-      - name: Push image with latest tag
-        run: |
           docker push ${{ env.GITHUB_RELEASE_IMAGE_NAME }}
+
+      # Перетегирование тестового образа как "latest" для Docker Hub.
+      - name: Retag and push image for Docker Hub
+        run: |
+          docker login
+          docker tag ${{ env.TESTED_IMAGE_NAME }} ${{ env.DOCKER_RELEASE_IMAGE_NAME }}
           docker push ${{ env.DOCKER_RELEASE_IMAGE_NAME }}
 
       # Удаление старого тега из GHCR
