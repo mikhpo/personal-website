@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # Определение базового образа.
-FROM debian
+FROM debian:bookworm
 
 # Обновление и установка общих системных пакетов.
 # Версия утилит PostgreSQL должна совпадать с версией кластера.
