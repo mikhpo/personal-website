@@ -13,6 +13,7 @@ from imagekit.models import ImageSpecField  # type: ignore[import-untyped]
 from imagekit.processors import ResizeToFit  # type: ignore[import-untyped]
 from PIL import Image as pImage
 from PIL.ExifTags import TAGS
+from PIL.TiffImagePlugin import IFDRational
 
 from gallery.managers import PublicAlbumManager, PublicPhotoManager
 from gallery.utils import move_photo_image, photo_image_upload_path
@@ -270,13 +271,26 @@ class Photo(models.Model):
 
     @cached_property
     def exposure(self) -> str:
-        """Выдержка."""
+        """Возвращает значение выдержки из метаданных EXIF.
+
+        Если в EXIF присутствует ключ "ExposureTime", метод интерпретирует его значение:
+        - Если значение представляет собой объект IFDRational, значение преобразуется в строку
+          вида "numerator/denominator".
+        - Если значение число, меньшее или равное 1, метод преобразует его в строку такого же формата.
+        - Для всех остальных случаев возвращается строковое представление числа.
+
+        Возвращает строку с выдержкой или пустую строку, если ключ отсутствует.
+        """
         if "ExposureTime" in self.exif:
-            exposure_time: float = self.exif["ExposureTime"]
-            if exposure_time <= 1:
+            exposure_time: float | IFDRational = self.exif["ExposureTime"]
+            if isinstance(exposure_time, IFDRational):
+                numenator = exposure_time.numerator
+                denominator = exposure_time.denominator
+            elif exposure_time <= 1:
                 numenator, denominator = exposure_time.as_integer_ratio()
-                return f"{numenator}/{denominator}"
-            return str(int(exposure_time))
+            else:
+                return str(int(exposure_time))
+            return f"{numenator}/{denominator}"
         return ""
 
     @cached_property
