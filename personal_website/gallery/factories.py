@@ -7,7 +7,7 @@ from faker import Faker
 from gallery.models import Album, Photo, Tag
 from gallery.schemas import ExifData
 
-fake = Faker()
+fake = Faker(locale="ru_RU")
 
 
 class TagFactory(factory.django.DjangoModelFactory):
@@ -15,8 +15,9 @@ class TagFactory(factory.django.DjangoModelFactory):
 
     class Meta:  # noqa: D106
         model = Tag
+        django_get_or_create = ("name",)
 
-    name = factory.Faker("word")
+    name = factory.Sequence(lambda n: f"{fake.word()}_{n}")
     slug = factory.LazyAttribute(lambda _: None)
     description = factory.Faker("sentence")
 
@@ -31,8 +32,9 @@ class AlbumFactory(factory.django.DjangoModelFactory):
     class Meta:  # noqa: D106
         model = Album
         skip_postgeneration_save = True
+        django_get_or_create = ("name",)
 
-    name = factory.Faker("sentence")
+    name = factory.Sequence(lambda n: f"{fake.sentence()}_{n}")
     description = factory.Faker("text")
     slug = factory.LazyAttribute(lambda _: None)
     created_at = factory.LazyFunction(now)
@@ -64,9 +66,10 @@ class PhotoFactory(factory.django.DjangoModelFactory):
     class Meta:  # noqa: D106
         model = Photo
         skip_postgeneration_save = True
+        django_get_or_create = ("name",)
 
     image = factory.django.ImageField()
-    name = factory.Faker("word")
+    name = factory.Sequence(lambda n: f"{fake.sentence()}_{n}")
     description = factory.Faker("sentence")
     slug = factory.LazyAttribute(lambda _: None)
     uploaded_at = factory.LazyFunction(now)
