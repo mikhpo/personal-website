@@ -2,9 +2,12 @@
 
 import factory  # type: ignore[import-untyped]
 from django.utils.timezone import now
+from faker import Faker
 
 from accounts.factories import UserFactory
 from blog.models import Article, Category, Comment, Series, Topic
+
+fake = Faker(locale="ru_RU")
 
 
 class CategoryFactory(factory.django.DjangoModelFactory):
@@ -12,8 +15,9 @@ class CategoryFactory(factory.django.DjangoModelFactory):
 
     class Meta:  # noqa: D106
         model = Category
+        django_get_or_create = ("name",)
 
-    name = factory.Faker("word")
+    name = factory.Sequence(lambda n: f"{fake.word()}_{n}")
     description = factory.Faker("sentence")
     slug = factory.LazyAttribute(lambda _: None)
     image = factory.django.ImageField()
@@ -29,8 +33,9 @@ class TopicFactory(factory.django.DjangoModelFactory):
 
     class Meta:  # noqa: D106
         model = Topic
+        django_get_or_create = ("name",)
 
-    name = factory.Faker("word")
+    name = factory.Sequence(lambda n: f"{fake.word()}_{n}")
     description = factory.Faker("sentence")
     slug = factory.LazyAttribute(lambda _: None)
     image = factory.django.ImageField()
@@ -46,8 +51,9 @@ class SeriesFactory(factory.django.DjangoModelFactory):
 
     class Meta:  # noqa: D106
         model = Series
+        django_get_or_create = ("name",)
 
-    name = factory.Faker("word")
+    name = factory.Sequence(lambda n: f"{fake.word()}_{n}")
     description = factory.Faker("sentence")
     slug = factory.LazyAttribute(lambda _: None)
     image = factory.django.ImageField()
@@ -64,6 +70,7 @@ class ArticleFactory(factory.django.DjangoModelFactory):
     class Meta:  # noqa: D106
         model = Article
         skip_postgeneration_save = True
+        django_get_or_create = ("title",)
 
     title = factory.Faker("sentence")
     description = factory.Faker("paragraph")
