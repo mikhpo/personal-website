@@ -34,7 +34,7 @@ class AlbumFactory(factory.django.DjangoModelFactory):
         skip_postgeneration_save = True
         django_get_or_create = ("name",)
 
-    name = factory.Sequence(lambda n: f"{fake.sentence()}_{n}")
+    name = factory.Faker("sentence")
     description = factory.Faker("text")
     slug = factory.LazyAttribute(lambda _: None)
     created_at = factory.LazyFunction(now)
@@ -69,7 +69,7 @@ class PhotoFactory(factory.django.DjangoModelFactory):
         django_get_or_create = ("name",)
 
     image = factory.django.ImageField()
-    name = factory.Sequence(lambda n: f"{fake.sentence()}_{n}")
+    name = factory.Faker("sentence")
     description = factory.Faker("sentence")
     slug = factory.LazyAttribute(lambda _: None)
     uploaded_at = factory.LazyFunction(now)

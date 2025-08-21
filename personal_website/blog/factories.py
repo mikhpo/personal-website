@@ -72,7 +72,7 @@ class ArticleFactory(factory.django.DjangoModelFactory):
         skip_postgeneration_save = True
         django_get_or_create = ("title",)
 
-    title = factory.Sequence(lambda n: f"{fake.sentence()}_{n}")
+    title = factory.Faker("sentence")
     description = factory.Faker("paragraph")
     content = factory.Faker("text")
     published_at = factory.LazyFunction(now)
