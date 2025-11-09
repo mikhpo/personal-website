@@ -309,6 +309,7 @@ jobs:
     services:
       postgres: *postgres_service
     env:
+    # Используется IP-адрес шлюза Docker-сети — обычно это 172.17.0.1.
       POSTGRES_HOST: "172.17.0.1"
     steps:
       - name: Checkout code
@@ -324,6 +325,8 @@ jobs:
       - name: Pull Docker image from GHCR
         run: docker pull ${{ env.TEST_IMAGE_NAME }}
 
+      # Ожидание готовности сервиса PostgreSQL перед запуском тестов.
+      # Этот шаг необходим, чтобы убедиться, что база данных доступна для приложения.
       - name: Wait for PostgreSQL
         run: |
           for i in {1..10}; do
@@ -346,6 +349,7 @@ jobs:
               poetry run pytest \
             "
 
+      # Если тестирование пройдено успешно, то перетегировать образ как протестированный.
       - name: Tag image as tested for GHCR
         run: |
           docker tag ${{ env.TEST_IMAGE_NAME }} ${{ env.TESTED_IMAGE_NAME }}
@@ -354,6 +358,7 @@ jobs:
         run: |
           docker push ${{ env.TESTED_IMAGE_NAME }}
 
+      # Удаление старого тега из GHCR
       - name: Delete test tag from GHCR
         uses: dataaxiom/ghcr-cleanup-action@v1
         with:
