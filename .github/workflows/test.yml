@@ -19,22 +19,77 @@ env:
   EMAIL_HOST_PASSWORD: ${{ secrets.EMAIL_HOST_PASSWORD }}
   DOMAIN_NAME: ${{ secrets.DOMAIN_NAME }}
   LANG: ru_RU.utf8
-  PYTHON_VERSION: '3.12'
-  NODE_VERSION: 'latest'
+  PYTHON_VERSION: "3.12"
+  NODE_VERSION: "latest"
   TEST_TAG: test
   TESTED_TAG: tested
   TEST_IMAGE_NAME: ghcr.io/${{ github.repository }}:${TEST_TAG}
   TESTED_IMAGE_NAME: ghcr.io/${{ github.repository }}:${TESTED_TAG}
 
 jobs:
+  # Кэширование зависимостей Poetry.
+  cache-poetry:
+    name: Cache Poetry dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Poetry
+        run: |
+          python -m pip install --upgrade pip
+          pip install poetry
+
+      - name: Install Python dependencies
+        run: poetry install
+
+      - name: Cache Poetry dependencies
+        uses: actions/cache@v4
+        with:
+          key: poetry-${{ hashFiles('**/poetry.lock') }}
+          path: ~/.cache/pip
+
+  # Кэширование зависимостей npm.
+  cache-npm:
+    name: Cache npm dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install Node.js dependencies
+        run: npm install
+
+      - name: Cache npm dependencies
+        uses: actions/cache@v4
+        with:
+          key: npm-${{ hashFiles('**/package-lock.json') }}
+          path: ~/.npm
 
   # Статический анализ кода Python при помощи Ruff.
   ruff_check:
     name: Ruff lint
     runs-on: ubuntu-latest
+    needs: cache-poetry
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Restore Poetry cache
+        uses: actions/cache@v4
+        with:
+          key: poetry-${{ hashFiles('**/poetry.lock') }}
+          path: ~/.cache/pip
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -54,9 +109,16 @@ jobs:
   mypy_check:
     name: Mypy check
     runs-on: ubuntu-latest
+    needs: cache-poetry
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Restore Poetry cache
+        uses: actions/cache@v4
+        with:
+          key: poetry-${{ hashFiles('**/poetry.lock') }}
+          path: ~/.cache/pip
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -76,9 +138,16 @@ jobs:
   eslint_check:
     name: ESLint check
     runs-on: ubuntu-latest
+    needs: cache-npm
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Restore npm cache
+        uses: actions/cache@v4
+        with:
+          key: npm-${{ hashFiles('**/package-lock.json') }}
+          path: ~/.npm
 
       - name: Setup Node.js environment
         uses: actions/setup-node@v4
@@ -86,8 +155,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Install Node.js dependencies
-        run: |
-          npm install
+        run: npm install
 
       - name: Run ESLint
         run: npx eslint . --ext .js,.jsx,.ts,.tsx
@@ -96,9 +164,16 @@ jobs:
   markdownlint_check:
     name: Markdownlint check
     runs-on: ubuntu-latest
+    needs: cache-npm
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Restore npm cache
+        uses: actions/cache@v4
+        with:
+          key: npm-${{ hashFiles('**/package-lock.json') }}
+          path: ~/.npm
 
       - name: Setup Node.js environment
         uses: actions/setup-node@v4
@@ -106,8 +181,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Install Node.js dependencies
-        run: |
-          npm install
+        run: npm install
 
       - name: Run markdownlint
         run: npx markdownlint-cli *.md docs/*.md
@@ -116,6 +190,7 @@ jobs:
   test_python_with_pytest:
     name: Pytest run
     runs-on: ubuntu-latest
+    needs: [cache-poetry, cache-npm]
     services:
       postgres: &postgres_service
         image: postgres
@@ -133,6 +208,18 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Restore Poetry cache
+        uses: actions/cache@v4
+        with:
+          key: poetry-${{ hashFiles('**/poetry.lock') }}
+          path: ~/.cache/pip
+
+      - name: Restore npm cache
+        uses: actions/cache@v4
+        with:
+          key: npm-${{ hashFiles('**/package-lock.json') }}
+          path: ~/.npm
 
       - name: Install wkhtmltopdf
         run: |
@@ -154,7 +241,7 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v4
         with:
-          node-version: 'latest'
+          node-version: "latest"
 
       - name: Install Python dependencies
         run: |
@@ -187,6 +274,7 @@ jobs:
   build_docker_image:
     name: Build Docker image
     runs-on: ubuntu-latest
+    needs: test_python_with_pytest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -222,7 +310,7 @@ jobs:
       postgres: *postgres_service
     env:
     # Используется IP-адрес шлюза Docker-сети — обычно это 172.17.0.1.
-      POSTGRES_HOST: '172.17.0.1'
+      POSTGRES_HOST: "172.17.0.1"
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
