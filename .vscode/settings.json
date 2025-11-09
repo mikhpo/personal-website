@@ -37,10 +37,10 @@
   "plantuml.exportOutDir": "docs/diagrams/out",
   "todo-tree.filtering.excludeGlobs": [
     "**/.venv/**",
-    "**/node_modules/**",
+    "**/node_modules/**"
   ],
   "[html][django-html]": {
     "editor.formatOnSave": true,
     "editor.defaultFormatter": "monosans.djlint"
-  },
+  }
 }

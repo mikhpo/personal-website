@@ -35,6 +35,20 @@ repos:
       - id: poetry-install
   - repo: local
     hooks:
+      - id: eslint
+        name: eslint
+        description: Статический анализ кода JavaScript при помощи ESLint
+        entry: npm run eslint
+        language: system
+        types: [file]
+        files: \.[jt]sx?$  # *.js, *.jsx, *.ts, *.tsx
+      - id: markdownlint
+        name: markdownlint
+        description: Проверка Markdown файлов при помощи markdownlint
+        entry: npm run markdownlint
+        language: system
+        types: [file]
+        files: \.(md|markdown)$
       - id: mypy
         name: mypy
         description: Выполнить проверки типов при помощи Mypy
