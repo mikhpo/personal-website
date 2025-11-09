@@ -20,6 +20,7 @@ env:
   DOMAIN_NAME: ${{ secrets.DOMAIN_NAME }}
   LANG: ru_RU.utf8
   PYTHON_VERSION: '3.12'
+  NODE_VERSION: 'latest'
   TEST_TAG: test
   TESTED_TAG: tested
   TEST_IMAGE_NAME: ghcr.io/${{ github.repository }}:${TEST_TAG}
@@ -70,6 +71,46 @@ jobs:
 
       - name: Run Mypy tool
         run: poetry run mypy .
+
+  # Статический анализ кода JavaScript при помощи ESLint.
+  eslint_check:
+    name: ESLint check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install Node.js dependencies
+        run: |
+          npm install
+
+      - name: Run ESLint
+        run: npx eslint . --ext .js,.jsx,.ts,.tsx
+
+  # Проверка Markdown файлов при помощи markdownlint.
+  markdownlint_check:
+    name: Markdownlint check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install Node.js dependencies
+        run: |
+          npm install
+
+      - name: Run markdownlint
+        run: npx markdownlint-cli *.md docs/*.md
 
   # Выполнение тестов Python при помощи Pytest.
   test_python_with_pytest:

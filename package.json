@@ -4,7 +4,9 @@
   "description": "JavaScript dependencies for my personal website",
   "main": "index.js",
   "scripts": {
-    "test": "node --test personal_website/tests"
+    "test": "node --test personal_website/tests",
+    "eslint": "eslint personal_website/tests --ext .js,.jsx,.ts,.tsx",
+    "markdownlint": "markdownlint *.md docs/*.md"
   },
   "author": "Mikhail Polyakov",
   "license": "ISC",
@@ -15,6 +17,7 @@
   "devDependencies": {
     "eslint": "^8.56.0",
     "eslint-config-google": "^0.14.0",
-    "eslint-config-prettier": "^9.1.0"
+    "eslint-config-prettier": "^9.1.0",
+    "markdownlint-cli": "^0.37.0"
   }
 }

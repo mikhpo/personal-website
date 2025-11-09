@@ -22,3 +22,4 @@ CACHE
 /temp/
 nginx/conf.d
 .ruff_cache
+TODO.md
