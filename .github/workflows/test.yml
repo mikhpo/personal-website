@@ -27,6 +27,40 @@ env:
   TESTED_IMAGE_NAME: ghcr.io/${{ github.repository }}:${TESTED_TAG}
 
 jobs:
+  # Кэширование pip и Poetry.
+  cache-pip-poetry:
+    name: Cache pip & Poetry installation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Restore pip cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ hashFiles('**/pyproject.toml', '**/requirements.txt') }}
+          restore-keys: |
+            pip-
+
+      - name: Install pip & Poetry
+        run: |
+          python -m pip install --upgrade pip
+          pip install poetry
+
+      - name: Cache Poetry binary
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.HOME }}/.local/bin/poetry
+          key: poetry-bin-${{ hashFiles('**/pyproject.toml') }}
+          restore-keys: |
+            poetry-bin-
+
   # Кэширование зависимостей Poetry.
   cache-poetry:
     name: Cache Poetry dependencies
@@ -40,10 +74,23 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: Install Poetry
-        run: |
-          python -m pip install --upgrade pip
-          pip install poetry
+      - name: Restore pip cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ hashFiles('**/pyproject.toml', '**/requirements.txt') }}
+          restore-keys: |
+            pip-
+
+      - name: Restore Poetry binary
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.HOME }}/.local/bin/poetry
+          key: poetry-bin-${{ hashFiles('**/pyproject.toml') }}
+          restore-keys: |
+            poetry-bin-
+      - name: Upgrade pip
+        run: python -m pip install --upgrade pip
 
       - name: Install Python dependencies
         run: poetry install
@@ -96,11 +143,26 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
+      - name: Restore pip cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ hashFiles('**/pyproject.toml', '**/requirements.txt') }}
+          restore-keys: |
+            pip-
+
+      - name: Restore Poetry binary
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.HOME }}/.local/bin/poetry
+          key: poetry-bin-${{ hashFiles('**/pyproject.toml') }}
+          restore-keys: |
+            poetry-bin-
+
+      - name: Upgrade pip
+        run: python -m pip install --upgrade pip
       - name: Install Python dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install poetry
-          poetry install
+        run: poetry install
 
       - name: Check Ruff linter
         run: poetry run ruff check
@@ -125,11 +187,27 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
+      - name: Restore pip cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ hashFiles('**/pyproject.toml', '**/requirements.txt') }}
+          restore-keys: |
+            pip-
+
+      - name: Restore Poetry binary
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.HOME }}/.local/bin/poetry
+          key: poetry-bin-${{ hashFiles('**/pyproject.toml') }}
+          restore-keys: |
+            poetry-bin-
+
+      - name: Upgrade pip
+        run: python -m pip install --upgrade pip
+
       - name: Install Python dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install poetry
-          poetry install
+        run: poetry install
 
       - name: Run Mypy tool
         run: poetry run mypy .
@@ -243,11 +321,27 @@ jobs:
         with:
           node-version: "latest"
 
+      - name: Restore pip cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ hashFiles('**/pyproject.toml', '**/requirements.txt') }}
+          restore-keys: |
+            pip-
+
+      - name: Restore Poetry binary
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.HOME }}/.local/bin/poetry
+          key: poetry-bin-${{ hashFiles('**/pyproject.toml') }}
+          restore-keys: |
+            poetry-bin-
+
+      - name: Upgrade pip
+        run: python -m pip install --upgrade pip
+
       - name: Install Python dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install poetry
-          poetry install
+        run: poetry install
 
       - name: Install Node.js dependencies
         run: |
