@@ -153,17 +153,17 @@ Workflow использует кэширование зависимостей д
 
 Workflow состоит из следующих задач (jobs):
 
-| Задача                    | Описание                                                                   | Зависимости          |
-|---------------------------|----------------------------------------------------------------------------|----------------------|
-| `cache-poetry`            | Кэширование Python зависимостей Poetry                                     | —                    |
-| `cache-npm`               | Кэширование JavaScript зависимостей npm                                    | —                    |
-| `ruff_check`              | Проверка кода с помощью Ruff (линтер и форматтер)                          | `cache-poetry`       |
-| `mypy_check`              | Статический анализ типов с помощью Mypy                                    | `cache-poetry`       |
-| `eslint_check`            | Статический анализ JavaScript кода с помощью ESLint                        | `cache-npm`          |
-| `markdownlint_check`      | Проверка Markdown файлов с помощью markdownlint                            | `cache-npm`          |
+| Задача                    | Описание                                                                   | Зависимости                 |
+|---------------------------|----------------------------------------------------------------------------|-----------------------------|
+| `cache-poetry`            | Кэширование Python зависимостей Poetry                                     | —                           |
+| `cache-npm`               | Кэширование JavaScript зависимостей npm                                    | —                           |
+| `ruff_check`              | Проверка кода с помощью Ruff (линтер и форматтер)                          | `cache-poetry`              |
+| `mypy_check`              | Статический анализ типов с помощью Mypy                                    | `cache-poetry`              |
+| `eslint_check`            | Статический анализ JavaScript кода с помощью ESLint                        | `cache-npm`                 |
+| `markdownlint_check`      | Проверка Markdown файлов с помощью markdownlint                            | `cache-npm`                 |
 | `test_python_with_pytest` | Запуск тестов Python с помощью Pytest                                      | `cache-poetry`, `cache-npm` |
-| `build_docker_image`      | Сборка Docker-образа и публикация в GHCR с тегом `test`                    | `test_python_with_pytest` |
-| `test_docker_container`   | Запуск тестов внутри контейнера, перетегирование и публикация как `tested` | `build_docker_image` |
+| `build_docker_image`      | Сборка Docker-образа и публикация в GHCR с тегом `test`                    | `test_python_with_pytest`   |
+| `test_docker_container`   | Запуск тестов внутри контейнера, перетегирование и публикация как `tested` | `build_docker_image`        |
 
 Условия запуска:
 
