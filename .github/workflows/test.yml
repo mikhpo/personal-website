@@ -52,7 +52,7 @@ jobs:
         uses: actions/cache@v4
         with:
           key: poetry-${{ hashFiles('**/poetry.lock') }}
-          path: ~/.cache/pip
+          path: .venv
 
   # Кэширование зависимостей npm.
   cache-npm:
@@ -74,7 +74,7 @@ jobs:
         uses: actions/cache@v4
         with:
           key: npm-${{ hashFiles('**/package-lock.json') }}
-          path: ~/.npm
+          path: node_modules
 
   # Статический анализ кода Python при помощи Ruff.
   ruff_check:
@@ -89,7 +89,7 @@ jobs:
         uses: actions/cache@v4
         with:
           key: poetry-${{ hashFiles('**/poetry.lock') }}
-          path: ~/.cache/pip
+          path: .venv
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -118,7 +118,7 @@ jobs:
         uses: actions/cache@v4
         with:
           key: poetry-${{ hashFiles('**/poetry.lock') }}
-          path: ~/.cache/pip
+          path: .venv
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -147,7 +147,7 @@ jobs:
         uses: actions/cache@v4
         with:
           key: npm-${{ hashFiles('**/package-lock.json') }}
-          path: ~/.npm
+          path: node_modules
 
       - name: Setup Node.js environment
         uses: actions/setup-node@v4
@@ -173,7 +173,7 @@ jobs:
         uses: actions/cache@v4
         with:
           key: npm-${{ hashFiles('**/package-lock.json') }}
-          path: ~/.npm
+          path: node_modules
 
       - name: Setup Node.js environment
         uses: actions/setup-node@v4
@@ -213,13 +213,13 @@ jobs:
         uses: actions/cache@v4
         with:
           key: poetry-${{ hashFiles('**/poetry.lock') }}
-          path: ~/.cache/pip
+          path: .venv
 
       - name: Restore npm cache
         uses: actions/cache@v4
         with:
           key: npm-${{ hashFiles('**/package-lock.json') }}
-          path: ~/.npm
+          path: node_modules
 
       - name: Install wkhtmltopdf
         run: |
