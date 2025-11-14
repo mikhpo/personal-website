@@ -20,7 +20,8 @@ RUN apt-get update && \
     python3-pip \
     pipx \
     wget \
-    wkhtmltopdf
+    wkhtmltopdf && \
+    rm -rf /var/lib/apt/lists/*
 
 # Установить Poetry через pipx и обновить переменную PATH.
 RUN pipx ensurepath && \
@@ -34,11 +35,11 @@ RUN mkdir -p /etc/apt/keyrings && \
     curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg && \
     echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_${NODE_VERSION}.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list && \
     apt-get update && \
-    apt-get install -y nodejs
+    apt-get install -y nodejs && \
+    rm -rf /var/lib/apt/lists/*
 
 # Установить локаль.
-RUN rm -rf /var/lib/apt/lists/* && \
-    localedef -i ru_RU -c -f UTF-8 -A /usr/share/locale/locale.alias ru_RU.UTF-8
+RUN localedef -i ru_RU -c -f UTF-8 -A /usr/share/locale/locale.alias ru_RU.UTF-8
 ENV LANG=ru_RU.utf8
 
 # Установить клиент MinIO.
@@ -52,11 +53,13 @@ WORKDIR $WORK_DIR
 
 # Установить зависимости Node.js через npm.
 COPY package.json package-lock.json ./
-RUN npm install
+RUN npm ci --no-audit --no-fund && \
+    npm cache clean --force
 
 # Установить зависимости Python через Poetry.
 COPY pyproject.toml poetry.toml poetry.lock ./
-RUN poetry install
+RUN poetry install --no-interaction && \
+    poetry cache clear pypi --all
 
 # Скопировать в контейнер основное содержимое проекта.
 COPY . .
@@ -67,4 +70,3 @@ RUN bash personal_website/scripts/cronjobs.sh
 # Выполнить скрипт, запускающий сервер.
 ENV PYTHONPATH=.
 ENTRYPOINT ["/bin/bash", "personal_website/entrypoint.sh"]
-CMD ["0.0.0.0", "8000"]
