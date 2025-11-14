@@ -15,13 +15,7 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
-      # Шаг 1: Настройка SSH агента для подключения к серверу
-      - name: Set up SSH agent
-        uses: webfactory/ssh-agent@v0.9.1
-        with:
-          ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
-
-      # Шаг 2: Выполнение удаленного скрипта деплоя на сервере
+      # Выполнение удаленного скрипта деплоя на сервере
       - name: Execute remote deployment script
         uses: appleboy/ssh-action@v1.2.3
         with:
