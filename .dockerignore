@@ -20,3 +20,5 @@ storage
 nginx/conf.d
 tools/server
 Taskfile.yml
+.pre-commit-config.yaml
+.eslintrc.json
