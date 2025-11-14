@@ -23,5 +23,5 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           script: |
-            cd /root/personal_website
+            cd /root/personal-website
             bash personal_website/scripts/server/update.sh
