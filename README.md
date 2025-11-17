@@ -4,7 +4,7 @@
 
 ## Функциональность сайта
 
-![context](./diagrams/out/context/context.svg)
+![context](./docs/diagrams/out/context/context.svg)
 
 Для сайта реализован следующий функционал:
 
@@ -28,7 +28,7 @@
 * [Nginx](https://nginx.org/) (прокси-сервер)
 * [Docker](https://www.docker.com/) (контейнеризация)
 
-![container](./diagrams/out/container/container.svg)
+![container](./docs/diagrams/out/container/container.svg)
 
 ## Структура проекта
 
@@ -209,5 +209,5 @@ Workflow состоит из одной задачи:
 
 ## Дополнительная информация
 
-* [Руководство по разработке](docs/CONTRIBUTING.md)
-* [История изменений](docs/CHANGELOG.md)
+* [Руководство по разработке](./docs/CONTRIBUTING.md)
+* [История изменений](./docs/CHANGELOG.md)
