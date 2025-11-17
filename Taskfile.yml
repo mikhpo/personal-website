@@ -263,13 +263,23 @@ tasks:
     cmds:
       - git branch | grep -v "main" | xargs git branch -D
 
+  sync-branch:
+    desc: Синхронизировать ветку между репозиториями github и sourcecraft
+    summary: |
+      Синхронизирует ветку между репозиториями github и sourcecraft.
+      Если имя ветки не передано, то будет использована ветка main.
+      Пример использования с аргументом: `task sync-branch -- "branch-name"`
+      Пример использования без аргумента: `task sync-branch`
+    cmds:
+      - bash ./tools/sync-branch.sh {{.CLI_ARGS}}
+
   graph-models:
     desc: Экспортировать диаграммы моделей проекта
     summary: |
       Выполняет команду grap_models из пакета django-extensions для всего проекта,
       приложений проекта в совокупности и каждого приложения в отдельности.
     cmds:
-      - bash ./tools/graphmodels.sh
+      - bash ./tools/graph-models.sh
 
   check-migrations:
     desc: Проверить проект на отсутствующие миграции

@@ -101,9 +101,9 @@ Poetry сконфигурирован таким образом, чтобы ви
 
     npm test
 
-Также для выполнения всех тестов можно запустить bash-скрипт [runtests.sh](../tools/runtests.sh). Скрипт `runtests.sh` запускает тесты Node.js, тесты Pytest и создает отчет Coverage в формате HTML. Для запуска скрипта `runtests.sh` необходимо воспользоваться командой:
+Также для выполнения всех тестов можно запустить bash-скрипт [run-tests.sh](../tools/run-tests.sh). Скрипт `run-tests.sh` запускает тесты Node.js, тесты Pytest и создает отчет Coverage в формате HTML. Для запуска скрипта `run-tests.sh` необходимо воспользоваться командой:
 
-    bash tools/runtests.sh
+    bash tools/run-tests.sh
 
 Для запуска pytest в контейнере используется команда:
 
@@ -264,9 +264,9 @@ Certbot используется для получения и обновлени
 
     poetry run python personal_website/manage.py graph_models -a -g -o docs/images/project_models.png
 
-В связи с тем, что имеет смысл создавать диаграммы разного уровня детализации (для проекта, приложений, каждого приложения), целесообразнее запускать скрипт [graphmodels.sh](../tools/graphmodels.sh) для генерации диаграмм моделей:
+В связи с тем, что имеет смысл создавать диаграммы разного уровня детализации (для проекта, приложений, каждого приложения), целесообразнее запускать скрипт [graph-models.sh](../tools/graph-models.sh) для генерации диаграмм моделей:
 
-    bash tools/graphmodels.sh
+    bash tools/graph-models.sh
 
 Конечно! Ниже приведено описание двух GitHub Actions (`release.yml` и `test.yml`) в формате Markdown, без эмотиконов и с акцентом на структуру, назначение и условия выполнения. Также добавлен PlantUML-код диаграммы для визуализации.
 
