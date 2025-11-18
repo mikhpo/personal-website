@@ -6,16 +6,12 @@ on:
   # Запуск тестов при создании или обновлении pull request
   pull_request:
     - workflows: [test-workflow]
-  
+
   # Запуск релиза при пуше в ветку main
   push:
     - workflows: [release-workflow]
       filter:
         branches: ["main"]
-  
-  # Возможность ручного запуска релиза и деплоя
-  workflow_dispatch:
-    - workflows: [release-workflow, deploy-workflow]
 
 # Определение рабочих процессов
 workflows:
@@ -51,14 +47,14 @@ workflows:
               - poetry install
             env:
               POETRY_CACHE_KEY: poetry-${{ hashFiles('**/poetry.lock') }}
-          
+
           - name: cache-npm
             image: docker.io/library/node:latest
             script:
               - npm install
             env:
               NPM_CACHE_KEY: npm-${{ hashFiles('**/package-lock.json') }}
-      
+
       - name: lint-task
         needs: [cache-dependencies-task]
         cubes:
@@ -69,7 +65,7 @@ workflows:
               - pip install poetry
               - poetry install
               - poetry run ruff check
-      
+
           - name: mypy-check
             image: docker.io/library/python:3.12
             script:
@@ -77,19 +73,19 @@ workflows:
               - pip install poetry
               - poetry install
               - poetry run mypy .
-      
+
           - name: eslint-check
             image: docker.io/library/node:latest
             script:
               - npm install
               - npx eslint . --ext .js,.jsx,.ts,.tsx
-      
+
           - name: markdownlint-check
             image: docker.io/library/node:latest
             script:
               - npm install
               - npx markdownlint-cli *.md docs/*.md
-      
+
       - name: test-task
         needs: [cache-dependencies-task]
         cubes:
@@ -109,7 +105,7 @@ workflows:
               paths:
                 - htmlcov/
                 - coverage.xml
-      
+
       - name: build-image-task
         needs: [test-task]
         cubes:
@@ -119,7 +115,7 @@ workflows:
               - docker build -t $TEST_IMAGE_NAME -f personal_website/Dockerfile .
               - docker login ghcr.io -u ${{ secrets.GITHUB_ACTOR }} -p ${{ secrets.GITHUB_TOKEN }}
               - docker push $TEST_IMAGE_NAME
-      
+
       - name: test-container-task
         needs: [build-image-task]
         cubes:
@@ -130,7 +126,7 @@ workflows:
               - docker pull $TEST_IMAGE_NAME
               - docker tag $TEST_IMAGE_NAME $TESTED_IMAGE_NAME
               - docker push $TESTED_IMAGE_NAME
-  
+
   # Рабочий процесс для релиза
   release-workflow:
     env:
@@ -152,7 +148,7 @@ workflows:
               - docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
               - docker tag $TESTED_IMAGE_NAME $DOCKER_RELEASE_IMAGE_NAME
               - docker push $DOCKER_RELEASE_IMAGE_NAME
-  
+
   # Рабочий процесс для деплоя
   deploy-workflow:
     env:
