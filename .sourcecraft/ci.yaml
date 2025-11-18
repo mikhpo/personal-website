@@ -13,8 +13,8 @@ on:
       filter:
         branches: ["main"]
   
-  # Возможность ручного запуска релиза
-  manual:
+  # Возможность ручного запуска релиза и деплоя
+  workflow_dispatch:
     - workflows: [release-workflow, deploy-workflow]
 
 # Определение рабочих процессов
