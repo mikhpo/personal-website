@@ -131,6 +131,24 @@
 
 Для фотографий реализован автоматический парсинг метаданных в формате EXIF.
 
+## CI/CD
+
+Проект использует как GitHub Actions, так и SourceCraft CI/CD для автоматизации процессов тестирования, сборки и деплоя.
+
+### GitHub Actions Workflows
+
+1. **test.yml** - запускается при каждом pull request
+2. **release.yml** - запускается при закрытии pull request в ветку main
+3. **deploy.yml** - запускается после успешного релиза
+
+### SourceCraft Workflows
+
+1. **test-workflow** - запускается при каждом pull request
+2. **release-workflow** - запускается при пуше в ветку main
+3. **deploy-workflow** - запускается после успешного релиза
+
+Подробности конфигурации см. в файлах `.github/workflows/*.yml` и `.sourcecraft/ci.yaml`.
+
 ## Описание GitHub Actions
 
 GitHub Actions обеспечивают:
