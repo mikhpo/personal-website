@@ -22,7 +22,7 @@ workflows:
       SECRET_KEY: ${{ secrets.SECRET_KEY }}
       PROJECT_NAME: personal_website
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+      POSTGRES_PASSWORD: postgres
       POSTGRES_HOST: localhost
       POSTGRES_PORT: 5432
       POSTGRES_DB: personal_website
@@ -109,7 +109,7 @@ workflows:
       SECRET_KEY: ${{ secrets.SECRET_KEY }}
       PROJECT_NAME: personal_website
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+      POSTGRES_PASSWORD: postgres
       POSTGRES_HOST: localhost
       POSTGRES_PORT: 5432
       POSTGRES_DB: personal_website
