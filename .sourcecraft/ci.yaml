@@ -32,10 +32,6 @@ workflows:
       LANG: ru_RU.utf8
       PYTHON_VERSION: "3.12"
       NODE_VERSION: "latest"
-      TEST_TAG: test
-      TESTED_TAG: tested
-      TEST_IMAGE_NAME: ghcr.io/${{ repository }}:${TEST_TAG}
-      TESTED_IMAGE_NAME: ghcr.io/${{ repository }}:${TESTED_TAG}
     tasks:
       - name: cache-dependencies-task
         cubes:
@@ -106,6 +102,28 @@ workflows:
                 - htmlcov/
                 - coverage.xml
 
+  # Рабочий процесс для сборки Docker-образа
+  build-workflow:
+    env:
+      DEBUG: true
+      SECRET_KEY: ${{ secrets.SECRET_KEY }}
+      PROJECT_NAME: personal_website
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: personal_website
+      EMAIL_HOST_USER: ${{ secrets.EMAIL_HOST_USER }}
+      EMAIL_HOST_PASSWORD: ${{ secrets.EMAIL_HOST_PASSWORD }}
+      DOMAIN_NAME: ${{ secrets.DOMAIN_NAME }}
+      LANG: ru_RU.utf8
+      PYTHON_VERSION: "3.12"
+      NODE_VERSION: "latest"
+      TEST_TAG: test
+      TESTED_TAG: tested
+      TEST_IMAGE_NAME: ghcr.io/${{ repository }}:${TEST_TAG}
+      TESTED_IMAGE_NAME: ghcr.io/${{ repository }}:${TESTED_TAG}
+    tasks:
       - name: build-image-task
         needs: [test-task]
         cubes:
@@ -116,7 +134,7 @@ workflows:
               - docker login ghcr.io -u ${{ secrets.GITHUB_ACTOR }} -p ${{ secrets.GITHUB_TOKEN }}
               - docker push $TEST_IMAGE_NAME
 
-      - name: test-container-task
+      - name: test-build-task
         needs: [build-image-task]
         cubes:
           - name: test-in-container
