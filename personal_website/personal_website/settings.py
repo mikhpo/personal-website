@@ -167,16 +167,28 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = None
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Настройки подключения к базам данных.
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("POSTGRES_DB"),
-        "USER": os.getenv("POSTGRES_USER"),
-        "PASSWORD": os.getenv("POSTGRES_PASSWORD"),
-        "HOST": os.getenv("POSTGRES_HOST"),
-        "PORT": os.getenv("POSTGRES_PORT"),
-    },
-}
+# Если приложение запускается в SourceCraft CI/CD, то используется SQLite база данных.
+# В противном случае используется PostgreSQL.
+SOURCECRAFT_CI = str_to_bool(os.getenv("SOURCECRAFT_CI", default="False"))
+
+if SOURCECRAFT_CI:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        },
+    }
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": os.getenv("POSTGRES_DB"),
+            "USER": os.getenv("POSTGRES_USER"),
+            "PASSWORD": os.getenv("POSTGRES_PASSWORD"),
+            "HOST": os.getenv("POSTGRES_HOST"),
+            "PORT": os.getenv("POSTGRES_PORT"),
+        },
+    }
 
 # Настройки используемого шаблонизатора. Здесь также указан относительный путь до папки с шаблонами проекта.
 TEMPLATES = [
