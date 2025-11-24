@@ -32,6 +32,7 @@ workflows:
       POSTGRES_DB: "personal_website"
       PYTHON_VERSION: "3.13"
       NODE_VERSION: "latest"
+      POSTGRES_VERSION: "15"
     tasks:
       # Статический анализ и линтинг.
       - name: "lint-task"
@@ -56,6 +57,16 @@ workflows:
       # Тестирование.
       - name: "test-task"
         cubes:
+          # Запуск PostgreSQL для тестов
+          - name: "start-postgres"
+            image: postgres:${POSTGRES_VERSION}
+            env:
+              POSTGRES_USER: ${POSTGRES_USER}
+              POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+              POSTGRES_DB: ${POSTGRES_DB}
+            script:
+              - timeout 30 bash -c 'until pg_isready -U ${POSTGRES_USER}; do sleep 1; done'
+
           # Установка системных зависимостей
           - name: "install-system-dependencies"
             script:
@@ -65,7 +76,14 @@ workflows:
 
           # Выполнить тестирование кода Python
           - name: "python-test"
+            needs: ["start-postgres", "install-system-dependencies"]
             image: docker.io/library/python:${PYTHON_VERSION}
+            env:
+              POSTGRES_USER: ${POSTGRES_USER}
+              POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+              POSTGRES_DB: ${POSTGRES_DB}
+              POSTGRES_HOST: ${POSTGRES_HOST}
+              POSTGRES_PORT: ${POSTGRES_PORT}
             script:
               - "pip install poetry"
               - "poetry install"
