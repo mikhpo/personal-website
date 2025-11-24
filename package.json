@@ -4,7 +4,7 @@
   "description": "JavaScript dependencies for my personal website",
   "main": "index.js",
   "scripts": {
-    "test": "node --test personal_website/tests",
+    "test": "node --test 'personal_website/tests/**/*.js'",
     "eslint": "eslint personal_website/tests --ext .js,.jsx,.ts,.tsx",
     "markdownlint": "markdownlint *.md docs/*.md"
   },
