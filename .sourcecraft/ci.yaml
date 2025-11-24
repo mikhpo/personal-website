@@ -22,11 +22,12 @@ workflows:
   # Запускается при пуше в любую ветку, если есть открытый pull request
   test-workflow:
     tasks:
+      # Статический анализ и линтинг.
       - name: "lint-task"
         cubes:
           # Установка Python и зависимостей
           - name: "setup-python"
-            image: docker.io/library/python
+            image: docker.io/library/python:3.13
             script:
               - "pip install poetry"
               - "poetry install"
@@ -58,6 +59,7 @@ workflows:
             script:
               - "npx markdownlint-cli *.md docs/*.md"
 
+      # Тестирование.
       - name: "test-task"
         cubes:
           # Установка системных зависимостей
@@ -69,7 +71,7 @@ workflows:
 
           # Установка Python и зависимостей
           - name: "setup-python"
-            image: docker.io/library/python
+            image: docker.io/library/python:3.13
             script:
               - "pip install poetry"
               - "poetry install"
