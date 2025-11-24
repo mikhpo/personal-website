@@ -59,7 +59,7 @@ workflows:
         cubes:
           # Запуск PostgreSQL для тестов
           - name: "start-postgres"
-            image: postgres:${POSTGRES_VERSION}
+            image: docker.io/library/postgres:${POSTGRES_VERSION}
             env:
               POSTGRES_USER: ${POSTGRES_USER}
               POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
