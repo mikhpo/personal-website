@@ -110,10 +110,7 @@ workflows:
                   --env DEBUG="True" \
                   --entrypoint "" \
                   ${TEST_IMAGE_NAME} \
-                  /bin/bash -c "\
-                    poetry run python personal_website/manage.py collectstatic --noinput && \
-                    poetry run pytest \
-                  "
+                  /bin/bash -c "poetry run python personal_website/manage.py collectstatic --noinput && poetry run pytest"
               # Присвоение тега "tested" образу после успешного прохождения тестов
               - "docker tag ${TEST_IMAGE_NAME} ${TESTED_IMAGE_NAME}"
               # Отправка протестированного образа в реестр
