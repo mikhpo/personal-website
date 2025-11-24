@@ -36,7 +36,7 @@ workflows:
         cubes:
           # Выполнить проверки утилитами Python
           - name: "python-check"
-            image: docker.io/library/python:3.13
+            image: docker.io/library/python:3.12
             script:
               - "pip install poetry"
               - "poetry install"
@@ -56,7 +56,7 @@ workflows:
         cubes:
           # Выполнить тестирование кода Python
           - name: "python-test"
-            image: docker.io/library/python:3.13
+            image: docker.io/library/python:3.12
             script:
               - "apt-get update"
               - "apt-get install -y wkhtmltopdf locales"
