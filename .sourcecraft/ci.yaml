@@ -26,10 +26,10 @@ workflows:
           - name: "ruff-mypy"
             image: docker.io/library/python:3.13-bookworm
             script:
-              - "pip install poetry"
-              - "poetry install"
-              - "poetry run ruff check"
-              - "poetry run mypy ."
+              - pip install poetry
+              - poetry install
+              - poetry run ruff check
+              - poetry run mypy .
 
       # Выполнить проверки утилитами Node.js
       - name: "node-check"
@@ -37,9 +37,9 @@ workflows:
           - name: "eslint-markdown"
             image: docker.io/library/node
             script:
-              - "npm install"
-              - "npx eslint . --ext .js,.jsx,.ts,.tsx"
-              - "npx markdownlint-cli *.md docs/*.md"
+              - npm install
+              - npx eslint . --ext .js,.jsx,.ts,.tsx
+              - npx markdownlint-cli *.md docs/*.md
 
   # Тестирование
   test-workflow:
@@ -55,12 +55,12 @@ workflows:
           - name: "pytest"
             image: docker.io/library/python:3.13-bookworm
             script:
-              - "apt-get update"
-              - "apt-get install -y wkhtmltopdf locales"
-              - "localedef -i ru_RU -c -f UTF-8 -A /usr/share/locale/locale.alias ru_RU.UTF-8"
-              - "pip install poetry"
-              - "poetry install"
-              - "poetry run pytest"
+              - apt-get update
+              - apt-get install -y wkhtmltopdf locales
+              - localedef -i ru_RU -c -f UTF-8 -A /usr/share/locale/locale.alias ru_RU.UTF-8
+              - pip install poetry
+              - poetry install
+              - poetry run pytest
 
       # Тестирование кода JavaScript
       - name: "node-test"
@@ -68,8 +68,8 @@ workflows:
           - name: "node"
             image: docker.io/library/node
             script:
-              - "npm install"
-              - "npm test"
+              - npm install
+              - npm test
 
   # Сборка и тестирование образа приложения
   build-workflow:
@@ -89,32 +89,32 @@ workflows:
             image: docker.io/library/docker:latest
             script:
               # Авторизация в Docker Hub
-              - "echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin"
+              - echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
               # Сборка Docker-образа с использованием Dockerfile из директории personal_website
-              - "docker build -t ${TEST_IMAGE_NAME} -f personal_website/Dockerfile ."
+              - docker build -t $TEST_IMAGE_NAME -f personal_website/Dockerfile .
               # Отправка собранного образа в Docker Hub
-              - "docker push ${TEST_IMAGE_NAME}"
+              - docker push $TEST_IMAGE_NAME
 
           # Cube для запуска тестов внутри Docker-контейнера
           - name: "run-tests-in-container"
             image: docker.io/library/docker:latest
             script:
               # Авторизация в Docker Hub
-              - "echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin"
+              - echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
               # Получение тестового образа из реестра
-              - "docker pull ${TEST_IMAGE_NAME}"
+              - docker pull $TEST_IMAGE_NAME
               # Запуск тестов внутри контейнера
               - |
                 docker run --rm \
                   --env SECRET_KEY="${{ secrets.SECRET_KEY }}" \
                   --env DEBUG="True" \
                   --entrypoint "" \
-                  ${TEST_IMAGE_NAME} \
+                  $TEST_IMAGE_NAME \
                   poetry run pytest
               # Присвоение тега "tested" образу после успешного прохождения тестов
-              - "docker tag ${TEST_IMAGE_NAME} ${TESTED_IMAGE_NAME}"
+              - docker tag $TEST_IMAGE_NAME $TESTED_IMAGE_NAME
               # Отправка протестированного образа в реестр
-              - "docker push ${TESTED_IMAGE_NAME}"
+              - docker push $TESTED_IMAGE_NAME
 
   # release-workflow - запускается при пуше в ветку main
   release-workflow:
