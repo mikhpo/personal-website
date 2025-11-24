@@ -24,28 +24,19 @@ workflows:
     tasks:
       - name: "lint-task"
         cubes:
-          # Установка Python
+          # Установка Python и зависимостей
           - name: "setup-python"
-            action: actions/setup-python@v6
-            with:
-              python-version: "3.12"
+            image: docker.io/library/python
+            script:
+              - "pip install poetry"
+              - "poetry install"
 
           # Установка Node.js
           - name: "setup-node"
-            action: actions/setup-node@v6
-            with:
-              node-version: "latest"
-
-          # Установка Poetry
-          - name: "install-poetry"
+            image: docker.io/library/node
             script:
-              - "pip install poetry"
-
-          # Установка зависимостей
-          - name: "install-dependencies"
-            script:
-              - "poetry install"
               - "npm install"
+              - "npm ls"
 
           # Проверки Ruff
           - name: "ruff-check"
@@ -69,18 +60,6 @@ workflows:
 
       - name: "test-task"
         cubes:
-          # Установка Python
-          - name: "setup-python"
-            action: actions/setup-python@v6
-            with:
-              python-version: "3.12"
-
-          # Установка Node.js
-          - name: "setup-node"
-            action: actions/setup-node@v6
-            with:
-              node-version: "latest"
-
           # Установка системных зависимостей
           - name: "install-system-dependencies"
             script:
@@ -88,15 +67,17 @@ workflows:
               - "sudo apt-get install -y wkhtmltopdf locales"
               - "sudo localedef -i ru_RU -c -f UTF-8 -A /usr/share/locale/locale.alias ru_RU.UTF-8"
 
-          # Установка Poetry
-          - name: "install-poetry"
+          # Установка Python и зависимостей
+          - name: "setup-python"
+            image: docker.io/library/python
             script:
               - "pip install poetry"
-
-          # Установка зависимостей
-          - name: "install-dependencies"
-            script:
               - "poetry install"
+
+          # Установка Node.js
+          - name: "setup-node"
+            image: docker.io/library/node
+            script:
               - "npm install"
               - "npm ls"
 
