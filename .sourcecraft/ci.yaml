@@ -25,38 +25,21 @@ workflows:
       # Статический анализ и линтинг.
       - name: "lint-task"
         cubes:
-          # Установка Python и зависимостей
-          - name: "setup-python"
+          # Выполнить проверки утилитами Python
+          - name: "python-check"
             image: docker.io/library/python:3.13
             script:
               - "pip install poetry"
               - "poetry install"
+              - "poetry run ruff check"
+              - "poetry run mypy ."
 
-          # Установка Node.js
-          - name: "setup-node"
+          # Выполнить проверки утилитами Node.js
+          - name: "node-check"
             image: docker.io/library/node
             script:
               - "npm install"
-              - "npm ls"
-
-          # Проверки Ruff
-          - name: "ruff-check"
-            script:
-              - "poetry run ruff check"
-
-          # Проверки типов Mypy
-          - name: "mypy-check"
-            script:
-              - "poetry run mypy ."
-
-          # Проверки JavaScript ESLint
-          - name: "eslint-check"
-            script:
               - "npx eslint . --ext .js,.jsx,.ts,.tsx"
-
-          # Проверки Markdownlint
-          - name: "markdownlint-check"
-            script:
               - "npx markdownlint-cli *.md docs/*.md"
 
       # Тестирование.
@@ -69,42 +52,22 @@ workflows:
               - "sudo apt-get install -y wkhtmltopdf locales"
               - "sudo localedef -i ru_RU -c -f UTF-8 -A /usr/share/locale/locale.alias ru_RU.UTF-8"
 
-          # Установка Python и зависимостей
-          - name: "setup-python"
+          # Выполнить тестирование кода Python
+          - name: "python-test"
             image: docker.io/library/python:3.13
             script:
               - "pip install poetry"
               - "poetry install"
+              - "poetry run python personal_website/manage.py collectstatic --noinput"
+              - "poetry run python personal_website/manage.py makemigrations --dry-run --check"
+              - "poetry run pytest"
 
-          # Установка Node.js
-          - name: "setup-node"
+          # Выполнить тестирование кода JavaScript
+          - name: "node-test"
             image: docker.io/library/node
             script:
               - "npm install"
-              - "npm ls"
-
-          # Подготовка Django
-          - name: "prepare-django"
-            script:
-              - "poetry run python personal_website/manage.py collectstatic --noinput"
-              - "poetry run python personal_website/manage.py makemigrations --dry-run --check"
-
-          # Запуск тестов Python
-          - name: "run-python-tests"
-            script:
-              - "poetry run pytest"
-
-          # Запуск тестов JavaScript
-          - name: "run-javascript-tests"
-            script:
               - "npm test"
-
-          # Загрузка отчета о покрытии
-          - name: "upload-coverage-report"
-            action: actions/upload-artifact@v5
-            with:
-              name: coverage-html-report
-              path: htmlcov/
 
   # Запускается при пуше в любую ветку, если есть открытый pull request
   build-workflow:
