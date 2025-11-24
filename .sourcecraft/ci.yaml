@@ -3,16 +3,18 @@
 
 # Определение событий-триггеров для запуска рабочих процессов.
 on:
-  # 1. test-workflow - запускается при пуше в любую ветку, если есть открытый pull request
-  # 2. build-workflow - запускается при пуше в любую ветку, если есть открытый pull request
-  pull_request:
+
+  push:
+    # 1. test-workflow - запускается при пуше в любую ветку, если есть открытый pull request
+    # 2. build-workflow - запускается при пуше в любую ветку, если есть открытый pull request
     - workflows: [test-workflow, build-workflow]
+      filter:
+          branches: "!main"
 
   # 3. release-workflow - запускается при пуше в ветку main
-  push:
     - workflows: [release-workflow]
       filter:
-        branches: [main]
+        branches: "main"
 
 # Определение рабочих процессов
 workflows:
