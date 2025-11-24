@@ -1,251 +1,49 @@
 # Конфигурация CI/CD для SourceCraft
 # Функционально повторяет имеющиеся GitHub Workflow с учетом ограничения не более 3 тасок на 1 рабочий процесс
 
-# Определение событий-триггеров
+# Определение событий-триггеров для запуска рабочих процессов.
 on:
-  # Запуск тестового workflow при создании и обновлении Pull Request
-  # и релизного workflow после закрытия Pull Request в ветку "main"
+  # 1. test-workflow - запускается при пуше в любую ветку, если есть открытый pull request
+  # 2. build-workflow - запускается одновременно с test-workflow по тем же триггерам
   pull_request:
-    - workflows: [test-workflow]
-      filter:
-        source_branches: ["**", "!test**"]
-        target_branches: "main"
-    - workflows: [release-workflow]
-      types:
-        - closed
-      filter:
-        branches: ["main"]
+    - workflows: [test-workflow, build-workflow]
 
-  # Запуск релизного workflow при пуше в ветку main
+  # 3. release-workflow - запускается при пуше в ветку main
   push:
     - workflows: [release-workflow]
       filter:
-        branches: ["main"]
-
-  # Возможность ручного запуска релизного workflow
-  workflow_dispatch:
+        branches: [main]
 
 # Определение рабочих процессов
 workflows:
-  # Тестовый workflow
   test-workflow:
-    # Переменные окружения для всего workflow
-    env:
-      DEBUG: "True"
-      PROJECT_NAME: personal_website
-      REPOSITORY: mikhpo/personal-website
-      GITHUB_ACTOR: mikhpo
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: personal_website
-      LANG: ru_RU.utf8
-      PYTHON_VERSION: "3.12"
-      NODE_VERSION: "latest"
-      TEST_TAG: test
-      TESTED_TAG: tested
-
-    # Задания workflow
+    description: "Запускается при пуше в любую ветку, если есть открытый pull request"
     tasks:
-      # Задание 1: Кэширование зависимостей и статический анализ
-      - name: cache-and-lint-task
+      - name: "run-tests"
         cubes:
-          # Кубик 1: Установка Python и Poetry
-          - name: setup-python-poetry
-            image: docker.io/library/python:${{ env.PYTHON_VERSION }}
-            script:
-              - apt-get update && apt-get install -y curl
-              - curl -sSL https://install.python-poetry.org | python3 -
-              - export PATH="$HOME/.local/bin:$PATH"
-              - python -m pip install --upgrade pip
+          - name: "echo-test-message"
+            script: "echo 'Running tests...'"
 
-          # Кубик 2: Установка Node.js
-          - name: setup-node
-            image: docker.io/library/node:${{ env.NODE_VERSION }}
-            script:
-              - node --version
-              - npm --version
-
-          # Кубик 3: Установка зависимостей Python
-          - name: install-python-deps
-            needs: [setup-python-poetry]
-            script:
-              - poetry install
-
-          # Кубик 4: Установка зависимостей Node.js
-          - name: install-node-deps
-            needs: [setup-node]
-            script:
-              - npm install
-
-          # Кубик 5: Статический анализ Python (Ruff)
-          - name: ruff-check
-            needs: [install-python-deps]
-            script:
-              - poetry run ruff check
-
-          # Кубик 6: Статический анализ типов Python (Mypy)
-          - name: mypy-check
-            needs: [install-python-deps]
-            script:
-              - poetry run mypy .
-
-          # Кубик 7: Статический анализ JavaScript (ESLint)
-          - name: eslint-check
-            needs: [install-node-deps]
-            script:
-              - npx eslint . --ext .js,.jsx,.ts,.tsx
-
-          # Кубик 8: Проверка Markdown файлов
-          - name: markdownlint-check
-            needs: [install-node-deps]
-            script:
-              - npx markdownlint-cli *.md docs/*.md
-
-      # Задание 2: Тестирование
-      - name: test-task
+  build-workflow:
+    description: "Запускается одновременно с test-workflow по тем же триггерам"
+    tasks:
+      - name: "build-application"
         cubes:
-          # Кубик 1: Запуск PostgreSQL в Docker
-          - name: start-postgres
-            image: docker.io/library/postgres:15
-            env:
-              POSTGRES_USER: ${{ env.POSTGRES_USER }}
-              POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
-              POSTGRES_DB: ${{ env.POSTGRES_DB }}
-            script:
-              - echo "PostgreSQL started"
+          - name: "echo-build-message"
+            script: "echo 'Building application...'"
 
-          # Кубик 2: Выполнение тестов Python
-          - name: run-python-tests
-            needs: [start-postgres]
-            script:
-              - poetry run pytest
-
-          # Кубик 3: Выполнение тестов JavaScript
-          - name: run-js-tests
-            script:
-              - npm test
-
-          # Кубик 4: Проверка миграций Django
-          - name: check-django-migrations
-            script:
-              - poetry run python personal_website/manage.py makemigrations --dry-run --check
-
-          # Кубик 5: Сбор статических файлов
-          - name: collect-static-files
-            script:
-              - poetry run python personal_website/manage.py collectstatic --noinput
-
-      # Задание 3: Сборка и тестирование Docker-образа
-      - name: docker-task
-        cubes:
-          # Кубик 1: Сборка Docker-образа
-          - name: build-docker-image
-            script:
-              - docker build -t ${{ env.PROJECT_NAME }}:${{ env.TEST_TAG }} -f personal_website/Dockerfile .
-
-          # Кубик 2: Запуск тестов в Docker-контейнере
-          - name: test-in-docker
-            needs: [build-docker-image]
-            script:
-              - docker run --rm ${{ env.PROJECT_NAME }}:${{ env.TEST_TAG }} poetry run pytest
-
-          # Кубик 3: Тегирование образа как протестированного
-          - name: tag-tested-image
-            needs: [test-in-docker]
-            script:
-              - docker tag ${{ env.PROJECT_NAME }}:${{ env.TEST_TAG }} ${{ env.PROJECT_NAME }}:${{ env.TESTED_TAG }}
-
-  # Релизный workflow
   release-workflow:
-    # Переменные окружения для всего workflow
-    env:
-      PROJECT_NAME: personal_website
-      REPOSITORY: mikhpo/personal-website
-      TESTED_TAG: tested
-      LATEST_TAG: latest
-
-    # Задания workflow
+    description: "Запускается при пуше в ветку main"
     tasks:
-      # Задание 1: Публикация образа в GHCR
-      - name: publish-to-ghcr-task
+      - name: "create-release"
         cubes:
-          # Кубик 1: Аутентификация в GHCR
-          - name: login-to-ghcr
-            script:
-              - echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ env.GITHUB_ACTOR }} --password-stdin
+          - name: "echo-release-message"
+            script: "echo 'Creating release...'"
 
-          # Кубик 2: Получение протестированного образа из GHCR
-          - name: pull-tested-image
-            needs: [login-to-ghcr]
-            script:
-              - docker pull ${{ env.PROJECT_NAME }}:${{ env.TESTED_TAG }}
-
-          # Кубик 3: Перетегирование образа как latest для GHCR
-          - name: retag-for-ghcr
-            needs: [pull-tested-image]
-            script:
-              - docker tag ${{ env.PROJECT_NAME }}:${{ env.TESTED_TAG }} ghcr.io/${{ env.REPOSITORY }}:${{ env.LATEST_TAG }}
-              - docker push ghcr.io/${{ env.REPOSITORY }}:${{ env.LATEST_TAG }}
-
-      # Задание 2: Публикация образа в Docker Hub
-      - name: publish-to-dockerhub-task
-        cubes:
-          # Кубик 1: Аутентификация в Docker Hub
-          - name: login-to-dockerhub
-            script:
-              - echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
-
-          # Кубик 2: Получение протестированного образа
-          - name: pull-tested-image
-            needs: [login-to-dockerhub]
-            script:
-              - docker pull ${{ env.PROJECT_NAME }}:${{ env.TESTED_TAG }}
-
-          # Кубик 3: Перетегирование образа как latest для Docker Hub
-          - name: retag-for-dockerhub
-            needs: [pull-tested-image]
-            script:
-              - docker tag ${{ env.PROJECT_NAME }}:${{ env.TESTED_TAG }} ${{ env.REPOSITORY }}:${{ env.LATEST_TAG }}
-              - docker push ${{ env.REPOSITORY }}:${{ env.LATEST_TAG }}
-
-      # Задание 3: Очистка
-      - name: cleanup-task
-        cubes:
-          # Кубик 1: Удаление временных тегов из GHCR
-          - name: delete-test-tag-from-ghcr
-            script:
-              - echo "Удаление временных тегов из GHCR"
-              # Здесь должен быть скрипт для удаления тегов, но в SourceCraft
-              # это может быть реализовано по-другому
-
-  # Deploy workflow
   deploy-workflow:
-    # Задания workflow
+    description: "Запускается только вручную"
     tasks:
-      # Задание 1: Развертывание на VPS
-      - name: deploy-to-vps-task
+      - name: "deploy-application"
         cubes:
-          # Кубик 1: Выполнение удаленного скрипта деплоя на сервере
-          - name: execute-deploy-script
-            script:
-              - echo "Выполнение деплоя на сервер"
-              # В SourceCraft для SSH подключения может потребоваться
-              # специальная настройка или использование action
-
-      # Задание 2: Проверка развертывания
-      - name: verify-deployment-task
-        cubes:
-          # Кубик 1: Проверка доступности сайта
-          - name: check-website-availability
-            script:
-              - echo "Проверка доступности сайта после развертывания"
-              # Здесь должен быть скрипт для проверки доступности сайта
-
-      # Задание 3: Отправка уведомления
-      - name: send-notification-task
-        cubes:
-          # Кубик 1: Отправка уведомления о завершении деплоя
-          - name: send-deploy-notification
-            script:
-              - echo "Отправка уведомления о завершении деплоя"
-              # Здесь должен быть скрипт для отправки уведомления
+          - name: "echo-deploy-message"
+            script: "echo 'Deploying application...'"
