@@ -1,151 +1,236 @@
 # Конфигурация CI/CD для SourceCraft
 # Документация: https://sourcecraft.dev/portal/docs/ru/sourcecraft/operations/ci-cd
 
+# Файл определяет процессы непрерывной интеграции и доставки для проекта personal_website
+# Включает в себя тестирование, сборку Docker-образов, релиз и деплой приложения
+
 # Настройка событий-триггеров
+# Определяет при каких событиях запускать те или иные рабочие процессы
 on:
   # Запуск тестов при создании или обновлении pull request
+  # При открытии или изменении PR будет запущен процесс тестирования
   pull_request:
     - workflows: [test-workflow]
 
   # Запуск релиза при пуше в ветку main
+  # При пуше в основную ветку запускается процесс релиза
   push:
     - workflows: [release-workflow]
       filter:
         branches: ["main"]
 
+
 # Определение рабочих процессов
 workflows:
   # Рабочий процесс для тестирования
+  # Выполняет проверку кода, линтинг и запуск тестов
   test-workflow:
+    # Переменные окружения для тестового процесса
+    # Содержит настройки для запуска тестов и проверок кода
     env:
+      # Режим отладки Django
       DEBUG: true
+      # Секретный ключ Django (из секретов)
       SECRET_KEY: ${{ secrets.SECRET_KEY }}
+      # Имя проекта
       PROJECT_NAME: personal_website
+      # Настройки подключения к PostgreSQL для тестов
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_HOST: localhost
       POSTGRES_PORT: 5432
       POSTGRES_DB: personal_website
+      # Настройки почтового сервера (из секретов)
       EMAIL_HOST_USER: ${{ secrets.EMAIL_HOST_USER }}
       EMAIL_HOST_PASSWORD: ${{ secrets.EMAIL_HOST_PASSWORD }}
+      # Доменное имя сайта (из секретов)
       DOMAIN_NAME: ${{ secrets.DOMAIN_NAME }}
+      # Локаль для корректной работы с русским языком
       LANG: ru_RU.utf8
+      # Версия Python для установки
       PYTHON_VERSION: "3.12"
+      # Версия Node.js для установки
       NODE_VERSION: "latest"
     tasks:
       - name: cache-dependencies-task
         cubes:
           - name: cache-poetry
-            image: docker.io/library/python:3.12
-            script:
-              - python -m pip install --upgrade pip
-              - pip install poetry
-              - poetry install
-            env:
-              POETRY_CACHE_KEY: poetry-${{ hashFiles('**/poetry.lock') }}
+            uses: actions/setup-python@v5
+            with:
+              python-version: ${{ env.PYTHON_VERSION }}
 
+          - name: install-poetry
+            uses: snok/install-poetry@v1
+            with:
+              version: latest
+              virtualenvs-create: true
+              virtualenvs-in-project: true
+
+          - name: load-poetry-cache
+            uses: actions/cache@v4
+            with:
+              path: .venv
+              key: poetry-${{ hashFiles("**/poetry.lock") }}
+
+          - name: install-python-dependencies
+            run: poetry install
+
+          # Настройка Node.js и кэширование npm зависимостей
           - name: cache-npm
-            image: docker.io/library/node:latest
-            script:
-              - npm install
-            env:
-              NPM_CACHE_KEY: npm-${{ hashFiles('**/package-lock.json') }}
+            uses: actions/setup-node@v4
+            with:
+              node-version: ${{ env.NODE_VERSION }}
 
+          - name: load-npm-cache
+            uses: actions/cache@v4
+            with:
+              path: node_modules
+              key: npm-${{ hashFiles("**/package-lock.json") }}
+
+          - name: install-node-dependencies
+            run: npm install
+
+      # Задача линтинга кода - проверяет качество кода с помощью различных линтеров
       - name: lint-task
         needs: [cache-dependencies-task]
         cubes:
+          # Проверка Python кода с помощью Ruff
           - name: ruff-check
-            image: docker.io/library/python:3.12
-            script:
-              - python -m pip install --upgrade pip
-              - pip install poetry
-              - poetry install
-              - poetry run ruff check
+            uses: chartboost/ruff-action@v1
 
+          # Проверка типов Python с помощью MyPy
           - name: mypy-check
-            image: docker.io/library/python:3.12
-            script:
-              - python -m pip install --upgrade pip
-              - pip install poetry
-              - poetry install
-              - poetry run mypy .
+            run: poetry run mypy .
 
+          # Проверка JavaScript кода с помощью ESLint
           - name: eslint-check
-            image: docker.io/library/node:latest
-            script:
-              - npm install
-              - npx eslint . --ext .js,.jsx,.ts,.tsx
+            uses: eslint/action-eslint@v1
+            with:
+              config: .eslintrc.json
 
+          # Проверка Markdown файлов
           - name: markdownlint-check
-            image: docker.io/library/node:latest
-            script:
-              - npm install
-              - npx markdownlint-cli *.md docs/*.md
+            uses: DavidAnson/markdownlint-cli2-action@v18
+            with:
+              globs: |
+                *.md
+                docs/**/*.md
 
+      # Задача тестирования - запускает тесты приложения
       - name: test-task
         needs: [cache-dependencies-task]
         cubes:
-          - name: run-tests
-            image: docker.io/library/python:3.12
-            script:
-              - apt-get update && apt-get install -y wkhtmltopdf locales
-              - localedef -i ru_RU -c -f UTF-8 -A /usr/share/locale/locale.alias ru_RU.UTF-8
-              - python -m pip install --upgrade pip
-              - pip install poetry
-              - poetry install
-              - npm install
-              - poetry run python personal_website/manage.py makemigrations --dry-run --check
-              - poetry run python personal_website/manage.py collectstatic --noinput
-              - poetry run pytest
-            artifacts:
-              paths:
-                - htmlcov/
-                - coverage.xml
+          # Установка системных зависимостей, необходимых для тестов
+          - name: setup-system-deps
+            run: |
+              sudo apt-get update
+              sudo apt-get install -y wkhtmltopdf locales
+              sudo localedef -i ru_RU -c -f UTF-8 -A /usr/share/locale/locale.alias ${{ env.LANG }}
+
+          # Проверка наличия непримененных миграций Django
+          - name: run-django-migrations-check
+            run: poetry run python personal_website/manage.py makemigrations --dry-run --check
+
+          # Сбор статических файлов
+          - name: collect-static-files
+            run: poetry run python personal_website/manage.py collectstatic --noinput
+
+          # Запуск тестов с помощью pytest
+          - name: run-pytest
+            run: poetry run pytest
+
+          # Загрузка отчета о покрытии кода тестами
+          - name: upload-coverage-report
+            uses: actions/upload-artifact@v4
+            with:
+              name: coverage-html-report
+              path: htmlcov/
 
   # Рабочий процесс для сборки Docker-образа
+  # Собирает и тестирует Docker-образ приложения
   build-workflow:
+    # Переменные окружения для процесса сборки
+    # Содержит настройки для сборки и тестирования Docker-образа
     env:
+      # Режим отладки Django
       DEBUG: true
+      # Секретный ключ Django (из секретов)
       SECRET_KEY: ${{ secrets.SECRET_KEY }}
+      # Имя проекта
       PROJECT_NAME: personal_website
+      # Настройки подключения к PostgreSQL
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_HOST: localhost
       POSTGRES_PORT: 5432
       POSTGRES_DB: personal_website
+      # Настройки почтового сервера (из секретов)
       EMAIL_HOST_USER: ${{ secrets.EMAIL_HOST_USER }}
       EMAIL_HOST_PASSWORD: ${{ secrets.EMAIL_HOST_PASSWORD }}
+      # Доменное имя сайта (из секретов)
       DOMAIN_NAME: ${{ secrets.DOMAIN_NAME }}
+      # Локаль для корректной работы с русским языком
       LANG: ru_RU.utf8
+      # Версия Python для установки
       PYTHON_VERSION: "3.12"
+      # Версия Node.js для установки
       NODE_VERSION: "latest"
+      # Теги для Docker-образов
       TEST_TAG: test
       TESTED_TAG: tested
+      # Полные имена Docker-образов с тегами
       TEST_IMAGE_NAME: ghcr.io/${{ repository }}:${TEST_TAG}
       TESTED_IMAGE_NAME: ghcr.io/${{ repository }}:${TESTED_TAG}
     tasks:
+      # Задача сборки Docker-образа
       - name: build-image-task
         needs: [test-task]
         cubes:
-          - name: build-and-push-test-image
-            image: docker.io/library/docker:latest
-            script:
-              - docker build -t $TEST_IMAGE_NAME -f personal_website/Dockerfile .
-              - docker login ghcr.io -u ${{ secrets.GITHUB_ACTOR }} -p ${{ secrets.GITHUB_TOKEN }}
-              - docker push $TEST_IMAGE_NAME
+          # Настройка Docker Buildx для кросс-платформенной сборки
+          - name: setup-docker-buildx
+            uses: docker/setup-buildx-action@v3
 
+          # Авторизация в GitHub Container Registry
+          - name: login-to-ghcr
+            uses: docker/login-action@v3
+            with:
+              registry: ghcr.io
+              username: ${{ github.actor }}
+              password: ${{ secrets.GITHUB_TOKEN }}
+
+          # Сборка и пуш тестового образа в GitHub Container Registry
+          - name: build-and-push-test-image
+            uses: docker/build-push-action@v6
+            with:
+              context: .
+              file: personal_website/Dockerfile
+              push: true
+              tags: ${{ env.TEST_IMAGE_NAME }}
+
+      # Задача тестирования собранного образа
       - name: test-build-task
         needs: [build-image-task]
         cubes:
-          - name: test-in-container
-            image: docker.io/library/docker:latest
-            script:
-              - docker login ghcr.io -u ${{ secrets.GITHUB_ACTOR }} -p ${{ secrets.GITHUB_TOKEN }}
-              - docker pull $TEST_IMAGE_NAME
-              - docker tag $TEST_IMAGE_NAME $TESTED_IMAGE_NAME
-              - docker push $TESTED_IMAGE_NAME
+          # Повторная авторизация в GitHub Container Registry
+          - name: login-to-ghcr
+            uses: docker/login-action@v3
+            with:
+              registry: ghcr.io
+              username: ${{ github.actor }}
+              password: ${{ secrets.GITHUB_TOKEN }}
+
+          # Получение тестового образа для проверки
+          - name: pull-test-image
+            run: docker pull ${{ env.TEST_IMAGE_NAME }}
+
+          # Пометка образа как протестированного и пуш в реестр
+          - name: tag-as-tested
+            run: |
+              docker tag ${{ env.TEST_IMAGE_NAME }} ${{ env.TESTED_IMAGE_NAME }}
+              docker push ${{ env.TESTED_IMAGE_NAME }}
 
   # Рабочий процесс для релиза
+  # Помечает протестированный образ как релизный и пушит в реестры
   release-workflow:
     env:
       TESTED_TAG: tested
@@ -154,36 +239,61 @@ workflows:
       GITHUB_RELEASE_IMAGE_NAME: ghcr.io/${{ repository }}:${LATEST_TAG}
       DOCKER_RELEASE_IMAGE_NAME: ${{ repository }}:${LATEST_TAG}
     tasks:
+      # Задача переименования и пуша релизного образа
       - name: retag-and-push-task
         cubes:
-          - name: retag-and-push
-            image: docker.io/library/docker:latest
-            script:
-              - docker login ghcr.io -u ${{ secrets.GITHUB_ACTOR }} -p ${{ secrets.GITHUB_TOKEN }}
-              - docker pull $TESTED_IMAGE_NAME
-              - docker tag $TESTED_IMAGE_NAME $GITHUB_RELEASE_IMAGE_NAME
-              - docker push $GITHUB_RELEASE_IMAGE_NAME
-              - docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
-              - docker tag $TESTED_IMAGE_NAME $DOCKER_RELEASE_IMAGE_NAME
-              - docker push $DOCKER_RELEASE_IMAGE_NAME
+          # Авторизация в GitHub Container Registry
+          - name: login-to-ghcr
+            uses: docker/login-action@v3
+            with:
+              registry: ghcr.io
+              username: ${{ github.actor }}
+              password: ${{ secrets.GITHUB_TOKEN }}
+
+          # Получение протестированного образа
+          - name: pull-tested-image
+            run: docker pull ${{ env.TESTED_IMAGE_NAME }}
+
+          # Переименование и пуш образа в GHCR как latest
+          - name: retag-for-ghcr
+            run: |
+              docker tag ${{ env.TESTED_IMAGE_NAME }} ${{ env.GITHUB_RELEASE_IMAGE_NAME }}
+              docker push ${{ env.GITHUB_RELEASE_IMAGE_NAME }}
+
+          # Авторизация в Docker Hub
+          - name: login-to-docker-hub
+            uses: docker/login-action@v3
+            with:
+              username: ${{ secrets.DOCKER_USERNAME }}
+              password: ${{ secrets.DOCKER_PASSWORD }}
+
+          # Переименование и пуш образа в Docker Hub как latest
+          - name: retag-for-docker-hub
+            run: |
+              docker tag ${{ env.TESTED_IMAGE_NAME }} ${{ env.DOCKER_RELEASE_IMAGE_NAME }}
+              docker push ${{ env.DOCKER_RELEASE_IMAGE_NAME }}
 
   # Рабочий процесс для деплоя
+  # Выполняет деплой приложения на production сервер
   deploy-workflow:
+    # Переменные окружения для процесса деплоя
+    # Содержит настройки подключения к production серверу
     env:
+      # Параметры подключения к серверу (из секретов)
       SERVER_HOST: ${{ secrets.SERVER_HOST }}
       SERVER_USER: ${{ secrets.SERVER_USER }}
     tasks:
+      # Задача деплоя приложения на VPS сервер
       - name: deploy-task
         needs: [release-workflow]
         cubes:
+          # Подключение по SSH и выполнение скрипта обновления
           - name: deploy-to-vps
-            image: docker.io/library/alpine:latest
-            script:
-              - apk add --no-cache openssh-client
-              - mkdir -p ~/.ssh
-              - echo "$DEPLOY_SSH_KEY" > ~/.ssh/id_rsa
-              - chmod 600 ~/.ssh/id_rsa
-              - ssh-keyscan -H $SERVER_HOST >> ~/.ssh/known_hosts
-              - ssh -i ~/.ssh/id_rsa $SERVER_USER@$SERVER_HOST "cd /root/personal-website && bash personal_website/scripts/server/update.sh"
-            env:
-              DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+            uses: appleboy/ssh-action@v1.2.3
+            with:
+              host: ${{ env.SERVER_HOST }}
+              username: ${{ env.SERVER_USER }}
+              key: ${{ secrets.DEPLOY_SSH_KEY }}
+              script: |
+                cd /root/personal-website
+                bash personal_website/scripts/server/update.sh
