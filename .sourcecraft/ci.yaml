@@ -110,7 +110,7 @@ workflows:
               # Запуск тестов внутри контейнера
               - |
                 docker run --rm \
-                  --env SOURCECRAFT_CI="$SOURCECRAFT_CI"
+                  --env SOURCECRAFT_CI="$SOURCECRAFT_CI" \
                   --env SECRET_KEY="$SECRET_KEY" \
                   --env DEBUG="True" \
                   --entrypoint "" \
