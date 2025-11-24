@@ -80,9 +80,7 @@ workflows:
       TESTED_TAG: "tested"                      # Тег для протестированного образа
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}  # Имя пользователя Docker Hub
       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}  # Пароль пользователя Docker Hub
-      TEST_IMAGE_NAME: $DOCKER_USERNAME/$PROJECT_NAME:$TEST_TAG      # Полное имя тестового образа
-      TESTED_IMAGE_NAME: $DOCKER_USERNAME/$PROJECT_NAME:$TESTED_TAG  # Полное имя протестированного образа
-      SECRET_KEY: ${{ secrets.SECRET_KEY }}
+      SECRET_KEY: ${{ secrets.SECRET_KEY }}     # Секретный ключ для Django
 
     tasks:
       # Задача сборки Docker-образа
@@ -95,9 +93,9 @@ workflows:
               # Авторизация в Docker Hub
               - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
               # Сборка Docker-образа с использованием Dockerfile из директории personal_website
-              - docker build -t $TEST_IMAGE_NAME -f personal_website/Dockerfile .
+              - docker build -t $DOCKER_USERNAME/$PROJECT_NAME:$TEST_TAG -f personal_website/Dockerfile .
               # Отправка собранного образа в Docker Hub
-              - docker push $TEST_IMAGE_NAME
+              - docker push $DOCKER_USERNAME/$PROJECT_NAME:$TEST_TAG
 
           # Cube для запуска тестов внутри Docker-контейнера
           - name: "run-tests-in-container"
@@ -106,7 +104,7 @@ workflows:
               # Авторизация в Docker Hub
               - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
               # Получение тестового образа из реестра
-              - docker pull $TEST_IMAGE_NAME
+              - docker pull $DOCKER_USERNAME/$PROJECT_NAME:$TEST_TAG
               # Запуск тестов внутри контейнера
               - |
                 docker run --rm \
@@ -114,12 +112,12 @@ workflows:
                   --env SECRET_KEY="$SECRET_KEY" \
                   --env DEBUG="True" \
                   --entrypoint "" \
-                  $TEST_IMAGE_NAME \
-                  poetry run pytest
+                  $DOCKER_USERNAME/$PROJECT_NAME:$TEST_TAG \
+                  bash -c "poetry run pytest"
               # Присвоение тега "tested" образу после успешного прохождения тестов
-              - docker tag $TEST_IMAGE_NAME $TESTED_IMAGE_NAME
+              - docker tag $DOCKER_USERNAME/$PROJECT_NAME:$TEST_TAG $DOCKER_USERNAME/$PROJECT_NAME:$TESTED_TAG
               # Отправка протестированного образа в реестр
-              - docker push $TESTED_IMAGE_NAME
+              - docker push $DOCKER_USERNAME/$PROJECT_NAME:$TESTED_TAG
 
   # release-workflow - запускается при пуше в ветку main
   release-workflow:
