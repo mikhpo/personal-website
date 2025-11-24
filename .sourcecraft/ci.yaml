@@ -26,10 +26,10 @@ workflows:
           - name: "ruff-mypy"
             image: docker.io/library/python:3.13-bookworm
             script:
-              - "pip install poetry"
-              - "poetry install"
-              - "poetry run ruff check"
-              - "poetry run mypy ."
+              - pip install poetry
+              - poetry install
+              - poetry run ruff check
+              - poetry run mypy .
 
       # Выполнить проверки утилитами Node.js
       - name: "node-check"
@@ -37,9 +37,9 @@ workflows:
           - name: "eslint-markdown"
             image: docker.io/library/node
             script:
-              - "npm install"
-              - "npx eslint . --ext .js,.jsx,.ts,.tsx"
-              - "npx markdownlint-cli *.md docs/*.md"
+              - npm install
+              - npx eslint . --ext .js,.jsx,.ts,.tsx
+              - npx markdownlint-cli *.md docs/*.md
 
   # Тестирование
   test-workflow:
@@ -55,12 +55,12 @@ workflows:
           - name: "pytest"
             image: docker.io/library/python:3.13-bookworm
             script:
-              - "apt-get update"
-              - "apt-get install -y wkhtmltopdf locales"
-              - "localedef -i ru_RU -c -f UTF-8 -A /usr/share/locale/locale.alias ru_RU.UTF-8"
-              - "pip install poetry"
-              - "poetry install"
-              - "poetry run pytest"
+              - apt-get update
+              - apt-get install -y wkhtmltopdf locales
+              - localedef -i ru_RU -c -f UTF-8 -A /usr/share/locale/locale.alias ru_RU.UTF-8
+              - pip install poetry
+              - poetry install
+              - poetry run pytest
 
       # Тестирование кода JavaScript
       - name: "node-test"
@@ -68,17 +68,56 @@ workflows:
           - name: "node"
             image: docker.io/library/node
             script:
-              - "npm install"
-              - "npm test"
+              - npm install
+              - npm test
 
-  # Запускается при пуше в любую ветку, если есть открытый pull request
+  # Сборка и тестирование образа приложения
   build-workflow:
+    # Переменные окружения для процесса сборки Docker-образа
+    env:
+      PROJECT_NAME: "personal_website"          # Имя проекта
+      TEST_TAG: "test"                          # Тег для тестового образа
+      TESTED_TAG: "tested"                      # Тег для протестированного образа
+      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}  # Имя пользователя Docker Hub
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}  # Пароль пользователя Docker Hub
+      SECRET_KEY: ${{ secrets.SECRET_KEY }}     # Секретный ключ для Django
+
     tasks:
-      - name: "build-application"
+      # Задача сборки Docker-образа
+      - name: "build-test-docker"
         cubes:
-          - name: "echo-build-message"
+          # Cube для сборки и отправки Docker-образа в реестр
+          - name: "build-and-push-image"
+            image: docker.io/library/docker:latest
             script:
-              - "echo 'Building application...'"
+              # Авторизация в Docker Hub
+              - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+              # Сборка Docker-образа с использованием Dockerfile из директории personal_website
+              - docker build -t $DOCKER_USERNAME/$PROJECT_NAME:$TEST_TAG -f personal_website/Dockerfile .
+              # Отправка собранного образа в Docker Hub
+              - docker push $DOCKER_USERNAME/$PROJECT_NAME:$TEST_TAG
+
+          # Cube для запуска тестов внутри Docker-контейнера
+          - name: "run-tests-in-container"
+            image: docker.io/library/docker:latest
+            script:
+              # Авторизация в Docker Hub
+              - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+              # Получение тестового образа из реестра
+              - docker pull $DOCKER_USERNAME/$PROJECT_NAME:$TEST_TAG
+              # Запуск тестов внутри контейнера
+              - |
+                docker run --rm \
+                  --env SOURCECRAFT_CI="$SOURCECRAFT_CI" \
+                  --env SECRET_KEY="$SECRET_KEY" \
+                  --env DEBUG="True" \
+                  --entrypoint "" \
+                  $DOCKER_USERNAME/$PROJECT_NAME:$TEST_TAG \
+                  bash -c "poetry run pytest"
+              # Присвоение тега "tested" образу после успешного прохождения тестов
+              - docker tag $DOCKER_USERNAME/$PROJECT_NAME:$TEST_TAG $DOCKER_USERNAME/$PROJECT_NAME:$TESTED_TAG
+              # Отправка протестированного образа в реестр
+              - docker push $DOCKER_USERNAME/$PROJECT_NAME:$TESTED_TAG
 
   # release-workflow - запускается при пуше в ветку main
   release-workflow:
