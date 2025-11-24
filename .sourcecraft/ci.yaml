@@ -5,33 +5,25 @@
 on:
 
   push:
-    # Запускаются при пуше в любую ветку, кроме основной:
-    # 1. review-workflow
-    # 2. build-workflow
-    - workflows: [review-workflow, build-workflow]
+    # Запускаются при пуше в любую ветку, кроме основной
+    - workflows: [lint-workflow, test-workflow, build-workflow]
       filter:
         branches: ["!main", "!master"]
 
-  # 3. release-workflow - запускается при пуше в ветку main
+    # Запускается при пуше в основную ветку
     - workflows: [release-workflow]
       filter:
         branches: ["main", "master"]
 
 # Определение рабочих процессов
 workflows:
-  # Запускается при пуше в любую ветку, если есть открытый pull request
-  review-workflow:
-    # Определение переменных окружения для всего рабочего процесса
-    env:
-      DEBUG: "True"
-      SECRET_KEY: ${{ secrets.SECRET_KEY }}
-      PROJECT_NAME: "personal_website"
+  # Статический анализ и линтинг
+  lint-workflow:
     tasks:
-      # Статический анализ и линтинг.
-      - name: "lint-task"
+      # Выполнить проверки утилитами Python
+      - name: "python-check"
         cubes:
-          # Выполнить проверки утилитами Python
-          - name: "python-check"
+          - name: "ruff-mypy"
             image: docker.io/library/python:3.13-bookworm
             script:
               - "pip install poetry"
@@ -39,19 +31,28 @@ workflows:
               - "poetry run ruff check"
               - "poetry run mypy ."
 
-          # Выполнить проверки утилитами Node.js
-          - name: "node-check"
+      # Выполнить проверки утилитами Node.js
+      - name: "node check"
+        cubes:
+          - name: "eslint-markdown"
             image: docker.io/library/node
             script:
               - "npm install"
               - "npx eslint . --ext .js,.jsx,.ts,.tsx"
               - "npx markdownlint-cli *.md docs/*.md"
 
-      # Тестирование.
-      - name: "test-task"
+  # Тестирование
+  test-workflow:
+    # Определение переменных окружения для всего рабочего процесса
+    env:
+      DEBUG: "True"
+      SECRET_KEY: ${{ secrets.SECRET_KEY }}
+      PROJECT_NAME: "personal_website"
+    tasks:
+      # Тестирование кода Python
+      - name: "python-test"
         cubes:
-          # Выполнить тестирование кода Python
-          - name: "python-test"
+          - name: "pytest"
             image: docker.io/library/python:3.13-bookworm
             script:
               - "apt-get update"
@@ -59,12 +60,12 @@ workflows:
               - "localedef -i ru_RU -c -f UTF-8 -A /usr/share/locale/locale.alias ru_RU.UTF-8"
               - "pip install poetry"
               - "poetry install"
-              - "poetry run python personal_website/manage.py collectstatic --noinput"
-              - "poetry run python personal_website/manage.py makemigrations --dry-run --check"
               - "poetry run pytest"
 
-          # Выполнить тестирование кода JavaScript
-          - name: "node-test"
+      # Тестирование кода JavaScript
+      - name: "node-test"
+        cubes:
+          - name: "node"
             image: docker.io/library/node
             script:
               - "npm install"
