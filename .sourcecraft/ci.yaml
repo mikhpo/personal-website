@@ -6,9 +6,9 @@ on:
 
   push:
     # Запускаются при пуше в любую ветку, кроме основной:
-    # 1. test-workflow
+    # 1. review-workflow
     # 2. build-workflow
-    - workflows: [test-workflow, build-workflow]
+    - workflows: [review-workflow, build-workflow]
       filter:
         branches: ["!main", "!master"]
 
@@ -20,13 +20,55 @@ on:
 # Определение рабочих процессов
 workflows:
   # Запускается при пуше в любую ветку, если есть открытый pull request
-  test-workflow:
+  review-workflow:
+    # Определение переменных окружения для всего рабочего процесса
+    env:
+      DEBUG: "True"
+      SECRET_KEY: ${{ secrets.SECRET_KEY }}
+      PROJECT_NAME: "personal_website"
     tasks:
-      - name: "run-tests"
+      # Статический анализ и линтинг.
+      - name: "lint-task"
         cubes:
-          - name: "echo-test-message"
+          # Выполнить проверки утилитами Python
+          - name: "python-check"
+            image: docker.io/library/python:3.13-bookworm
             script:
-              - "echo 'Running tests...'"
+              - "pip install poetry"
+              - "poetry install"
+              - "poetry run ruff check"
+              - "poetry run mypy ."
+
+          # Выполнить проверки утилитами Node.js
+          - name: "node-check"
+            image: docker.io/library/node
+            script:
+              - "npm install"
+              - "npx eslint . --ext .js,.jsx,.ts,.tsx"
+              - "npx markdownlint-cli *.md docs/*.md"
+
+      # Тестирование.
+      - name: "test-task"
+        cubes:
+          # Выполнить тестирование кода Python
+          - name: "python-test"
+            image: docker.io/library/python:3.13-bookworm
+            script:
+              - "apt-get update"
+              - "apt-get install -y wkhtmltopdf locales"
+              - "localedef -i ru_RU -c -f UTF-8 -A /usr/share/locale/locale.alias ru_RU.UTF-8"
+              - "pip install poetry"
+              - "poetry install"
+              - "poetry run python personal_website/manage.py collectstatic --noinput"
+              - "poetry run python personal_website/manage.py makemigrations --dry-run --check"
+              - "poetry run pytest"
+
+          # Выполнить тестирование кода JavaScript
+          - name: "node-test"
+            image: docker.io/library/node
+            script:
+              - "npm install"
+              - "npm test"
 
   # Запускается при пуше в любую ветку, если есть открытый pull request
   build-workflow:
