@@ -80,8 +80,8 @@ workflows:
       TESTED_TAG: "tested"                      # Тег для протестированного образа
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}  # Имя пользователя Docker Hub
       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}  # Пароль пользователя Docker Hub
-      TEST_IMAGE_NAME: ${DOCKER_USERNAME}/${PROJECT_NAME}:${TEST_TAG}      # Полное имя тестового образа
-      TESTED_IMAGE_NAME: ${DOCKER_USERNAME}/${PROJECT_NAME}:${TESTED_TAG}  # Полное имя протестированного образа
+      TEST_IMAGE_NAME: $DOCKER_USERNAME/$PROJECT_NAME:$TEST_TAG      # Полное имя тестового образа
+      TESTED_IMAGE_NAME: $DOCKER_USERNAME/$PROJECT_NAME:$TESTED_TAG  # Полное имя протестированного образа
       SECRET_KEY: ${{ secrets.SECRET_KEY }}
 
     tasks:
