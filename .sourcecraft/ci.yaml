@@ -9,12 +9,12 @@ on:
     # 2. build-workflow - запускается при пуше в любую ветку, если есть открытый pull request
     - workflows: [test-workflow, build-workflow]
       filter:
-          branches: "!main"
+        branches: ["!main", "!master"]
 
   # 3. release-workflow - запускается при пуше в ветку main
     - workflows: [release-workflow]
       filter:
-        branches: "main"
+        branches: ["main", "master"]
 
 # Определение рабочих процессов
 workflows:
