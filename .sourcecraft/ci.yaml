@@ -4,7 +4,7 @@
 # Определение событий-триггеров для запуска рабочих процессов.
 on:
   # 1. test-workflow - запускается при пуше в любую ветку, если есть открытый pull request
-  # 2. build-workflow - запускается одновременно с test-workflow по тем же триггерам
+  # 2. build-workflow - запускается при пуше в любую ветку, если есть открытый pull request
   pull_request:
     - workflows: [test-workflow, build-workflow]
 
@@ -22,7 +22,8 @@ workflows:
       - name: "run-tests"
         cubes:
           - name: "echo-test-message"
-            script: "echo 'Running tests...'"
+            script:
+              - "echo 'Running tests...'"
 
   # Запускается при пуше в любую ветку, если есть открытый pull request
   build-workflow:
@@ -30,20 +31,23 @@ workflows:
       - name: "build-application"
         cubes:
           - name: "echo-build-message"
-            script: "echo 'Building application...'"
+            script:
+              - "echo 'Building application...'"
 
-  # Запускается при пуше в ветку main
+  # release-workflow - запускается при пуше в ветку main
   release-workflow:
     tasks:
       - name: "create-release"
         cubes:
           - name: "echo-release-message"
-            script: "echo 'Creating release...'"
+            script:
+              - "echo 'Creating release...'"
 
-  # Запускается только вручную
+  # Запускается вручную
   deploy-workflow:
     tasks:
       - name: "deploy-application"
         cubes:
           - name: "echo-deploy-message"
-            script: "echo 'Deploying application...'"
+            script:
+              - "echo 'Deploying application...'"
