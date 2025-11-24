@@ -22,68 +22,8 @@ workflows:
   # Запускается при пуше в любую ветку, если есть открытый pull request
   test-workflow:
     tasks:
-      - name: "cache-task"
-        cubes:
-          # Установка Python
-          - name: "setup-python"
-            action: actions/setup-python@v5
-            with:
-              python-version: "3.12"
-
-          # Установка Node.js
-          - name: "setup-node"
-            action: actions/setup-node@v4
-            with:
-              node-version: "latest"
-
-          # Установка Poetry
-          - name: "install-poetry"
-            script:
-              - "python -m pip install --upgrade pip"
-              - "pip install poetry"
-
-          # Установка зависимостей Poetry
-          - name: "install-poetry-dependencies"
-            script:
-              - "poetry install"
-
-          # Установка зависимостей npm
-          - name: "install-npm-dependencies"
-            script:
-              - "npm install"
-
-          # Кэширование зависимостей Poetry
-          - name: "cache-poetry"
-            action: actions/cache@v4
-            with:
-              key: poetry-${{ hashFiles('**/poetry.lock') }}
-              path: .venv
-
-          # Кэширование зависимостей npm
-          - name: "cache-npm"
-            action: actions/cache@v4
-            with:
-              key: npm-${{ hashFiles('**/package-lock.json') }}
-              path: node_modules
-
       - name: "lint-task"
         cubes:
-          # Восстановление кэша Poetry
-          - name: "restore-poetry-cache"
-            action: actions/cache@v4
-            with:
-              key: poetry-${{ hashFiles('**/poetry.lock') }}
-              path: .venv
-              restore-keys: poetry-
-
-          # Восстановление кэша npm
-          - name: "restore-npm-cache"
-            action: actions/cache@v4
-            with:
-              key: npm-${{ hashFiles('**/package-lock.json') }}
-              path: node_modules
-              restore-keys: npm-
-
           # Установка Python
           - name: "setup-python"
             action: actions/setup-python@v5
@@ -96,8 +36,8 @@ workflows:
             with:
               node-version: "latest"
 
-          # Установка зависимостей (если кэш не найден)
-          - name: "install-dependencies-if-needed"
+          # Установка зависимостей
+          - name: "install-dependencies"
             script:
               - "poetry install"
               - "npm install"
@@ -124,22 +64,6 @@ workflows:
 
       - name: "test-task"
         cubes:
-          # Восстановление кэша Poetry
-          - name: "restore-poetry-cache"
-            action: actions/cache@v4
-            with:
-              key: poetry-${{ hashFiles('**/poetry.lock') }}
-              path: .venv
-              restore-keys: poetry-
-
-          # Восстановление кэша npm
-          - name: "restore-npm-cache"
-            action: actions/cache@v4
-            with:
-              key: npm-${{ hashFiles('**/package-lock.json') }}
-              path: node_modules
-              restore-keys: npm-
-
           # Установка Python
           - name: "setup-python"
             action: actions/setup-python@v5
@@ -159,8 +83,8 @@ workflows:
               - "sudo apt-get install -y wkhtmltopdf locales"
               - "sudo localedef -i ru_RU -c -f UTF-8 -A /usr/share/locale/locale.alias ru_RU.UTF-8"
 
-          # Установка зависимостей (если кэш не найден)
-          - name: "install-dependencies-if-needed"
+          # Установка зависимостей
+          - name: "install-dependencies"
             script:
               - "poetry install"
               - "npm install"
