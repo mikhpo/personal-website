@@ -103,16 +103,6 @@ workflows:
               - "echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin"
               # Получение тестового образа из реестра
               - "docker pull ${TEST_IMAGE_NAME}"
-              # Подготовка команды для запуска в контейнере
-              - "echo 'Подготовка к запуску тестов в контейнере'"
-              # Запуск collectstatic внутри контейнера
-              - |
-                docker run --rm \
-                  --env SECRET_KEY="${{ secrets.SECRET_KEY }}" \
-                  --env DEBUG="True" \
-                  --entrypoint "" \
-                  ${TEST_IMAGE_NAME} \
-                  poetry run python personal_website/manage.py collectstatic --noinput
               # Запуск тестов внутри контейнера
               - |
                 docker run --rm \
