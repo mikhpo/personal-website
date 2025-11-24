@@ -3,7 +3,7 @@ services:
   # Веб-сайт на Django. Запускается либо через Gunicorn, либо через команду runserver.
   # Способ запуска и параметры запуска определяются скриптом entrypoint.sh.
   website:
-    image: ${DOCKER_REGISTRY}/mikhpo/personal-website:latest
+    image: ${DOCKER_REGISTRY:-docker.io}/mikhpo/personal-website:latest
     platform: "linux/amd64"
     build:
       context: .
@@ -23,11 +23,11 @@ services:
     ports:
       - 8000:8000
     volumes:
-      - ${STORAGE_ROOT}:/srv/website/storage:rw
-      - ${STATIC_ROOT}:/srv/website/static:rw
-      - ${BACKUP_ROOT}:/srv/website/backups:rw
-      - ${LOGS_ROOT}:/srv/website/logs:rw
-      - ${TEMP_ROOT}:/srv/website/temp:rw
+      - ${STORAGE_ROOT:-./storage/}:/srv/website/storage:rw
+      - ${STATIC_ROOT:-./static/}:/srv/website/static:rw
+      - ${BACKUP_ROOT:-./backups/}:/srv/website/backups:rw
+      - ${LOGS_ROOT:-./logs/}:/srv/website/logs:rw
+      - ${TEMP_ROOT:-./temp/}:/srv/website/temp:rw
       - ./htmlcov/:/srv/website/htmlcov:rw
     depends_on:
       postgres:
@@ -76,13 +76,13 @@ services:
       - STATIC_ROOT=/srv/website/static
     env_file: .env
     ports:
-      - ${NGINX_PORT}:${NGINX_PORT}
+      - ${NGINX_PORT:-80}:${NGINX_PORT:-80}
       - 443:443
     volumes:
       - ./nginx/templates:/etc/nginx/templates:ro
       - ./nginx/conf.d:/etc/nginx/conf.d:rw
-      - ${STORAGE_ROOT}:/srv/website/storage:ro
-      - ${STATIC_ROOT}:/srv/website/static:ro
+      - ${STORAGE_ROOT:-./storage/}:/srv/website/storage:ro
+      - ${STATIC_ROOT:-./static/}:/srv/website/static:ro
       - nginx-certs:/etc/letsencrypt/live/${DOMAIN_NAME}:rw
     depends_on:
       website:

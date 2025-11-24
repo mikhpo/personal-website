@@ -62,7 +62,7 @@ workflows:
               POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
               POSTGRES_DB: ${POSTGRES_DB}
             script:
-              - timeout 30 bash -c 'until pg_isready -U ${POSTGRES_USER}; do sleep 1; done'
+              - bash tools/pg-isready.sh
 
           # Установка системных зависимостей
           - name: "install-system-dependencies"
