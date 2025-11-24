@@ -58,9 +58,9 @@ workflows:
           - name: "python-test"
             image: docker.io/library/python:3.13
             script:
-              - "sudo apt-get update"
-              - "sudo apt-get install -y wkhtmltopdf locales"
-              - "sudo localedef -i ru_RU -c -f UTF-8 -A /usr/share/locale/locale.alias ru_RU.UTF-8"
+              - "apt-get update"
+              - "apt-get install -y wkhtmltopdf locales"
+              - "localedef -i ru_RU -c -f UTF-8 -A /usr/share/locale/locale.alias ru_RU.UTF-8"
               - "pip install poetry"
               - "poetry install"
               - "poetry run python personal_website/manage.py collectstatic --noinput"
