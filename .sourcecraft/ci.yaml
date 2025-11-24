@@ -32,7 +32,7 @@ workflows:
               - "poetry run mypy ."
 
       # Выполнить проверки утилитами Node.js
-      - name: "node check"
+      - name: "node-check"
         cubes:
           - name: "eslint-markdown"
             image: docker.io/library/node
