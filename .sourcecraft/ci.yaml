@@ -10,11 +10,13 @@ on:
     - workflows: [test-workflow, build-workflow]
       filter:
         branches: ["!main", "!master"]
+      skip_on_pull_request: false
 
   # 3. release-workflow - запускается при пуше в ветку main
     - workflows: [release-workflow]
       filter:
         branches: ["main", "master"]
+      skip_on_pull_request: false
 
 # Определение рабочих процессов
 workflows:
