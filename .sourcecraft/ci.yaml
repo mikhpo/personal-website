@@ -82,7 +82,7 @@ workflows:
       TESTED_IMAGE_NAME: ${{ secrets.DOCKER_USERNAME }}/${PROJECT_NAME}:${TESTED_TAG}  # Полное имя протестированного образа
     tasks:
       # Задача сборки Docker-образа
-      - name: "build-docker"
+      - name: "build-test-docker"
         cubes:
           # Cube для сборки и отправки Docker-образа в реестр
           - name: "build-and-push-image"
@@ -95,9 +95,6 @@ workflows:
               # Отправка собранного образа в Docker Hub
               - "docker push ${TEST_IMAGE_NAME}"
 
-      # Задача тестирования Docker-образа
-      - name: "test-docker"
-        cubes:
           # Cube для запуска тестов внутри Docker-контейнера
           - name: "run-tests-in-container"
             image: docker.io/library/docker:latest
