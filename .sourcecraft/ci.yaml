@@ -6,9 +6,9 @@ on:
 
   push:
     # Запускаются при пуше в любую ветку, кроме основной:
-    # 1. test-workflow
+    # 1. review-workflow
     # 2. build-workflow
-    - workflows: [test-workflow, build-workflow]
+    - workflows: [review-workflow, build-workflow]
       filter:
         branches: ["!main", "!master"]
 
@@ -20,14 +20,25 @@ on:
 # Определение рабочих процессов
 workflows:
   # Запускается при пуше в любую ветку, если есть открытый pull request
-  test-workflow:
+  review-workflow:
+    # Определение переменных окружения для всего рабочего процесса
+    env:
+      DEBUG: "True"
+      PROJECT_NAME: "personal_website"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
+      POSTGRES_HOST: "localhost"
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: "personal_website"
+      PYTHON_VERSION: "3.13"
+      NODE_VERSION: "latest"
     tasks:
       # Статический анализ и линтинг.
       - name: "lint-task"
         cubes:
           # Выполнить проверки утилитами Python
           - name: "python-check"
-            image: docker.io/library/python:3.13
+            image: docker.io/library/python:${PYTHON_VERSION}
             script:
               - "pip install poetry"
               - "poetry install"
@@ -36,7 +47,7 @@ workflows:
 
           # Выполнить проверки утилитами Node.js
           - name: "node-check"
-            image: docker.io/library/node
+            image: docker.io/library/node:${NODE_VERSION}
             script:
               - "npm install"
               - "npx eslint . --ext .js,.jsx,.ts,.tsx"
@@ -54,7 +65,7 @@ workflows:
 
           # Выполнить тестирование кода Python
           - name: "python-test"
-            image: docker.io/library/python:3.13
+            image: docker.io/library/python:${PYTHON_VERSION}
             script:
               - "pip install poetry"
               - "poetry install"
@@ -64,7 +75,7 @@ workflows:
 
           # Выполнить тестирование кода JavaScript
           - name: "node-test"
-            image: docker.io/library/node
+            image: docker.io/library/node:${NODE_VERSION}
             script:
               - "npm install"
               - "npm test"
