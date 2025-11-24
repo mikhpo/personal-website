@@ -1,48 +1,11 @@
-# Конфигурация CI/CD для SourceCraft
-# Функционально повторяет имеющиеся GitHub Workflow с учетом ограничения не более 3 тасок на 1 рабочий процесс
-
-# Определение событий-триггеров для запуска рабочих процессов.
 on:
   push:
-    - workflows: test-workflow
-      filter:
-        branches: ["**"]
-      skip_on_pull_request: false
 
-# Определение рабочих процессов
 workflows:
-  # Запускается при пуше в любую ветку, если есть открытый pull request
   test-workflow:
     tasks:
-      - name: "run-tests"
+      - name: "test-task"
         cubes:
-          - name: "echo-test-message"
+          - name: "echo-message"
             script:
-              - "echo 'Running tests...'"
-
-  # Запускается при пуше в любую ветку, если есть открытый pull request
-  build-workflow:
-    tasks:
-      - name: "build-application"
-        cubes:
-          - name: "echo-build-message"
-            script:
-              - "echo 'Building application...'"
-
-  # release-workflow - запускается при пуше в ветку main
-  release-workflow:
-    tasks:
-      - name: "create-release"
-        cubes:
-          - name: "echo-release-message"
-            script:
-              - "echo 'Creating release...'"
-
-  # Запускается вручную
-  deploy-workflow:
-    tasks:
-      - name: "deploy-application"
-        cubes:
-          - name: "echo-deploy-message"
-            script:
-              - "echo 'Deploying application...'"
+              - "echo 'Hello World'"
