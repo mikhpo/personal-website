@@ -71,14 +71,56 @@ workflows:
               - "npm install"
               - "npm test"
 
-  # Запускается при пуше в любую ветку, если есть открытый pull request
+  # Сборка и тестирование образа приложения
   build-workflow:
+    # Переменные окружения для процесса сборки Docker-образа
+    env:
+      PROJECT_NAME: "personal_website"          # Имя проекта
+      TEST_TAG: "test"                          # Тег для тестового образа
+      TESTED_TAG: "tested"                      # Тег для протестированного образа
+      TEST_IMAGE_NAME: ${{ secrets.DOCKER_USERNAME }}/${PROJECT_NAME}:${TEST_TAG}      # Полное имя тестового образа
+      TESTED_IMAGE_NAME: ${{ secrets.DOCKER_USERNAME }}/${PROJECT_NAME}:${TESTED_TAG}  # Полное имя протестированного образа
     tasks:
-      - name: "build-application"
+      # Задача сборки Docker-образа
+      - name: "build-docker"
         cubes:
-          - name: "echo-build-message"
+          # Cube для сборки и отправки Docker-образа в реестр
+          - name: "build-and-push-image"
+            image: docker.io/library/docker:latest
             script:
-              - "echo 'Building application...'"
+              # Авторизация в Docker Hub
+              - "echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin"
+              # Сборка Docker-образа с использованием Dockerfile из директории personal_website
+              - "docker build -t ${TEST_IMAGE_NAME} -f personal_website/Dockerfile ."
+              # Отправка собранного образа в Docker Hub
+              - "docker push ${TEST_IMAGE_NAME}"
+
+      # Задача тестирования Docker-образа
+      - name: "test-docker"
+        cubes:
+          # Cube для запуска тестов внутри Docker-контейнера
+          - name: "run-tests-in-container"
+            image: docker.io/library/docker:latest
+            script:
+              # Авторизация в Docker Hub
+              - "echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin"
+              # Получение тестового образа из реестра
+              - "docker pull ${TEST_IMAGE_NAME}"
+              # Запуск тестов внутри контейнера
+              - |
+                docker run --rm \
+                  --env SECRET_KEY="${{ secrets.SECRET_KEY }}" \
+                  --env DEBUG="True" \
+                  --entrypoint "" \
+                  ${TEST_IMAGE_NAME} \
+                  /bin/bash -c "\
+                    poetry run python personal_website/manage.py collectstatic --noinput && \
+                    poetry run pytest \
+                  "
+              # Присвоение тега "tested" образу после успешного прохождения тестов
+              - "docker tag ${TEST_IMAGE_NAME} ${TESTED_IMAGE_NAME}"
+              # Отправка протестированного образа в реестр
+              - "docker push ${TESTED_IMAGE_NAME}"
 
   # release-workflow - запускается при пуше в ветку main
   release-workflow:
