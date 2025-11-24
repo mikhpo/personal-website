@@ -16,32 +16,32 @@ on:
 
 # Определение рабочих процессов
 workflows:
+  # Запускается при пуше в любую ветку, если есть открытый pull request
   test-workflow:
-    description: "Запускается при пуше в любую ветку, если есть открытый pull request"
     tasks:
       - name: "run-tests"
         cubes:
           - name: "echo-test-message"
             script: "echo 'Running tests...'"
 
+  # Запускается при пуше в любую ветку, если есть открытый pull request
   build-workflow:
-    description: "Запускается одновременно с test-workflow по тем же триггерам"
     tasks:
       - name: "build-application"
         cubes:
           - name: "echo-build-message"
             script: "echo 'Building application...'"
 
+  # Запускается при пуше в ветку main
   release-workflow:
-    description: "Запускается при пуше в ветку main"
     tasks:
       - name: "create-release"
         cubes:
           - name: "echo-release-message"
             script: "echo 'Creating release...'"
 
+  # Запускается только вручную
   deploy-workflow:
-    description: "Запускается только вручную"
     tasks:
       - name: "deploy-application"
         cubes:
