@@ -26,15 +26,20 @@ workflows:
         cubes:
           # Установка Python
           - name: "setup-python"
-            action: actions/setup-python@v5
+            action: actions/setup-python@v6
             with:
               python-version: "3.12"
 
           # Установка Node.js
           - name: "setup-node"
-            action: actions/setup-node@v4
+            action: actions/setup-node@v6
             with:
               node-version: "latest"
+
+          # Установка Poetry
+          - name: "install-poetry"
+            script:
+              - "pip install poetry"
 
           # Установка зависимостей
           - name: "install-dependencies"
@@ -66,13 +71,13 @@ workflows:
         cubes:
           # Установка Python
           - name: "setup-python"
-            action: actions/setup-python@v5
+            action: actions/setup-python@v6
             with:
               python-version: "3.12"
 
           # Установка Node.js
           - name: "setup-node"
-            action: actions/setup-node@v4
+            action: actions/setup-node@v6
             with:
               node-version: "latest"
 
@@ -82,6 +87,11 @@ workflows:
               - "sudo apt-get update"
               - "sudo apt-get install -y wkhtmltopdf locales"
               - "sudo localedef -i ru_RU -c -f UTF-8 -A /usr/share/locale/locale.alias ru_RU.UTF-8"
+
+          # Установка Poetry
+          - name: "install-poetry"
+            script:
+              - "pip install poetry"
 
           # Установка зависимостей
           - name: "install-dependencies"
@@ -108,7 +118,7 @@ workflows:
 
           # Загрузка отчета о покрытии
           - name: "upload-coverage-report"
-            action: actions/upload-artifact@v4
+            action: actions/upload-artifact@v5
             with:
               name: coverage-html-report
               path: htmlcov/
