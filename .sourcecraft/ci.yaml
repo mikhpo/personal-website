@@ -176,12 +176,69 @@ workflows:
 
   # release-workflow - запускается при пуше в ветку main
   release-workflow:
+    # Переменные окружения для процесса релиза Docker-образа
+    env:
+      PROJECT_NAME: "personal_website" # Имя проекта
+      TESTED_TAG: "tested" # Тег для протестированного образа
+      LATEST_TAG: "latest" # Тег для релизного образа
+      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }} # Имя пользователя Docker Hub
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }} # Пароль пользователя Docker Hub
+      YC_OAUTH_TOKEN: ${{ secrets.YC_OAUTH_TOKEN }} # OAuth токен для Yandex Cloud
+      YC_CONTAINER_REGISTRY_ID: ${{ secrets.YC_CONTAINER_REGISTRY_ID }} # ID реестра контейнеров в Yandex Cloud
+
     tasks:
-      - name: "create-release"
+      # Задача релиза Docker-образа
+      - name: "release-docker"
         cubes:
-          - name: "echo-release-message"
+          # Cube для перетегирования и отправки Docker-образа в реестры
+          - name: "retag-and-push-image"
+            image: docker.io/library/docker:latest
             script:
-              - "echo 'Creating release...'"
+              # Авторизация в Docker Hub
+              - |
+                echo "$DOCKER_PASSWORD" | \
+                docker login -u "$DOCKER_USERNAME" --password-stdin
+
+              # Авторизация в Yandex Cloud Container Registry
+              - |
+                echo "$YC_OAUTH_TOKEN" | \
+                docker login --username oauth --password-stdin cr.yandex
+
+              # Получение протестированного образа из Yandex Cloud Container Registry
+              - |
+                docker pull \
+                  cr.yandex/$YC_CONTAINER_REGISTRY_ID/$PROJECT_NAME:$TESTED_TAG
+
+              # Перетегирование протестированного образа как "latest" для Docker Hub
+              - |
+                docker tag \
+                  $DOCKER_USERNAME/$PROJECT_NAME:$TESTED_TAG \
+                  $DOCKER_USERNAME/$PROJECT_NAME:$LATEST_TAG
+
+              # Перетегирование протестированного образа как "latest" для Yandex Cloud
+              - |
+                docker tag \
+                  cr.yandex/$YC_CONTAINER_REGISTRY_ID/$PROJECT_NAME:$TESTED_TAG \
+                  cr.yandex/$YC_CONTAINER_REGISTRY_ID/$PROJECT_NAME:$LATEST_TAG
+
+              # Отправка релизного образа в Docker Hub
+              - |
+                docker push \
+                  $DOCKER_USERNAME/$PROJECT_NAME:$LATEST_TAG
+
+              # Отправка релизного образа в Yandex Cloud Container Registry
+              - |
+                docker push \
+                  cr.yandex/$YC_CONTAINER_REGISTRY_ID/$PROJECT_NAME:$LATEST_TAG
+
+              # Удаление старого тега из Docker Hub и Yandex Cloud Container Registry
+              - |
+                docker rmi \
+                  $DOCKER_USERNAME/$PROJECT_NAME:$TESTED_TAG
+
+              - |
+                docker rmi \
+                  cr.yandex/$YC_CONTAINER_REGISTRY_ID/$PROJECT_NAME:$TESTED_TAG
 
   # Запускается вручную
   deploy-workflow:
