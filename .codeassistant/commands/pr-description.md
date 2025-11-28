@@ -5,8 +5,7 @@ description: "Создание описания для Pull Request"
 1. Получить diff текущей ветки по сравнению с веткой master во временный файл:
 
     ```bash
-    mkdir -p tmp
-    git diff main > tmp/changes.diff
+    git diff main > changes.diff
     ```
 
 2. На основе анализа `changes.diff` создать в папке файл `pr_description.md` в формате Markdown с описанием изменений. Требования к описанию:

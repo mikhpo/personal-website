@@ -14,12 +14,6 @@ on:
       filter:
         branches: ["main", "master"]
 
-  # Запускается после успешного завершения релиза
-  workflow_run:
-    - workflows: [release-workflow]
-      type: completed
-      target: deploy-workflow
-
 # Определение рабочих процессов
 workflows:
   # Статический анализ и линтинг
