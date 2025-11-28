@@ -31,9 +31,12 @@ workflows:
           - name: "ruff-mypy"
             image: docker.io/library/python:3.13-bookworm
             script:
+              - echo "Установка Poetry и зависимостей проекта"
               - pip install poetry
               - poetry install
+              - echo "Запуск статического анализа с помощью Ruff"
               - poetry run ruff check
+              - echo "Запуск проверки типов с помощью MyPy"
               - poetry run mypy .
 
       # Выполнить проверки утилитами Node.js
@@ -42,8 +45,11 @@ workflows:
           - name: "eslint-markdown"
             image: docker.io/library/node
             script:
+              - echo "Установка зависимостей Node.js"
               - npm install
+              - echo "Запуск ESLint для проверки JavaScript/TypeScript кода"
               - npx eslint . --ext .js,.jsx,.ts,.tsx
+              - echo "Проверка Markdown файлов с помощью markdownlint"
               - npx markdownlint-cli *.md docs/*.md
 
   # Тестирование
@@ -60,11 +66,15 @@ workflows:
           - name: "pytest"
             image: docker.io/library/python:3.13-bookworm
             script:
+              - echo "Обновление системы и установка необходимых пакетов"
               - apt-get update
               - apt-get install -y wkhtmltopdf locales
+              - echo "Настройка локали ru_RU.UTF-8"
               - localedef -i ru_RU -c -f UTF-8 -A /usr/share/locale/locale.alias ru_RU.UTF-8
+              - echo "Установка Poetry и зависимостей проекта"
               - pip install poetry
               - poetry install
+              - echo "Запуск тестов Python с помощью Pytest"
               - poetry run pytest
 
       # Тестирование кода JavaScript
@@ -73,7 +83,9 @@ workflows:
           - name: "node"
             image: docker.io/library/node
             script:
+              - echo "Установка зависимостей Node.js для тестирования"
               - npm install
+              - echo "Запуск тестов JavaScript с помощью npm"
               - npm test
 
   # Сборка и тестирование образа приложения
@@ -99,33 +111,39 @@ workflows:
             script:
               # Авторизация в Docker Hub
               - |
+                echo "Авторизация в Docker Hub"
                 echo "$DOCKER_PASSWORD" | \
                 docker login -u "$DOCKER_USERNAME" --password-stdin
 
               # Авторизация в Yandex Cloud Container Registry
               - |
+                echo "Авторизация в Yandex Cloud Container Registry"
                 echo "$YC_OAUTH_TOKEN" | \
                 docker login --username oauth --password-stdin cr.yandex
 
               # Сборка Docker-образа с использованием Dockerfile из директории personal_website
               - |
+                echo "Сборка Docker-образа приложения"
                 docker build \
                   -t $DOCKER_USERNAME/$PROJECT_NAME:$TEST_TAG \
                   -f personal_website/Dockerfile .
 
               # Тегирование образа для Yandex Cloud Container Registry
               - |
+                echo "Тегирование Docker-образа для Yandex Cloud Container Registry"
                 docker tag \
                   $DOCKER_USERNAME/$PROJECT_NAME:$TEST_TAG \
                   cr.yandex/$YC_CONTAINER_REGISTRY_ID/$PROJECT_NAME:$TEST_TAG
 
               # Отправка собранного образа в Docker Hub
               - |
+                echo "Отправка Docker-образа в Docker Hub"
                 docker push \
                   $DOCKER_USERNAME/$PROJECT_NAME:$TEST_TAG
 
               # Отправка собранного образа в Yandex Cloud Container Registry
               - |
+                echo "Отправка Docker-образа в Yandex Cloud Container Registry"
                 docker push \
                   cr.yandex/$YC_CONTAINER_REGISTRY_ID/$PROJECT_NAME:$TEST_TAG
 
@@ -135,21 +153,25 @@ workflows:
             script:
               # Авторизация в Docker Hub
               - |
+                echo "Авторизация в Docker Hub"
                 echo "$DOCKER_PASSWORD" | \
                 docker login -u "$DOCKER_USERNAME" --password-stdin
 
               # Авторизация в Yandex Cloud Container Registry
               - |
+                echo "Авторизация в Yandex Cloud Container Registry"
                 echo "$YC_OAUTH_TOKEN" | \
                 docker login --username oauth --password-stdin cr.yandex
 
               # Получение тестового образа из реестра (Yandex Cloud как основной)
               - |
+                echo "Получение тестового Docker-образа из Yandex Cloud Container Registry"
                 docker pull \
                   cr.yandex/$YC_CONTAINER_REGISTRY_ID/$PROJECT_NAME:$TEST_TAG
 
               # Запуск тестов внутри контейнера (на образе из Yandex Cloud)
               - |
+                echo "Запуск тестов внутри Docker-контейнера"
                 docker run --rm \
                   --env SOURCECRAFT_CI="$SOURCECRAFT_CI" \
                   --env SECRET_KEY="$SECRET_KEY" \
@@ -160,23 +182,27 @@ workflows:
 
               # Присвоение тега "tested" образу после успешного прохождения тестов (Docker Hub)
               - |
+                echo "Тегирование Docker-образа как 'tested' для Docker Hub"
                 docker tag \
                   $DOCKER_USERNAME/$PROJECT_NAME:$TEST_TAG \
                   $DOCKER_USERNAME/$PROJECT_NAME:$TESTED_TAG
 
               # Присвоение тега "tested" образу после успешного прохождения тестов (Yandex Cloud)
               - |
+                echo "Тегирование Docker-образа как 'tested' для Yandex Cloud"
                 docker tag \
                   cr.yandex/$YC_CONTAINER_REGISTRY_ID/$PROJECT_NAME:$TEST_TAG \
                   cr.yandex/$YC_CONTAINER_REGISTRY_ID/$PROJECT_NAME:$TESTED_TAG
 
               # Отправка протестированного образа в реестр (Docker Hub)
               - |
+                echo "Отправка протестированного Docker-образа в Docker Hub"
                 docker push \
                   $DOCKER_USERNAME/$PROJECT_NAME:$TESTED_TAG
 
               # Отправка протестированного образа в реестр (Yandex Cloud)
               - |
+                echo "Отправка протестированного Docker-образа в Yandex Cloud Container Registry"
                 docker push \
                   cr.yandex/$YC_CONTAINER_REGISTRY_ID/$PROJECT_NAME:$TESTED_TAG
 
@@ -202,47 +228,56 @@ workflows:
             script:
               # Авторизация в Docker Hub
               - |
+                echo "Авторизация в Docker Hub"
                 echo "$DOCKER_PASSWORD" | \
                 docker login -u "$DOCKER_USERNAME" --password-stdin
 
               # Авторизация в Yandex Cloud Container Registry
               - |
+                echo "Авторизация в Yandex Cloud Container Registry"
                 echo "$YC_OAUTH_TOKEN" | \
                 docker login --username oauth --password-stdin cr.yandex
 
               # Получение протестированного образа из Yandex Cloud Container Registry
               - |
+                echo "Получение протестированного Docker-образа из Yandex Cloud Container Registry"
                 docker pull \
                   cr.yandex/$YC_CONTAINER_REGISTRY_ID/$PROJECT_NAME:$TESTED_TAG
 
               # Перетегирование протестированного образа как "latest" для Docker Hub
               - |
+                echo "Перетегирование Docker-образа как 'latest' для Docker Hub"
                 docker tag \
                   $DOCKER_USERNAME/$PROJECT_NAME:$TESTED_TAG \
                   $DOCKER_USERNAME/$PROJECT_NAME:$LATEST_TAG
 
               # Перетегирование протестированного образа как "latest" для Yandex Cloud
               - |
+                echo "Перетегирование Docker-образа как 'latest' для Yandex Cloud"
                 docker tag \
                   cr.yandex/$YC_CONTAINER_REGISTRY_ID/$PROJECT_NAME:$TESTED_TAG \
                   cr.yandex/$YC_CONTAINER_REGISTRY_ID/$PROJECT_NAME:$LATEST_TAG
 
               # Отправка релизного образа в Docker Hub
               - |
+                echo "Отправка релизного Docker-образа в Docker Hub"
                 docker push \
                   $DOCKER_USERNAME/$PROJECT_NAME:$LATEST_TAG
 
               # Отправка релизного образа в Yandex Cloud Container Registry
               - |
+                echo "Отправка релизного Docker-образа в Yandex Cloud Container Registry"
                 docker push \
                   cr.yandex/$YC_CONTAINER_REGISTRY_ID/$PROJECT_NAME:$LATEST_TAG
 
               # Удаление старого тега из Docker Hub и Yandex Cloud Container Registry
               - |
+                echo "Удаление старого тега 'tested' из Docker Hub"
                 docker rmi \
                   $DOCKER_USERNAME/$PROJECT_NAME:$TESTED_TAG
 
               - |
+                echo "Удаление старого тега 'tested' из Yandex Cloud Container Registry"
                 docker rmi \
                   cr.yandex/$YC_CONTAINER_REGISTRY_ID/$PROJECT_NAME:$TESTED_TAG
 
