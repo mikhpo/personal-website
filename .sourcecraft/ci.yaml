@@ -14,6 +14,12 @@ on:
       filter:
         branches: ["main", "master"]
 
+  # Запускается после успешного завершения релиза
+  workflow_run:
+    - workflows: [release-workflow]
+      type: completed
+      target: deploy-workflow
+
 # Определение рабочих процессов
 workflows:
   # Статический анализ и линтинг
@@ -174,7 +180,7 @@ workflows:
                 docker push \
                   cr.yandex/$YC_CONTAINER_REGISTRY_ID/$PROJECT_NAME:$TESTED_TAG
 
-  # release-workflow - запускается при пуше в ветку main
+  # Релиз Docker-образа с тэгом latest
   release-workflow:
     # Переменные окружения для процесса релиза Docker-образа
     env:
@@ -240,11 +246,18 @@ workflows:
                 docker rmi \
                   cr.yandex/$YC_CONTAINER_REGISTRY_ID/$PROJECT_NAME:$TESTED_TAG
 
-  # Запускается вручную
+  # Делой на VPS по SSH
   deploy-workflow:
     tasks:
       - name: "deploy-application"
         cubes:
-          - name: "echo-deploy-message"
-            script:
-              - "echo 'Deploying application...'"
+          # Выполнение удаленного скрипта деплоя на сервере через SSH
+          - name: execute-remote-deployment
+            action: appleboy/ssh-action@v1.2.3
+            with:
+              host: ${{ secrets.SERVER_HOST }}
+              username: ${{ secrets.SERVER_USER }}
+              key: ${{ secrets.DEPLOY_SSH_KEY }}
+              script: |
+                cd /root/personal-website
+                bash personal_website/scripts/server/update.sh
