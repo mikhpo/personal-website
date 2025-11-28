@@ -3,22 +3,17 @@
 
 # Определение событий-триггеров для запуска рабочих процессов.
 on:
-  push:
-    # Запускаются при пуше в любую ветку, кроме основной
+  pull_request:
+    # Запускается при открытии предложения изменений
     - workflows: [lint-workflow, test-workflow, build-workflow]
       filter:
-        branches: ["!main", "!master"]
+        target_branches: ["main", "master"]
 
+  push:
     # Запускается при пуше в основную ветку
     - workflows: [release-workflow]
       filter:
         branches: ["main", "master"]
-
-  # Запускается после успешного завершения релиза
-  workflow_run:
-    - workflows: [release-workflow]
-      type: completed
-      target: deploy-workflow
 
 # Определение рабочих процессов
 workflows:
