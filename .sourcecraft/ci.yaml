@@ -80,9 +80,8 @@ workflows:
       TESTED_TAG: "tested" # Тег для протестированного образа
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }} # Имя пользователя Docker Hub
       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }} # Пароль пользователя Docker Hub
-      SOURCECRAFT_TOKEN: ${{ secrets.SOURCECRAFT_TOKEN }} # Токен для SourceCraft Registry
-      SOURCECRAFT_ORGANIZATION: ${{ secrets.SOURCECRAFT_ORGANIZATION }} # Имя организации в SourceCraft
-      SOURCECRAFT_DOCKER_REGISTRY_ID: ${{ secrets.SOURCECRAFT_DOCKER_REGISTRY_ID }} # ID реестра Docker в SourceCraft
+      YC_OAUTH_TOKEN: ${{ secrets.YC_OAUTH_TOKEN }} # OAuth токен для Yandex Cloud
+      YC_CONTAINER_REGISTRY_ID: ${{ secrets.YC_CONTAINER_REGISTRY_ID }} # ID реестра контейнеров в Yandex Cloud
 
     tasks:
       # Задача сборки Docker-образа
@@ -97,10 +96,10 @@ workflows:
                 echo "$DOCKER_PASSWORD" | \
                 docker login -u "$DOCKER_USERNAME" --password-stdin
 
-              # Авторизация в SourceCraft Registry
+              # Авторизация в Yandex Cloud Container Registry
               - |
-                echo "$SOURCECRAFT_TOKEN" | \
-                docker login --username iam --password-stdin pkg.sourcecraft.tech
+                echo "$YC_OAUTH_TOKEN" | \
+                docker login --username oauth --password-stdin cr.yandex
 
               # Сборка Docker-образа с использованием Dockerfile из директории personal_website
               - |
@@ -108,21 +107,21 @@ workflows:
                   -t $DOCKER_USERNAME/$PROJECT_NAME:$TEST_TAG \
                   -f personal_website/Dockerfile .
 
-              # Тегирование образа для SourceCraft Registry
+              # Тегирование образа для Yandex Cloud Container Registry
               - |
                 docker tag \
                   $DOCKER_USERNAME/$PROJECT_NAME:$TEST_TAG \
-                  pkg.sourcecraft.tech/cr/$SOURCECRAFT_ORGANIZATION/$SOURCECRAFT_DOCKER_REGISTRY_ID/$PROJECT_NAME:$TEST_TAG
+                  cr.yandex/$YC_CONTAINER_REGISTRY_ID/$PROJECT_NAME:$TEST_TAG
 
               # Отправка собранного образа в Docker Hub
               - |
                 docker push \
                   $DOCKER_USERNAME/$PROJECT_NAME:$TEST_TAG
 
-              # Отправка собранного образа в SourceCraft Registry
+              # Отправка собранного образа в Yandex Cloud Container Registry
               - |
                 docker push \
-                  pkg.sourcecraft.tech/cr/$SOURCECRAFT_ORGANIZATION/$SOURCECRAFT_DOCKER_REGISTRY_ID/$PROJECT_NAME:$TEST_TAG
+                  cr.yandex/$YC_CONTAINER_REGISTRY_ID/$PROJECT_NAME:$TEST_TAG
 
           # Cube для запуска тестов внутри Docker-контейнера
           - name: "run-tests-in-container"
@@ -133,24 +132,24 @@ workflows:
                 echo "$DOCKER_PASSWORD" | \
                 docker login -u "$DOCKER_USERNAME" --password-stdin
 
-              # Авторизация в SourceCraft Registry
+              # Авторизация в Yandex Cloud Container Registry
               - |
-                echo "$SOURCECRAFT_TOKEN" | \
-                docker login --username iam --password-stdin pkg.sourcecraft.tech
+                echo "$YC_OAUTH_TOKEN" | \
+                docker login --username oauth --password-stdin cr.yandex
 
-              # Получение тестового образа из реестра (SourceCraft как основной)
+              # Получение тестового образа из реестра (Yandex Cloud как основной)
               - |
                 docker pull \
-                  pkg.sourcecraft.tech/cr/$SOURCECRAFT_ORGANIZATION/$SOURCECRAFT_DOCKER_REGISTRY_ID/$PROJECT_NAME:$TEST_TAG
+                  cr.yandex/$YC_CONTAINER_REGISTRY_ID/$PROJECT_NAME:$TEST_TAG
 
-              # Запуск тестов внутри контейнера (на образе из SourceCraft)
+              # Запуск тестов внутри контейнера (на образе из Yandex Cloud)
               - |
                 docker run --rm \
                   --env SOURCECRAFT_CI="$SOURCECRAFT_CI" \
                   --env SECRET_KEY="$SECRET_KEY" \
                   --env DEBUG="True" \
                   --entrypoint "" \
-                  pkg.sourcecraft.tech/cr/$SOURCECRAFT_ORGANIZATION/$SOURCECRAFT_DOCKER_REGISTRY_ID/$PROJECT_NAME:$TEST_TAG \
+                  cr.yandex/$YC_CONTAINER_REGISTRY_ID/$PROJECT_NAME:$TEST_TAG \
                   bash -c "poetry run pytest"
 
               # Присвоение тега "tested" образу после успешного прохождения тестов (Docker Hub)
@@ -159,21 +158,21 @@ workflows:
                   $DOCKER_USERNAME/$PROJECT_NAME:$TEST_TAG \
                   $DOCKER_USERNAME/$PROJECT_NAME:$TESTED_TAG
 
-              # Присвоение тега "tested" образу после успешного прохождения тестов (SourceCraft)
+              # Присвоение тега "tested" образу после успешного прохождения тестов (Yandex Cloud)
               - |
                 docker tag \
-                  pkg.sourcecraft.tech/cr/$SOURCECRAFT_ORGANIZATION/$SOURCECRAFT_DOCKER_REGISTRY_ID/$PROJECT_NAME:$TEST_TAG \
-                  pkg.sourcecraft.tech/cr/$SOURCECRAFT_ORGANIZATION/$SOURCECRAFT_DOCKER_REGISTRY_ID/$PROJECT_NAME:$TESTED_TAG
+                  cr.yandex/$YC_CONTAINER_REGISTRY_ID/$PROJECT_NAME:$TEST_TAG \
+                  cr.yandex/$YC_CONTAINER_REGISTRY_ID/$PROJECT_NAME:$TESTED_TAG
 
               # Отправка протестированного образа в реестр (Docker Hub)
               - |
                 docker push \
                   $DOCKER_USERNAME/$PROJECT_NAME:$TESTED_TAG
 
-              # Отправка протестированного образа в реестр (SourceCraft)
+              # Отправка протестированного образа в реестр (Yandex Cloud)
               - |
                 docker push \
-                  pkg.sourcecraft.tech/cr/$SOURCECRAFT_ORGANIZATION/$SOURCECRAFT_DOCKER_REGISTRY_ID/$PROJECT_NAME:$TESTED_TAG
+                  cr.yandex/$YC_CONTAINER_REGISTRY_ID/$PROJECT_NAME:$TESTED_TAG
 
   # release-workflow - запускается при пуше в ветку main
   release-workflow:
