@@ -3,7 +3,6 @@
 
 # Определение событий-триггеров для запуска рабочих процессов.
 on:
-
   push:
     # Запускаются при пуше в любую ветку, кроме основной
     - workflows: [lint-workflow, test-workflow, build-workflow]
@@ -14,6 +13,12 @@ on:
     - workflows: [release-workflow]
       filter:
         branches: ["main", "master"]
+
+  # Запускается после успешного завершения релиза
+  workflow_run:
+    - workflows: [release-workflow]
+      type: completed
+      target: deploy-workflow
 
 # Определение рабочих процессов
 workflows:
@@ -75,12 +80,14 @@ workflows:
   build-workflow:
     # Переменные окружения для процесса сборки Docker-образа
     env:
-      PROJECT_NAME: "personal_website"          # Имя проекта
-      TEST_TAG: "test"                          # Тег для тестового образа
-      TESTED_TAG: "tested"                      # Тег для протестированного образа
-      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}  # Имя пользователя Docker Hub
-      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}  # Пароль пользователя Docker Hub
-      SECRET_KEY: ${{ secrets.SECRET_KEY }}     # Секретный ключ для Django
+      PROJECT_NAME: "personal_website" # Имя проекта
+      SECRET_KEY: ${{ secrets.SECRET_KEY }} # Секретный ключ для Django
+      TEST_TAG: "test" # Тег для тестового образа
+      TESTED_TAG: "tested" # Тег для протестированного образа
+      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }} # Имя пользователя Docker Hub
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }} # Пароль пользователя Docker Hub
+      YC_OAUTH_TOKEN: ${{ secrets.YC_OAUTH_TOKEN }} # OAuth токен для Yandex Cloud
+      YC_CONTAINER_REGISTRY_ID: ${{ secrets.YC_CONTAINER_REGISTRY_ID }} # ID реестра контейнеров в Yandex Cloud
 
     tasks:
       # Задача сборки Docker-образа
@@ -91,48 +98,166 @@ workflows:
             image: docker.io/library/docker:latest
             script:
               # Авторизация в Docker Hub
-              - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+              - |
+                echo "$DOCKER_PASSWORD" | \
+                docker login -u "$DOCKER_USERNAME" --password-stdin
+
+              # Авторизация в Yandex Cloud Container Registry
+              - |
+                echo "$YC_OAUTH_TOKEN" | \
+                docker login --username oauth --password-stdin cr.yandex
+
               # Сборка Docker-образа с использованием Dockerfile из директории personal_website
-              - docker build -t $DOCKER_USERNAME/$PROJECT_NAME:$TEST_TAG -f personal_website/Dockerfile .
+              - |
+                docker build \
+                  -t $DOCKER_USERNAME/$PROJECT_NAME:$TEST_TAG \
+                  -f personal_website/Dockerfile .
+
+              # Тегирование образа для Yandex Cloud Container Registry
+              - |
+                docker tag \
+                  $DOCKER_USERNAME/$PROJECT_NAME:$TEST_TAG \
+                  cr.yandex/$YC_CONTAINER_REGISTRY_ID/$PROJECT_NAME:$TEST_TAG
+
               # Отправка собранного образа в Docker Hub
-              - docker push $DOCKER_USERNAME/$PROJECT_NAME:$TEST_TAG
+              - |
+                docker push \
+                  $DOCKER_USERNAME/$PROJECT_NAME:$TEST_TAG
+
+              # Отправка собранного образа в Yandex Cloud Container Registry
+              - |
+                docker push \
+                  cr.yandex/$YC_CONTAINER_REGISTRY_ID/$PROJECT_NAME:$TEST_TAG
 
           # Cube для запуска тестов внутри Docker-контейнера
           - name: "run-tests-in-container"
             image: docker.io/library/docker:latest
             script:
               # Авторизация в Docker Hub
-              - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-              # Получение тестового образа из реестра
-              - docker pull $DOCKER_USERNAME/$PROJECT_NAME:$TEST_TAG
-              # Запуск тестов внутри контейнера
+              - |
+                echo "$DOCKER_PASSWORD" | \
+                docker login -u "$DOCKER_USERNAME" --password-stdin
+
+              # Авторизация в Yandex Cloud Container Registry
+              - |
+                echo "$YC_OAUTH_TOKEN" | \
+                docker login --username oauth --password-stdin cr.yandex
+
+              # Получение тестового образа из реестра (Yandex Cloud как основной)
+              - |
+                docker pull \
+                  cr.yandex/$YC_CONTAINER_REGISTRY_ID/$PROJECT_NAME:$TEST_TAG
+
+              # Запуск тестов внутри контейнера (на образе из Yandex Cloud)
               - |
                 docker run --rm \
                   --env SOURCECRAFT_CI="$SOURCECRAFT_CI" \
                   --env SECRET_KEY="$SECRET_KEY" \
                   --env DEBUG="True" \
                   --entrypoint "" \
-                  $DOCKER_USERNAME/$PROJECT_NAME:$TEST_TAG \
+                  cr.yandex/$YC_CONTAINER_REGISTRY_ID/$PROJECT_NAME:$TEST_TAG \
                   bash -c "poetry run pytest"
-              # Присвоение тега "tested" образу после успешного прохождения тестов
-              - docker tag $DOCKER_USERNAME/$PROJECT_NAME:$TEST_TAG $DOCKER_USERNAME/$PROJECT_NAME:$TESTED_TAG
-              # Отправка протестированного образа в реестр
-              - docker push $DOCKER_USERNAME/$PROJECT_NAME:$TESTED_TAG
 
-  # release-workflow - запускается при пуше в ветку main
+              # Присвоение тега "tested" образу после успешного прохождения тестов (Docker Hub)
+              - |
+                docker tag \
+                  $DOCKER_USERNAME/$PROJECT_NAME:$TEST_TAG \
+                  $DOCKER_USERNAME/$PROJECT_NAME:$TESTED_TAG
+
+              # Присвоение тега "tested" образу после успешного прохождения тестов (Yandex Cloud)
+              - |
+                docker tag \
+                  cr.yandex/$YC_CONTAINER_REGISTRY_ID/$PROJECT_NAME:$TEST_TAG \
+                  cr.yandex/$YC_CONTAINER_REGISTRY_ID/$PROJECT_NAME:$TESTED_TAG
+
+              # Отправка протестированного образа в реестр (Docker Hub)
+              - |
+                docker push \
+                  $DOCKER_USERNAME/$PROJECT_NAME:$TESTED_TAG
+
+              # Отправка протестированного образа в реестр (Yandex Cloud)
+              - |
+                docker push \
+                  cr.yandex/$YC_CONTAINER_REGISTRY_ID/$PROJECT_NAME:$TESTED_TAG
+
+  # Релиз Docker-образа с тэгом latest
   release-workflow:
-    tasks:
-      - name: "create-release"
-        cubes:
-          - name: "echo-release-message"
-            script:
-              - "echo 'Creating release...'"
+    # Переменные окружения для процесса релиза Docker-образа
+    env:
+      PROJECT_NAME: "personal_website" # Имя проекта
+      TESTED_TAG: "tested" # Тег для протестированного образа
+      LATEST_TAG: "latest" # Тег для релизного образа
+      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }} # Имя пользователя Docker Hub
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }} # Пароль пользователя Docker Hub
+      YC_OAUTH_TOKEN: ${{ secrets.YC_OAUTH_TOKEN }} # OAuth токен для Yandex Cloud
+      YC_CONTAINER_REGISTRY_ID: ${{ secrets.YC_CONTAINER_REGISTRY_ID }} # ID реестра контейнеров в Yandex Cloud
 
-  # Запускается вручную
+    tasks:
+      # Задача релиза Docker-образа
+      - name: "release-docker"
+        cubes:
+          # Cube для перетегирования и отправки Docker-образа в реестры
+          - name: "retag-and-push-image"
+            image: docker.io/library/docker:latest
+            script:
+              # Авторизация в Docker Hub
+              - |
+                echo "$DOCKER_PASSWORD" | \
+                docker login -u "$DOCKER_USERNAME" --password-stdin
+
+              # Авторизация в Yandex Cloud Container Registry
+              - |
+                echo "$YC_OAUTH_TOKEN" | \
+                docker login --username oauth --password-stdin cr.yandex
+
+              # Получение протестированного образа из Yandex Cloud Container Registry
+              - |
+                docker pull \
+                  cr.yandex/$YC_CONTAINER_REGISTRY_ID/$PROJECT_NAME:$TESTED_TAG
+
+              # Перетегирование протестированного образа как "latest" для Docker Hub
+              - |
+                docker tag \
+                  $DOCKER_USERNAME/$PROJECT_NAME:$TESTED_TAG \
+                  $DOCKER_USERNAME/$PROJECT_NAME:$LATEST_TAG
+
+              # Перетегирование протестированного образа как "latest" для Yandex Cloud
+              - |
+                docker tag \
+                  cr.yandex/$YC_CONTAINER_REGISTRY_ID/$PROJECT_NAME:$TESTED_TAG \
+                  cr.yandex/$YC_CONTAINER_REGISTRY_ID/$PROJECT_NAME:$LATEST_TAG
+
+              # Отправка релизного образа в Docker Hub
+              - |
+                docker push \
+                  $DOCKER_USERNAME/$PROJECT_NAME:$LATEST_TAG
+
+              # Отправка релизного образа в Yandex Cloud Container Registry
+              - |
+                docker push \
+                  cr.yandex/$YC_CONTAINER_REGISTRY_ID/$PROJECT_NAME:$LATEST_TAG
+
+              # Удаление старого тега из Docker Hub и Yandex Cloud Container Registry
+              - |
+                docker rmi \
+                  $DOCKER_USERNAME/$PROJECT_NAME:$TESTED_TAG
+
+              - |
+                docker rmi \
+                  cr.yandex/$YC_CONTAINER_REGISTRY_ID/$PROJECT_NAME:$TESTED_TAG
+
+  # Делой на VPS по SSH
   deploy-workflow:
     tasks:
       - name: "deploy-application"
         cubes:
-          - name: "echo-deploy-message"
-            script:
-              - "echo 'Deploying application...'"
+          # Выполнение удаленного скрипта деплоя на сервере через SSH
+          - name: execute-remote-deployment
+            action: appleboy/ssh-action@v1.2.3
+            with:
+              host: ${{ secrets.SERVER_HOST }}
+              username: ${{ secrets.SERVER_USER }}
+              key: ${{ secrets.DEPLOY_SSH_KEY }}
+              script: |
+                cd /root/personal-website
+                bash personal_website/scripts/server/update.sh
