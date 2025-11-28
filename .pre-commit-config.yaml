@@ -58,16 +58,8 @@ repos:
         pass_filenames: false
       - id: poetry-export
         name: poetry-export
-        description: Выполнить команду poetry export для фиксации зависимостей в requirements.txt
-        entry: poetry export
-        language: python
+        description: Экспорт зависимостей в requirements.txt
+        entry: bash -c 'poetry run pip freeze > requirements.txt'
+        language: system
         pass_filenames: false
         files: ^(.*/)?poetry\.lock$
-        args:
-          [
-            "--format",
-            "requirements.txt",
-            "--output",
-            "requirements.txt",
-            "--without-hashes",
-          ]

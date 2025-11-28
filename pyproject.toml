@@ -32,6 +32,7 @@ requests = "^2.32.3"
 minio = "^7.2.15"
 factory-boy = "^3.3.1"
 pydantic = "^2.10.6"
+django-storages = "^1.14.6"
 
 [tool.poetry.group.dev.dependencies]
 coverage = "^7.6.10"
