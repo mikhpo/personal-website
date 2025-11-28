@@ -10,6 +10,11 @@ on:
         target_branches: ["main", "master"]
 
   push:
+    # Запускается при пуше не в основную ветку
+    - workflows: [lint-workflow, test-workflow, build-workflow]
+      filter:
+        branches: ["!main", "!master"]
+
     # Запускается при пуше в основную ветку
     - workflows: [release-workflow]
       filter:
