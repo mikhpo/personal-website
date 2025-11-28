@@ -3,7 +3,6 @@
 
 # Определение событий-триггеров для запуска рабочих процессов.
 on:
-
   push:
     # Запускаются при пуше в любую ветку, кроме основной
     - workflows: [lint-workflow, test-workflow, build-workflow]
@@ -75,12 +74,15 @@ workflows:
   build-workflow:
     # Переменные окружения для процесса сборки Docker-образа
     env:
-      PROJECT_NAME: "personal_website"          # Имя проекта
-      TEST_TAG: "test"                          # Тег для тестового образа
-      TESTED_TAG: "tested"                      # Тег для протестированного образа
-      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}  # Имя пользователя Docker Hub
-      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}  # Пароль пользователя Docker Hub
-      SECRET_KEY: ${{ secrets.SECRET_KEY }}     # Секретный ключ для Django
+      PROJECT_NAME: "personal_website" # Имя проекта
+      SECRET_KEY: ${{ secrets.SECRET_KEY }} # Секретный ключ для Django
+      TEST_TAG: "test" # Тег для тестового образа
+      TESTED_TAG: "tested" # Тег для протестированного образа
+      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }} # Имя пользователя Docker Hub
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }} # Пароль пользователя Docker Hub
+      SOURCECRAFT_TOKEN: ${{ secrets.SOURCECRAFT_TOKEN }} # Токен для SourceCraft Registry
+      SOURCECRAFT_ORGANIZATION: ${{ secrets.SOURCECRAFT_ORGANIZATION }} # Имя организации в SourceCraft
+      SOURCECRAFT_DOCKER_REGISTRY_ID: ${{ secrets.SOURCECRAFT_DOCKER_REGISTRY_ID }} # ID реестра Docker в SourceCraft
 
     tasks:
       # Задача сборки Docker-образа
@@ -91,33 +93,87 @@ workflows:
             image: docker.io/library/docker:latest
             script:
               # Авторизация в Docker Hub
-              - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+              - |
+                echo "$DOCKER_PASSWORD" | \
+                docker login -u "$DOCKER_USERNAME" --password-stdin
+
+              # Авторизация в SourceCraft Registry
+              - |
+                echo "$SOURCECRAFT_TOKEN" | \
+                docker login --username iam --password-stdin pkg.sourcecraft.tech
+
               # Сборка Docker-образа с использованием Dockerfile из директории personal_website
-              - docker build -t $DOCKER_USERNAME/$PROJECT_NAME:$TEST_TAG -f personal_website/Dockerfile .
+              - |
+                docker build \
+                  -t $DOCKER_USERNAME/$PROJECT_NAME:$TEST_TAG \
+                  -f personal_website/Dockerfile .
+
+              # Тегирование образа для SourceCraft Registry
+              - |
+                docker tag \
+                  $DOCKER_USERNAME/$PROJECT_NAME:$TEST_TAG \
+                  pkg.sourcecraft.tech/cr/$SOURCECRAFT_ORGANIZATION/$SOURCECRAFT_DOCKER_REGISTRY_ID/$PROJECT_NAME:$TEST_TAG
+
               # Отправка собранного образа в Docker Hub
-              - docker push $DOCKER_USERNAME/$PROJECT_NAME:$TEST_TAG
+              - |
+                docker push \
+                  $DOCKER_USERNAME/$PROJECT_NAME:$TEST_TAG
+
+              # Отправка собранного образа в SourceCraft Registry
+              - |
+                docker push \
+                  pkg.sourcecraft.tech/cr/$SOURCECRAFT_ORGANIZATION/$SOURCECRAFT_DOCKER_REGISTRY_ID/$PROJECT_NAME:$TEST_TAG
 
           # Cube для запуска тестов внутри Docker-контейнера
           - name: "run-tests-in-container"
             image: docker.io/library/docker:latest
             script:
               # Авторизация в Docker Hub
-              - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-              # Получение тестового образа из реестра
-              - docker pull $DOCKER_USERNAME/$PROJECT_NAME:$TEST_TAG
-              # Запуск тестов внутри контейнера
+              - |
+                echo "$DOCKER_PASSWORD" | \
+                docker login -u "$DOCKER_USERNAME" --password-stdin
+
+              # Авторизация в SourceCraft Registry
+              - |
+                echo "$SOURCECRAFT_TOKEN" | \
+                docker login --username iam --password-stdin pkg.sourcecraft.tech
+
+              # Получение тестового образа из реестра (SourceCraft как основной)
+              - |
+                docker pull \
+                  pkg.sourcecraft.tech/cr/$SOURCECRAFT_ORGANIZATION/$SOURCECRAFT_DOCKER_REGISTRY_ID/$PROJECT_NAME:$TEST_TAG
+
+              # Запуск тестов внутри контейнера (на образе из SourceCraft)
               - |
                 docker run --rm \
                   --env SOURCECRAFT_CI="$SOURCECRAFT_CI" \
                   --env SECRET_KEY="$SECRET_KEY" \
                   --env DEBUG="True" \
                   --entrypoint "" \
-                  $DOCKER_USERNAME/$PROJECT_NAME:$TEST_TAG \
+                  pkg.sourcecraft.tech/cr/$SOURCECRAFT_ORGANIZATION/$SOURCECRAFT_DOCKER_REGISTRY_ID/$PROJECT_NAME:$TEST_TAG \
                   bash -c "poetry run pytest"
-              # Присвоение тега "tested" образу после успешного прохождения тестов
-              - docker tag $DOCKER_USERNAME/$PROJECT_NAME:$TEST_TAG $DOCKER_USERNAME/$PROJECT_NAME:$TESTED_TAG
-              # Отправка протестированного образа в реестр
-              - docker push $DOCKER_USERNAME/$PROJECT_NAME:$TESTED_TAG
+
+              # Присвоение тега "tested" образу после успешного прохождения тестов (Docker Hub)
+              - |
+                docker tag \
+                  $DOCKER_USERNAME/$PROJECT_NAME:$TEST_TAG \
+                  $DOCKER_USERNAME/$PROJECT_NAME:$TESTED_TAG
+
+              # Присвоение тега "tested" образу после успешного прохождения тестов (SourceCraft)
+              - |
+                docker tag \
+                  pkg.sourcecraft.tech/cr/$SOURCECRAFT_ORGANIZATION/$SOURCECRAFT_DOCKER_REGISTRY_ID/$PROJECT_NAME:$TEST_TAG \
+                  pkg.sourcecraft.tech/cr/$SOURCECRAFT_ORGANIZATION/$SOURCECRAFT_DOCKER_REGISTRY_ID/$PROJECT_NAME:$TESTED_TAG
+
+              # Отправка протестированного образа в реестр (Docker Hub)
+              - |
+                docker push \
+                  $DOCKER_USERNAME/$PROJECT_NAME:$TESTED_TAG
+
+              # Отправка протестированного образа в реестр (SourceCraft)
+              - |
+                docker push \
+                  pkg.sourcecraft.tech/cr/$SOURCECRAFT_ORGANIZATION/$SOURCECRAFT_DOCKER_REGISTRY_ID/$PROJECT_NAME:$TESTED_TAG
 
   # release-workflow - запускается при пуше в ветку main
   release-workflow:
