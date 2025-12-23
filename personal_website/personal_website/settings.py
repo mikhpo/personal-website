@@ -140,7 +140,7 @@ TEMP_ROOT = os.getenv("TEMP_ROOT", default=PROJECT_DIR / "temp")
 STORAGE_TYPE = os.getenv("STORAGE_TYPE", default="filesystem")
 
 STORAGES = {
-    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "default": {"BACKEND": "personal_website.storages.select_storage"},
     "staticfiles": {"BACKEND": "whitenoise.storage.CompressedStaticFilesStorage"},
     "test": {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
