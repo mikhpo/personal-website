@@ -1,11 +1,10 @@
 """Настройки запуска тестов при помощи модуля django.test."""
 
-import shutil
-from pathlib import Path
 from typing import Any
 
-from django.conf import settings
 from django.test.runner import DiscoverRunner
+
+from personal_website.utils import setup_test_environment, teardown_test_environment
 
 
 class CustomRunner(DiscoverRunner):
@@ -16,12 +15,10 @@ class CustomRunner(DiscoverRunner):
         Создать папку для временных файлов перед глобальным запуском тестов
         и скопировать тестовые изображения в папку для тестирования.
         """
-        Path(settings.TEMP_ROOT).mkdir(parents=True, exist_ok=True)
-        media_dir = settings.BASE_DIR / "media"
-        shutil.copytree(media_dir, settings.TEMP_ROOT, dirs_exist_ok=True)
+        setup_test_environment()
         return super().setup_test_environment(**kwargs)
 
     def teardown_test_environment(self, **kwargs: dict[str, Any]) -> None:
         """Удалить папку для временных файлов после глобального завершения тестов."""
-        shutil.rmtree(settings.TEMP_ROOT, ignore_errors=True)
+        teardown_test_environment()
         return super().teardown_test_environment(**kwargs)

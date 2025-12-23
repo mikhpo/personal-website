@@ -5,8 +5,10 @@ import locale
 import logging
 import os
 import re
+import shutil
 from pathlib import Path
 
+from django.conf import settings
 from django.db.models import Model
 from django.utils import timezone
 from django.utils.text import slugify
@@ -145,3 +147,72 @@ def generate_random_text(word_count: int) -> str:
     """
     random_words = fake.words(word_count)
     return " ".join(random_words)
+
+
+def cleanup_temp_directory() -> None:
+    """Очистить временную директорию."""
+    shutil.rmtree(settings.TEMP_ROOT, ignore_errors=True)
+
+
+def cleanup_s3_test_bucket() -> None:
+    """Очистить тестовый бакет S3 от временных файлов."""
+    try:
+        # Получить тестовое хранилище
+        from django.core.files.storage import storages
+
+        s3_storage = storages["s3"]
+
+        # Если это S3 хранилище, очистить его
+        if hasattr(s3_storage, "bucket_name"):
+            # Импортируем boto3 только при необходимости
+            import boto3  # type: ignore[import-untyped]
+
+            # Создать клиент S3
+            s3_client = boto3.client(
+                "s3",
+                aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+                aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+                region_name=getattr(settings, "AWS_S3_REGION_NAME", "us-east-1"),
+                endpoint_url=getattr(settings, "AWS_S3_ENDPOINT_URL", None),
+            )
+
+            # Получить список всех объектов в бакете
+            paginator = s3_client.get_paginator("list_objects_v2")
+            pages = paginator.paginate(Bucket=s3_storage.bucket_name)
+
+            # Удалить все объекты
+            delete_keys = []
+            for page in pages:
+                if "Contents" in page:
+                    delete_keys.extend({"Key": obj["Key"]} for obj in page["Contents"])
+
+            # Выполнить массовое удаление
+            if delete_keys:
+                s3_client.delete_objects(
+                    Bucket=s3_storage.bucket_name,
+                    Delete={"Objects": delete_keys},
+                )
+    except Exception:  # noqa: BLE001, S110
+        # Не прерываем тесты при ошибках очистки
+        pass
+
+
+def setup_test_environment() -> None:
+    """Настроить тестовую среду."""
+    # Создать папку для временных файлов
+    Path(settings.TEMP_ROOT).mkdir(parents=True, exist_ok=True)
+
+    # Скопировать тестовые изображения, если директория media существует
+    media_dir = settings.BASE_DIR / "media"
+    if Path(media_dir).exists():
+        shutil.copytree(media_dir, settings.TEMP_ROOT, dirs_exist_ok=True)
+
+
+def teardown_test_environment() -> None:
+    """Очистить тестовую среду."""
+    # Очистить временную директорию
+    cleanup_temp_directory()
+
+    # Если используется S3 в тестах, очистить тестовый бакет
+    if getattr(settings, "STORAGE_TYPE", "filesystem") == "s3":
+        cleanup_s3_test_bucket()

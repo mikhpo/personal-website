@@ -1,12 +1,12 @@
 """Определение глобальных фикстур, используемых при запуске тестов через Pytest."""
 
-import shutil
 from collections.abc import Generator
-from pathlib import Path
 from typing import Any
 
 import pytest
 from django.conf import settings
+
+from personal_website.utils import setup_test_environment, teardown_test_environment
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -16,14 +16,12 @@ def manage_temp_dir() -> Generator[str, Any, None]:
     Создать каталог для временных файлов тестовой сессией и
     удалить временный каталог после завершения тестовой сессии.
     """
-    # Получить адрес папки для временных файлов из переменных окружения.
-    temp_dir = settings.TEMP_ROOT
-
-    # Создать папку для временных файлов перед глобальным запуском тестов.
-    Path(temp_dir).mkdir(parents=True, exist_ok=True)
+    # Настроить тестовую среду
+    setup_test_environment()
 
     # Передать адрес временной папки как фикстуру для тестов.
+    temp_dir = settings.TEMP_ROOT
     yield str(temp_dir)
 
-    # Удалить временную папку со всем содержимым.
-    shutil.rmtree(temp_dir, ignore_errors=True)
+    # Очистить тестовую среду
+    teardown_test_environment()
