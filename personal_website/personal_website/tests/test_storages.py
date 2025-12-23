@@ -1,10 +1,10 @@
 """Тесты файловых хранилищ."""
 
+import unittest
 from io import BytesIO
 from pathlib import Path
 
 import boto3  # type: ignore[import-untyped]
-import pytest
 from botocore.client import Config  # type: ignore[import-untyped]
 from django.conf import settings
 from django.core.files.base import ContentFile
@@ -111,7 +111,7 @@ class TestCustomFileSystemStorage(SimpleTestCase):
         self.assertFalse(self.storage.exists(saved_name))
 
 
-@pytest.mark.skipif(not S3_AVAILABLE, reason="S3 storage is not available")
+@unittest.skipUnless(S3_AVAILABLE, "S3 storage is not available")
 class TestCustomS3Storage(SimpleTestCase):
     """Тесты для S3 хранилища."""
 
