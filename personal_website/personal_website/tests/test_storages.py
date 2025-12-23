@@ -3,7 +3,9 @@
 from io import BytesIO
 from pathlib import Path
 
+import boto3  # type: ignore[import-untyped]
 import pytest
+from botocore.client import Config  # type: ignore[import-untyped]
 from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.files.storage import FileSystemStorage
@@ -15,9 +17,6 @@ from personal_website.storages import CustomFileSystemStorage, CustomS3Storage, 
 def is_s3_available() -> bool:
     """Проверить доступность S3 хранилища."""
     try:
-        import boto3  # type: ignore[import-untyped]
-        from botocore.client import Config  # type: ignore[import-untyped]
-
         s3_client = boto3.client(
             "s3",
             aws_access_key_id=settings.STORAGES["s3"]["OPTIONS"]["access_key"],
@@ -120,9 +119,6 @@ class TestCustomS3Storage(SimpleTestCase):
     def setUpClass(cls) -> None:  # noqa: D102
         super().setUpClass()
         # Создать тестовый бакет, если он не существует
-        import boto3  # type: ignore[import-untyped]
-        from botocore.client import Config  # type: ignore[import-untyped]
-
         cls.s3_client = boto3.client(
             "s3",
             aws_access_key_id=settings.STORAGES["s3"]["OPTIONS"]["access_key"],
