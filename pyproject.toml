@@ -33,6 +33,8 @@ minio = "^7.2.15"
 factory-boy = "^3.3.1"
 pydantic = "^2.10.6"
 django-storages = "^1.14.6"
+boto3 = "^1.42.15"
+s3path = "^0.6.4"
 
 [tool.poetry.group.dev.dependencies]
 coverage = "^7.6.10"
