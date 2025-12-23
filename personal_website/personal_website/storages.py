@@ -849,8 +849,9 @@ class FakerFileStorageAdapter(FakerFileSystemStorage):
 
 def select_storage() -> Storage:
     """Возвращает файловое хранилище по умолчанию."""
-    # Для тестов всегда использовать тестовое хранилище
-    if settings.TEST:
+    # Для тестов использовать тестовое хранилище,
+    # но не в том случае, если задано в явном виде использование S3.
+    if settings.TEST and settings.STORAGE_TYPE != "s3":
         return storages["test"]
 
     # Для S3 использовать хранилище S3

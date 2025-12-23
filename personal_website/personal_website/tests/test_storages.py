@@ -7,7 +7,7 @@ import pytest
 from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.files.storage import FileSystemStorage
-from django.test import SimpleTestCase
+from django.test import SimpleTestCase, override_settings
 
 from personal_website.storages import CustomFileSystemStorage, CustomS3Storage, select_storage
 
@@ -36,7 +36,7 @@ def is_s3_available() -> bool:
 S3_AVAILABLE = is_s3_available()
 
 
-class FileSystemStorageTests(SimpleTestCase):
+class TestFileSystemStorage(SimpleTestCase):
     """Проверка доступа к хранилищу на основе локальной файловой системы."""
 
     @classmethod
@@ -49,15 +49,8 @@ class FileSystemStorageTests(SimpleTestCase):
         path_exists = Path(storage_dir).exists()
         self.assertTrue(path_exists)
 
-    def test_select_storage(self) -> None:
-        """Селектор хранилища возвращает тестовое хранилище."""
-        storage = select_storage()
-        self.assertIsInstance(storage, FileSystemStorage)
-        storage_name = Path(storage.location).name
-        self.assertEqual(storage_name, "temp")
 
-
-class CustomFileSystemStorageTests(SimpleTestCase):
+class TestCustomFileSystemStorage(SimpleTestCase):
     """Тесты для расширенного файлового хранилища."""
 
     def setUp(self) -> None:  # noqa: D102
@@ -120,7 +113,7 @@ class CustomFileSystemStorageTests(SimpleTestCase):
 
 
 @pytest.mark.skipif(not S3_AVAILABLE, reason="S3 storage is not available")
-class CustomS3StorageTests(SimpleTestCase):
+class TestCustomS3Storage(SimpleTestCase):
     """Тесты для S3 хранилища."""
 
     @classmethod
@@ -255,13 +248,31 @@ class CustomS3StorageTests(SimpleTestCase):
         self.storage.rmdir("test/directory")
 
 
-class SelectStorageTests(SimpleTestCase):
+class TestSelectStorage(SimpleTestCase):
     """Тесты механизма выбора хранилища."""
 
-    def test_select_storage_returns_test_storage_in_test_mode(self) -> None:
-        """В тестовом режиме select_storage возвращает тестовое хранилище."""
+    def test_select_storage_returns_test_storage_in_test_mode_without_s3(self) -> None:
+        """В тестовом режиме без S3 select_storage возвращает тестовое хранилище."""
+        with override_settings(TEST=True, STORAGE_TYPE="filesystem"):
+            storage = select_storage()
+            self.assertIsInstance(storage, FileSystemStorage)
+            self.assertEqual(Path(storage.location).name, "temp")
+
+    @override_settings(TEST=True, STORAGE_TYPE="s3")
+    def test_select_storage_returns_s3_storage_in_test_mode_with_s3_type(self) -> None:
+        """В тестовом режиме с STORAGE_TYPE = 's3' select_storage возвращает S3 хранилище."""
+        storage = select_storage()
+        self.assertIsInstance(storage, CustomS3Storage)
+
+    @override_settings(TEST=False, STORAGE_TYPE="s3")
+    def test_select_storage_returns_s3_storage_when_storage_type_is_s3(self) -> None:
+        """Когда STORAGE_TYPE = 's3', select_storage возвращает S3 хранилище."""
+        storage = select_storage()
+        self.assertIsInstance(storage, CustomS3Storage)
+
+    @override_settings(TEST=False, STORAGE_TYPE="filesystem")
+    def test_select_storage_returns_filesystem_storage_by_default(self) -> None:
+        """По умолчанию select_storage возвращает файловое хранилище."""
         storage = select_storage()
         self.assertIsInstance(storage, FileSystemStorage)
-        # В тестовом режиме всегда используется test хранилище
-        self.assertTrue(settings.TEST)
-        self.assertEqual(Path(storage.location).name, "temp")
+        self.assertNotEqual(Path(storage.location).name, "temp")
