@@ -115,25 +115,6 @@ class TestCustomFileSystemStorage(SimpleTestCase):
 class TestCustomS3Storage(SimpleTestCase):
     """Тесты для S3 хранилища."""
 
-    @classmethod
-    def setUpClass(cls) -> None:  # noqa: D102
-        super().setUpClass()
-        # Создать тестовый бакет, если он не существует
-        cls.s3_client = boto3.client(
-            "s3",
-            aws_access_key_id=settings.STORAGES["s3"]["OPTIONS"]["access_key"],
-            aws_secret_access_key=settings.STORAGES["s3"]["OPTIONS"]["secret_key"],
-            endpoint_url=settings.STORAGES["s3"]["OPTIONS"]["endpoint_url"],
-            config=Config(signature_version="s3v4"),
-        )
-
-        bucket_name = settings.STORAGES["s3"]["OPTIONS"]["bucket_name"]
-        try:  # noqa: SIM105
-            cls.s3_client.create_bucket(Bucket=bucket_name)
-        except Exception:  # noqa: BLE001, S110
-            # Бакет уже существует
-            pass
-
     def setUp(self) -> None:  # noqa: D102
         self.storage = CustomS3Storage(
             bucket_name=settings.STORAGES["s3"]["OPTIONS"]["bucket_name"],

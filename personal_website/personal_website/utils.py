@@ -8,6 +8,9 @@ import re
 import shutil
 from pathlib import Path
 
+import boto3  # type: ignore[import-untyped]
+from botocore.client import Config  # type: ignore[import-untyped]
+from botocore.exceptions import ClientError  # type: ignore[import-untyped]
 from django.conf import settings
 from django.db.models import Model
 from django.utils import timezone
@@ -154,47 +157,64 @@ def cleanup_temp_directory() -> None:
     shutil.rmtree(settings.TEMP_ROOT, ignore_errors=True)
 
 
+def create_s3_test_bucket() -> None:
+    """Создать тестовый бакет S3, если он не существует."""
+    # Получить настройки S3 из конфигурации хранилища
+    s3_options = settings.STORAGES["s3"]["OPTIONS"]
+
+    # Создать клиент S3
+    s3_client = boto3.client(
+        "s3",
+        aws_access_key_id=s3_options["access_key"],
+        aws_secret_access_key=s3_options["secret_key"],
+        region_name=s3_options["region_name"],
+        endpoint_url=s3_options["endpoint_url"],
+        config=Config(signature_version="s3v4"),
+    )
+
+    bucket_name = s3_options["bucket_name"]
+    # Пытаемся создать бакет
+    try:
+        s3_client.create_bucket(Bucket=bucket_name)
+    except ClientError as e:
+        # Если бакет уже существует и принадлежит нам, это не ошибка
+        if e.response["Error"]["Code"] != "BucketAlreadyOwnedByYou":
+            # Для всех других ошибок пробрасываем исключение дальше
+            raise
+
+
 def cleanup_s3_test_bucket() -> None:
     """Очистить тестовый бакет S3 от временных файлов."""
-    try:
-        # Получить тестовое хранилище
-        from django.core.files.storage import storages
+    # Получить настройки S3 из конфигурации хранилища
+    s3_options = settings.STORAGES["s3"]["OPTIONS"]
 
-        s3_storage = storages["s3"]
+    # Создать клиент S3
+    s3_client = boto3.client(
+        "s3",
+        aws_access_key_id=s3_options["access_key"],
+        aws_secret_access_key=s3_options["secret_key"],
+        region_name=s3_options["region_name"],
+        endpoint_url=s3_options["endpoint_url"],
+    )
 
-        # Если это S3 хранилище, очистить его
-        if hasattr(s3_storage, "bucket_name"):
-            # Импортируем boto3 только при необходимости
-            import boto3  # type: ignore[import-untyped]
+    bucket_name = s3_options["bucket_name"]
 
-            # Создать клиент S3
-            s3_client = boto3.client(
-                "s3",
-                aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-                aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-                region_name=getattr(settings, "AWS_S3_REGION_NAME", "us-east-1"),
-                endpoint_url=getattr(settings, "AWS_S3_ENDPOINT_URL", None),
-            )
+    # Получить список всех объектов в бакете
+    paginator = s3_client.get_paginator("list_objects_v2")
+    pages = paginator.paginate(Bucket=bucket_name)
 
-            # Получить список всех объектов в бакете
-            paginator = s3_client.get_paginator("list_objects_v2")
-            pages = paginator.paginate(Bucket=s3_storage.bucket_name)
+    # Удалить все объекты
+    delete_keys = []
+    for page in pages:
+        if "Contents" in page:
+            delete_keys.extend({"Key": obj["Key"]} for obj in page["Contents"])
 
-            # Удалить все объекты
-            delete_keys = []
-            for page in pages:
-                if "Contents" in page:
-                    delete_keys.extend({"Key": obj["Key"]} for obj in page["Contents"])
-
-            # Выполнить массовое удаление
-            if delete_keys:
-                s3_client.delete_objects(
-                    Bucket=s3_storage.bucket_name,
-                    Delete={"Objects": delete_keys},
-                )
-    except Exception:  # noqa: BLE001, S110
-        # Не прерываем тесты при ошибках очистки
-        pass
+    # Выполнить массовое удаление
+    if delete_keys:
+        s3_client.delete_objects(
+            Bucket=bucket_name,
+            Delete={"Objects": delete_keys},
+        )
 
 
 def setup_test_environment() -> None:
@@ -206,6 +226,10 @@ def setup_test_environment() -> None:
     media_dir = settings.BASE_DIR / "media"
     if Path(media_dir).exists():
         shutil.copytree(media_dir, settings.TEMP_ROOT, dirs_exist_ok=True)
+
+    # Если используется S3 в тестах, создать тестовый бакет
+    if getattr(settings, "STORAGE_TYPE", "filesystem") == "s3":
+        create_s3_test_bucket()
 
 
 def teardown_test_environment() -> None:
