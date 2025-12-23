@@ -136,6 +136,9 @@ MEDIA_ROOT = os.getenv("STORAGE_ROOT", default=PROJECT_DIR / "storage")
 # Адрес временной папки для тестирования.
 TEMP_ROOT = os.getenv("TEMP_ROOT", default=PROJECT_DIR / "temp")
 
+# Тип хранилища: filesystem (по умолчанию) или s3.
+STORAGE_TYPE = os.getenv("STORAGE_TYPE", default="filesystem")
+
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
     "staticfiles": {"BACKEND": "whitenoise.storage.CompressedStaticFilesStorage"},
@@ -144,6 +147,26 @@ STORAGES = {
         "OPTIONS": {
             "location": TEMP_ROOT,
             "base_url": "/media/",
+        },
+    },
+    "filesystem": {
+        "BACKEND": "personal_website.storages.CustomFileSystemStorage",
+        "OPTIONS": {
+            "location": MEDIA_ROOT,
+            "base_url": MEDIA_URL,
+        },
+    },
+    "s3": {
+        "BACKEND": "personal_website.storages.CustomS3Storage",
+        "OPTIONS": {
+            "bucket_name": os.getenv("AWS_STORAGE_BUCKET_NAME"),
+            "access_key": os.getenv("AWS_ACCESS_KEY_ID"),
+            "secret_key": os.getenv("AWS_SECRET_ACCESS_KEY"),
+            "region_name": os.getenv("AWS_S3_REGION_NAME", "us-east-1"),
+            "endpoint_url": os.getenv("AWS_S3_ENDPOINT_URL"),
+            "file_overwrite": False,
+            "default_acl": "public-read",
+            "querystring_auth": False,
         },
     },
 }
