@@ -226,6 +226,31 @@ class TestCustomS3Storage(SimpleTestCase):
         self.storage.delete(saved_name)
         self.assertFalse(self.storage.exists(saved_name))
 
+    def test_save_overwrites_existing_file(self) -> None:
+        """Тест перезаписи существующего файла в S3."""
+        filename = "test_overwrite_file.txt"
+        original_content = b"Original content"
+        updated_content = b"Updated content"
+
+        # Сохранить исходный файл
+        saved_name = self.storage.save(filename, ContentFile(original_content))
+        self.assertTrue(self.storage.exists(saved_name))
+
+        # Прочитать и проверить исходное содержимое
+        content = self.storage.read_bytes(saved_name)
+        self.assertEqual(content, original_content)
+
+        # Перезаписать файл новым содержимым
+        self.storage.save(filename, ContentFile(updated_content))
+
+        # Прочитать и проверить обновленное содержимое
+        content = self.storage.read_bytes(saved_name)
+        self.assertEqual(content, updated_content)
+
+        # Удалить файл
+        self.storage.delete(saved_name)
+        self.assertFalse(self.storage.exists(saved_name))
+
     def test_mkdir_is_noop(self) -> None:
         """Тест что mkdir для S3 является no-op операцией."""
         # Не должно вызывать ошибок
