@@ -25,6 +25,7 @@ env:
   TESTED_TAG: tested
   TEST_IMAGE_NAME: ghcr.io/${{ github.repository }}:${TEST_TAG}
   TESTED_IMAGE_NAME: ghcr.io/${{ github.repository }}:${TESTED_TAG}
+  STORAGE_TYPE: filesystem
 
 jobs:
   # Кэширование зависимостей Poetry.

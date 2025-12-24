@@ -59,6 +59,7 @@ workflows:
       DEBUG: "True"
       SECRET_KEY: ${{ secrets.SECRET_KEY }}
       PROJECT_NAME: "personal_website"
+      STORAGE_TYPE: "filesystem"
     tasks:
       # Тестирование кода Python
       - name: "python-test"
