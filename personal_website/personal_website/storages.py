@@ -32,15 +32,21 @@ class BaseStorageMixin:
         if isinstance(name, Path):
             name = str(name)
 
+        # Преобразуем base_location в строку, если это Path
+        base_location = getattr(self, "base_location", "")
+        if isinstance(base_location, Path):
+            base_location = str(base_location)
+
         # Проверяем, что base_location является частью имени файла.
-        if hasattr(self, "base_location") and self.base_location and name.startswith(self.base_location):
+        if base_location and name.startswith(base_location):
             # Разделяем путь по base_location и берем вторую часть.
-            parts = name.split(self.base_location, 1)
+            parts = name.split(base_location, 1)
             if len(parts) > 1:
                 # Возвращаем вторую часть без ведущих слэшей.
                 return parts[1].lstrip("/")
+
         # Если base_location пустая строка, удаляем начальный слэш из имени файла.
-        elif hasattr(self, "base_location") and not self.base_location and name.startswith("/"):
+        elif base_location == "" and name.startswith("/"):
             return name.lstrip("/")
         return name
 
