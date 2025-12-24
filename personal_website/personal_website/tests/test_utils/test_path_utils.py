@@ -1,73 +1,100 @@
 """Тесты вспомогательных функций для работы с файлами и файловой системой."""
 
-from pathlib import Path
-
-from django.conf import settings
 from django.test import SimpleTestCase
 from faker import Faker
-from faker_file.providers.jpeg_file import JpegFileProvider  # type: ignore[import-untyped]
 
-from personal_website.storages import FakerFileStorageAdapter
-from personal_website.utils import calculate_path_size, list_file_paths
+from personal_website.storages import select_storage
+from personal_website.utils import list_file_paths
 
 FAKER = Faker()
-FS_STORAGE = FakerFileStorageAdapter(
-    root_path=settings.TEMP_ROOT,
-    rel_path=Path(__file__).resolve().stem,
-)
+storage = select_storage()
 
 
 class ListFilePathTests(SimpleTestCase):
     """Тестирование утилиты поиска абсолютных путей тестовых фотографий."""
 
-    @classmethod
-    def setUpClass(cls) -> None:
-        """Создать тестовую директорию с изображениями."""
-        super().setUpClass()
-        cls.test_images_dir = Path(settings.TEMP_ROOT) / "test_list_file_paths"
-        cls.test_images_dir.mkdir(parents=True, exist_ok=True)
-
-        # Создать несколько тестовых файлов
-        fs_storage = FakerFileStorageAdapter(
-            root_path=settings.TEMP_ROOT,
-            rel_path="test_list_file_paths",
-        )
-        cls.files = [JpegFileProvider(FAKER).jpeg_file(storage=fs_storage, raw=False) for _ in range(3)]
-
     def test_paths_exist(self) -> None:
         """Проверить, что возвращенные пути существуют."""
-        image_paths_list = list_file_paths(self.test_images_dir)
+        # Создаем тестовую директорию в хранилище
+        test_dir = "test_list_file_paths"
+        storage.mkdir(test_dir, parents=True, exist_ok=True)
+
+        # Создаем несколько тестовых файлов напрямую через хранилище
+        file_paths = []
+        for i in range(3):
+            file_name = f"test_file_{i}.jpg"
+            file_path = storage.joinpath(test_dir, file_name)
+            # Создаем пустой файл
+            storage.save(file_path, b"test content")
+            file_paths.append(file_path)
+
+        # Вызываем функцию
+        image_paths_list = list_file_paths(test_dir)
+
+        # Проверяем результаты
         self.assertIsInstance(image_paths_list, list)
         self.assertEqual(len(image_paths_list), 3)
         for image_path in image_paths_list:
-            image_exists = Path(image_path).exists()
-            self.assertTrue(image_exists)
+            # Проверяем, что путь существует в хранилище
+            self.assertTrue(storage.exists(image_path))
 
+        # Очищаем тестовые файлы
+        storage.rmtree(test_dir, ignore_errors=True)
 
-class CalculatePathSizeTests(SimpleTestCase):
-    """Тесты утилиты определения размера занимаего на диске места."""
+    def test_empty_directory(self) -> None:
+        """Проверить поведение функции для пустой директории."""
+        # Создаем пустую директорию
+        test_dir = "test_empty_directory"
+        storage.mkdir(test_dir, parents=True, exist_ok=True)
 
-    @classmethod
-    def setUpClass(cls) -> None:  # noqa: D102
-        cls.files = [JpegFileProvider(FAKER).jpeg_file(storage=FS_STORAGE, raw=False) for _ in range(3)]
-        return super().setUpClass()
+        # Вызываем функцию
+        result = list_file_paths(test_dir)
 
-    def test_file(self) -> None:
-        """Проверка определения размера файла."""
-        filepath = FS_STORAGE.abspath(self.files[0])
-        filesize = calculate_path_size(filepath)
-        self.assertIsInstance(filesize, dict)
-        if filesize:
-            value = filesize["value"]
-            unit = filesize["unit"]
-            message = filesize["message"]
-            self.assertIsInstance(message, str)
-            self.assertIsInstance(value, int)
-            self.assertIn(str(value), message)
-            self.assertIn(unit, message)
+        # Проверяем, что возвращается пустой список
+        self.assertIsInstance(result, list)
+        self.assertEqual(len(result), 0)
 
-    def test_dir(self) -> None:
-        """Проверка определения размера каталога."""
-        dir_path = Path(FS_STORAGE.root_path) / FS_STORAGE.rel_path
-        filesize = calculate_path_size(dir_path)
-        self.assertIsInstance(filesize, dict)
+        # Очищаем тестовые файлы
+        storage.rmtree(test_dir, ignore_errors=True)
+
+    def test_nonexistent_directory(self) -> None:
+        """Проверить поведение функции для несуществующей директории."""
+        # Вызываем функцию с несуществующим путем
+        result = list_file_paths("nonexistent_directory")
+
+        # Проверяем, что возвращается пустой список
+        self.assertIsInstance(result, list)
+        self.assertEqual(len(result), 0)
+
+    def test_with_subdirectories(self) -> None:
+        """Проверить поведение функции с подкаталогами."""
+        # Создаем тестовую директорию
+        test_dir = "test_with_subdirs"
+        storage.mkdir(test_dir, parents=True, exist_ok=True)
+
+        # Создаем файлы и подкаталоги
+        file1 = storage.joinpath(test_dir, "file1.txt")
+        storage.save(file1, b"test content 1")
+
+        file2 = storage.joinpath(test_dir, "file2.txt")
+        storage.save(file2, b"test content 2")
+
+        # Создаем подкаталог
+        subdir = storage.joinpath(test_dir, "subdir")
+        storage.mkdir(subdir, parents=True, exist_ok=True)
+
+        # Вызываем функцию
+        result = list_file_paths(test_dir)
+
+        # Проверяем, что возвращаются только пути к файлам, а не подкаталогам
+        self.assertIsInstance(result, list)
+        self.assertEqual(len(result), 2)
+
+        # Проверяем, что возвращенные пути существуют
+        for path in result:
+            self.assertTrue(storage.exists(path))
+            # Проверяем, что это файл, а не директория
+            self.assertFalse(storage.is_dir(path))
+
+        # Очищаем тестовые файлы
+        storage.rmtree(test_dir, ignore_errors=True)

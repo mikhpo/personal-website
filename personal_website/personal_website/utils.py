@@ -3,7 +3,6 @@
 import datetime
 import locale
 import logging
-import os
 import re
 import shutil
 from pathlib import Path
@@ -17,6 +16,8 @@ from django.utils import timezone
 from django.utils.text import slugify
 from faker import Faker
 from pytils import translit  # type: ignore[import-untyped]
+
+from personal_website.storages import select_storage
 
 fake = Faker(locale="ru_RU")
 
@@ -68,7 +69,7 @@ class NoColorLogFormatter(logging.Formatter):
         return self._fmt.find("{asctime}") >= 0  # type: ignore[union-attr]
 
 
-def list_file_paths(files_dir: Path) -> list[str]:
+def list_file_paths(files_dir: str) -> list[str]:
     """Определить пути набора набора файлов в указанном каталоге.
 
     Args:
@@ -77,45 +78,26 @@ def list_file_paths(files_dir: Path) -> list[str]:
     Returns:
         list: список полных путей до файлов.
     """
-    names = os.listdir(files_dir)
-    paths = [Path(files_dir).joinpath(name) for name in names]
-    return [str(path) for path in paths if Path(path).is_file()]
+    # Получаем хранилище по умолчанию
+    storage = select_storage()
 
+    # Получаем список файлов и подкаталогов
+    try:
+        files, _ = storage.listdir(files_dir)
+    except (OSError, FileNotFoundError, ClientError):
+        # Если возникла ошибка при получении списка файлов, возвращаем пустой список
+        return []
 
-def calculate_path_size(path: str) -> dict | None:
-    """Определение размера файла или каталога по указанному пути с автоматическим определением единцы измерения.
+    # Формируем полные пути к файлам
+    paths = []
+    for file_name in files:
+        # Используем метод joinpath для формирования полного пути
+        full_path = storage.joinpath(files_dir, file_name)
+        # Проверяем, что путь ведет к файлу, а не к каталогу
+        if storage.exists(full_path) and not storage.is_dir(full_path):
+            paths.append(full_path)
 
-    Args:
-        path (str): путь до файла или каталога.
-
-    Returns:
-        dict: словарь, содержащий значение, единицу измерения и сообщение.
-
-    Examples:
-        ```
-        {"value": 500, "unit": "КБ", "message": "500 КБ"}
-        ```
-    """
-    units = ("Б", "КБ", "МБ", "ГБ", "ТБ")
-    binary_thousand = 1024
-    size: float | int = 0
-
-    # Способ определения размера дампа зависит от типа пути: файл или каталог.
-    if Path(path).is_dir():
-        for _path, _, files in os.walk(path):
-            for file in files:
-                filepath = Path(_path) / file
-                size += Path(filepath).stat().st_size
-    else:
-        size = Path(path).stat().st_size
-
-    # Определение единцы измерения размера дампа. Значение округляется до целого числа.
-    for unit in units:
-        if size < binary_thousand:
-            value = int(size)
-            return {"value": value, "unit": unit, "message": f"{value} {unit}"}
-        size /= binary_thousand
-    return None
+    return paths
 
 
 def has_cyrillic(text: str) -> bool:

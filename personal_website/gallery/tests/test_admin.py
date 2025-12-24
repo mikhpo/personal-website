@@ -3,7 +3,6 @@
 from http import HTTPStatus
 from pathlib import Path
 
-from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
@@ -11,9 +10,11 @@ from django.test import TestCase
 from gallery.apps import GalleryConfig
 from gallery.factories import AlbumFactory, PhotoFactory
 from gallery.models import Album, Photo, Tag
+from personal_website.storages import StorageType, select_storage
 from personal_website.utils import list_file_paths
 
 ADMIN_URL = "/admin/"
+storage: StorageType = select_storage()
 
 
 class GalleryAdminTests(TestCase):
@@ -23,7 +24,7 @@ class GalleryAdminTests(TestCase):
     def setUpTestData(cls) -> None:
         """Подготовить тестовые данные для выполнения тестов."""
         cls.superuser: User = User.objects.create_superuser(username="testadmin", password="12345")
-        test_images_dir = Path(settings.TEMP_ROOT) / "gallery" / "photos"
+        test_images_dir = "gallery/photos"
         cls.image_path = list_file_paths(test_images_dir)[0]
         return super().setUpTestData()
 
@@ -69,14 +70,15 @@ class GalleryAdminTests(TestCase):
 
         with self.subTest("Отправка данных для изменения объекта"):
             new_slug = "new-slug"
-            with Path(self.image_path).open("rb") as photo_image:
-                data = {
-                    "image": SimpleUploadedFile(photo_image.name, photo_image.read()),
-                    "name": photo.name,
-                    "album": album.pk,
-                    "slug": new_slug,
-                }
-                response = self.client.post(url, data)
+            file_content = storage.read_bytes(self.image_path)
+            file_name = Path(self.image_path).name
+            data = {
+                "image": SimpleUploadedFile(file_name, file_content),
+                "name": photo.name,
+                "album": album.pk,
+                "slug": new_slug,
+            }
+            response = self.client.post(url, data)
             photo.refresh_from_db()
             self.assertEqual(photo.slug, new_slug)
             self.assertIsNotNone(photo.image.name)
@@ -107,7 +109,7 @@ class GalleryAdminTests(TestCase):
         """Проверяет успешность добавления фотографии через административную панель."""
         # Создать альбом, в который будет добавляться фотография.
         album = AlbumFactory(name="Тестовый альбом")
-        photo_name = Path(self.image_path).stem
+        photo_name = storage.stem(self.image_path)
 
         # Ссылка на форму добавления фотографии в административной панели.
         url = ADMIN_URL + "gallery/photo/add/"
@@ -116,13 +118,14 @@ class GalleryAdminTests(TestCase):
 
         # Загрузить фотографию, проверить статус ответа и что
         # фотография с именем исходного файла существует в базе данных.
-        with Path(self.image_path).open("rb") as photo_image:
-            data = {
-                "image": SimpleUploadedFile(photo_image.name, photo_image.read()),
-                "album": album.pk,
-                "public": True,
-            }
-            response = self.client.post(url, data)
+        file_content = storage.read_bytes(self.image_path)
+        file_name = Path(self.image_path).name
+        data = {
+            "image": SimpleUploadedFile(file_name, file_content),
+            "album": album.pk,
+            "public": True,
+        }
+        response = self.client.post(url, data)
         self.assertEqual(response.status_code, HTTPStatus.FOUND)
         self.assertTrue(Photo.objects.filter(name=photo_name).exists())
 

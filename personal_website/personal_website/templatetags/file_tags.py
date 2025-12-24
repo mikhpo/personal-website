@@ -15,10 +15,10 @@ Examples:
 
 from django import template
 
-from personal_website.storages import select_storage
+from personal_website.storages import StorageType, select_storage
 
 register = template.Library()
-storage = select_storage()
+storage: StorageType = select_storage()
 
 
 @register.filter

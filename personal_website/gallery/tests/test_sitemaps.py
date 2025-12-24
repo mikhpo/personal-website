@@ -1,9 +1,7 @@
 """Тесты карты сайта для объектов галереи."""
 
 from http import HTTPStatus
-from pathlib import Path
 
-from django.conf import settings
 from django.test import TestCase
 from django.utils import timezone
 
@@ -29,7 +27,7 @@ class GallerySitemapTest(TestCase):
         cls.private_album = AlbumFactory(public=False)
 
         # Создать фотографии в базе данных из картинок в директории проекта.
-        test_images_dir = Path(settings.TEMP_ROOT) / "gallery" / "photos"
+        test_images_dir = "gallery/photos"
         images = list_file_paths(test_images_dir)
         for image in images:
             if "Tuscany" in image:

@@ -11,7 +11,13 @@ from django.core.files.base import ContentFile
 from django.core.files.storage import FileSystemStorage
 from django.test import SimpleTestCase, override_settings
 
-from personal_website.storages import CustomFileSystemStorage, CustomS3Storage, select_storage
+from personal_website.storages import (
+    CustomFileSystemStorage,
+    CustomS3Storage,
+    FakerFileStorageAdapter,
+    StorageType,
+    select_storage,
+)
 
 
 def is_s3_available() -> bool:
@@ -209,6 +215,17 @@ class TestCustomS3Storage(SimpleTestCase):
         # Удалить файл
         self.storage.delete(saved_name)
 
+    def test_save(self) -> None:
+        """Тест сохранения файла в S3."""
+        test_content = b"Test content for S3 save method"
+        filename = "test_save_file.txt"
+        saved_name = self.storage.save(filename, test_content)
+        self.assertTrue(self.storage.exists(saved_name))
+        content = self.storage.read_bytes(saved_name)
+        self.assertEqual(content, test_content)
+        self.storage.delete(saved_name)
+        self.assertFalse(self.storage.exists(saved_name))
+
     def test_mkdir_is_noop(self) -> None:
         """Тест что mkdir для S3 является no-op операцией."""
         # Не должно вызывать ошибок
@@ -225,31 +242,122 @@ class TestCustomS3Storage(SimpleTestCase):
         self.storage.rmdir("test/directory")
 
 
+class TestFakerFileStorageAdapter(SimpleTestCase):
+    """Тесты для адаптера FakerFileStorageAdapter."""
+
+    def setUp(self) -> None:
+        """Настроить тестовое хранилище."""
+        self.faker_storage = FakerFileStorageAdapter()
+
+    def test_generate_filename(self) -> None:
+        """Тест генерации имени файла."""
+        filename = self.faker_storage.generate_filename(extension="txt", prefix="test_")
+        self.assertTrue(filename.endswith(".txt"))
+        self.assertIn("test_", filename)
+
+    def test_write_text(self) -> None:
+        """Тест записи текстовых данных в файл."""
+        filename = "test_write_text.txt"
+        data = "Тестовые текстовые данные"
+        bytes_written = self.faker_storage.write_text(filename, data)
+        self.assertEqual(bytes_written, len(data.encode("utf-8")))
+        self.assertTrue(self.faker_storage.exists(filename))
+        self.faker_storage.unlink(filename)
+        self.assertFalse(self.faker_storage.exists(filename))
+
+    def test_write_bytes(self) -> None:
+        """Тест записи байтовых данных в файл."""
+        filename = "test_write_bytes.txt"
+        data = b"Test binary data"
+        bytes_written = self.faker_storage.write_bytes(filename, data)
+        self.assertEqual(bytes_written, len(data))
+        self.assertTrue(self.faker_storage.exists(filename))
+        self.faker_storage.unlink(filename)
+        self.assertFalse(self.faker_storage.exists(filename))
+
+    def test_exists(self) -> None:
+        """Тест проверки существования файла."""
+        filename = "test_exists.txt"
+        data = b"Test data"
+        self.assertFalse(self.faker_storage.exists(filename))
+        self.faker_storage.write_bytes(filename, data)
+        self.assertTrue(self.faker_storage.exists(filename))
+        self.faker_storage.unlink(filename)
+        self.assertFalse(self.faker_storage.exists(filename))
+
+    def test_abspath(self) -> None:
+        """Тест получения абсолютного пути к файлу."""
+        filename = "test_abspath.txt"
+        abs_path = self.faker_storage.abspath(filename)
+        self.assertTrue(abs_path.endswith(filename))
+
+    def test_relpath(self) -> None:
+        """Тест получения относительного пути к файлу."""
+        filename = "test_relpath.txt"
+        rel_path = self.faker_storage.relpath(filename)
+        self.assertEqual(rel_path, filename)
+
+    def test_read(self) -> None:
+        """Тест чтения данных из файла."""
+        filename = "test_read.txt"
+        data = b"Test read data"
+        self.faker_storage.write_bytes(filename, data)
+        read_data = self.faker_storage.read(filename)
+        self.assertEqual(read_data, data)
+        self.faker_storage.unlink(filename)
+
+    def test_delete(self) -> None:
+        """Тест удаления файла."""
+        filename = "test_delete.txt"
+        data = b"Test delete data"
+        self.faker_storage.write_bytes(filename, data)
+        self.assertTrue(self.faker_storage.exists(filename))
+        self.faker_storage.delete(filename)
+        self.assertFalse(self.faker_storage.exists(filename))
+
+    def test_unlink(self) -> None:
+        """Тест удаления файла через unlink."""
+        filename = "test_unlink.txt"
+        data = b"Test unlink data"
+        self.faker_storage.write_bytes(filename, data)
+        self.assertTrue(self.faker_storage.exists(filename))
+        self.faker_storage.unlink(filename)
+        self.assertFalse(self.faker_storage.exists(filename))
+
+    def test_mkdir(self) -> None:
+        """Тест создания директории."""
+        directory = "test_directory"
+
+        # Так как создания директории от конкретной реализации,
+        # просто проверяем, что метод не вызвал ошибок
+        self.faker_storage.mkdir(directory)
+
+
 class TestSelectStorage(SimpleTestCase):
     """Тесты механизма выбора хранилища."""
 
     def test_select_storage_returns_test_storage_in_test_mode_without_s3(self) -> None:
         """В тестовом режиме без S3 select_storage возвращает тестовое хранилище."""
         with override_settings(TEST=True, STORAGE_TYPE="filesystem"):
-            storage = select_storage()
+            storage: StorageType = select_storage()
             self.assertIsInstance(storage, FileSystemStorage)
             self.assertEqual(Path(storage.location).name, "temp")
 
     @override_settings(TEST=True, STORAGE_TYPE="s3")
     def test_select_storage_returns_s3_storage_in_test_mode_with_s3_type(self) -> None:
         """В тестовом режиме с STORAGE_TYPE = 's3' select_storage возвращает S3 хранилище."""
-        storage = select_storage()
+        storage: StorageType = select_storage()
         self.assertIsInstance(storage, CustomS3Storage)
 
     @override_settings(TEST=False, STORAGE_TYPE="s3")
     def test_select_storage_returns_s3_storage_when_storage_type_is_s3(self) -> None:
         """Когда STORAGE_TYPE = 's3', select_storage возвращает S3 хранилище."""
-        storage = select_storage()
+        storage: StorageType = select_storage()
         self.assertIsInstance(storage, CustomS3Storage)
 
     @override_settings(TEST=False, STORAGE_TYPE="filesystem")
     def test_select_storage_returns_filesystem_storage_by_default(self) -> None:
         """По умолчанию select_storage возвращает файловое хранилище."""
-        storage = select_storage()
+        storage: StorageType = select_storage()
         self.assertIsInstance(storage, FileSystemStorage)
         self.assertNotEqual(Path(storage.location).name, "temp")

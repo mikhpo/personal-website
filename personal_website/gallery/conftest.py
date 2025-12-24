@@ -1,18 +1,15 @@
 """Фикстуры тестов галереи."""
 
-import shutil
 from collections.abc import Generator
-from pathlib import Path
 from typing import Any
 
 import pytest
-from django.conf import settings
 from faker import Faker
-from faker_file.providers.jpeg_file import JpegFileProvider  # type: ignore[import-untyped]
-from faker_file.storages.filesystem import FileSystemStorage  # type: ignore[import-untyped]
+from faker_file.providers.jpeg_file import JpegFileProvider  # type:ignore[import-untyped]
 
 from gallery.factories import ExifDataFactory
 from gallery.utils import write_exif
+from personal_website.storages import StorageType, select_storage
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -24,30 +21,32 @@ def manage_test_images() -> Generator[str, Any, None]:
     """
     # Получить адрес папки для тестовых изображений.
     relative_path = "gallery/photos"
-    test_images_dir = Path(settings.TEMP_ROOT) / relative_path
 
     # Создать папку для тестовых изображений перед запуском тестов галереи.
-    Path(test_images_dir).mkdir(parents=True, exist_ok=True)
+    storage: StorageType = select_storage()
 
     fake = Faker()
-    gallery_storage = FileSystemStorage(root_path=settings.TEMP_ROOT, rel_path=relative_path)
 
     # Создать фотографии для альбома Тосканы.
     for i in range(3):
-        jpeg_file = JpegFileProvider(fake).jpeg_file(storage=gallery_storage, basename=f"Tuscany {i}", raw=False)
-        jpeg_file_path = gallery_storage.abspath(jpeg_file)
+        file_name = f"Tuscany {i}.jpg"
+        file_path = f"{relative_path}/{file_name}"
+        jpeg_file = JpegFileProvider(fake).jpeg_file(raw=True)
+        storage.save(file_path, jpeg_file)
         exif_data = ExifDataFactory()
-        write_exif(jpeg_file_path, exif_data)
+        write_exif(file_path, exif_data)
 
     # Создать фотографии для альбома Лангтанг.
     for i in range(2):
-        jpeg_file = JpegFileProvider(fake).jpeg_file(storage=gallery_storage, basename=f"Langtang {i}", raw=False)
-        jpeg_file_path = gallery_storage.abspath(jpeg_file)
+        file_name = f"Langtang {i}.jpg"
+        file_path = f"{relative_path}/{file_name}"
+        jpeg_file = JpegFileProvider(fake).jpeg_file(raw=True)
+        storage.save(file_path, jpeg_file)
         exif_data = ExifDataFactory()
-        write_exif(jpeg_file_path, exif_data)
+        write_exif(file_path, exif_data)
 
     # Передать адрес временной папки как фикстуру для тестов.
-    yield str(test_images_dir)
+    yield relative_path
 
     # Удалить временную папку со всем содержимым.
-    shutil.rmtree(test_images_dir, ignore_errors=True)
+    storage.rmtree(relative_path, ignore_errors=True)

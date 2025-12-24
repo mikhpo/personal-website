@@ -1,14 +1,16 @@
 """Определение параметров хранения загружаемых файлов."""
 
 import shutil
+import uuid
 from io import BytesIO
 from pathlib import Path
-from typing import Any, Callable, Union
+from typing import IO, Any, Callable, Union
 
 from botocore.exceptions import ClientError  # type: ignore[import-untyped]
 from django.conf import settings
 from django.core.files.base import ContentFile
-from django.core.files.storage import FileSystemStorage, Storage, storages
+from django.core.files.storage import FileSystemStorage, storages
+from django.utils.text import slugify
 from faker_file.storages.filesystem import FileSystemStorage as FakerFileSystemStorage  # type: ignore[import-untyped]
 from storages.backends.s3boto3 import S3Boto3Storage  # type: ignore[import-untyped]
 
@@ -63,7 +65,11 @@ class BaseStorageMixin:
             return name.split("/", 3)[3]
         return name
 
-    def save(self, name: str, content: Any, *args, **kwargs) -> str:  # noqa: ANN401
+
+class CustomFileSystemStorage(BaseStorageMixin, FileSystemStorage):
+    """Расширенная система хранения для локальной файловой системы."""
+
+    def save(self, name: str | None, content: IO[Any] | bytes, max_length: int | None = None) -> str:
         """
         Сохраняет файл в хранилище.
 
@@ -74,17 +80,51 @@ class BaseStorageMixin:
         Returns:
             Имя сохраненного файла.
         """
+        if not name:
+            msg = "Необходимо передать имя файла"
+            raise ValueError(msg)
         relative_name = self._get_relative_name(name)
         relative_name = self._normalize_s3_path(relative_name)
 
         # Если content - это байты, преобразуем их в файловый объект
         if isinstance(content, bytes):
             content = ContentFile(content)
-        return super().save(relative_name, content, *args, **kwargs)  # type: ignore[misc]
+        return super().save(relative_name, content, max_length)
 
+    def listdir(self, path: str) -> tuple[list[str], list[str]]:
+        """
+        Получить список файлов и подкаталогов в заданной директории.
 
-class CustomFileSystemStorage(BaseStorageMixin, FileSystemStorage):
-    """Расширенная файловая система хранения с дополнительными методами для работы с файлами."""
+        Args:
+            path (str): Путь к директории.
+
+        Returns:
+            tuple[list[str], list[str]]: Кортеж из двух списков: файлов и подкаталогов.
+        """
+        # Получаем относительное имя файла
+        relative_path = self._get_relative_name(path)
+
+        # Получаем абсолютный путь
+        abs_path = self.path(relative_path)
+
+        # Получаем список файлов и подкаталогов
+        try:
+            path_obj = Path(abs_path)
+            entries = path_obj.iterdir()
+        except OSError:
+            # Если директория не существует или недоступна, возвращаем пустые списки
+            return ([], [])
+
+        files = []
+        dirs = []
+
+        for entry in entries:
+            if entry.is_file():
+                files.append(entry.name)
+            elif entry.is_dir():
+                dirs.append(entry.name)
+
+        return (files, dirs)
 
     def path(self, name: str) -> str:
         """
@@ -354,6 +394,92 @@ class CustomFileSystemStorage(BaseStorageMixin, FileSystemStorage):
 
 class CustomS3Storage(BaseStorageMixin, S3Boto3Storage):
     """Расширенная S3 система хранения с дополнительными методами для работы с файлами."""
+
+    def save(self, name: str, content: Any, *args, **kwargs) -> str:  # noqa: ANN401
+        """
+        Сохраняет файл в S3 хранилище.
+
+        Args:
+            name: Имя файла.
+            content: Содержимое файла (может быть файловым объектом или байтами).
+
+        Returns:
+            Имя сохраненного файла.
+        """
+        relative_name = self._get_relative_name(name)
+        relative_name = self._normalize_s3_path(relative_name)
+
+        # Если content - это байты, преобразуем их в файловый объект
+        if isinstance(content, bytes):
+            content = ContentFile(content)
+
+        # Используем родительский метод save класса S3Boto3Storage для загрузки файла в S3
+        return super().save(relative_name, content, *args, **kwargs)
+
+    def listdir(self, path: str) -> tuple[list[str], list[str]]:
+        """
+        Получить список файлов и подкаталогов в заданной директории.
+
+        Args:
+            path (str): Путь к директории.
+
+        Returns:
+            tuple[list[str], list[str]]: Кортеж из двух списков: файлов и подкаталогов.
+        """
+        # Получаем относительное имя файла
+        relative_path = self._get_relative_name(path)
+        relative_path = self._normalize_s3_path(relative_path)
+
+        # Добавляем завершающий слэш, чтобы получить список файлов в директории
+        if relative_path and not relative_path.endswith("/"):
+            relative_path += "/"
+
+        return self._listdir_paginated(relative_path)
+
+    def _listdir_paginated(self, prefix: str) -> tuple[list[str], list[str]]:
+        """
+        Получить список файлов и подкаталогов с использованием пагинации.
+
+        Args:
+            prefix (str): Префикс для поиска объектов.
+
+        Returns:
+            tuple[list[str], list[str]]: Кортеж из двух списков: файлов и подкаталогов.
+        """
+        try:
+            paginator = self.connection.meta.client.get_paginator("list_objects_v2")
+            pages = paginator.paginate(Bucket=self.bucket_name, Prefix=prefix, Delimiter="/")
+
+            files = []
+            dirs = []
+
+            for page in pages:
+                # Обрабатываем директории (представляем их как пустые объекты с суффиксом '/')
+                if "CommonPrefixes" in page:
+                    for prefix_info in page["CommonPrefixes"]:
+                        # Извлекаем имя директории из префикса
+                        dir_name = prefix_info["Prefix"].rstrip("/")
+                        if dir_name:
+                            # Извлекаем последнюю часть пути как имя директории
+                            dir_name = dir_name.split("/")[-1]
+                            dirs.append(dir_name)
+
+                # Обрабатываем файлы
+                if "Contents" in page:
+                    for obj in page["Contents"]:
+                        # Получаем путь к объекту
+                        obj_key = obj["Key"]
+                        # Извлекаем имя файла из ключа
+                        file_name = obj_key.split("/")[-1]
+                        # Пропускаем пустые имена файлов (это может быть директория)
+                        if file_name:
+                            files.append(file_name)
+
+        except ClientError:
+            # Если произошла ошибка (например, директория не существует), возвращаем пустые списки
+            return ([], [])
+        else:
+            return (files, dirs)
 
     def __init__(self, *args, **kwargs) -> None:
         """Инициализация хранилища с клиентом Minio."""
@@ -813,9 +939,9 @@ class FakerFileStorageAdapter(FakerFileSystemStorage):
     def __init__(self, root_path: str = "", rel_path: str = "", *args, **kwargs) -> None:
         """Инициализация адаптера."""
         super().__init__(root_path, rel_path, *args, **kwargs)
-        from personal_website.storages import select_storage
-
-        self.django_storage = select_storage()
+        self.django_storage: StorageType = select_storage()
+        if not root_path:
+            self.root_path = self.django_storage.location
 
     def normalize_filename(self, filename: str) -> str:
         """Нормализовать имя файла."""
@@ -823,10 +949,7 @@ class FakerFileStorageAdapter(FakerFileSystemStorage):
 
     def abspath(self, filename: str) -> str:
         """Получить абсолютный путь к файлу."""
-        if hasattr(self.django_storage, "path"):
-            return self.django_storage.path(filename)
-        # Для S3 и других удаленных хранилищ возвращаем имя файла
-        return filename
+        return self.django_storage.path(filename)
 
     def exists(self, filename: str) -> bool:
         """Проверить существование файла."""
@@ -846,17 +969,106 @@ class FakerFileStorageAdapter(FakerFileSystemStorage):
         """Удалить файл."""
         return self.django_storage.delete(filename)
 
+    def mkdir(self, path: Union[str, Path], *, parents: bool = True, exist_ok: bool = True) -> None:
+        """
+        Создание директории по указанному пути, включая все необходимые родительские директории.
 
-def select_storage() -> Storage:
+        Args:
+            path (Union[str, Path]): Путь к создаваемой директории.
+            parents (bool): Если True, создает все необходимые родительские директории.
+            exist_ok (bool): Если True, не вызывает исключение, если директория уже существует.
+        """
+        # Делегируем операцию mkdir хранилищу Django
+        self.django_storage.mkdir(path, parents=parents, exist_ok=exist_ok)
+
+    def generate_filename(self, extension: str, prefix: str = "", basename: str = "") -> str:  # type: ignore[override]
+        """
+        Генерирует имя файла с заданным расширением.
+
+        Args:
+            extension: Расширение файла.
+            prefix: Префикс имени файла.
+            basename: Базовое имя файла.
+
+        Returns:
+            Сгенерированное имя файла.
+        """
+        if not basename:
+            basename = str(uuid.uuid4())[:8]
+
+        filename = f"{prefix}{basename}.{extension}"
+        # Нормализуем имя файла, убирая недопустимые символы
+        return slugify(filename.replace(".", "-")) + f".{extension}"
+
+    def write_text(self, filename: str, data: str, encoding: str = "utf-8") -> int:
+        """
+        Записывает текстовые данные в файл.
+
+        Args:
+            filename: Имя файла.
+            data: Текстовые данные для записи.
+            encoding: Кодировка текста.
+
+        Returns:
+            Количество записанных байтов.
+        """
+        content_file = ContentFile(data.encode(encoding))
+        self.django_storage.save(filename, content_file)
+        return len(data.encode(encoding))
+
+    def write_bytes(self, filename: str, data: bytes) -> int:
+        """
+        Записывает байтовые данные в файл.
+
+        Args:
+            filename: Имя файла.
+            data: Байтовые данные для записи.
+
+        Returns:
+            Количество записанных байтов.
+        """
+        content_file = ContentFile(data)
+        self.django_storage.save(filename, content_file)
+        return len(data)
+
+    def unlink(self, filename: str) -> None:
+        """
+        Удаляет файл.
+
+        Args:
+            filename: Имя файла для удаления.
+        """
+        self.django_storage.delete(filename)
+
+    def relpath(self, filename: str) -> str:
+        """
+        Возвращает относительный путь к файлу.
+
+        Args:
+            filename: Имя файла.
+
+        Returns:
+            Относительный путь к файлу.
+        """
+        return filename
+
+
+StorageType = CustomFileSystemStorage | CustomS3Storage
+
+
+def select_storage() -> StorageType:
     """Возвращает файловое хранилище по умолчанию."""
     # Для тестов использовать тестовое хранилище,
     # но не в том случае, если задано в явном виде использование S3.
     if settings.TEST and settings.STORAGE_TYPE != "s3":
-        return storages["test"]
+        test_storage: CustomFileSystemStorage = storages["test"]  # type: ignore[assignment]
+        return test_storage
 
     # Для S3 использовать хранилище S3
     if settings.STORAGE_TYPE == "s3":
-        return storages["s3"]
+        s3_storage: CustomS3Storage = storages["s3"]  # type: ignore[assignment]
+        return s3_storage
 
     # Иначе использовать обычное файловое хранилище
-    return storages["filesystem"]
+    fs_storage: CustomFileSystemStorage = storages["filesystem"]  # type: ignore[assignment]
+    return fs_storage

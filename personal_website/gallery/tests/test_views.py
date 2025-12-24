@@ -25,6 +25,7 @@ from gallery.views import (
     TagDetailView,
     UploadFormView,
 )
+from personal_website.storages import StorageType, select_storage
 from personal_website.utils import list_file_paths
 
 if TYPE_CHECKING:
@@ -57,6 +58,8 @@ TAG_DETAIL_TEMPLATE_NAME = f"{APP_NAME}/tag_detail.html"
 TAG_LIST_TEMPLATE_NAME = f"{APP_NAME}/tag_list.html"
 UPLOAD_TEMPLATE_NAME = f"{APP_NAME}/upload.html"
 
+storage: StorageType = select_storage()
+
 
 class GalleryViewsTest(TestCase):
     """Тестирование представлений галереи."""
@@ -67,7 +70,7 @@ class GalleryViewsTest(TestCase):
         cls.tag = TagFactory()
         cls.album = AlbumFactory()
         cls.album.tags.add(cls.tag)
-        test_images_dir = Path(settings.TEMP_ROOT) / "gallery" / "photos"
+        test_images_dir = "gallery/photos"
         files = list_file_paths(test_images_dir)
         images = [file for file in files if is_image(file)]
         for image in images:
@@ -414,7 +417,7 @@ class UploadFormViewTests(TestCase):
         cls.user = User.objects.create_user(username=cls.test_username, password=cls.test_password)
         cls.staff_user = User.objects.create_superuser(username=cls.staff_username, password=cls.staff_password)
         Path(settings.MEDIA_ROOT).mkdir(parents=True, exist_ok=True)
-        test_images_dir = Path(settings.TEMP_ROOT) / "gallery" / "photos"
+        test_images_dir = "gallery/photos"
         cls.test_image_paths = list_file_paths(test_images_dir)
         cls.album = AlbumFactory()
         return super().setUpTestData()
@@ -481,9 +484,10 @@ class UploadFormViewTests(TestCase):
         """Проверка результатов загрузки фотографий через форму."""
         photos = []
         for image_path in self.test_image_paths:
-            with Path(image_path).open("rb") as image:
-                file = SimpleUploadedFile(name=image.name, content=image.read())
-                photos.append(file)
+            file_content = storage.read_bytes(image_path)
+            file_name = Path(image_path).name
+            file = SimpleUploadedFile(name=file_name, content=file_content)
+            photos.append(file)
 
         data = {"photos": photos, "album": self.album.pk}
         response = self.client.post(UPLOAD_URL, data)
@@ -497,9 +501,10 @@ class UploadFormViewTests(TestCase):
         """После загрузки фотографий появляется сообщение с результатом."""
         photos = []
         for image_path in self.test_image_paths:
-            with Path(image_path).open("rb") as image:
-                file = SimpleUploadedFile(name=image.name, content=image.read())
-                photos.append(file)
+            file_content = storage.read_bytes(image_path)
+            file_name = Path(image_path).name
+            file = SimpleUploadedFile(name=file_name, content=file_content)
+            photos.append(file)
 
         data = {"photos": photos, "album": self.album.pk}
         response = self.client.post(UPLOAD_URL, data, follow=True)

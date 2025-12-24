@@ -2,26 +2,21 @@
 
 import datetime
 from http import HTTPStatus
-from pathlib import Path
 from typing import TYPE_CHECKING
 
-from django.conf import settings
 from django.test import TestCase
 from faker import Faker
-from faker_file.providers.jpeg_file import JpegFileProvider  # type: ignore[import-untyped]
-from faker_file.storages.filesystem import FileSystemStorage  # type: ignore[import-untyped]
 
 from gallery.models import Album, Photo, Tag, photo_image_upload_path
-from personal_website.storages import select_storage
-from personal_website.utils import list_file_paths
+from personal_website.storages import FakerFileStorageAdapter, StorageType, select_storage
 
 if TYPE_CHECKING:
     from django.db.models import QuerySet
 
-storage = select_storage()
+storage: StorageType = select_storage()
 
 FAKER = Faker()
-FS_STORAGE = FileSystemStorage(root_path=settings.TEMP_ROOT, rel_path="gallery/photos/test_models")
+FS_STORAGE = FakerFileStorageAdapter(rel_path="gallery/photos/test_models")
 
 
 class GalleryModelsTests(TestCase):
@@ -47,22 +42,22 @@ class GalleryModelsTests(TestCase):
             description="Фотографии из путешествия по Лангтангу весной 2014 года",
         )
 
-        # Создать фотографии в базе данных из картинок в директории проекта.
-        images_path = Path(FS_STORAGE.root_path) / FS_STORAGE.rel_path
-        for _ in range(2):
-            JpegFileProvider(FAKER).jpeg_file(storage=FS_STORAGE, prefix="Langtang")
-        for _ in range(3):
-            JpegFileProvider(FAKER).jpeg_file(storage=FS_STORAGE, prefix="Tuscany")
-        images = list_file_paths(images_path)
-        for image in images:
-            if "Tuscany" in image:
-                album = cls.tuscany_album
-            elif "Langtang" in image:
-                album = cls.langtang_album
-            else:
-                msg = "Нужно создать новый тестовый альбом"
-                raise Exception(msg)  # noqa: TRY002
-            Photo.objects.create(image=image, album=album)
+        # Создать фотографии с помощью фабрик с заданными именами
+        from gallery.factories import PhotoFactory
+
+        # Создать 3 фотографии для альбома "Тоскана" с именами, содержащими "Tuscany"
+        for i in range(3):
+            PhotoFactory.create(
+                album=cls.tuscany_album,
+                name=f"Tuscany Photo {i + 1}",
+            )
+
+        # Создать 2 фотографии для альбома "Лангтанг" с именами, содержащими "Langtang"
+        for i in range(2):
+            PhotoFactory.create(
+                album=cls.langtang_album,
+                name=f"Langtang Photo {i + 1}",
+            )
 
     def test_objects_created(self) -> None:
         """Проверить, что все объекты для тестирования созданы."""
@@ -243,7 +238,7 @@ class GalleryModelsTests(TestCase):
             test_photos: QuerySet = test_album.photo_set.all()
             test_album.cover = test_photos.first()
             test_album.save()
-            self.assertNotEqual(test_album.cover, None)
+            self.assertIsNotNone(test_album.cover)
             self.assertIsInstance(test_album.cover, Photo)
 
             # Удалить фотографию, служащую обложкой и перезагрузить из БД атрибуты альбома.
@@ -298,18 +293,18 @@ class GalleryModelsTests(TestCase):
         self.assertIsInstance(photo, Photo)
         if photo:
             old_path = photo.image.path
-            old_path_exists = Path(old_path).exists()
+            old_path_exists = storage.exists(old_path)
             self.assertTrue(old_path_exists)
 
             # Изменить альбом и сохранить фотографию.
             old_relative_path = photo.image.name
-            file_name = Path(old_relative_path).name
+            file_name = storage.name(old_relative_path)
             photo.album = self.langtang_album
             photo.save()
 
             # Адрес файла был изменен корректно.
-            new_name_is_absolute = Path(photo.image.name).is_absolute()
-            new_path_exists = Path(photo.image.path).exists()
+            new_name_is_absolute = storage.is_absolute(photo.image.name)
+            new_path_exists = storage.exists(photo.image.path)
             upload_path = photo_image_upload_path(photo, file_name)
             self.assertFalse(new_name_is_absolute)
             self.assertNotEqual(old_relative_path, photo.image.name)

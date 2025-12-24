@@ -143,7 +143,7 @@ STORAGES = {
     "default": {"BACKEND": "personal_website.storages.select_storage"},
     "staticfiles": {"BACKEND": "whitenoise.storage.CompressedStaticFilesStorage"},
     "test": {
-        "BACKEND": "django.core.files.storage.FileSystemStorage",
+        "BACKEND": "personal_website.storages.CustomFileSystemStorage",
         "OPTIONS": {
             "location": TEMP_ROOT,
             "base_url": "/media/",
@@ -164,7 +164,7 @@ STORAGES = {
             "secret_key": os.getenv("AWS_SECRET_ACCESS_KEY"),
             "region_name": os.getenv("AWS_S3_REGION_NAME", "us-east-1"),
             "endpoint_url": os.getenv("AWS_S3_ENDPOINT_URL"),
-            "file_overwrite": False,
+            "file_overwrite": True,
             "default_acl": "public-read",
             "querystring_auth": False,
         },

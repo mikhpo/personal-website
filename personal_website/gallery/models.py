@@ -17,7 +17,7 @@ from PIL.TiffImagePlugin import IFDRational
 
 from gallery.managers import PublicAlbumManager, PublicPhotoManager
 from gallery.utils import move_photo_image, photo_image_upload_path
-from personal_website.storages import select_storage
+from personal_website.storages import StorageType, select_storage
 from personal_website.utils import get_unique_slug
 
 thumbnail_size: int = settings.GALLERY_THUMBNAIL_SIZE
@@ -25,6 +25,7 @@ preview_size: int = settings.GALLERY_PREVIEW_SIZE
 resize_quality: int = settings.GALLERY_RESIZE_QUALITY
 
 current_timezone = get_current_timezone()
+storage: StorageType = select_storage()
 
 
 class Tag(models.Model):
@@ -207,7 +208,7 @@ class Photo(models.Model):
             if previous.album != self.album:
                 self.change_album_photo_image_path(previous)
         if not self.name:
-            self.name = Path(self.image.name).stem
+            self.name = storage.stem(self.image.name)
         if not self.slug:
             self.slug = get_unique_slug(self, self.name)
         super().save(*args, **kwargs)
@@ -220,7 +221,6 @@ class Photo(models.Model):
     def exif(self) -> dict:
         """Получить данные EXIF при помощи библиотеки PIL."""
         exif_data = {}
-        storage = select_storage()
         if storage.exists(self.image.name):
             with pImage.open(self.image) as img:
                 if hasattr(img, "_getexif"):
@@ -311,12 +311,12 @@ class Photo(models.Model):
     def datetime_taken(self) -> datetime:
         """Получить время съемки фотографии из EXIF или использовать время создания файла."""
         # Проверить наличие файла изображения.
-        if not self.image.name or not Path(self.image.path).exists():
+        if not self.image.name or not storage.exists(self.image.name):
             return now()
 
         # Получить дату и время последнего изменения файла.
-        time_stamp = Path(self.image.path).stat().st_mtime
-        date_time = datetime.fromtimestamp(time_stamp, current_timezone)
+        modified_time = storage.get_modified_time(self.image.name)
+        date_time = modified_time.astimezone(current_timezone)
 
         # Если в EXIF отсутствует дата и время съемки,
         # то вернуть дату и время последнего изменения.
