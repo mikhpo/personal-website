@@ -249,7 +249,7 @@ workflows:
               - |
                 echo "Перетегирование Docker-образа как 'latest' для Docker Hub"
                 docker tag \
-                  $DOCKER_USERNAME/$PROJECT_NAME:$TESTED_TAG \
+                  cr.yandex/$YC_CONTAINER_REGISTRY_ID/$PROJECT_NAME:$TESTED_TAG \
                   $DOCKER_USERNAME/$PROJECT_NAME:$LATEST_TAG
 
               # Перетегирование протестированного образа как "latest" для Yandex Cloud
@@ -271,12 +271,7 @@ workflows:
                 docker push \
                   cr.yandex/$YC_CONTAINER_REGISTRY_ID/$PROJECT_NAME:$LATEST_TAG
 
-              # Удаление старого тега из Docker Hub и Yandex Cloud Container Registry
-              - |
-                echo "Удаление старого тега 'tested' из Docker Hub"
-                docker rmi \
-                  $DOCKER_USERNAME/$PROJECT_NAME:$TESTED_TAG
-
+              # Удаление старого тега из Yandex Cloud Container Registry
               - |
                 echo "Удаление старого тега 'tested' из Yandex Cloud Container Registry"
                 docker rmi \
