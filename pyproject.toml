@@ -35,6 +35,9 @@ pydantic = "^2.10.6"
 django-storages = "^1.14.6"
 boto3 = "^1.42.15"
 s3path = "^0.6.4"
+django-webpack-loader = "^3.2.3"
+djangorestframework = "^3.16.1"
+django-cors-headers = "^4.9.0"
 
 [tool.poetry.group.dev.dependencies]
 coverage = "^7.6.10"
@@ -52,6 +55,7 @@ pyparsing = "^3.2.1"
 pydot = "^3.0.4"
 django-stubs = { extras = ["compatible-mypy"], version = "^5.1.2" }
 types-requests = "^2.32.0.20241016"
+pytest-playwright = "^0.7.2"
 
 [tool.black]
 line-length = 120
