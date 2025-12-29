@@ -24,3 +24,7 @@ nginx/conf.d
 .ruff_cache
 TODO.md
 /tmp/
+
+# Файлы сборки Webpack
+webpack-stats.json
+personal_website/frontend/dist/
