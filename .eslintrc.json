@@ -3,7 +3,8 @@
     "browser": true,
     "commonjs": true,
     "es2021": true,
-    "es6": true
+    "es6": true,
+    "jest": true
   },
   "extends": ["google", "prettier"],
   "parserOptions": {
@@ -13,5 +14,15 @@
       "jsx": true
     }
   },
-  "rules": {}
+  "plugins": ["react"],
+  "rules": {
+    "no-unused-vars": ["error", { "varsIgnorePattern": "React" }],
+    "react/jsx-uses-react": "error",
+    "react/jsx-uses-vars": "error"
+  },
+  "settings": {
+    "react": {
+      "version": "detect"
+    }
+  }
 }
