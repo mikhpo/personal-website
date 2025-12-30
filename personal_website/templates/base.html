@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 {% load static %}
+{% load webpack_loader %}
 <!-- Основной шаблон сайта, от которого наследуют все другие шаблоны. -->
 <html lang="ru">
   <meta charset="utf-8">
@@ -15,7 +16,8 @@
           {% include "title.html" %}
         {% endblock title %}
       </title>
-      <link rel="stylesheet" href="{% static "bootstrap/dist/css/bootstrap.min.css" %}">
+      <link rel="stylesheet"
+            href="{% static "bootstrap/dist/css/bootstrap.min.css" %}">
       <link rel="stylesheet" href="{% static "css/base.css" %}">
       <link rel="stylesheet" href="{% static "css/navbar.css" %}">
       <link rel="stylesheet" href="{% static "css/cards.css" %}">
@@ -39,6 +41,10 @@
       <script src="{% static "bootstrap/dist/js/bootstrap.bundle.min.js" %}"></script>
       {% block js %}
       {% endblock js %}
+      <!-- Подключение React бандла -->
+      <!-- 'main' - имя точки входа, определенное в webpack.config.js -->
+      <!-- 'js' - тип ресурса, который мы хотим подключить (в данном случае JavaScript) -->
+      {% render_bundle 'main' 'js' %}
     {% endblock body %}
   </body>
 </html>

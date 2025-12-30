@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     "imagekit",
     "django_cleanup.apps.CleanupConfig",
     "django_extensions",
+    "webpack_loader",
     "accounts",
     "gallery",
     "blog",
@@ -388,3 +389,24 @@ GALLERY_PREVIEW_SIZE = 1000
 
 # Качество сжатия миниатюр и предварительного просмотра.
 GALLERY_RESIZE_QUALITY = 100
+
+# Конфигурация django-webpack-loader для интеграции React
+# BUNDLE_DIR_NAME: Указывает директорию, где Webpack будет сохранять собранные бандлы
+# STATS_FILE: Путь к файлу webpack-stats.json, который генерируется Webpack при сборке
+# POLL_INTERVAL: Интервал опроса для проверки изменений в бандлах (в секундах)
+# TIMEOUT: Таймаут для загрузки бандлов (None означает отсутствие таймаута)
+# IGNORE: Регулярные выражения для файлов, которые следует игнорировать при загрузке бандлов
+WEBPACK_LOADER = {
+    "DEFAULT": {
+        "BUNDLE_DIR_NAME": "frontend/dist/",
+        "STATS_FILE": BASE_DIR.parent / "webpack-stats.json",
+        "POLL_INTERVAL": 0.1,
+        "TIMEOUT": None,
+        "IGNORE": [r".+\.hot-update.js", r".+\.map"],
+    },
+}
+
+# Для development режима отключаем кэширование,
+# чтобы видеть изменения сразу без перезапуска сервера
+if DEBUG:
+    WEBPACK_LOADER["DEFAULT"]["CACHE"] = False
