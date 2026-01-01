@@ -34,7 +34,7 @@ window.mountReactComponent = (componentName, elementId, props = {}) => {
    * Загружает компонент по имени из директории ./components/
    * Ожидается, что компонент экспортируется как default export
    */
-  import(`./components/${componentName}`).then((module) => {
+  import(`./components/${componentName}.jsx`).then((module) => {
     const Component = module.default;
     root.render(React.createElement(Component, props));
   }).catch((error) => {

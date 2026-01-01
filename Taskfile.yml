@@ -62,15 +62,62 @@ tasks:
       - poetry run python ./personal_website/manage.py migrate
       - task: graph-models
 
-  test:
-    desc: Выполнить тесты
+  test-frontend:
+    desc: Выполнить модульные тесты React компонентов с проверкой покрытия кода
     summary: |
-      Команда выполянет тесты проекта Python/Django через Pytest с формированием отчета Coverage в формате HTML
-      и тесты вспомогательных модулей Node.js. Интерпретатор Python запускается через Poetry из виртуального
-      окружения проекта. Сервер базы данных PostgreSQL запускается в контейнере через Docker Compose.
+      Команда устанавливает зависимости Node.js и запускает Jest тесты для React компонентов.
+      Включает генерацию отчета о покрытии кода тестами.
+      Используется при локальной разработке и в CI/CD для проверки качества фронтенда.
+    preconditions:
+      - test -f package.json
+    cmds:
+      - npm ci
+      - npm test -- --coverage --watchAll=false
+
+  build-frontend:
+    desc: Собрать React фронтенд в production-ready бандл
+    summary: |
+      Команда устанавливает зависимости Node.js и выполняет production сборку React приложения.
+      Результатом является оптимизированный бандл и файл webpack-stats.json,
+      необходимый для интеграции с Django через django-webpack-loader.
+    preconditions:
+      - test -f package.json
+    cmds:
+      - npm ci
+      - npm run build
+
+  test-backend:
+    desc: Выполнить тесты Django с использованием собранного React фронтенда
+    summary: |
+      Команда запускает Django тесты с отключенным кэшем webpack-loader.
+      Перед запуском тестов выполняет сборку фронтенда для обеспечения актуального состояния бандлов.
+      Используется для проверки интеграции React компонентов с Django шаблонами.
     preconditions:
       - test -f compose.yaml
       - test -f pyproject.toml
+      - test -f .env
+    env:
+      POSTGRES_HOST: localhost
+      MINIO_SERVER_URL: http://127.0.0.1:9000
+      MINIO_BROWSER_REDIRECT_URL: http://127.0.0.1:9001
+      WEBPACK_LOADER_CACHE: 'False'
+    cmds:
+      - defer: docker-compose down
+      - docker-compose up -d postgres
+      - docker-compose ps
+      - task: build-frontend
+      - poetry run pytest {{.CLI_ARGS}}
+
+  test:
+    desc: Выполнить полный цикл тестирования приложения (фронтенд + бэкенд)
+    summary: |
+      Команда выполняет полный цикл тестирования, включающий как фронтенд, так и бэкенд.
+      Сначала запускает тесты React компонентов, затем тестирует интеграцию с Django.
+      Используется для финальной проверки перед коммитом и в CI/CD пайплайне.
+    preconditions:
+      - test -f compose.yaml
+      - test -f pyproject.toml
+      - test -f package.json
       - test -f .env
     env:
       POSTGRES_HOST: localhost
@@ -80,8 +127,8 @@ tasks:
       - defer: docker-compose down
       - docker-compose up -d postgres
       - docker-compose ps
-      - npm test
-      - poetry run pytest {{.CLI_ARGS}}
+      - task: test-frontend
+      - task: test-backend
 
   test-container:
     desc: Выполнить тесты в контейнере
