@@ -22,7 +22,7 @@ function moduleInstalled(module) {
   }
 }
 
-test(`Проверка установки модулей npm`, (t) => {
+test(`Проверка установки модулей npm`, () => {
   modules.forEach((module) => {
     assert.ok(moduleInstalled(module), `Модуль ${module} не установлен`);
   });

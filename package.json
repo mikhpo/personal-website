@@ -1,15 +1,22 @@
 {
-  "name": "javascript",
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "personal-website",
   "version": "1.0.0",
-  "description": "JavaScript dependencies for my personal website",
+  "description": "Frontend dependencies for my personal website",
+  "keywords": [
+    "personal-website",
+    "react",
+    "bootstrap",
+    "webpack"
+  ],
   "main": "index.js",
   "scripts": {
     "dev": "webpack --mode development --watch",
     "build": "webpack --mode production",
     "test": "jest",
     "test:watch": "jest --watch",
-    "eslint": "eslint personal_website/frontend/src --ext .js,.jsx,.ts,.tsx",
-    "markdownlint": "markdownlint *.md docs/*.md"
+    "eslint": "eslint . --ext .js,.jsx,.ts,.tsx --ignore-path .gitignore",
+    "markdownlint": "markdownlint *.md docs/*.md --ignore-path .gitignore"
   },
   "author": "Mikhail Polyakov",
   "license": "ISC",

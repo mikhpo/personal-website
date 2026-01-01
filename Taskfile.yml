@@ -184,14 +184,37 @@ tasks:
     cmds:
       - poetry run mypy .
 
+  eslint:
+    desc: Выполнить статический анализ кода JavaScript/React при помощи ESLint
+    summary: |
+      Проверяет качество кода JavaScript и React компонентов с помощью ESLint.
+      Использует конфигурацию из .eslintrc.json.
+    preconditions:
+      - test -f package.json
+    cmds:
+      - npm run eslint
+
+  markdownlint:
+    desc: Выполнить проверку Markdown файлов при помощи markdownlint
+    summary: |
+      Проверяет качество Markdown документации с помощью markdownlint.
+      Использует конфигурацию из .markdownlint.json.
+    preconditions:
+      - test -f package.json
+    cmds:
+      - npm run markdownlint
+
   check:
     desc: Выполнить статический анализ кода и проверки Django
-    summary: Команда запускает проверки Ruff, Mypy и Django
+    summary: Команда запускает проверки Ruff, Mypy, ESLint, markdownlint и Django
     preconditions:
       - test -f pyproject.toml
+      - test -f package.json
     cmds:
       - task: ruff
       - task: mypy
+      - task: eslint
+      - task: markdownlint
       - poetry run python personal_website/manage.py check
 
   install:
