@@ -58,10 +58,13 @@ INSTALLED_APPS = [
     "django_cleanup.apps.CleanupConfig",
     "django_extensions",
     "webpack_loader",
+    "rest_framework",
+    "corsheaders",
     "accounts",
     "gallery",
     "blog",
     "main",
+    "api",
 ]
 
 WHITENOISE_MIDDLEWARE = "whitenoise.middleware.WhiteNoiseMiddleware"
