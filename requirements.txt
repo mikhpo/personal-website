@@ -25,11 +25,12 @@ django-crispy-forms==2.3
 django-extensions==3.2.3
 django-imagekit==5.0.0
 django-storages==1.14.6
-django-stubs==5.1.2
-django-stubs-ext==5.1.2
+django-stubs==5.2.9
+django-stubs-ext==5.2.9
 django-tinymce==4.1.0
 django-webpack-loader==3.2.3
 djangorestframework==3.16.1
+djangorestframework-stubs==3.16.7
 djlint==1.36.4
 EditorConfig==0.17.0
 factory_boy==3.3.1
@@ -83,6 +84,7 @@ pytils==0.4.1
 PyYAML==6.0.2
 regex==2024.11.6
 requests==2.32.3
+rest-framework-simplejwt==0.0.2
 ruff==0.9.4
 s3path==0.6.4
 s3transfer==0.16.0

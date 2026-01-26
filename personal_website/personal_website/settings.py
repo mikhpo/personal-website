@@ -255,6 +255,8 @@ EMAIL_USE_SSL = False
 # Выбор тестового раннера.
 TEST_RUNNER = "personal_website.runners.CustomRunner"
 
+AUTH_USER_MODEL = "auth.User"
+
 # Настройки модуля Django Crispy Forms, улучшающего отображение стандартных форм Django.
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
@@ -407,6 +409,29 @@ WEBPACK_LOADER = {
         "TIMEOUT": None,
         "IGNORE": [r".+\.hot-update.js", r".+\.map"],
     },
+}
+
+# Настройки REST Framework
+REST_FRAMEWORK = {
+    "DEFAULT_PAGINATION_CLASS": "api.pagination.StandardResultsSetPagination",
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "rest_framework.authentication.SessionAuthentication",  # Для Swagger интерфейса
+    ],
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticatedOrReadOnly",
+    ],
+    "DEFAULT_FILTER_BACKENDS": [
+        "django_filters.rest_framework.DjangoFilterBackend",
+        "rest_framework.filters.SearchFilter",
+        "rest_framework.filters.OrderingFilter",
+    ],
+    "DATETIME_FORMAT": "%Y-%m-%dT%H:%M:%S%z",
+    "DEFAULT_RENDERER_CLASSES": [
+        "rest_framework.renderers.JSONRenderer",
+        "rest_framework.renderers.BrowsableAPIRenderer",  # Для разработки
+    ],
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
 # Для development режима отключаем кэширование,

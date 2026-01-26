@@ -702,39 +702,38 @@ sftp = ["paramiko (>=1.15)"]
 
 [[package]]
 name = "django-stubs"
-version = "5.1.2"
+version = "5.2.9"
 description = "Mypy stubs for Django"
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.10"
 groups = ["dev"]
 files = [
-    {file = "django_stubs-5.1.2-py3-none-any.whl", hash = "sha256:04ddc778faded6fb48468a8da9e98b8d12b9ba983faa648d37a73ebde0f024da"},
-    {file = "django_stubs-5.1.2.tar.gz", hash = "sha256:a0fcb3659bab46a6d835cc2d9bff3fc29c36ccea41a10e8b1930427bc0f9f0df"},
+    {file = "django_stubs-5.2.9-py3-none-any.whl", hash = "sha256:2317a7130afdaa76f6ff7f623650d7f3bf1b6c86a60f95840e14e6ec6de1a7cd"},
+    {file = "django_stubs-5.2.9.tar.gz", hash = "sha256:c192257120b08785cfe6f2f1c91f1797aceae8e9daa689c336e52c91e8f6a493"},
 ]
 
 [package.dependencies]
-asgiref = "*"
 django = "*"
-django-stubs-ext = ">=5.1.2"
-mypy = {version = ">=1.12,<1.15", optional = true, markers = "extra == \"compatible-mypy\""}
-types-PyYAML = "*"
+django-stubs-ext = ">=5.2.9"
+mypy = {version = ">=1.13,<1.20", optional = true, markers = "extra == \"compatible-mypy\""}
+types-pyyaml = "*"
 typing-extensions = ">=4.11.0"
 
 [package.extras]
-compatible-mypy = ["mypy (>=1.12,<1.15)"]
+compatible-mypy = ["mypy (>=1.13,<1.20)"]
 oracle = ["oracledb"]
-redis = ["redis"]
+redis = ["redis", "types-redis"]
 
 [[package]]
 name = "django-stubs-ext"
-version = "5.1.2"
+version = "5.2.9"
 description = "Monkey-patching and extensions for django-stubs"
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.10"
 groups = ["dev"]
 files = [
-    {file = "django_stubs_ext-5.1.2-py3-none-any.whl", hash = "sha256:6c559214538d6a26f631ca638ddc3251a0a891d607de8ce01d23d3201ad8ad6c"},
-    {file = "django_stubs_ext-5.1.2.tar.gz", hash = "sha256:421c0c3025a68e3ab8e16f065fad9ba93335ecefe2dd92a0cff97a665680266c"},
+    {file = "django_stubs_ext-5.2.9-py3-none-any.whl", hash = "sha256:230c51575551b0165be40177f0f6805f1e3ebf799b835c85f5d64c371ca6cf71"},
+    {file = "django_stubs_ext-5.2.9.tar.gz", hash = "sha256:6db4054d1580657b979b7d391474719f1a978773e66c7070a5e246cd445a25a9"},
 ]
 
 [package.dependencies]
@@ -782,6 +781,29 @@ files = [
 
 [package.dependencies]
 django = ">=4.2"
+
+[[package]]
+name = "djangorestframework-stubs"
+version = "3.16.7"
+description = "PEP-484 stubs for django-rest-framework"
+optional = false
+python-versions = ">=3.10"
+groups = ["dev"]
+files = [
+    {file = "djangorestframework_stubs-3.16.7-py3-none-any.whl", hash = "sha256:70f80050144875f80ce8ac823ff8628f6e3eb7336495394bb9803251721d9358"},
+    {file = "djangorestframework_stubs-3.16.7.tar.gz", hash = "sha256:e53bc346e9950ebdd1bb2bbc19d7e5c8b7acc894e381df55da69248f47ab78ff"},
+]
+
+[package.dependencies]
+django-stubs = ">=5.2.8"
+types-pyyaml = "*"
+types-requests = "*"
+typing-extensions = ">=4.0"
+
+[package.extras]
+compatible-mypy = ["django-stubs[compatible-mypy]", "mypy (>=1.13,<1.20)"]
+coreapi = ["coreapi (>=2.0.0)"]
+markdown = ["types-markdown (>=0.1.5)"]
 
 [[package]]
 name = "djlint"
@@ -2166,6 +2188,18 @@ socks = ["PySocks (>=1.5.6,!=1.5.7)"]
 use-chardet-on-py3 = ["chardet (>=3.0.2,<6)"]
 
 [[package]]
+name = "rest-framework-simplejwt"
+version = "0.0.2"
+description = "PoC of pipreqs dependency confusion"
+optional = false
+python-versions = ">=3.0"
+groups = ["main"]
+files = [
+    {file = "rest_framework_simplejwt-0.0.2-py3-none-any.whl", hash = "sha256:620c56826ff4791c4aaa730ec52aed1f4c74b9c20ea15b9fc1a39bdf99a29a30"},
+    {file = "rest_framework_simplejwt-0.0.2.tar.gz", hash = "sha256:035187ce5380e18e8b966610a89b6460fb4b73cd179979343888fb190328125d"},
+]
+
+[[package]]
 name = "ruff"
 version = "0.9.4"
 description = "An extremely fast Python linter and code formatter, written in Rust."
@@ -2544,4 +2578,4 @@ dev = ["pytest", "setuptools"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.11"
-content-hash = "6e57b17380639bb498207b1f17ef0ab5408961e59b25584519209d9dadb51e75"
+content-hash = "f4434ffd998751b29a39a305f001448e38cd8282a5faaf634ebf302af5115d81"
