@@ -30,6 +30,7 @@ urlpatterns = [
     path("main/", include("main.urls")),
     path("blog/", include("blog.urls")),
     path("gallery/", include("gallery.urls")),
+    path("api/", include("api.urls")),
     path(
         "sitemap.xml",
         sitemap,

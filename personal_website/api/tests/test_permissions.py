@@ -1,11 +1,10 @@
 """Тесты для кастомных permissions API."""
 
-from typing import TypeAlias
+from typing import TYPE_CHECKING
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
-from django.contrib.auth.models import User as DjangoUser
-from django.db import models
+from django.db.models import Model
 from django.http import HttpRequest
 from django.test import TestCase
 from rest_framework.request import Request
@@ -13,15 +12,16 @@ from rest_framework.views import View
 
 from api.permissions import IsPublicOrAuthor, IsStaffOrReadOnly
 
+if TYPE_CHECKING:
+    from django.contrib.auth.models import AbstractUser
+
 User = get_user_model()
-# Создаем псевдоним типа для использования в аннотациях
-UserType: TypeAlias = DjangoUser
 
 
 class MockRequest(Request):
     """Мock объект для запроса."""
 
-    def __init__(self, user: UserType | None = None, method: str = "GET") -> None:
+    def __init__(self, user: "AbstractUser | None" = None, method: str = "GET") -> None:
         """Инициализация mock объекта для запроса."""
         self.method = method
         django_request = HttpRequest()
@@ -34,20 +34,17 @@ class MockView(View):
     """Mock объект для view."""
 
 
-class MockModel(models.Model):
+class MockModel(Model):
     """Mock модель для тестируемого объекта."""
-
-    public = models.BooleanField(default=False)
-    author = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
-
-    class Meta:
-        """Мета-класс для определения параметров модели."""
-
-        app_label = "api"
 
     def __str__(self) -> str:
         """Возвращает строковое представление объекта."""
-        return f"MockModel(public={self.public}, author={self.author})"
+        return f"MockModel(public={self.public})"
+
+    def __init__(self, public: bool = False, author: "AbstractUser | None" = None) -> None:  # noqa: FBT001, FBT002
+        """Инициализация mock модели."""
+        self.public = public
+        self.author = author
 
 
 class IsPublicOrAuthorTest(TestCase):
@@ -63,6 +60,13 @@ class IsPublicOrAuthorTest(TestCase):
             is_staff=True,
         )
         self.other_user = User.objects.create_user(username="otheruser", password="testpass123")
+
+    def test_has_object_permission_staff_user(self) -> None:
+        """Тест разрешения доступа для staff пользователя."""
+        request = MockRequest(user=self.staff_user, method="DELETE")
+        view = MockView()
+        obj = MockModel(public=False, author=self.other_user)
+        self.assertTrue(self.permission.has_object_permission(request, view, obj))
 
     def test_has_permission_safe_methods(self) -> None:
         """Тест разрешения доступа для безопасных методов."""
@@ -81,13 +85,6 @@ class IsPublicOrAuthorTest(TestCase):
         request = MockRequest(user=self.user, method="POST")
         view = MockView()
         self.assertTrue(self.permission.has_permission(request, view))
-
-    def test_has_object_permission_staff_user(self) -> None:
-        """Тест разрешения доступа для staff пользователя."""
-        request = MockRequest(user=self.staff_user, method="DELETE")
-        view = MockView()
-        obj = MockModel(public=False, author=self.other_user)
-        self.assertTrue(self.permission.has_object_permission(request, view, obj))
 
     def test_has_object_permission_safe_methods_public_object(self) -> None:
         """Тест разрешения доступа для безопасных методов публичного объекта."""

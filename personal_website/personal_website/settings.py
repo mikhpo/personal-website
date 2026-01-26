@@ -2,6 +2,7 @@
 
 import os
 import sys
+from datetime import timedelta
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -431,7 +432,26 @@ REST_FRAMEWORK = {
         "rest_framework.renderers.JSONRenderer",
         "rest_framework.renderers.BrowsableAPIRenderer",  # Для разработки
     ],
-    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+# Simple JWT настройки
+SIMPLE_JWT = {
+    # Время жизни access token - 15 минут
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
+    # Время жизни refresh token - 7 дней
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    # Обновлять refresh token при каждом использовании
+    "ROTATE_REFRESH_TOKENS": True,
+    # Добавлять использованные refresh tokens в blacklist
+    "BLACKLIST_AFTER_ROTATION": True,
+    # Алгоритм подписи
+    "ALGORITHM": "HS256",
+    # Использовать стандартные claims
+    "AUTH_HEADER_TYPES": ("Bearer",),
+    "AUTH_HEADER_NAME": "HTTP_AUTHORIZATION",
+    # Добавить user_id в payload
+    "USER_ID_FIELD": "id",
+    "USER_ID_CLAIM": "user_id",
 }
 
 # Для development режима отключаем кэширование,
