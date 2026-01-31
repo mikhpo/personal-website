@@ -74,6 +74,7 @@ WHITENOISE_MIDDLEWARE = "whitenoise.middleware.WhiteNoiseMiddleware"
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     WHITENOISE_MIDDLEWARE,
+    "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -433,6 +434,16 @@ REST_FRAMEWORK = {
         "rest_framework.renderers.BrowsableAPIRenderer",  # Для разработки
     ],
 }
+
+# CORS настройки
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    f"https://{DOMAIN_NAME}",
+]
+
+# Разрешить отправку cookies
+CORS_ALLOW_CREDENTIALS = True
 
 # Simple JWT настройки
 SIMPLE_JWT = {
