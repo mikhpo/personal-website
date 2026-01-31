@@ -981,6 +981,21 @@ offline = ["drf-spectacular-sidecar"]
 sidecar = ["drf-spectacular-sidecar"]
 
 [[package]]
+name = "drf-spectacular-sidecar"
+version = "2026.1.1"
+description = "Serve self-contained distribution builds of Swagger UI and Redoc with Django"
+optional = false
+python-versions = ">=3.6"
+groups = ["main"]
+files = [
+    {file = "drf_spectacular_sidecar-2026.1.1-py3-none-any.whl", hash = "sha256:af8df62f1b594ec280351336d837eaf2402ab25a6bc2a1fad7aee9935821070f"},
+    {file = "drf_spectacular_sidecar-2026.1.1.tar.gz", hash = "sha256:6f7c173a8ddbbbdafc7a27e028614b65f07a89ca90f996a432d57460463b56be"},
+]
+
+[package.dependencies]
+Django = ">=2.2"
+
+[[package]]
 name = "editorconfig"
 version = "0.17.1"
 description = "EditorConfig File Locator and Interpreter for Python"
@@ -3217,4 +3232,4 @@ dev = ["pytest", "setuptools"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.11"
-content-hash = "dca47794f4b2975b49bf357d84a33acb16e98aea74d8dbca96edadcf214117b4"
+content-hash = "1b1feff1b29d681308ae252e48213a0c7f4428e867a0750730f994af94885c9e"

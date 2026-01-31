@@ -61,3 +61,25 @@ class TestSchemaGeneration(TestCase):
         url = reverse("api:redoc")
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_swagger_ui_offline_mode(self) -> None:
+        """Тест работы Swagger UI в offline режиме (без внешних зависимостей)."""
+        url = reverse("api:swagger")
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Проверяем, что в ответе нет ссылок на внешние CDN
+        content = response.content.decode("utf-8")
+        self.assertNotIn("cdn.jsdelivr.net", content)
+        self.assertNotIn("unpkg.com", content)
+
+    def test_redoc_offline_mode(self) -> None:
+        """Тест работы ReDoc в offline режиме (без внешних зависимостей)."""
+        url = reverse("api:redoc")
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Проверяем, что в ответе нет ссылок на внешние CDN
+        content = response.content.decode("utf-8")
+        self.assertNotIn("cdn.jsdelivr.net", content)
+        self.assertNotIn("unpkg.com", content)

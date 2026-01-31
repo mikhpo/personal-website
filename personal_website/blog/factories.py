@@ -75,8 +75,8 @@ class ArticleFactory(factory.django.DjangoModelFactory):
     title = factory.Faker("sentence")
     description = factory.Faker("paragraph")
     content = factory.Faker("text")
-    published_at = factory.LazyFunction(now)
-    modified_at = factory.LazyFunction(now)
+    published_at = factory.LazyAttribute(lambda _: now())
+    modified_at = factory.LazyAttribute(lambda _: now())
     slug = factory.LazyAttribute(lambda _: None)
     image = factory.django.ImageField()
     public = factory.LazyAttribute(lambda _: True)
@@ -132,7 +132,7 @@ class CommentFactory(factory.django.DjangoModelFactory):
     article = factory.SubFactory(ArticleFactory)
     author = factory.SubFactory(UserFactory)
     content = factory.Faker("text")
-    posted = factory.LazyFunction(now)
+    posted = factory.LazyAttribute(lambda _: now())
 
     def __new__(cls, *args, **kwargs) -> "Comment":
         """Возвращается объект Comment."""

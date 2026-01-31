@@ -33,7 +33,7 @@ def manage_test_images() -> Generator[str, Any, None]:
         file_path = f"{relative_path}/{file_name}"
         jpeg_file = JpegFileProvider(fake).jpeg_file(raw=True)
         storage.save(file_path, jpeg_file)
-        exif_data = ExifDataFactory()
+        exif_data = ExifDataFactory.build()
         write_exif(file_path, exif_data)
 
     # Создать фотографии для альбома Лангтанг.
@@ -42,7 +42,7 @@ def manage_test_images() -> Generator[str, Any, None]:
         file_path = f"{relative_path}/{file_name}"
         jpeg_file = JpegFileProvider(fake).jpeg_file(raw=True)
         storage.save(file_path, jpeg_file)
-        exif_data = ExifDataFactory()
+        exif_data = ExifDataFactory.build()
         write_exif(file_path, exif_data)
 
     # Передать адрес временной папки как фикстуру для тестов.

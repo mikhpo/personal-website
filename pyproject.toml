@@ -45,6 +45,7 @@ pyyaml = "^6.0.3"
 uritemplate = "^4.2.0"
 inflection = "^0.5.1"
 jsonschema = "^4.26.0"
+drf-spectacular-sidecar = "^2026.1.1"
 
 [tool.poetry.group.dev.dependencies]
 coverage = "^7.6.10"

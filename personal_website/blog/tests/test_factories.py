@@ -24,7 +24,7 @@ class TestCategoryFactory(TestCase):
     def test_category_factory_image_field(self) -> None:
         """Поле изображения объекта содержит настоящее изображение."""
         category = CategoryFactory()
-        is_valid_image = is_image(category.image)
+        is_valid_image = is_image(category.image.name)
         self.assertTrue(is_valid_image)
 
 
@@ -39,7 +39,7 @@ class TestTopicFactory(TestCase):
     def test_topic_factory_image_field(self) -> None:
         """Поле изображения объекта содержит настоящее изображение."""
         topic = TopicFactory()
-        is_valid_image = is_image(topic.image)
+        is_valid_image = is_image(topic.image.name)
         self.assertTrue(is_valid_image)
 
 
@@ -54,7 +54,7 @@ class TestSeriesFactory(TestCase):
     def test_series_factory_image_field(self) -> None:
         """Поле изображения объекта содержит настоящее изображение."""
         series = SeriesFactory()
-        is_valid_image = is_image(series.image)
+        is_valid_image = is_image(series.image.name)
         self.assertTrue(is_valid_image)
 
 
@@ -69,7 +69,7 @@ class TestArticleFactory(TestCase):
     def test_article_factory_image_field(self) -> None:
         """Поле изображения содержит настоящее изображение."""
         article = ArticleFactory()
-        is_valid_image = is_image(article.image)
+        is_valid_image = is_image(article.image.name)
         self.assertTrue(is_valid_image)
 
     def test_article_factory_create_series(self) -> None:

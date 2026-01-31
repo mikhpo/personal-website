@@ -131,7 +131,7 @@ class TestExifUtils(SimpleTestCase):
         self.assertIsNone(exif.model)
 
         # Вызвать функцию, передав случайно сгенерированный набор данных.
-        exif_data = ExifDataFactory()
+        exif_data = ExifDataFactory.build()
         write_exif(self.file_path, exif_data)
 
         # После вызова функции повторно прочитать данные EXIF из изображения

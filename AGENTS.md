@@ -8,6 +8,7 @@
 
 - Установить зависимости: `poetry install`
 - Применить миграции: `poetry run python personal_website/manage.py migrate`
+- Собрать статические файлы: `poetry run python personal_website/manage.py collectstatic --no-input`
 - Запустить сервер разработки: `poetry run python personal_website/manage.py runserver`
 - Запустить тесты: `poetry run pytest`
 
@@ -54,6 +55,13 @@
 - Статьи могут принадлежать нескольким категориям, сериям и темам
 - Есть система комментариев
 - Поддержка TinyMCE редактора для статей
+
+## Особенности API документации
+
+- Используется drf-spectacular для генерации OpenAPI 3.0 схемы
+- Swagger UI и ReDoc доступны по адресам `/api/docs/swagger/` и `/api/docs/redoc/`
+- Документация работает полностью в offline режиме без подключения к интернету
+- Статические файлы Swagger UI и Redoc собираются локально при помощи drf-spectacular-sidecar
 
 ## Работа с данными
 

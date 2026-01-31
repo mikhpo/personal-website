@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "corsheaders",
     "drf_spectacular",
+    "drf_spectacular_sidecar",
     "accounts",
     "gallery",
     "blog",
@@ -485,6 +486,10 @@ SPECTACULAR_SETTINGS = {
         },
     },
     "SECURITY": [{"jwtAuth": []}],
+    # Настройки для офлайн работы Swagger и Redoc
+    "SWAGGER_UI_DIST": "SIDECAR",
+    "SWAGGER_UI_FAVICON_HREF": "SIDECAR",
+    "REDOC_DIST": "SIDECAR",
 }
 
 # Для development режима отключаем кэширование,
