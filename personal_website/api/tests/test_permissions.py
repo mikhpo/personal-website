@@ -47,7 +47,7 @@ class MockModel(Model):
         self.author = author
 
 
-class IsPublicOrAuthorTest(TestCase):
+class TestIsPublicOrAuthor(TestCase):
     """Тесты для permission IsPublicOrAuthor."""
 
     def setUp(self) -> None:
