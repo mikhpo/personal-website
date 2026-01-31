@@ -36,6 +36,7 @@ ALLOWED_HOSTS = [
     "0.0.0.0",  # noqa: S104
     "127.0.0.1",
     "localhost",
+    "testserver",  # Для тестов
     DOMAIN_NAME,
     f"www.{DOMAIN_NAME}",
 ]
@@ -61,6 +62,7 @@ INSTALLED_APPS = [
     "webpack_loader",
     "rest_framework",
     "corsheaders",
+    "drf_spectacular",
     "accounts",
     "gallery",
     "blog",
@@ -433,6 +435,7 @@ REST_FRAMEWORK = {
         "rest_framework.renderers.JSONRenderer",
         "rest_framework.renderers.BrowsableAPIRenderer",  # Для разработки
     ],
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
 # CORS настройки
@@ -463,6 +466,25 @@ SIMPLE_JWT = {
     # Добавить user_id в payload
     "USER_ID_FIELD": "id",
     "USER_ID_CLAIM": "user_id",
+}
+
+# Настройки drf-spectacular для генерации OpenAPI документации
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Personal Website API",
+    "DESCRIPTION": "REST API для персонального сайта с блогом и галереей",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    # JWT аутентификация в Swagger
+    "APPEND_COMPONENTS": {
+        "securitySchemes": {
+            "jwtAuth": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT",
+            },
+        },
+    },
+    "SECURITY": [{"jwtAuth": []}],
 }
 
 # Для development режима отключаем кэширование,

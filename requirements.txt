@@ -34,6 +34,7 @@ djangorestframework==3.16.1
 djangorestframework-stubs==3.16.7
 djangorestframework_simplejwt==5.5.1
 djlint==1.36.4
+drf-spectacular==0.29.0
 EditorConfig==0.17.0
 factory_boy==3.3.1
 Faker==35.2.0
@@ -44,11 +45,14 @@ gunicorn==23.0.0
 identify==2.6.6
 idna==3.10
 imgkit==1.2.3
+inflection==0.5.1
 iniconfig==2.0.0
 isort==6.0.0
 jmespath==1.0.1
 jsbeautifier==1.15.1
 json5==0.10.0
+jsonschema==4.26.0
+jsonschema-specifications==2025.9.1
 minio==7.2.15
 model-bakery==1.20.1
 mypy==1.14.1
@@ -84,10 +88,12 @@ python-dateutil==2.9.0.post0
 python-dotenv==1.0.1
 python-slugify==8.0.4
 pytils==0.4.1
-PyYAML==6.0.2
+PyYAML==6.0.3
+referencing==0.37.0
 regex==2024.11.6
 requests==2.32.3
 rest-framework-simplejwt==0.0.2
+rpds-py==0.30.0
 ruff==0.9.4
 s3path==0.6.4
 s3transfer==0.16.0
@@ -99,6 +105,7 @@ tqdm==4.67.1
 types-PyYAML==6.0.12.20241230
 types-requests==2.32.0.20241016
 typing_extensions==4.12.2
+uritemplate==4.2.0
 urllib3==2.3.0
 virtualenv==20.29.1
 whitenoise==6.8.2
