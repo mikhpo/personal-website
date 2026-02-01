@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 {% load static %}
 {% load webpack_loader %}
+{% load react_props %}
 <!-- Основной шаблон сайта, от которого наследуют все другие шаблоны. -->
 <html lang="ru">
   <meta charset="utf-8">
@@ -25,7 +26,14 @@
       {% block css %}
       {% endblock css %}
       {% block navbar %}
-        {% include "navbar.html" %}
+        <div id="navbar-root" data-props="{% react_props navbar_data %}"></div>
+        <script>
+          document.addEventListener('DOMContentLoaded', function() {
+            const navbarElement = document.getElementById('navbar-root');
+            const props = JSON.parse(navbarElement.dataset.props);
+            window.mountReactComponent('Navbar/Navbar', 'navbar-root', props);
+          });
+        </script>
       {% endblock navbar %}
       {% block extra_header %}
       {% endblock extra_header %}
