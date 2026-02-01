@@ -19,7 +19,7 @@ def navbar_data(request: HttpRequest) -> dict[str, Any]:
         {
             "url": "/",
             "text": "Главная",
-            "active": request.path == "/",
+            "active": "/main/" in request.path or request.path == "/",
         },
         {
             "url": "/blog/",
@@ -40,7 +40,7 @@ def navbar_data(request: HttpRequest) -> dict[str, Any]:
 
     return {
         "navbar_data": {
-            "brandName": "Personal Website",
+            "brandName": "Mikhail Polyakov",
             "brandUrl": "/",
             "links": links,
             "userAuthenticated": request.user.is_authenticated,

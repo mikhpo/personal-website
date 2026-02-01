@@ -29,7 +29,7 @@ module.exports = {
   output: {
     path: path.resolve(__dirname, 'personal_website/frontend/dist'),
     filename: '[name]-[contenthash].js',
-    publicPath: '/static/frontend/dist/',
+    publicPath: '/static/',
   },
 
   /**

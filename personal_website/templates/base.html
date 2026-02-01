@@ -27,13 +27,6 @@
       {% endblock css %}
       {% block navbar %}
         <div id="navbar-root" data-props="{% react_props navbar_data %}"></div>
-        <script>
-          document.addEventListener('DOMContentLoaded', function() {
-            const navbarElement = document.getElementById('navbar-root');
-            const props = JSON.parse(navbarElement.dataset.props);
-            window.mountReactComponent('Navbar/Navbar', 'navbar-root', props);
-          });
-        </script>
       {% endblock navbar %}
       {% block extra_header %}
       {% endblock extra_header %}
@@ -53,6 +46,17 @@
       <!-- 'main' - имя точки входа, определенное в webpack.config.js -->
       <!-- 'js' - тип ресурса, который мы хотим подключить (в данном случае JavaScript) -->
       {% render_bundle 'main' 'js' %}
+      <script>
+        document.addEventListener('DOMContentLoaded', function() {
+          const navbarElement = document.getElementById('navbar-root');
+          if (navbarElement && navbarElement.dataset.props) {
+            const props = JSON.parse(navbarElement.dataset.props);
+            if (typeof window.mountReactComponent === 'function') {
+              window.mountReactComponent('Navbar/Navbar', 'navbar-root', props);
+            }
+          }
+        });
+      </script>
     {% endblock body %}
   </body>
 </html>

@@ -1,5 +1,6 @@
 """Template tags для передачи данных в React компоненты."""
 
+import html
 import json
 from typing import Any
 
@@ -21,6 +22,7 @@ def react_props(data: dict[str, Any]) -> str:
         data: Словарь с данными для React компонента
 
     Returns:
-        JSON строка с данными
+        JSON строка с данными, экранированная для использования в HTML атрибутах
     """
-    return mark_safe(json.dumps(data))
+    json_str = json.dumps(data)
+    return mark_safe(html.escape(json_str))

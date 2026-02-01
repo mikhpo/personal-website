@@ -131,7 +131,11 @@ STATIC_URL = "/static/"
 STATIC_ROOT = os.getenv("STATIC_ROOT", default=PROJECT_DIR / "static")
 
 # NPM-зависимости в корневом каталоге проекта.
-STATICFILES_DIRS = [BASE_DIR / "staticfiles", PROJECT_DIR / "node_modules"]
+STATICFILES_DIRS = [
+    BASE_DIR / "staticfiles",
+    PROJECT_DIR / "node_modules",
+    BASE_DIR / "frontend/dist",
+]
 
 # На проде статические файлы раздаются через WhiteNoise.
 WHITENOISE_ROOT = STATIC_ROOT

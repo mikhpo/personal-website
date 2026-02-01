@@ -56,21 +56,22 @@ import { Navbar as BSNavbar, Nav, NavDropdown, Container } from 'react-bootstrap
  */
 const Navbar = ({ brandName, brandUrl, links, userAuthenticated, userName, userIsStaff }) => {
   return (
-    <BSNavbar bg="dark" variant="dark" expand="lg">
-      <Container>
+    <BSNavbar bg="light" variant="light" expand="lg" className="shadow mb-5">
+      <Container fluid>
         <BSNavbar.Brand href={brandUrl}>{brandName}</BSNavbar.Brand>
         <BSNavbar.Toggle aria-controls="basic-navbar-nav" />
         <BSNavbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto">
             {links.map((link) => {
-              // Обработка dropdown для галереи
+              // Обработка элементов с выпадающим меню (галерея)
               if (link.dropdown) {
+                // Всегда отображаем как dropdown для постоянного выравнивания
                 return (
                   <NavDropdown
                     key={link.url}
                     title={link.text}
+                    id={`nav-dropdown-${link.url}`}
                     active={link.active}
-                    href={link.url}
                   >
                     {link.dropdown.map((item) => (
                       <NavDropdown.Item key={item.url} href={item.url}>
@@ -87,9 +88,13 @@ const Navbar = ({ brandName, brandUrl, links, userAuthenticated, userName, userI
                 );
               }
 
-              // Обычная ссылка
+              // Обычные ссылки
               return (
-                <Nav.Link key={link.url} href={link.url} active={link.active}>
+                <Nav.Link
+                  key={link.url}
+                  href={link.url}
+                  className={link.active ? 'active' : ''}
+                >
                   {link.text}
                 </Nav.Link>
               );
@@ -98,22 +103,18 @@ const Navbar = ({ brandName, brandUrl, links, userAuthenticated, userName, userI
           <Nav>
             {userAuthenticated ? (
               <>
-                <Nav.Link disabled className="text-nowrap">
-                  Вы вошли как {userName}
-                </Nav.Link>
+                <span className="navbar-text text-nowrap">
+                  <small>Вы вошли как {userName}</small>
+                </span>
                 {userIsStaff && (
-                  <Nav.Link href="/admin/" className="text-nowrap">
-                    Администрирование
-                  </Nav.Link>
+                  <a href="/admin/" className="navbar-text text-nowrap">Администрирование</a>
                 )}
-                <Nav.Link href="/accounts/logout/">Выйти</Nav.Link>
+                <a href="/accounts/logout/" className="btn btn-outline-dark" role="button">Выйти</a>
               </>
             ) : (
               <>
-                <Nav.Link href="/accounts/signup/" className="text-nowrap">
-                  Регистрация
-                </Nav.Link>
-                <Nav.Link href="/accounts/login/">Войти</Nav.Link>
+                <a href="/accounts/signup/" className="navbar-text text-nowrap">Регистрация</a>
+                <a href="/accounts/login/" className="btn btn-outline-dark" role="button">Войти</a>
               </>
             )}
           </Nav>
