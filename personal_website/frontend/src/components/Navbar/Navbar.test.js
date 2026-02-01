@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import Navbar from './Navbar';
 
 /**
@@ -48,7 +48,7 @@ describe('Navbar', () => {
         dropdown: [
           { url: '/gallery/albums/', text: 'Альбомы' },
           { url: '/gallery/photos/', text: 'Фотографии' },
-          { url: '/gallery/tags/', text: 'Тэги' },
+          { url: '#', text: 'Тэги', offcanvas: true },
         ]
       },
     ],
@@ -129,5 +129,63 @@ describe('Navbar', () => {
     render(<Navbar {...props} />);
 
     expect(screen.getByText('Администрирование')).toBeInTheDocument();
+  });
+
+  /**
+   * Тест проверяет, что кнопка "Тэги" в выпадающем меню галереи
+   * имеет атрибут offcanvas и открывает offcanvas панель
+   *
+   * @function
+   * @name handles-tags-offcanvas-button-correctly
+   */
+  test('корректно обрабатывает кнопку offcanvas для тегов', () => {
+    // Мокируем window.bootstrap
+    const mockOffcanvasInstance = {
+      show: jest.fn(),
+    };
+
+    const mockBootstrap = {
+      Offcanvas: {
+        getOrCreateInstance: jest.fn(() => mockOffcanvasInstance),
+      },
+    };
+
+    Object.defineProperty(window, 'bootstrap', {
+      value: mockBootstrap,
+      writable: true,
+    });
+
+    // Мокируем document.getElementById
+    const mockOffcanvasElement = document.createElement('div');
+    mockOffcanvasElement.id = 'tagsOffcanvas';
+    document.getElementById = jest.fn(() => mockOffcanvasElement);
+
+    const props = {
+      ...defaultProps,
+      userAuthenticated: true,
+      userName: 'testuser',
+    };
+
+    render(<Navbar {...props} />);
+
+    // Сначала находим и кликаем на кнопку "Галерея", чтобы открыть dropdown
+    const galleryDropdown = screen.getByText('Галерея');
+    expect(galleryDropdown).toBeInTheDocument();
+
+    // Имитируем hover или клик для открытия dropdown
+    fireEvent.click(galleryDropdown);
+
+    // Теперь кнопка "Тэги" должна стать видимой
+    const tagsButton = screen.getByText('Тэги');
+    expect(tagsButton).toBeInTheDocument();
+    expect(tagsButton).toHaveAttribute('href', '#');
+
+    // Симулируем клик по кнопке
+    fireEvent.click(tagsButton);
+
+    // Проверяем, что были вызваны соответствующие функции
+    expect(document.getElementById).toHaveBeenCalledWith('tagsOffcanvas');
+    expect(mockBootstrap.Offcanvas.getOrCreateInstance).toHaveBeenCalledWith(mockOffcanvasElement);
+    expect(mockOffcanvasInstance.show).toHaveBeenCalled();
   });
 });

@@ -1,13 +1,15 @@
-"""Context processors для глобальных данных шаблонов."""
+"""Процессоры контекста для глобальных данных шаблонов."""
 
 from typing import Any
 
 from django.http import HttpRequest
 
+from gallery.models import Tag
+
 
 def navbar_data(request: HttpRequest) -> dict[str, Any]:
     """
-    Context processor для данных навигационной панели.
+    Процессор контекста для данных навигационной панели.
 
     Args:
         request: HTTP запрос
@@ -33,7 +35,7 @@ def navbar_data(request: HttpRequest) -> dict[str, Any]:
             "dropdown": [
                 {"url": "/gallery/albums/", "text": "Альбомы"},
                 {"url": "/gallery/photos/", "text": "Фотографии"},
-                {"url": "/gallery/tags/", "text": "Тэги"},
+                {"url": "#", "text": "Тэги", "offcanvas": True},
             ],
         },
     ]
@@ -47,4 +49,19 @@ def navbar_data(request: HttpRequest) -> dict[str, Any]:
             "userName": request.user.username if request.user.is_authenticated else "",
             "userIsStaff": request.user.is_staff if request.user.is_authenticated else False,
         },
+    }
+
+
+def tags_data(request: HttpRequest) -> dict[str, Any]:  # noqa: ARG001
+    """
+    Процессор контекста для данных тегов.
+
+    Args:
+        request: HTTP запрос
+
+    Returns:
+        Словарь с тегами для offcanvas панели
+    """
+    return {
+        "tags": Tag.objects.all(),
     }

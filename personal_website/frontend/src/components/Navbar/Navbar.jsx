@@ -73,11 +73,45 @@ const Navbar = ({ brandName, brandUrl, links, userAuthenticated, userName, userI
                     id={`nav-dropdown-${link.url}`}
                     active={link.active}
                   >
-                    {link.dropdown.map((item) => (
-                      <NavDropdown.Item key={item.url} href={item.url}>
-                        {item.text}
-                      </NavDropdown.Item>
-                    ))}
+                    {link.dropdown.map((item) => {
+                      // Обработка offcanvas кнопки для тегов
+                      if (item.offcanvas) {
+                        return (
+                          <NavDropdown.Item
+                            key={item.text}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              // Открыть offcanvas панель с тегами
+                              const offcanvas = document.getElementById('tagsOffcanvas');
+                              if (offcanvas) {
+                                // Используем Bootstrap JS API для открытия offcanvas
+                                const bootstrap = window.bootstrap;
+                                if (bootstrap && bootstrap.Offcanvas) {
+                                  const offcanvasInstance = bootstrap.Offcanvas.getOrCreateInstance(offcanvas);
+                                  offcanvasInstance.show();
+                                } else {
+                                  // Fallback если Bootstrap JS не доступен
+                                  offcanvas.classList.add('show');
+                                  offcanvas.style.visibility = 'visible';
+                                  offcanvas.setAttribute('aria-modal', 'true');
+                                  offcanvas.setAttribute('role', 'dialog');
+                                  document.body.classList.add('offcanvas-open');
+                                }
+                              }
+                            }}
+                          >
+                            {item.text}
+                          </NavDropdown.Item>
+                        );
+                      }
+
+                      // Обычные ссылки
+                      return (
+                        <NavDropdown.Item key={item.url} href={item.url}>
+                          {item.text}
+                        </NavDropdown.Item>
+                      );
+                    })}
                     {userIsStaff && (
                       <>
                         <NavDropdown.Divider />
