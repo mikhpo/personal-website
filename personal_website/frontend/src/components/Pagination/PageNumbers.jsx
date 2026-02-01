@@ -1,7 +1,13 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { Pagination as BSPagination } from 'react-bootstrap';
-import { getPageUrl, calculatePageRange } from './paginationUtils';
+import { calculatePageRange } from './utils/paginationHelpers';
+import {
+  createFirstPageElements,
+  createMainPageElements,
+  createLastPageElements
+} from './utils/pageItemsGenerator';
+import { renderPaginationItem } from './utils/paginationRenderers';
 
 /**
  * Компонент для отображения номеров страниц в пагинации
@@ -11,10 +17,10 @@ import { getPageUrl, calculatePageRange } from './paginationUtils';
  * @param {number} props.totalPages - Общее количество страниц
  * @param {string} props.baseUrl - Базовый URL для формирования ссылок
  *
- * @return {Array<JSX.Element>} Массив элементов пагинации
+ * @return {JSX.Element} Элемент пагинации с номерами страниц
  *
  * @description
- * Создает массив элементов пагинации, включая:
+ * Создает элемент пагинации с номерами страниц, включая:
  * - Номера страниц вокруг текущей (не более 5)
  * - Первая и последняя страница
  * - Многоточия при необходимости
@@ -22,57 +28,24 @@ import { getPageUrl, calculatePageRange } from './paginationUtils';
  */
 const PageNumbers = ({ currentPage, totalPages, baseUrl }) => {
   const { startPage, endPage } = calculatePageRange(currentPage, totalPages);
-  const pages = [];
 
-  // Добавляем первую страницу и многоточие в начале, если нужно
-  const addFirstPageWithEllipsis = () => {
-    if (startPage > 1) {
-      pages.push(
-        <BSPagination.Item key={1} href={getPageUrl(baseUrl, 1)}>
-          1
-        </BSPagination.Item>
-      );
-      if (startPage > 2) {
-        pages.push(<BSPagination.Ellipsis key="ellipsis-start" disabled />);
-      }
-    }
-  };
+  // Функция для создания элементов с правильными параметрами
+  const createElement = (elementType, page) =>
+    renderPaginationItem(elementType, page, currentPage, totalPages, baseUrl);
 
-  // Добавляем номера страниц в основном диапазоне
-  const addMainPageNumbers = () => {
-    for (let i = startPage; i <= endPage; i++) {
-      pages.push(
-        <BSPagination.Item
-          key={i}
-          active={i === currentPage}
-          href={i === currentPage ? undefined : getPageUrl(baseUrl, i)}
-        >
-          {i}
-        </BSPagination.Item>
-      );
-    }
-  };
+  // Создаем все элементы пагинации
+  const firstPageElements = createFirstPageElements(startPage, totalPages, baseUrl, createElement);
+  const mainPageElements = createMainPageElements(startPage, endPage, currentPage, baseUrl, createElement);
+  const lastPageElements = createLastPageElements(endPage, totalPages, baseUrl, createElement);
 
-  // Добавляем многоточие и последнюю страницу в конце, если нужно
-  const addLastPageWithEllipsis = () => {
-    if (endPage < totalPages) {
-      if (endPage < totalPages - 1) {
-        pages.push(<BSPagination.Ellipsis key="ellipsis-end" disabled />);
-      }
-      pages.push(
-        <BSPagination.Item key={totalPages} href={getPageUrl(baseUrl, totalPages)}>
-          {totalPages}
-        </BSPagination.Item>
-      );
-    }
-  };
+  // Объединяем все элементы
+  const items = [...firstPageElements, ...mainPageElements, ...lastPageElements];
 
-  // Формируем структуру пагинации
-  addFirstPageWithEllipsis();
-  addMainPageNumbers();
-  addLastPageWithEllipsis();
-
-  return pages;
+  return (
+    <BSPagination className="justify-content-center">
+      {items}
+    </BSPagination>
+  );
 };
 
 PageNumbers.propTypes = {

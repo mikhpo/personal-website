@@ -1,42 +1,27 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Pagination as BSPagination } from 'react-bootstrap';
-import { getPageUrl } from './paginationUtils';
+import { renderNavigationButton } from './utils/paginationRenderers';
 
 /**
- * Компонент для отображения кнопок навигации (Предыдущая/Следующая)
+ * Компонент для отображения кнопок навигации (Первая/Предыдущая/Следующая/Последняя)
  *
  * @param {Object} props - Свойства компонента
  * @param {number} props.currentPage - Текущая страница
  * @param {number} props.totalPages - Общее количество страниц
  * @param {string} props.baseUrl - Базовый URL для формирования ссылок
- * @param {string} props.type - Тип кнопки ('prev' или 'next')
+ * @param {string} props.type - Тип кнопки ('first', 'prev', 'next', 'last')
  *
  * @return {JSX.Element} Элемент управления навигацией
  */
 const NavigationControls = ({ currentPage, totalPages, baseUrl, type }) => {
-  if (type === 'prev') {
-    return (
-      <BSPagination.Prev
-        disabled={currentPage === 1}
-        href={currentPage > 1 ? getPageUrl(baseUrl, currentPage - 1) : undefined}
-      />
-    );
-  }
-
-  return (
-    <BSPagination.Next
-      disabled={currentPage === totalPages}
-      href={currentPage < totalPages ? getPageUrl(baseUrl, currentPage + 1) : undefined}
-    />
-  );
+  return renderNavigationButton(type, currentPage, totalPages, baseUrl);
 };
 
 NavigationControls.propTypes = {
   currentPage: PropTypes.number.isRequired,
   totalPages: PropTypes.number.isRequired,
   baseUrl: PropTypes.string.isRequired,
-  type: PropTypes.oneOf(['prev', 'next']).isRequired,
+  type: PropTypes.oneOf(['first', 'prev', 'next', 'last']).isRequired,
 };
 
 export default NavigationControls;

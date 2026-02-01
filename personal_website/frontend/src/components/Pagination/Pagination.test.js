@@ -3,20 +3,11 @@ import { render, screen } from '@testing-library/react';
 import Pagination from './Pagination';
 
 /**
- * Тесты для компонента пагинации
- *
- * @description
- * Набор тестов для проверки корректности работы компонента пагинации,
- * включая отображение элементов, обработку граничных случаев
- * и правильность формирования ссылок.
+ * Тесты для основного компонента пагинации
  */
 describe('Pagination', () => {
   /**
    * Тест проверяет, что компонент не отображается при наличии только одной страницы
-   *
-   * @description
-   * При totalPages равном 1 компонент должен возвращать null,
-   * так как пагинация не требуется.
    */
   test('не рендерится при одной странице', () => {
     const { container } = render(
@@ -26,42 +17,86 @@ describe('Pagination', () => {
   });
 
   /**
-   * Тест проверяет корректность отображения номеров страниц
-   *
-   * @description
-   * Компонент должен отображать первую и последнюю страницы
-   * при наличии нескольких страниц.
+   * Тесты для навигационной пагинации (по умолчанию)
    */
-  test('рендерит правильное количество страниц', () => {
-    render(<Pagination currentPage={1} totalPages={5} baseUrl="/blog/" />);
+  describe('навигационная пагинация', () => {
+    /**
+     * Тест проверяет отображение навигационной пагинации по умолчанию
+     */
+    test('рендерит навигационную пагинацию по умолчанию', () => {
+      render(<Pagination currentPage={3} totalPages={5} baseUrl="/blog/" />);
 
-    expect(screen.getByText('1')).toBeInTheDocument();
-    expect(screen.getByText('5')).toBeInTheDocument();
+      expect(screen.getByText('первая')).toBeInTheDocument();
+      expect(screen.getByText('предыдущая')).toBeInTheDocument();
+      expect(screen.getByText('страница 3 из 5')).toBeInTheDocument();
+      expect(screen.getByText('следующая')).toBeInTheDocument();
+      expect(screen.getByText('последняя')).toBeInTheDocument();
+    });
+
+    /**
+     * Тест проверяет отображение навигационной пагинации с явным указанием типа
+     */
+    test('рендерит навигационную пагинацию с явным указанием типа', () => {
+      render(<Pagination currentPage={3} totalPages={5} baseUrl="/blog/" type="navigation" />);
+
+      expect(screen.getByText('первая')).toBeInTheDocument();
+      expect(screen.getByText('предыдущая')).toBeInTheDocument();
+      expect(screen.getByText('страница 3 из 5')).toBeInTheDocument();
+      expect(screen.getByText('следующая')).toBeInTheDocument();
+      expect(screen.getByText('последняя')).toBeInTheDocument();
+    });
   });
 
   /**
-   * Тест проверяет отключение кнопки "Предыдущая" на первой странице
-   *
-   * @description
-   * При currentPage равном 1 кнопка "Предыдущая" должна иметь класс 'disabled'.
+   * Тесты для пагинации с номерами страниц
    */
-  test('отключает кнопку Previous на первой странице', () => {
-    render(<Pagination currentPage={1} totalPages={5} baseUrl="/blog/" />);
+  describe('пагинация с номерами страниц', () => {
+    /**
+     * Тест проверяет отображение пагинации с номерами страниц
+     */
+    test('рендерит пагинацию с номерами страниц', () => {
+      render(<Pagination currentPage={3} totalPages={5} baseUrl="/blog/" type="numbers" />);
 
-    const prevButton = screen.getByText('Previous').closest('li');
-    expect(prevButton).toHaveClass('disabled');
+      expect(screen.getByText('1')).toBeInTheDocument();
+      expect(screen.getByText('2')).toBeInTheDocument();
+      expect(screen.getByText('3')).toBeInTheDocument(); // активная страница
+      expect(screen.getByText('4')).toBeInTheDocument();
+      expect(screen.getByText('5')).toBeInTheDocument();
+    });
+
+    /**
+     * Тест проверяет отображение многоточий при большом количестве страниц
+     */
+    test('рендерит многоточия при большом количестве страниц', () => {
+      render(<Pagination currentPage={5} totalPages={20} baseUrl="/blog/" type="numbers" />);
+
+      expect(screen.getByText('1')).toBeInTheDocument();
+      expect(screen.getByText('20')).toBeInTheDocument();
+    });
   });
 
   /**
-   * Тест проверяет отключение кнопки "Следующая" на последней странице
-   *
-   * @description
-   * При currentPage равном totalPages кнопка "Следующая" должна иметь класс 'disabled'.
+   * Тесты для структуры компонента
    */
-  test('отключает кнопку Next на последней странице', () => {
-    render(<Pagination currentPage={5} totalPages={5} baseUrl="/blog/" />);
+  describe('структура компонента', () => {
+    /**
+     * Тест проверяет наличие контейнеров в навигационной пагинации
+     */
+    test('имеет правильную структуру контейнеров в навигационной пагинации', () => {
+      const { container } = render(<Pagination currentPage={3} totalPages={5} baseUrl="/blog/" />);
 
-    const nextButton = screen.getByText('Next').closest('li');
-    expect(nextButton).toHaveClass('disabled');
+      expect(container.querySelector('.container')).toBeInTheDocument();
+      expect(container.querySelector('.pagination')).toBeInTheDocument();
+    });
+
+    /**
+     * Тест проверяет наличие контейнеров в пагинации с номерами
+     */
+    test('имеет правильную структуру контейнеров в пагинации с номерами', () => {
+      const { container } = render(<Pagination currentPage={3} totalPages={5} baseUrl="/blog/" type="numbers" />);
+
+      expect(container.querySelector('.container')).toBeInTheDocument();
+      expect(container.querySelector('.pagination')).toBeInTheDocument();
+    });
   });
 });

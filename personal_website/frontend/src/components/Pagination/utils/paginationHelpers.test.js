@@ -1,4 +1,4 @@
-import { getPageUrl, calculatePageRange } from './paginationUtils';
+import { getPageUrl, calculatePageRange } from './paginationHelpers';
 
 /**
  * Набор тестов для утилит пагинации
@@ -7,7 +7,7 @@ import { getPageUrl, calculatePageRange } from './paginationUtils';
  * - getPageUrl: формирование URL для перехода на конкретную страницу
  * - calculatePageRange: вычисление диапазона страниц для отображения
  */
-describe('paginationUtils', () => {
+describe('paginationHelpers', () => {
   /**
    * Тесты для функции getPageUrl
    *
