@@ -44,7 +44,7 @@ def navbar_data(request: HttpRequest) -> dict[str, Any]:
             "brandUrl": "/",
             "links": links,
             "userAuthenticated": request.user.is_authenticated,
-            "username": request.user.username if request.user.is_authenticated else "",
+            "userName": request.user.username if request.user.is_authenticated else "",
             "userIsStaff": request.user.is_staff if request.user.is_authenticated else False,
         },
     }

@@ -42,7 +42,7 @@ describe('Navbar', () => {
     const props = {
       ...defaultProps,
       userAuthenticated: true,
-      username: 'testuser',
+      userName: 'testuser',
     };
 
     render(<Navbar {...props} />);
@@ -57,7 +57,7 @@ describe('Navbar', () => {
       ...defaultProps,
       userAuthenticated: true,
       userIsStaff: true,
-      username: 'staffuser',
+      userName: 'staffuser',
     };
 
     render(<Navbar {...props} />);

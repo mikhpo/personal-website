@@ -11,11 +11,11 @@ import { Navbar as BSNavbar, Nav, NavDropdown, Container } from 'react-bootstrap
  * @param {string} props.brandUrl - URL бренда
  * @param {Array} props.links - Ссылки навигации
  * @param {boolean} props.userAuthenticated - Признак аутентификации пользователя
- * @param {string} props.username - Имя пользователя
+ * @param {string} props.userName - Имя пользователя
  * @param {boolean} props.userIsStaff - Признак staff пользователя
  * @return {JSX.Element} Элемент навигационной панели
  */
-const Navbar = ({ brandName, brandUrl, links, userAuthenticated, username, userIsStaff }) => {
+const Navbar = ({ brandName, brandUrl, links, userAuthenticated, userName, userIsStaff }) => {
   return (
     <BSNavbar bg="dark" variant="dark" expand="lg">
       <Container>
@@ -60,7 +60,7 @@ const Navbar = ({ brandName, brandUrl, links, userAuthenticated, username, userI
             {userAuthenticated ? (
               <>
                 <Nav.Link disabled className="text-nowrap">
-                  Вы вошли как {username}
+                  Вы вошли как {userName}
                 </Nav.Link>
                 {userIsStaff && (
                   <Nav.Link href="/admin/" className="text-nowrap">
@@ -101,12 +101,12 @@ Navbar.propTypes = {
     })
   ).isRequired,
   userAuthenticated: PropTypes.bool.isRequired,
-  username: PropTypes.string,
+  userName: PropTypes.string,
   userIsStaff: PropTypes.bool,
 };
 
 Navbar.defaultProps = {
-  username: '',
+  userName: '',
   userIsStaff: false,
 };
 
