@@ -12,6 +12,7 @@ from django.views.generic.detail import DetailView
 
 from blog.forms import NewCommentForm
 from blog.models import Article, Category, Comment, Series, Topic
+from main.utils import get_pagination_data
 
 logger = logging.getLogger(settings.PROJECT_NAME)
 
@@ -66,25 +67,43 @@ def blog(request: HttpRequest) -> HttpResponse:
     Отображаются только те статьи, для которых не была установлена невидимость (черновики).
     """
     content = Article.published.all()
-    return render(request, "blog/article_list.html", {"page_obj": paginate(request, content)})
+    page_obj = paginate(request, content)
+    context: dict[str, object] = {"page_obj": page_obj}
+    if pagination_data := get_pagination_data(request, page_obj):
+        context["pagination_data"] = pagination_data
+    return render(request, "blog/article_list.html", context)
 
 
 def category(request: HttpRequest, slug: str) -> HttpResponse:
     """Вывод всех статей, соответствующих определенной категории."""
     category = Category.objects.get(slug=slug)
     articles = category.article_set.filter(public=True)
-    return render(request, "blog/article_list.html", {"page_obj": paginate(request, articles)})
+    page_obj = paginate(request, articles)
+    context: dict[str, object] = {"page_obj": page_obj}
+    if pagination_data := get_pagination_data(request, page_obj):
+        context["pagination_data"] = pagination_data
+    return render(request, "blog/article_list.html", context)
 
 
 def series(request: HttpRequest, slug: str) -> HttpResponse:
     """Вывод всех статей, соответствующих определенной серии."""
     series = Series.objects.get(slug=slug)
     articles = series.article_set.filter(public=True)
-    return render(request, "blog/article_list.html", {"page_obj": paginate(request, articles)})
+    page_obj = paginate(request, articles)
+    pagination_data = get_pagination_data(request, page_obj)
+    context: dict[str, object] = {"page_obj": page_obj}
+    if pagination_data := get_pagination_data(request, page_obj):
+        context["pagination_data"] = pagination_data
+    return render(request, "blog/article_list.html", context)
 
 
 def topic(request: HttpRequest, slug: str) -> HttpResponse:
     """Вывод всех статей, соответствующих определенной теме."""
     topic = Topic.objects.get(slug=slug)
     articles = topic.article_set.filter(public=True)
-    return render(request, "blog/article_list.html", {"page_obj": paginate(request, articles)})
+    page_obj = paginate(request, articles)
+    pagination_data = get_pagination_data(request, page_obj)
+    context: dict[str, object] = {"page_obj": page_obj}
+    if pagination_data := get_pagination_data(request, page_obj):
+        context["pagination_data"] = pagination_data
+    return render(request, "blog/article_list.html", context)

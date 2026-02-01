@@ -6,6 +6,8 @@
             {% with album_list as albums %}
                 {% include "gallery/albums.html" %}
             {% endwith %}
+            <br>
+            {% include "pagination.html" %}
         {% endif %}
     </div>
     <br>

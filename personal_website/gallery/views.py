@@ -16,6 +16,7 @@ from PIL import Image, UnidentifiedImageError
 
 from gallery.forms import UploadForm
 from gallery.models import Album, Photo, Tag
+from main.utils import get_pagination_data
 
 if TYPE_CHECKING:
     from django.db.models import QuerySet
@@ -82,6 +83,10 @@ class PhotoListView(ListView):
         """Добавить в контекст набор всхе тэгов фотографии."""
         context = super().get_context_data(**kwargs)
         context["tags"] = Tag.objects.all()
+        if "page_obj" in context:
+            pagination_data = get_pagination_data(self.request, context["page_obj"])
+            if pagination_data:
+                context["pagination_data"] = pagination_data
         return context
 
 
@@ -111,11 +116,16 @@ class AlbumListView(ListView):
     model = Album
     template_name = "gallery/album_list.html"
     queryset = Album.published.all()
+    paginate_by = 20
 
     def get_context_data(self, **kwargs) -> dict[str, Any]:
         """Добавить все тэги в контекст ответа."""
         context = super().get_context_data(**kwargs)
         context["tags"] = Tag.objects.all()
+        if "page_obj" in context:
+            pagination_data = get_pagination_data(self.request, context["page_obj"])
+            if pagination_data:
+                context["pagination_data"] = pagination_data
         return context
 
 
@@ -199,12 +209,14 @@ class UploadFormView(FormView):
         #  Если хотя бы одна фотография заружена в альбом.
         if counter:
             url = album.get_absolute_url()
-            string = (
-                f"Загружено <b>{counter}</b> фотографий в альбом "
-                f'<a href="{url}" class="alert-link">{album.name}</a>'
+            messages.add_message(
+                self.request,
+                messages.SUCCESS,
+                message=mark_safe(
+                    f"Загружено <b>{counter}</b> фотографий в альбом "
+                    f'<a href="{url}" class="alert-link">{album.name}</a>',
+                ),
             )
-            safe_string = mark_safe(string)
-            messages.add_message(self.request, messages.SUCCESS, safe_string)
             message = f"Загружено {counter} фотографий в альбом {album.name}"
             logger.info(message)
 

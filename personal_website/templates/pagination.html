@@ -1,23 +1,29 @@
-<div class="container">
-    <div class="pagination">
-        <span class="step-links">
-            {% if page_obj.has_previous %}
-                <div class="d-grid gap-2 d-md-block">
-                    <a href="?page=1" class="btn btn-outline-dark">первая</a>
-                    <a href="?page={{ page_obj.previous_page_number }}"
-                       class="btn btn-outline-dark">предыдущая</a>
-                {% endif %}
-                {% if page_obj and page_obj.paginator.num_pages > 1 %}
-                    <span class="current">страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
-                {% endif %}
-                {% if page_obj.has_next %}
-                    <a href="?page={{ page_obj.next_page_number }}"
-                       class="btn btn-outline-dark">следующая</a>
-                    <a href="?page={{ page_obj.paginator.num_pages }}"
-                       class="btn btn-outline-dark">последняя</a>
-                </div>
-            {% endif %}
-        </span>
-    </div>
-    <br>
-</div>
+<!--
+Шаблон пагинации для интеграции React компонента пагинации в Django.
+
+Этот шаблон создает контейнер для монтирования React компонента пагинации и
+инициализирует его с переданными данными. Компонент отображает элементы
+навигации по страницам с возможностью перехода к определенной странице.
+
+Параметры:
+- pagination_id: Уникальный идентификатор для элемента пагинации (по умолчанию 'default')
+- pagination_data: Данные для инициализации React компонента пагинации
+
+Использует:
+- react_props: Пользовательский template tag для сериализации данных в JSON
+- mountReactComponent: Глобальная функция для монтирования React компонентов
+-->
+{% load react_props %}
+<div id="pagination-root-{{ pagination_id|default:'default' }}"
+     data-props="{% react_props pagination_data %}"></div>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const paginationElement = document.getElementById('pagination-root-{{ pagination_id|default:'default' }}');
+    if (paginationElement && paginationElement.dataset.props) {
+      const props = JSON.parse(paginationElement.dataset.props);
+      if (typeof window.mountReactComponent === 'function') {
+        window.mountReactComponent('Pagination/Pagination', 'pagination-root-{{ pagination_id|default:'default' }}', props);
+      }
+    }
+  });
+</script>
