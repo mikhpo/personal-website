@@ -1,6 +1,10 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import Navbar from './Navbar';
+import BrandSection from './BrandSection';
+import NavLink from './NavLink';
+import OffcanvasTrigger from './OffcanvasTrigger';
+import UserAuthSection from './UserAuthSection';
 
 /**
  * Тесты для компонента навигационной панели
@@ -182,6 +186,216 @@ describe('Navbar', () => {
 
     // Симулируем клик по кнопке
     fireEvent.click(tagsButton);
+
+    // Проверяем, что были вызваны соответствующие функции
+    expect(document.getElementById).toHaveBeenCalledWith('tagsOffcanvas');
+    expect(mockBootstrap.Offcanvas.getOrCreateInstance).toHaveBeenCalledWith(mockOffcanvasElement);
+    expect(mockOffcanvasInstance.show).toHaveBeenCalled();
+  });
+});
+
+// Тесты для BrandSection компонента
+describe('BrandSection', () => {
+  /**
+   * Тест проверяет корректность отображения секции бренда
+   *
+   * Проверяет наличие:
+   * - Ссылки с названием бренда
+   * - Корректного URL для ссылки бренда
+   *
+   * @function
+   * @name renders-brand-with-correct-properties
+   */
+  test('рендерит бренд с корректными свойствами', () => {
+    const props = {
+      brandName: 'Мой сайт',
+      brandUrl: '/',
+    };
+
+    render(<BrandSection {...props} />);
+
+    const brandLink = screen.getByText('Мой сайт');
+    expect(brandLink).toBeInTheDocument();
+    expect(brandLink).toHaveAttribute('href', '/');
+  });
+});
+
+// Тесты для NavLink компонента
+describe('NavLink', () => {
+  /**
+   * Тест проверяет корректность отображения обычной навигационной ссылки
+   *
+   * Проверяет наличие:
+   * - Текста ссылки
+   * - Корректного URL для ссылки
+   * - Отсутствие класса active у неактивной ссылки
+   *
+   * @function
+   * @name renders-regular-link
+   */
+  test('рендерит обычную ссылку', () => {
+    const props = {
+      link: {
+        url: '/about',
+        text: 'О нас',
+        active: false,
+      },
+    };
+
+    render(<NavLink {...props} />);
+
+    const navLink = screen.getByText('О нас');
+    expect(navLink).toBeInTheDocument();
+    expect(navLink).toHaveAttribute('href', '/about');
+    expect(navLink).not.toHaveClass('active');
+  });
+
+  /**
+   * Тест проверяет корректность отображения активной навигационной ссылки
+   *
+   * Проверяет наличие:
+   * - Текста ссылки
+   * - Наличия класса active у активной ссылки
+   *
+   * @function
+   * @name renders-active-link
+   */
+  test('рендерит активную ссылку', () => {
+    const props = {
+      link: {
+        url: '/',
+        text: 'Главная',
+        active: true,
+      },
+    };
+
+    render(<NavLink {...props} />);
+
+    const navLink = screen.getByText('Главная');
+    expect(navLink).toBeInTheDocument();
+    expect(navLink).toHaveClass('active');
+  });
+});
+
+// Тесты для UserAuthSection компонента
+describe('UserAuthSection', () => {
+  /**
+   * Тест проверяет корректность отображения элементов
+   * для неавторизованного пользователя
+   *
+   * Проверяет наличие:
+   * - Ссылки для регистрации
+   * - Кнопки для входа
+   *
+   * @function
+   * @name renders-elements-for-unauthenticated-user
+   */
+  test('рендерит элементы для неавторизованного пользователя', () => {
+    const props = {
+      userAuthenticated: false,
+    };
+
+    render(<UserAuthSection {...props} />);
+
+    expect(screen.getByText('Войти')).toBeInTheDocument();
+    expect(screen.getByText('Регистрация')).toBeInTheDocument();
+  });
+
+  /**
+   * Тест проверяет корректность отображения элементов
+   * для авторизованного пользователя
+   *
+   * Проверяет наличие:
+   * - Информации о текущем пользователе
+   * - Кнопки для выхода
+   * - Отсутствие ссылок для аутентификации
+   *
+   * @function
+   * @name renders-elements-for-authenticated-user
+   */
+  test('рендерит элементы для авторизованного пользователя', () => {
+    const props = {
+      userAuthenticated: true,
+      userName: 'testuser',
+    };
+
+    render(<UserAuthSection {...props} />);
+
+    expect(screen.getByText(/Вы вошли как testuser/)).toBeInTheDocument();
+    expect(screen.getByText('Выйти')).toBeInTheDocument();
+  });
+
+  /**
+   * Тест проверяет отображение ссылки администрирования
+   * для пользователя с правами staff
+   *
+   * Проверяет наличие:
+   * - Ссылки на административную панель
+   *
+   * @function
+   * @name renders-admin-link-for-staff-user
+   */
+  test('рендерит ссылку администрирования для staff пользователя', () => {
+    const props = {
+      userAuthenticated: true,
+      userName: 'staffuser',
+      userIsStaff: true,
+    };
+
+    render(<UserAuthSection {...props} />);
+
+    expect(screen.getByText('Администрирование')).toBeInTheDocument();
+  });
+});
+
+// Тесты для OffcanvasTrigger компонента
+describe('OffcanvasTrigger', () => {
+  /**
+   * Тест проверяет корректность отображения элемента меню
+   * с offcanvas триггером
+   *
+   * Проверяет:
+   * - Наличие элемента меню с текстом
+   * - Корректность открытия offcanvas панели при клике
+   *
+   * @function
+   * @name renders-offcanvas-trigger-menu-item
+   */
+  test('рендерит элемент меню с offcanvas триггером', () => {
+    // Мокируем window.bootstrap
+    const mockOffcanvasInstance = {
+      show: jest.fn(),
+    };
+
+    const mockBootstrap = {
+      Offcanvas: {
+        getOrCreateInstance: jest.fn(() => mockOffcanvasInstance),
+      },
+    };
+
+    Object.defineProperty(window, 'bootstrap', {
+      value: mockBootstrap,
+      writable: true,
+    });
+
+    // Мокируем document.getElementById
+    const mockOffcanvasElement = document.createElement('div');
+    mockOffcanvasElement.id = 'tagsOffcanvas';
+    document.getElementById = jest.fn(() => mockOffcanvasElement);
+
+    const props = {
+      item: {
+        text: 'Тэги',
+      },
+    };
+
+    render(<OffcanvasTrigger {...props} />);
+
+    const offcanvasTrigger = screen.getByText('Тэги');
+    expect(offcanvasTrigger).toBeInTheDocument();
+
+    // Симулируем клик по кнопке
+    fireEvent.click(offcanvasTrigger);
 
     // Проверяем, что были вызваны соответствующие функции
     expect(document.getElementById).toHaveBeenCalledWith('tagsOffcanvas');
