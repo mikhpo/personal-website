@@ -2,9 +2,13 @@
 
 from typing import Any
 
+from django.contrib.messages import get_messages
 from django.http import HttpRequest
 
 from gallery.models import Tag
+
+# Время автоматического закрытия сообщений (в миллисекундах)
+DEFAULT_AUTO_CLOSE_DELAY = 60000  # 1 минута
 
 
 def navbar_data(request: HttpRequest) -> dict[str, Any]:
@@ -64,4 +68,41 @@ def tags_data(request: HttpRequest) -> dict[str, Any]:  # noqa: ARG001
     """
     return {
         "tags": Tag.objects.all(),
+    }
+
+
+def alerts_data(request: HttpRequest) -> dict[str, Any]:
+    """
+    Процессор контекста для системных сообщений.
+
+    Args:
+        request: HTTP запрос
+
+    Returns:
+        Словарь с сообщениями для отображения
+    """
+    messages = get_messages(request)
+    alerts = []
+
+    for message in messages:
+        # Преобразуем уровни сообщений Django в уровни Bootstrap
+        level_map = {
+            "debug": "info",
+            "info": "info",
+            "success": "success",
+            "warning": "warning",
+            "error": "danger",
+        }
+
+        alert = {
+            "message": message.message,
+            "level": level_map.get(message.tags, "info"),
+            "dismissible": True,
+            "autoClose": True,
+            "autoCloseDelay": DEFAULT_AUTO_CLOSE_DELAY,
+        }
+        alerts.append(alert)
+
+    return {
+        "messages": alerts,
     }
