@@ -38,7 +38,7 @@ describe('NavigationControls', () => {
    *
    * @description
    * Тест проверяет, что на первой странице кнопка "Первая" получает
-   * атрибут disabled, что делает её неактивной для пользователя
+   * класс disabled и aria-disabled, что делает её неактивной для пользователя
    */
   test('отключает кнопку "первая" на первой странице', () => {
     render(
@@ -51,7 +51,9 @@ describe('NavigationControls', () => {
     );
 
     const firstButton = screen.getByText('первая');
-    expect(firstButton).toBeDisabled();
+    expect(firstButton).not.toHaveAttribute('href');
+    expect(firstButton).toHaveClass('disabled');
+    expect(firstButton).toHaveAttribute('aria-disabled', 'true');
   });
 
   /**
@@ -81,7 +83,7 @@ describe('NavigationControls', () => {
    *
    * @description
    * Тест проверяет, что на первой странице кнопка "Предыдущая" получает
-   * атрибут disabled, что делает её неактивной для пользователя
+   * класс disabled и aria-disabled, что делает её неактивной для пользователя
    */
   test('отключает кнопку "предыдущая" на первой странице', () => {
     render(
@@ -94,7 +96,9 @@ describe('NavigationControls', () => {
     );
 
     const prevButton = screen.getByText('предыдущая');
-    expect(prevButton).toBeDisabled();
+    expect(prevButton).not.toHaveAttribute('href');
+    expect(prevButton).toHaveClass('disabled');
+    expect(prevButton).toHaveAttribute('aria-disabled', 'true');
   });
 
   /**
@@ -124,7 +128,7 @@ describe('NavigationControls', () => {
    *
    * @description
    * Тест проверяет, что на последней странице кнопка "Следующая" получает
-   * атрибут disabled, что делает её неактивной для пользователя
+   * класс disabled и aria-disabled, что делает её неактивной для пользователя
    */
   test('отключает кнопку "следующая" на последней странице', () => {
     render(
@@ -137,7 +141,9 @@ describe('NavigationControls', () => {
     );
 
     const nextButton = screen.getByText('следующая');
-    expect(nextButton).toBeDisabled();
+    expect(nextButton).not.toHaveAttribute('href');
+    expect(nextButton).toHaveClass('disabled');
+    expect(nextButton).toHaveAttribute('aria-disabled', 'true');
   });
 
   /**
@@ -167,7 +173,7 @@ describe('NavigationControls', () => {
    *
    * @description
    * Тест проверяет, что на последней странице кнопка "Последняя" получает
-   * атрибут disabled, что делает её неактивной для пользователя
+   * класс disabled и aria-disabled, что делает её неактивной для пользователя
    */
   test('отключает кнопку "последняя" на последней странице', () => {
     render(
@@ -180,6 +186,8 @@ describe('NavigationControls', () => {
     );
 
     const lastButton = screen.getByText('последняя');
-    expect(lastButton).toBeDisabled();
+    expect(lastButton).not.toHaveAttribute('href');
+    expect(lastButton).toHaveClass('disabled');
+    expect(lastButton).toHaveAttribute('aria-disabled', 'true');
   });
 });

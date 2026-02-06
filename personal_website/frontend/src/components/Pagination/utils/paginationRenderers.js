@@ -68,15 +68,34 @@ export const renderNavigationButton = (type, currentPage, totalPages, baseUrl) =
   const disabled = isButtonDisabled(type, currentPage, totalPages);
   const href = getButtonHref(type, currentPage, totalPages, baseUrl);
   const text = getButtonText(type);
-  const className = getButtonClassName(type);
 
-  return (
-    <a
-      className={className}
-      href={href}
-      {...(disabled ? { disabled: true } : {})}
-    >
-      {text}
-    </a>
-  );
+  // Формируем класс с учетом состояния disabled
+  let finalClassName = getButtonClassName(type);
+  if (disabled) {
+    finalClassName = finalClassName + ' disabled';
+  }
+
+  // Формируем атрибуты для ссылки
+  if (disabled) {
+    return (
+      <a
+        className={finalClassName}
+        aria-disabled={true}
+        // tabIndex=-1 убирает элемент из порядка табуляции,
+        // делая его недоступным для навигации с клавиатуры
+        tabIndex={-1}
+      >
+        {text}
+      </a>
+    );
+  } else {
+    return (
+      <a
+        className={finalClassName}
+        href={href}
+      >
+        {text}
+      </a>
+    );
+  }
 };

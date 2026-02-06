@@ -205,7 +205,7 @@ describe('paginationRenderers', () => {
 
     /**
      * Проверяет отключенную кнопку "первая" на первой странице
-     * Ожидается: ссылка без href и с атрибутом disabled
+     * Ожидается: ссылка без href, с классом disabled и aria-disabled
      */
     test('рендерит отключенную кнопку "первая" на первой странице', () => {
       const { container } = render(
@@ -215,7 +215,9 @@ describe('paginationRenderers', () => {
       const button = container.querySelector('a');
       expect(button).toBeInTheDocument();
       expect(button).not.toHaveAttribute('href');
-      expect(button).toHaveAttribute('disabled');
+      expect(button).toHaveClass('disabled');
+      expect(button).toHaveAttribute('aria-disabled', 'true');
+      expect(button).toHaveAttribute('tabIndex', '-1');
     });
 
     /**
@@ -236,7 +238,7 @@ describe('paginationRenderers', () => {
 
     /**
      * Проверяет отключенную кнопку "предыдущая" на первой странице
-     * Ожидается: ссылка без href и с атрибутом disabled
+     * Ожидается: ссылка без href, с классом disabled и aria-disabled
      */
     test('рендерит отключенную кнопку "предыдущая" на первой странице', () => {
       const { container } = render(
@@ -246,7 +248,9 @@ describe('paginationRenderers', () => {
       const button = container.querySelector('a');
       expect(button).toBeInTheDocument();
       expect(button).not.toHaveAttribute('href');
-      expect(button).toHaveAttribute('disabled');
+      expect(button).toHaveClass('disabled');
+      expect(button).toHaveAttribute('aria-disabled', 'true');
+      expect(button).toHaveAttribute('tabIndex', '-1');
     });
 
     /**
@@ -267,7 +271,7 @@ describe('paginationRenderers', () => {
 
     /**
      * Проверяет отключенную кнопку "следующая" на последней странице
-     * Ожидается: ссылка без href и с атрибутом disabled
+     * Ожидается: ссылка без href, с классом disabled и aria-disabled
      */
     test('рендерит отключенную кнопку "следующая" на последней странице', () => {
       const { container } = render(
@@ -277,7 +281,9 @@ describe('paginationRenderers', () => {
       const button = container.querySelector('a');
       expect(button).toBeInTheDocument();
       expect(button).not.toHaveAttribute('href');
-      expect(button).toHaveAttribute('disabled');
+      expect(button).toHaveClass('disabled');
+      expect(button).toHaveAttribute('aria-disabled', 'true');
+      expect(button).toHaveAttribute('tabIndex', '-1');
     });
 
     /**
@@ -298,7 +304,7 @@ describe('paginationRenderers', () => {
 
     /**
      * Проверяет отключенную кнопку "последняя" на последней странице
-     * Ожидается: ссылка без href и с атрибутом disabled
+     * Ожидается: ссылка без href, с классом disabled и aria-disabled
      */
     test('рендерит отключенную кнопку "последняя" на последней странице', () => {
       const { container } = render(
@@ -308,7 +314,9 @@ describe('paginationRenderers', () => {
       const button = container.querySelector('a');
       expect(button).toBeInTheDocument();
       expect(button).not.toHaveAttribute('href');
-      expect(button).toHaveAttribute('disabled');
+      expect(button).toHaveClass('disabled');
+      expect(button).toHaveAttribute('aria-disabled', 'true');
+      expect(button).toHaveAttribute('tabIndex', '-1');
     });
   });
 });
