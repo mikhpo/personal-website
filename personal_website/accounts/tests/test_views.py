@@ -30,35 +30,45 @@ class UserPersmissionsTest(TestCase):
         self.assertNotContains(response, "Администрирование")
         self.assertNotContains(response, "Вы вошли как")
         self.assertNotContains(response, "Выйти")
-        self.assertContains(response, "Войти")
-        self.assertContains(response, "Регистрация")
+        # Ссылки на регистрацию и вход находятся в навигационной панели,
+        # реализованной через React компонент. Проверяем наличие контейнера для React компонента навигации.
+        self.assertContains(response, 'id="navbar-root"')
 
         # Проверить отображение блоков меню навигации для обычного пользователя, который авторизовался.
         self.assertTrue(self.client.login(username="user", password="UserPassword"))
+
+        # Информация о пользователе и ссылка на выход реализованы через React компонент,
+        # проверяем наличие контейнера для React компонента навигации с правильными данными.
         response = self.client.get(self.url)
-        self.assertContains(response, f"Вы вошли как {self.user.username}")
-        self.assertContains(response, "Выйти")
-        self.assertNotContains(response, "Войти")
-        self.assertNotContains(response, "Регистрация")
-        self.assertNotContains(response, "Администрирование")
+        navbar_data = response.context["navbar_data"]
+        self.assertContains(response, 'id="navbar-root"')
+        self.assertTrue(navbar_data["userAuthenticated"])
+        self.assertEqual(navbar_data["userName"], "user")
+        self.assertFalse(navbar_data["userIsStaff"])
 
         # Проверить отображение блоков меню навигации для пользователя с правами администратора.
         self.assertTrue(self.client.login(username="staff", password="StaffUserPassword"))
-        response = self.client.get(self.url)
-        self.assertContains(response, f"Вы вошли как {self.staff.username}")
-        self.assertContains(response, "Выйти")
-        self.assertContains(response, "Администрирование")
-        self.assertNotContains(response, "Войти")
-        self.assertNotContains(response, "Регистрация")
 
-        # Проверить отобржаение блоков меню навигации для суперпользователя.
-        self.assertTrue(self.client.login(username="superuser", password="SuperUserSecretPassword"))
+        # Информация о пользователе, ссылка на выход и администрирование реализованы через React компонент,
+        # проверяем наличие контейнера для React компонента навигации с правильными данными.
         response = self.client.get(self.url)
-        self.assertContains(response, f"Вы вошли как {self.superuser.username}")
-        self.assertContains(response, "Выйти")
-        self.assertContains(response, "Администрирование")
-        self.assertNotContains(response, "Войти")
-        self.assertNotContains(response, "Регистрация")
+        navbar_data = response.context["navbar_data"]
+        self.assertContains(response, 'id="navbar-root"')
+        self.assertTrue(navbar_data["userAuthenticated"])
+        self.assertEqual(navbar_data["userName"], "staff")
+        self.assertTrue(navbar_data["userIsStaff"])
+
+        # Проверить отображение блоков меню навигации для суперпользователя.
+        self.assertTrue(self.client.login(username="superuser", password="SuperUserSecretPassword"))
+
+        # Информация о пользователе, ссылка на выход и администрирование реализованы через React компонент,
+        # проверяем наличие контейнера для React компонента навигации с правильными данными.
+        response = self.client.get(self.url)
+        navbar_data = response.context["navbar_data"]
+        self.assertContains(response, 'id="navbar-root"')
+        self.assertTrue(navbar_data["userAuthenticated"])
+        self.assertEqual(navbar_data["userName"], "superuser")
+        self.assertTrue(navbar_data["userIsStaff"])
 
         # Деавторизоваться и вновь проверить отображение блоков меню навигации для неавторизованного пользователя.
         self.client.logout()
@@ -66,8 +76,12 @@ class UserPersmissionsTest(TestCase):
         self.assertNotContains(response, "Администрирование")
         self.assertNotContains(response, "Вы вошли как")
         self.assertNotContains(response, "Выйти")
-        self.assertContains(response, "Войти")
-        self.assertContains(response, "Регистрация")
+
+        # Ссылки на регистрацию и вход находятся в навигационной панели,
+        # реализованной через React компонент. Проверяем наличие контейнера для React компонента навигации.
+        navbar_data = response.context["navbar_data"]
+        self.assertContains(response, 'id="navbar-root"')
+        self.assertFalse(navbar_data["userAuthenticated"])
 
 
 class UserManagementRoutesTest(TestCase):

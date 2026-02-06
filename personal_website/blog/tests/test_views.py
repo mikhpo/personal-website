@@ -77,7 +77,9 @@ class BlogIndexPageTests(TestCase):
         self.assertContains(response, 'class="card-body"')
         self.assertContains(response, 'class="card-title"')
         self.assertContains(response, 'class="card-text"')
-        self.assertContains(response, 'class="pagination"')
+
+        # Пагинация реализована через React компонент, проверяем наличие контейнера для него
+        self.assertContains(response, 'id="pagination-root-default"')
 
     def test_article_list_pagination(self) -> None:
         """Проверка на корректность паджинации статей блога на главной странице блога."""
@@ -289,7 +291,9 @@ class CategoryPageTests(TestCase):
         self.assertContains(response, 'class="card-body"')
         self.assertContains(response, 'class="card-title"')
         self.assertContains(response, 'class="card-text"')
-        self.assertContains(response, 'class="pagination"')
+
+        # Пагинация реализована через React компонент, проверяем наличие контейнера для него
+        self.assertContains(response, 'id="pagination-root-default"')
 
     def test_category_pagination(self) -> None:
         """Проверка на корректность паджинации статей в категории."""
@@ -393,7 +397,9 @@ class TopicPageTests(TestCase):
         self.assertContains(response, 'class="card-body"')
         self.assertContains(response, 'class="card-title"')
         self.assertContains(response, 'class="card-text"')
-        self.assertContains(response, 'class="pagination"')
+
+        # Пагинация реализована через React компонент, проверяем наличие контейнера для него
+        self.assertContains(response, 'id="pagination-root-default"')
 
     def test_topic_pagination(self) -> None:
         """Проверка на корректность паджинации статей по теме."""
@@ -495,7 +501,9 @@ class SeriesPageTests(TestCase):
         self.assertContains(response, 'class="card-body"')
         self.assertContains(response, 'class="card-title"')
         self.assertContains(response, 'class="card-text"')
-        self.assertContains(response, 'class="pagination"')
+
+        # Пагинация реализована через React компонент, проверяем наличие контейнера для него
+        self.assertContains(response, 'id="pagination-root-default"')
 
     def test_series_pagination(self) -> None:
         """Проверка на корректность паджинации статей из серии."""
