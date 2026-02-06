@@ -405,7 +405,7 @@ tasks:
       Эквивалент команды docker stop для всех запущенных в данный момент контейнеров (docker ps -a).
     cmds:
       - docker ps -a
-      - docker stop $(docker ps -a -q)
+      - docker stop $(docker ps -a -q) 2>/dev/null || true
       - docker ps -a
 
   remove-containers:
@@ -414,5 +414,18 @@ tasks:
       Эквивалент команды docker rm для всех запущенных в данный момент контейнеров (docker ps -a).
     cmds:
       - docker ps -a
-      - docker rm $(docker ps -a -q)
+      - docker stop $(docker ps -a -q) 2>/dev/null || true
+      - docker rm $(docker ps -a -q) 2>/dev/null || true
       - docker ps -a
+
+  prune-volumes:
+    desc: Удалить все тома Docker
+    summary: |
+      Удаляет все тома Docker, включая именованные.
+      Перед удалением останавливает все контейнеры.
+      Полезно для полной очистки данных контейнеров.
+    cmds:
+      - docker volume ls
+      - task: stop-containers
+      - docker volume rm -f $(docker volume ls -q) 2>/dev/null || true
+      - docker volume ls
