@@ -68,7 +68,7 @@ UPLOAD_TEMPLATE_NAME = f"{APP_NAME}/upload.html"
 storage: StorageType = select_storage()
 
 
-class GalleryViewsTest(TestCase):
+class TestGalleryViews(TestCase):
     """Тестирование представлений галереи."""
 
     @classmethod
@@ -410,7 +410,7 @@ class GalleryViewsTest(TestCase):
             self.assertEqual(tags.count(), len(context["tags"]))
 
 
-class UploadFormViewTests(TestCase):
+class TestUploadFormView(TestCase):
     """Тесты формы для пакетной загрузки фотографий в альбом."""
 
     test_username = "test_username"

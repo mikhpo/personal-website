@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from main.context_processors import NavbarData
 
 
-class UserPersmissionsTest(TestCase):
+class TestUserPermissions(TestCase):
     """Проверка полномочий пользователя."""
 
     url = "/main/"
@@ -91,7 +91,7 @@ class UserPersmissionsTest(TestCase):
         self.assertFalse(navbar_data["userAuthenticated"])
 
 
-class UserManagementRoutesTest(TestCase):
+class TestUserManagementRoutes(TestCase):
     """Тестирование ссылок системы авторизации."""
 
     @classmethod

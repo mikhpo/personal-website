@@ -12,7 +12,7 @@ from personal_website.utils import list_file_paths
 SITEMAP_URL = "/sitemap.xml"
 
 
-class GallerySitemapTest(TestCase):
+class TestGallerySitemap(TestCase):
     """Тестирование карты галереи."""
 
     @classmethod

@@ -10,7 +10,7 @@ from blog.models import Category, Series
 from main.views import main
 
 
-class MainPageTest(TestCase):
+class TestMainPage(TestCase):
     """Тесты загрузки главной страницы сайта."""
 
     main_url = "/main/"
@@ -89,7 +89,7 @@ class MainPageTest(TestCase):
         self.assertQuerySetEqual(target_series, response.context["series"])
 
 
-class SitemapTest(TestCase):
+class TestSitemap(TestCase):
     """Тестирование карты сайта."""
 
     def test_sitemap_url(self) -> None:

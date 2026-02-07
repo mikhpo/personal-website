@@ -17,7 +17,7 @@ VALID_CREDENTIALS = {
 }
 
 
-class SignUpFormTest(TestCase):
+class TestSignUpForm(TestCase):
     """Тестирование формы регистрации на сайте."""
 
     signup_url = "/accounts/signup/"

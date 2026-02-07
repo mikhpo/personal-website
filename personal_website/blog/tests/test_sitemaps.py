@@ -8,7 +8,7 @@ from django.utils import timezone
 from blog.factories import ArticleFactory, CategoryFactory, SeriesFactory, TopicFactory
 
 
-class BlogSitemapTest(TestCase):
+class TestBlogSitemap(TestCase):
     """Тестирование карты блога."""
 
     sitemap_url = "/sitemap.xml"

@@ -8,7 +8,7 @@ from gallery.models import Photo
 from personal_website.utils import list_file_paths
 
 
-class GalleryFormsTest(TestCase):
+class TestGalleryForms(TestCase):
     """Тестирование форм приложения галереи."""
 
     def test_no_cover_photos_for_new_album(self) -> None:

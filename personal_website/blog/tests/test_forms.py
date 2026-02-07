@@ -6,7 +6,7 @@ from blog.forms import NewCommentForm
 from personal_website.utils import generate_random_text
 
 
-class CommentFormTest(TestCase):
+class TestCommentForm(TestCase):
     """Проверка корректности TestCase формы создания комментария."""
 
     def test_comment_form_fields(self) -> None:

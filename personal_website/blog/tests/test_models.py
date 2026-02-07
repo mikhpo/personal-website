@@ -9,7 +9,7 @@ from blog.models import Article, Category, Comment, Series, Topic
 from personal_website.utils import generate_random_text
 
 
-class ArticleModelTest(TestCase):
+class TestArticleModel(TestCase):
     """Тесты модели статьи."""
 
     @classmethod
@@ -128,7 +128,7 @@ class ArticleModelTest(TestCase):
         self.assertEqual(Comment.objects.filter(author=user_3).count(), 0)
 
 
-class SeriesModelTest(TestCase):
+class TestSeriesModel(TestCase):
     """Тесты модели серии статей."""
 
     def test_series_name_unique(self) -> None:
@@ -159,7 +159,7 @@ class SeriesModelTest(TestCase):
         self.assertEqual(url, absolute_url)
 
 
-class TopicModelTest(TestCase):
+class TestTopicModel(TestCase):
     """Тесты модели темы статей."""
 
     def test_topic_name_unique(self) -> None:
@@ -190,7 +190,7 @@ class TopicModelTest(TestCase):
         self.assertEqual(url, absolute_url)
 
 
-class CategoryModelTest(TestCase):
+class TestCategoryModel(TestCase):
     """Тесты модели категории статей."""
 
     def test_category_name_unique(self) -> None:

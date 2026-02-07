@@ -16,7 +16,7 @@ from personal_website.utils import format_local_datetime, generate_random_text
 FAKER = Faker()
 
 
-class BlogAdminTest(TestCase):
+class TestBlogAdmin(TestCase):
     """Тестирование функциональности раздела блога в административном интерфейсе Django."""
 
     ADMIN_URL = "/admin/"

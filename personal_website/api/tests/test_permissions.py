@@ -144,7 +144,7 @@ class TestIsPublicOrAuthor(TestCase):
         self.assertFalse(self.permission._is_author(None, obj))  # noqa: SLF001
 
 
-class IsStaffOrReadOnlyTest(TestCase):
+class TestIsStaffOrReadOnly(TestCase):
     """Тесты для permission IsStaffOrReadOnly."""
 
     def setUp(self) -> None:
