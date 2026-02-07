@@ -104,5 +104,7 @@ def alerts_data(request: HttpRequest) -> dict[str, Any]:
         alerts.append(alert)
 
     return {
-        "messages": alerts,
+        "alerts_data": {
+            "messages": alerts,
+        },
     }

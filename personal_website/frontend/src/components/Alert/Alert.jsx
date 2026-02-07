@@ -28,7 +28,7 @@ import { Alert as BSAlert } from 'react-bootstrap';
  * />
  *
  * @param {Object} props - Свойства компонента
- * @param {string} props.message - Текст сообщения, который будет отображен пользователю
+ * @param {string} props.message - Текст сообщения (может содержать HTML), который будет отображен пользователю
  * @param {('success'|'info'|'warning'|'error'|'danger')} props.level - Уровень важности сообщения, определяет цветовую схему отображения
  * @param {boolean} [props.dismissible=true] - Флаг, указывающий, можно ли пользователю вручную закрыть сообщение
  * @param {boolean} [props.autoClose=false] - Флаг, указывающий, должно ли сообщение автоматически закрываться через заданное время
@@ -79,7 +79,7 @@ const Alert = ({ message, level, dismissible, autoClose, autoCloseDelay }) => {
       onClose={dismissible ? () => setShow(false) : undefined}
       dismissible={dismissible}
     >
-      {message}
+      <div dangerouslySetInnerHTML={{ __html: message }} />
     </BSAlert>
   );
 };

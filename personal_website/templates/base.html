@@ -36,17 +36,6 @@
     {% block body %}
       {% block messages %}
         <div id="alerts-root" data-props="{% react_props alerts_data %}"></div>
-        <script>
-          document.addEventListener('DOMContentLoaded', function() {
-            const alertsElement = document.getElementById('alerts-root');
-            if (alertsElement && alertsElement.dataset.props) {
-              const props = JSON.parse(alertsElement.dataset.props);
-              if (typeof window.mountReactComponent === 'function') {
-                window.mountReactComponent('Alert/AlertContainer', 'alerts-root', props);
-              }
-            }
-          });
-        </script>
       {% endblock messages %}
       {% block content %}
       {% endblock content %}
@@ -59,11 +48,21 @@
       {% render_bundle 'main' 'js' %}
       <script>
         document.addEventListener('DOMContentLoaded', function() {
+          // Монтируем Navbar
           const navbarElement = document.getElementById('navbar-root');
           if (navbarElement && navbarElement.dataset.props) {
             const props = JSON.parse(navbarElement.dataset.props);
             if (typeof window.mountReactComponent === 'function') {
               window.mountReactComponent('Navbar/Navbar', 'navbar-root', props);
+            }
+          }
+
+          // Монтируем Alerts
+          const alertsElement = document.getElementById('alerts-root');
+          if (alertsElement && alertsElement.dataset.props) {
+            const props = JSON.parse(alertsElement.dataset.props);
+            if (typeof window.mountReactComponent === 'function') {
+              window.mountReactComponent('Alert/AlertContainer', 'alerts-root', props);
             }
           }
         });

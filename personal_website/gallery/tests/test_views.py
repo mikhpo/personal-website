@@ -1,6 +1,9 @@
 """Тесты представлений галереи."""
 
+import json
 import random
+import re
+from html import unescape
 from http import HTTPStatus
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -8,6 +11,7 @@ from typing import TYPE_CHECKING
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.http import HttpResponseBase
 from django.test import TestCase
 from django.urls import resolve, reverse
 from django.utils.crypto import get_random_string
@@ -499,23 +503,113 @@ class UploadFormViewTests(TestCase):
         for photo in Photo.objects.all():
             self.assertEqual(photo.album, self.album)
 
-    def test_upload_messages(self) -> None:
-        """После загрузки фотографий появляется сообщение с результатом."""
+    def _create_test_photos(self) -> list[SimpleUploadedFile]:
+        """Создать тестовые фотографии для загрузки."""
         photos = []
         for image_path in self.test_image_paths:
             file_content = storage.read_bytes(image_path)
             file_name = Path(image_path).name
             file = SimpleUploadedFile(name=file_name, content=file_content)
             photos.append(file)
+        return photos
 
+    def _check_react_component_mounting(self, response: HttpResponseBase, response_content: str) -> None:
+        """Проверить монтирование React компонента."""
+        # Проверяем, что скрипт монтирования React компонента идет после загрузки React bundle
+        react_bundle = response_content.find("main-")  # React bundle имеет имя main-[hash].js
+        alerts_mount = response_content.find("Alert/AlertContainer")
+        self.assertGreater(
+            alerts_mount,
+            react_bundle,
+            "Скрипт монтирования AlertContainer должен идти после загрузки React bundle",
+        )
+
+        # Проверяем наличие скрипта монтирования
+        self.assertContains(response, "window.mountReactComponent")
+        self.assertContains(response, "Alert/AlertContainer")
+
+    def _check_react_component_presence(self, response: HttpResponseBase) -> None:
+        """Проверить наличие React компонента в ответе."""
+        self.assertContains(response, "window.mountReactComponent")
+        self.assertContains(response, "Alert/AlertContainer")
+        self.assertContains(response, "alerts-root")
+
+    def _check_alerts_data(self, alerts_data: dict[str, list[dict[str, str | bool | int]]]) -> None:
+        """Проверить данные оповещений."""
+        self.assertIsNotNone(alerts_data)
+        self.assertIn("messages", alerts_data)
+        self.assertTrue(len(alerts_data["messages"]) > 0)
+
+    def _extract_alerts_props(self, response_content: str) -> dict[str, list[dict[str, str | bool | int]]]:
+        """Извлечь свойства оповещений из ответа."""
+        props_match = re.search(r'id="alerts-root"\s+data-props="([^"]*)"', response_content)
+        self.assertIsNotNone(props_match, "Не найден атрибут data-props у alerts-root")
+
+        if props_match is None:
+            self.fail("Не найден атрибут data-props у alerts-root")
+
+        # Если props пустой, значит нет сообщений
+        props_raw = props_match.group(1)
+        if not props_raw:
+            self.fail("data-props пустой, хотя ожидается сообщение о загрузке")
+
+        # Декодируем HTML entities и парсим JSON
+        props_json = unescape(props_raw)
+        result: dict[str, list[dict[str, str | bool | int]]] = json.loads(props_json)
+        return result
+
+    def _check_alert_structure(self, alert: dict[str, str | bool | int]) -> None:
+        """Проверить структуру оповещения."""
+        self.assertIn("message", alert)
+        self.assertIn("level", alert)
+        self.assertEqual(alert["level"], "success")
+        self.assertTrue(alert["dismissible"])
+        self.assertTrue(alert["autoClose"])
+        self.assertEqual(alert["autoCloseDelay"], 60000)
+
+    def _check_alert_content(self, alert: dict[str, str | bool | int]) -> None:
+        """Проверить содержимое оповещения."""
+        message = str(alert["message"])
+        self.assertIn("Загружено", message)
+        self.assertIn(str(len(self.test_image_paths)), message)
+        self.assertIn(self.album.name, message)
+
+    def test_upload_messages(self) -> None:
+        """После загрузки фотографий появляется сообщение с результатом."""
+        photos = self._create_test_photos()
         data = {"photos": photos, "album": self.album.pk}
         response = self.client.post(UPLOAD_URL, data, follow=True)
 
         # Сообщения реализованы через React компонент, проверяем наличие контейнера для него
         self.assertContains(response, 'id="alerts-root"')
 
-        # Проверяем, что в контексте есть сообщения
-        self.assertTrue(response.context["messages"])
+        # Проверяем монтирование React компонента
+        response_content = response.content.decode("utf-8")
+        self._check_react_component_mounting(response, response_content)
+
+        # Извлекаем и проверяем свойства оповещений
+        props_data = self._extract_alerts_props(response_content)
+        self.assertIn("messages", props_data)
+        self.assertTrue(len(props_data["messages"]) > 0, "Должно быть хотя бы одно сообщение")
+
+        # Проверяем структуру и содержимое оповещения
+        alert = props_data["messages"][0]
+        self._check_alert_structure(alert)
+        self._check_alert_content(alert)
+
+        # Проверяем, что alerts_data правильно передается в шаблон
+        alerts_data = response.context.get("alerts_data")
+        if not isinstance(alerts_data, dict):
+            self.fail("alerts_data должен быть словарем")
+        self._check_alerts_data(alerts_data)
+
+        # Проверяем структуру и содержимое оповещения из контекста
+        alert = alerts_data["messages"][0]
+        self._check_alert_structure(alert)
+        self._check_alert_content(alert)
+
+        # Проверяем, что скрипт монтирования React компонента присутствует
+        self._check_react_component_presence(response)
 
     def test_upload_image_verify(self) -> None:
         """Загружаемое изображение проверяется на валидность."""

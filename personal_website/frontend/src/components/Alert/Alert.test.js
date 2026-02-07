@@ -69,4 +69,26 @@ describe('Alert', () => {
       { timeout: 200 }
     );
   });
+
+  /**
+   * @test Проверяет рендеринг HTML в сообщении
+   *
+   * Тест проверяет, что компонент корректно рендерит HTML-разметку
+   * в тексте сообщения (например, ссылки и жирный текст).
+   */
+  test('рендерит HTML в сообщении', () => {
+    const htmlMessage = 'Загружено <b>5</b> фотографий в альбом <a href="/gallery/albums/test/" class="alert-link">Тестовый альбом</a>';
+    const { container } = render(<Alert message={htmlMessage} level="success" />);
+
+    // Проверяем наличие жирного текста
+    const boldElement = container.querySelector('b');
+    expect(boldElement).toBeInTheDocument();
+    expect(boldElement).toHaveTextContent('5');
+
+    // Проверяем наличие ссылки
+    const linkElement = container.querySelector('a.alert-link');
+    expect(linkElement).toBeInTheDocument();
+    expect(linkElement).toHaveTextContent('Тестовый альбом');
+    expect(linkElement).toHaveAttribute('href', '/gallery/albums/test/');
+  });
 });
