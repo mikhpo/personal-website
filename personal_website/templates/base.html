@@ -48,23 +48,27 @@
       {% render_bundle 'main' 'js' %}
       <script>
         document.addEventListener('DOMContentLoaded', function() {
-          // Монтируем Navbar
-          const navbarElement = document.getElementById('navbar-root');
-          if (navbarElement && navbarElement.dataset.props) {
-            const props = JSON.parse(navbarElement.dataset.props);
-            if (typeof window.mountReactComponent === 'function') {
-              window.mountReactComponent('Navbar/Navbar', 'navbar-root', props);
-            }
-          }
+          // Конфигурация компонентов для монтирования
+          const reactComponents = [
+            { elementId: 'navbar-root', componentName: 'Navbar/Navbar' },
+            { elementId: 'alerts-root', componentName: 'Alert/AlertContainer' }
+          ];
 
-          // Монтируем Alerts
-          const alertsElement = document.getElementById('alerts-root');
-          if (alertsElement && alertsElement.dataset.props) {
-            const props = JSON.parse(alertsElement.dataset.props);
-            if (typeof window.mountReactComponent === 'function') {
-              window.mountReactComponent('Alert/AlertContainer', 'alerts-root', props);
+          // Монтирование всех компонентов
+          reactComponents.forEach(function(component) {
+            const element = document.getElementById(component.elementId);
+
+            if (element && element.dataset.props) {
+              try {
+                const props = JSON.parse(element.dataset.props);
+                if (typeof window.mountReactComponent === 'function') {
+                  window.mountReactComponent(component.componentName, component.elementId, props);
+                }
+              } catch (error) {
+                console.error(`Failed to mount component "${component.componentName}" to "${component.elementId}":`, error);
+              }
             }
-          }
+          });
         });
       </script>
       <!-- Offcanvas панель с тегами -->
