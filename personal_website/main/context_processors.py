@@ -1,17 +1,84 @@
 """Процессоры контекста для глобальных данных шаблонов."""
 
-from typing import Any
+from typing import TYPE_CHECKING, TypedDict
 
 from django.contrib.messages import get_messages
+from django.db.models import QuerySet
 from django.http import HttpRequest
 
 from gallery.models import Tag
+
+if TYPE_CHECKING:
+    from django.contrib.messages.storage.base import Message
+
+
+class NavbarLinkDropdown(TypedDict, total=False):
+    """Тип для элементов выпадающего меню навигационной панели."""
+
+    url: str
+    text: str
+    offcanvas: bool
+
+
+class NavbarLink(TypedDict, total=False):
+    """Тип для элементов навигационной панели."""
+
+    url: str
+    text: str
+    active: bool
+    dropdown: list[NavbarLinkDropdown]
+
+
+class NavbarData(TypedDict):
+    """Тип для данных навигационной панели."""
+
+    brandName: str
+    brandUrl: str
+    links: list[NavbarLink]
+    userAuthenticated: bool
+    userName: str
+    userIsStaff: bool
+
+
+class AlertMessage(TypedDict, total=False):
+    """Тип для сообщений системы оповещения."""
+
+    message: str
+    level: str
+    dismissible: bool
+    autoClose: bool
+    autoCloseDelay: int
+
+
+class AlertsData(TypedDict):
+    """Тип для данных системы оповещения."""
+
+    messages: list[AlertMessage]
+
+
+class ContextNavbarData(TypedDict):
+    """Тип для контекста навигационной панели."""
+
+    navbar_data: NavbarData
+
+
+class ContextTagsData(TypedDict):
+    """Тип для контекста тегов."""
+
+    tags: QuerySet[Tag]
+
+
+class ContextAlertsData(TypedDict):
+    """Тип для контекста системы оповещения."""
+
+    alerts_data: AlertsData
+
 
 # Время автоматического закрытия сообщений (в миллисекундах)
 DEFAULT_AUTO_CLOSE_DELAY = 60000  # 1 минута
 
 
-def navbar_data(request: HttpRequest) -> dict[str, Any]:
+def navbar_data(request: HttpRequest) -> ContextNavbarData:
     """
     Процессор контекста для данных навигационной панели.
 
@@ -21,7 +88,7 @@ def navbar_data(request: HttpRequest) -> dict[str, Any]:
     Returns:
         Словарь с данными для navbar
     """
-    links = [
+    links: list[NavbarLink] = [
         {
             "url": "/",
             "text": "Главная",
@@ -56,7 +123,7 @@ def navbar_data(request: HttpRequest) -> dict[str, Any]:
     }
 
 
-def tags_data(request: HttpRequest) -> dict[str, Any]:  # noqa: ARG001
+def tags_data(request: HttpRequest) -> ContextTagsData:  # noqa: ARG001
     """
     Процессор контекста для данных тегов.
 
@@ -71,7 +138,7 @@ def tags_data(request: HttpRequest) -> dict[str, Any]:  # noqa: ARG001
     }
 
 
-def alerts_data(request: HttpRequest) -> dict[str, Any]:
+def alerts_data(request: HttpRequest) -> ContextAlertsData:
     """
     Процессор контекста для системных сообщений.
 
@@ -81,8 +148,8 @@ def alerts_data(request: HttpRequest) -> dict[str, Any]:
     Returns:
         Словарь с сообщениями для отображения
     """
-    messages = get_messages(request)
-    alerts = []
+    messages: list[Message] = list(get_messages(request))
+    alerts: list[AlertMessage] = []
 
     for message in messages:
         # Преобразуем уровни сообщений Django в уровни Bootstrap
@@ -94,9 +161,9 @@ def alerts_data(request: HttpRequest) -> dict[str, Any]:
             "error": "danger",
         }
 
-        alert = {
+        alert: AlertMessage = {
             "message": message.message,
-            "level": level_map.get(message.tags, "info"),
+            "level": level_map.get(message.tags, "info") if message.tags else "info",
             "dismissible": True,
             "autoClose": True,
             "autoCloseDelay": DEFAULT_AUTO_CLOSE_DELAY,

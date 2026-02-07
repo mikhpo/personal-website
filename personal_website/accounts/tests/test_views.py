@@ -1,6 +1,7 @@
 """Тесты представлений системы авторизации пользователей."""
 
 from http import HTTPStatus
+from typing import TYPE_CHECKING
 
 from django.contrib.auth.models import User
 from django.core import mail
@@ -9,6 +10,9 @@ from django.urls import resolve, reverse
 from django.utils.crypto import get_random_string
 
 from accounts.views import signup
+
+if TYPE_CHECKING:
+    from main.context_processors import NavbarData
 
 
 class UserPersmissionsTest(TestCase):
@@ -40,8 +44,9 @@ class UserPersmissionsTest(TestCase):
         # Информация о пользователе и ссылка на выход реализованы через React компонент,
         # проверяем наличие контейнера для React компонента навигации с правильными данными.
         response = self.client.get(self.url)
-        navbar_data = response.context["navbar_data"]
         self.assertContains(response, 'id="navbar-root"')
+
+        navbar_data: NavbarData = response.context["navbar_data"]
         self.assertTrue(navbar_data["userAuthenticated"])
         self.assertEqual(navbar_data["userName"], "user")
         self.assertFalse(navbar_data["userIsStaff"])
@@ -52,11 +57,12 @@ class UserPersmissionsTest(TestCase):
         # Информация о пользователе, ссылка на выход и администрирование реализованы через React компонент,
         # проверяем наличие контейнера для React компонента навигации с правильными данными.
         response = self.client.get(self.url)
-        navbar_data = response.context["navbar_data"]
         self.assertContains(response, 'id="navbar-root"')
-        self.assertTrue(navbar_data["userAuthenticated"])
-        self.assertEqual(navbar_data["userName"], "staff")
-        self.assertTrue(navbar_data["userIsStaff"])
+
+        navbar_data_staff: NavbarData = response.context["navbar_data"]
+        self.assertTrue(navbar_data_staff["userAuthenticated"])
+        self.assertEqual(navbar_data_staff["userName"], "staff")
+        self.assertTrue(navbar_data_staff["userIsStaff"])
 
         # Проверить отображение блоков меню навигации для суперпользователя.
         self.assertTrue(self.client.login(username="superuser", password="SuperUserSecretPassword"))
@@ -64,11 +70,12 @@ class UserPersmissionsTest(TestCase):
         # Информация о пользователе, ссылка на выход и администрирование реализованы через React компонент,
         # проверяем наличие контейнера для React компонента навигации с правильными данными.
         response = self.client.get(self.url)
-        navbar_data = response.context["navbar_data"]
         self.assertContains(response, 'id="navbar-root"')
-        self.assertTrue(navbar_data["userAuthenticated"])
-        self.assertEqual(navbar_data["userName"], "superuser")
-        self.assertTrue(navbar_data["userIsStaff"])
+
+        navbar_data_super: NavbarData = response.context["navbar_data"]
+        self.assertTrue(navbar_data_super["userAuthenticated"])
+        self.assertEqual(navbar_data_super["userName"], "superuser")
+        self.assertTrue(navbar_data_super["userIsStaff"])
 
         # Деавторизоваться и вновь проверить отображение блоков меню навигации для неавторизованного пользователя.
         self.client.logout()

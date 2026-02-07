@@ -16,6 +16,9 @@ from django.test import TestCase
 from django.urls import resolve, reverse
 from django.utils.crypto import get_random_string
 
+if TYPE_CHECKING:
+    from main.context_processors import AlertMessage, AlertsData
+
 from gallery.apps import GalleryConfig
 from gallery.factories import AlbumFactory, PhotoFactory, TagFactory
 from gallery.models import Album, Photo, Tag
@@ -534,13 +537,13 @@ class UploadFormViewTests(TestCase):
         self.assertContains(response, "Alert/AlertContainer")
         self.assertContains(response, "alerts-root")
 
-    def _check_alerts_data(self, alerts_data: dict[str, list[dict[str, str | bool | int]]]) -> None:
+    def _check_alerts_data(self, alerts_data: "AlertsData") -> None:
         """Проверить данные оповещений."""
         self.assertIsNotNone(alerts_data)
         self.assertIn("messages", alerts_data)
         self.assertTrue(len(alerts_data["messages"]) > 0)
 
-    def _extract_alerts_props(self, response_content: str) -> dict[str, list[dict[str, str | bool | int]]]:
+    def _extract_alerts_props(self, response_content: str) -> "AlertsData":
         """Извлечь свойства оповещений из ответа."""
         props_match = re.search(r'id="alerts-root"\s+data-props="([^"]*)"', response_content)
         self.assertIsNotNone(props_match, "Не найден атрибут data-props у alerts-root")
@@ -555,10 +558,10 @@ class UploadFormViewTests(TestCase):
 
         # Декодируем HTML entities и парсим JSON
         props_json = unescape(props_raw)
-        result: dict[str, list[dict[str, str | bool | int]]] = json.loads(props_json)
+        result: AlertsData = json.loads(props_json)
         return result
 
-    def _check_alert_structure(self, alert: dict[str, str | bool | int]) -> None:
+    def _check_alert_structure(self, alert: "AlertMessage") -> None:
         """Проверить структуру оповещения."""
         self.assertIn("message", alert)
         self.assertIn("level", alert)
@@ -567,7 +570,7 @@ class UploadFormViewTests(TestCase):
         self.assertTrue(alert["autoClose"])
         self.assertEqual(alert["autoCloseDelay"], 60000)
 
-    def _check_alert_content(self, alert: dict[str, str | bool | int]) -> None:
+    def _check_alert_content(self, alert: "AlertMessage") -> None:
         """Проверить содержимое оповещения."""
         message = str(alert["message"])
         self.assertIn("Загружено", message)
@@ -593,20 +596,20 @@ class UploadFormViewTests(TestCase):
         self.assertTrue(len(props_data["messages"]) > 0, "Должно быть хотя бы одно сообщение")
 
         # Проверяем структуру и содержимое оповещения
-        alert = props_data["messages"][0]
+        alert: AlertMessage = props_data["messages"][0]
         self._check_alert_structure(alert)
         self._check_alert_content(alert)
 
         # Проверяем, что alerts_data правильно передается в шаблон
         alerts_data = response.context.get("alerts_data")
-        if not isinstance(alerts_data, dict):
+        if alerts_data is None:
             self.fail("alerts_data должен быть словарем")
         self._check_alerts_data(alerts_data)
 
         # Проверяем структуру и содержимое оповещения из контекста
-        alert = alerts_data["messages"][0]
-        self._check_alert_structure(alert)
-        self._check_alert_content(alert)
+        context_alert: AlertMessage = alerts_data["messages"][0]
+        self._check_alert_structure(context_alert)
+        self._check_alert_content(context_alert)
 
         # Проверяем, что скрипт монтирования React компонента присутствует
         self._check_react_component_presence(response)
