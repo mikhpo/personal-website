@@ -1,10 +1,10 @@
 """Тесты для CORS конфигурации."""
 
-from django.test import TestCase
 from django.urls import reverse
+from rest_framework.test import APITestCase
 
 
-class TestCORSConfiguration(TestCase):
+class TestCORSConfiguration(APITestCase):
     """Тесты конфигурации CORS."""
 
     def test_cors_headers_present_on_api_endpoint(self) -> None:

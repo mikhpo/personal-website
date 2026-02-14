@@ -2,16 +2,19 @@
 
 import shutil
 import uuid
+from collections.abc import Callable
 from io import BytesIO
 from pathlib import Path
-from typing import IO, Any, Callable, Union
+from typing import IO, Any
 
 from botocore.exceptions import ClientError  # type: ignore[import-untyped]
 from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.files.storage import FileSystemStorage, storages
+from django.utils import timezone
 from django.utils.text import slugify
 from faker_file.storages.filesystem import FileSystemStorage as FakerFileSystemStorage  # type: ignore[import-untyped]
+from s3path import S3Path
 from storages.backends.s3boto3 import S3Boto3Storage  # type: ignore[import-untyped]
 
 
@@ -159,7 +162,7 @@ class CustomFileSystemStorage(BaseStorageMixin, FileSystemStorage):
 
     def mkdir(
         self,
-        path: Union[str, Path],
+        path: str | Path,
         parents: bool = True,  # noqa: FBT001, FBT002
         exist_ok: bool = True,  # noqa: FBT001, FBT002
     ) -> None:
@@ -178,7 +181,7 @@ class CustomFileSystemStorage(BaseStorageMixin, FileSystemStorage):
         abs_path = self.path(relative_path)
         Path(abs_path).mkdir(parents=parents, exist_ok=exist_ok)
 
-    def is_dir(self, path: Union[str, Path]) -> bool:
+    def is_dir(self, path: str | Path) -> bool:
         """
         Проверяет, является ли указанный путь директорией.
 
@@ -192,7 +195,7 @@ class CustomFileSystemStorage(BaseStorageMixin, FileSystemStorage):
         abs_path = self.path(relative_path)
         return Path(abs_path).is_dir()
 
-    def rmdir(self, path: Union[str, Path]) -> None:
+    def rmdir(self, path: str | Path) -> None:
         """
         Удаляет пустую директорию по указанному пути.
 
@@ -206,7 +209,7 @@ class CustomFileSystemStorage(BaseStorageMixin, FileSystemStorage):
         abs_path = self.path(relative_path)
         Path(abs_path).rmdir()
 
-    def rmtree(self, path: Union[str, Path], ignore_errors: bool = True) -> None:  # noqa: FBT001, FBT002
+    def rmtree(self, path: str | Path, ignore_errors: bool = True) -> None:  # noqa: FBT001, FBT002
         """
         Рекурсивно удаляет директорию и всё её содержимое.
 
@@ -219,7 +222,7 @@ class CustomFileSystemStorage(BaseStorageMixin, FileSystemStorage):
         abs_path = self.path(relative_path)
         shutil.rmtree(abs_path, ignore_errors=ignore_errors)
 
-    def copy_file(self, src: Union[str, Path], dst: Union[str, Path]) -> None:
+    def copy_file(self, src: str | Path, dst: str | Path) -> None:
         """
         Копирование файла с исходного пути в целевой.
 
@@ -274,7 +277,7 @@ class CustomFileSystemStorage(BaseStorageMixin, FileSystemStorage):
         abs_path = Path(self.path(relative_name))
         return abs_path.read_bytes()
 
-    def joinpath(self, *paths: Union[str, Path]) -> str:
+    def joinpath(self, *paths: str | Path) -> str:
         """
         Объединяет пути в один путь.
 
@@ -287,7 +290,7 @@ class CustomFileSystemStorage(BaseStorageMixin, FileSystemStorage):
         path = Path(*paths)
         return str(path)
 
-    def name(self, path: Union[str, Path]) -> str:
+    def name(self, path: str | Path) -> str:
         """
         Возвращает имя файла из пути.
 
@@ -299,7 +302,7 @@ class CustomFileSystemStorage(BaseStorageMixin, FileSystemStorage):
         """
         return Path(path).name
 
-    def stem(self, path: Union[str, Path]) -> str:
+    def stem(self, path: str | Path) -> str:
         """
         Возвращает имя файла без расширения из пути.
 
@@ -311,7 +314,7 @@ class CustomFileSystemStorage(BaseStorageMixin, FileSystemStorage):
         """
         return Path(path).stem
 
-    def suffix(self, path: Union[str, Path]) -> str:
+    def suffix(self, path: str | Path) -> str:
         """
         Возвращает расширение файла из пути.
 
@@ -323,7 +326,7 @@ class CustomFileSystemStorage(BaseStorageMixin, FileSystemStorage):
         """
         return Path(path).suffix
 
-    def with_suffix(self, path: Union[str, Path], suffix: str) -> str:
+    def with_suffix(self, path: str | Path, suffix: str) -> str:
         """
         Возвращает путь к файлу с измененным расширением.
 
@@ -336,7 +339,7 @@ class CustomFileSystemStorage(BaseStorageMixin, FileSystemStorage):
         """
         return str(Path(path).with_suffix(suffix))
 
-    def parent(self, path: Union[str, Path]) -> str:
+    def parent(self, path: str | Path) -> str:
         """
         Возвращает родительский каталог файла из пути.
 
@@ -352,7 +355,7 @@ class CustomFileSystemStorage(BaseStorageMixin, FileSystemStorage):
             return ""
         return str(parent_path)
 
-    def replace(self, src: Union[str, Path], dst: Union[str, Path]) -> None:
+    def replace(self, src: str | Path, dst: str | Path) -> None:
         """
         Переименование файла: заменяет файл по пути src на файл по пути dst.
 
@@ -366,7 +369,7 @@ class CustomFileSystemStorage(BaseStorageMixin, FileSystemStorage):
         abs_dst = self.path(relative_dst)
         Path(abs_src).replace(abs_dst)
 
-    def relative_to(self, path: Union[str, Path], other: Union[str, Path]) -> str:
+    def relative_to(self, path: str | Path, other: str | Path) -> str:
         """
         Вычисляет относительный путь от 'other' к 'path'.
 
@@ -385,7 +388,7 @@ class CustomFileSystemStorage(BaseStorageMixin, FileSystemStorage):
             return ""
         return str(relative_path)
 
-    def is_absolute(self, path: Union[str, Path]) -> bool:
+    def is_absolute(self, path: str | Path) -> bool:
         """
         Проверяет, является ли путь абсолютным.
 
@@ -549,8 +552,6 @@ class CustomS3Storage(BaseStorageMixin, S3Boto3Storage):
         Raises:
             FileNotFoundError: Если файл не существует.
         """
-        from django.utils import timezone
-
         relative_name = self._get_relative_name(name)
         relative_name = self._normalize_s3_path(relative_name)
 
@@ -588,7 +589,7 @@ class CustomS3Storage(BaseStorageMixin, S3Boto3Storage):
 
     def mkdir(
         self,
-        path: Union[str, Path],
+        path: str | Path,
         parents: bool = True,  # noqa: FBT001, FBT002
         exist_ok: bool = True,  # noqa: FBT001, FBT002
     ) -> None:
@@ -605,7 +606,7 @@ class CustomS3Storage(BaseStorageMixin, S3Boto3Storage):
         # В S3 нет необходимости создавать директории, так как они создаются автоматически
         # при загрузке объектов. Этот метод добавлен для совместимости интерфейса.
 
-    def is_dir(self, path: Union[str, Path]) -> bool:  # type: ignore[override]  # noqa: ARG002
+    def is_dir(self, path: str | Path) -> bool:  # type: ignore[override]  # noqa: ARG002
         """
         Проверяет, является ли указанный путь директорией.
         Для S3 хранилища это всегда возвращает False, так как S3 не имеет иерархической структуры каталогов.
@@ -620,7 +621,7 @@ class CustomS3Storage(BaseStorageMixin, S3Boto3Storage):
         # Этот метод добавлен для совместимости интерфейса.
         return False
 
-    def rmdir(self, path: Union[str, Path]) -> None:
+    def rmdir(self, path: str | Path) -> None:
         """
         Удаляет пустую директорию по указанному пути.
         Для S3 хранилища это операция не требуется, так как S3 не имеет иерархической структуры каталогов.
@@ -631,7 +632,7 @@ class CustomS3Storage(BaseStorageMixin, S3Boto3Storage):
         # В S3 нет необходимости удалять директории, так как они удаляются автоматически
         # при удалении всех объектов в них. Этот метод добавлен для совместимости интерфейса.
 
-    def rmtree(self, path: Union[str, Path], ignore_errors: bool = True) -> None:  # noqa: FBT001, FBT002
+    def rmtree(self, path: str | Path, ignore_errors: bool = True) -> None:  # noqa: FBT001, FBT002
         """
         Рекурсивно удаляет директорию и всё её содержимое.
         Для S3 это означает удаление всех объектов с указанным префиксом.
@@ -669,7 +670,7 @@ class CustomS3Storage(BaseStorageMixin, S3Boto3Storage):
                 error_message = f"Не удалось удалить директорию {path}: {error}"
                 raise OSError(error_message) from error
 
-    def joinpath(self, *paths: Union[str, Path]) -> str:
+    def joinpath(self, *paths: str | Path) -> str:
         """
         Объединяет пути в один путь.
 
@@ -683,7 +684,7 @@ class CustomS3Storage(BaseStorageMixin, S3Boto3Storage):
         str_paths = [str(path).strip("/") for path in paths if path]
         return "/".join(str_paths)
 
-    def name(self, path: Union[str, Path]) -> str:
+    def name(self, path: str | Path) -> str:
         """
         Возвращает имя файла из пути.
 
@@ -695,9 +696,9 @@ class CustomS3Storage(BaseStorageMixin, S3Boto3Storage):
         """
         # Для S3 путь - это просто строка, из которой мы извлекаем имя файла
         path_str = str(path)
-        return path_str.split("/")[-1]
+        return path_str.rsplit("/", maxsplit=1)[-1]
 
-    def stem(self, path: Union[str, Path]) -> str:
+    def stem(self, path: str | Path) -> str:
         """
         Возвращает имя файла без расширения из пути.
 
@@ -711,7 +712,7 @@ class CustomS3Storage(BaseStorageMixin, S3Boto3Storage):
         filename = self.name(path)
         return ".".join(filename.split(".")[:-1]) if "." in filename else filename
 
-    def suffix(self, path: Union[str, Path]) -> str:
+    def suffix(self, path: str | Path) -> str:
         """
         Возвращает расширение файла из пути.
 
@@ -725,7 +726,7 @@ class CustomS3Storage(BaseStorageMixin, S3Boto3Storage):
         filename = self.name(path)
         return "." + filename.split(".")[-1] if "." in filename else ""
 
-    def with_suffix(self, path: Union[str, Path], suffix: str) -> str:
+    def with_suffix(self, path: str | Path, suffix: str) -> str:
         """
         Возвращает путь к файлу с измененным расширением.
 
@@ -748,7 +749,7 @@ class CustomS3Storage(BaseStorageMixin, S3Boto3Storage):
         parts[-1] = new_filename
         return "/".join(parts)
 
-    def parent(self, path: Union[str, Path]) -> str:
+    def parent(self, path: str | Path) -> str:
         """
         Возвращает родительский каталог файла из пути.
 
@@ -762,7 +763,7 @@ class CustomS3Storage(BaseStorageMixin, S3Boto3Storage):
         path_str = str(path)
         return "/".join(path_str.split("/")[:-1])
 
-    def replace(self, src: Union[str, Path], dst: Union[str, Path]) -> None:
+    def replace(self, src: str | Path, dst: str | Path) -> None:
         """
         Переименование файла: заменяет файл по пути src на файл по пути dst.
         Для S3 это означает копирование объекта с новым ключом и удаление старого.
@@ -820,7 +821,7 @@ class CustomS3Storage(BaseStorageMixin, S3Boto3Storage):
             if not missing_ok:
                 raise
 
-    def copy_file(self, src: Union[str, Path], dst: Union[str, Path]) -> None:
+    def copy_file(self, src: str | Path, dst: str | Path) -> None:
         """
         Копирование файла с исходного пути в целевой.
         Если исходный файл находится в локальной файловой системе, загружаем его в S3.
@@ -901,7 +902,7 @@ class CustomS3Storage(BaseStorageMixin, S3Boto3Storage):
         else:
             return True
 
-    def relative_to(self, path: Union[str, Path], other: Union[str, Path]) -> str:
+    def relative_to(self, path: str | Path, other: str | Path) -> str:
         """
         Вычисляет относительный путь от 'other' к 'path'.
 
@@ -912,9 +913,6 @@ class CustomS3Storage(BaseStorageMixin, S3Boto3Storage):
         Returns:
             str: Относительный путь от 'other' к 'path'.
         """
-        # Для S3 пути являются строками, поэтому преобразуем их в Path для вычисления относительного пути
-        from s3path import S3Path
-
         path_obj = S3Path(str(path))
         other_obj = S3Path(str(other))
         relative_path = path_obj.relative_to(other_obj)
@@ -923,7 +921,7 @@ class CustomS3Storage(BaseStorageMixin, S3Boto3Storage):
             return ""
         return str(relative_path)
 
-    def is_absolute(self, path: Union[str, Path]) -> bool:
+    def is_absolute(self, path: str | Path) -> bool:
         """
         Проверяет, является ли путь абсолютным.
 
@@ -975,7 +973,7 @@ class FakerFileStorageAdapter(FakerFileSystemStorage):
         """Удалить файл."""
         return self.django_storage.delete(filename)
 
-    def mkdir(self, path: Union[str, Path], *, parents: bool = True, exist_ok: bool = True) -> None:
+    def mkdir(self, path: str | Path, *, parents: bool = True, exist_ok: bool = True) -> None:
         """
         Создание директории по указанному пути, включая все необходимые родительские директории.
 

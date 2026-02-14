@@ -4,8 +4,8 @@ from pathlib import Path
 
 from django.test import SimpleTestCase, TestCase
 from faker import Faker
-from faker_file.providers.jpeg_file import JpegFileProvider  # type:ignore[import-untyped]
-from faker_file.providers.txt_file import TxtFileProvider  # type:ignore[import-untyped]
+from faker_file.providers.jpeg_file import JpegFileProvider  # type: ignore[import-untyped]
+from faker_file.providers.txt_file import TxtFileProvider  # type: ignore[import-untyped]
 
 from gallery.apps import GalleryConfig
 from gallery.factories import AlbumFactory, ExifDataFactory, PhotoFactory

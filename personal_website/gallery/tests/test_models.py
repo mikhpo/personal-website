@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 from django.test import TestCase
 from faker import Faker
 
+from gallery.factories import PhotoFactory
 from gallery.models import Album, Photo, Tag, photo_image_upload_path
 from personal_website.storages import FakerFileStorageAdapter, StorageType, select_storage
 
@@ -41,9 +42,6 @@ class GalleryModelsTests(TestCase):
             name="Лангтанг",
             description="Фотографии из путешествия по Лангтангу весной 2014 года",
         )
-
-        # Создать фотографии с помощью фабрик с заданными именами
-        from gallery.factories import PhotoFactory
 
         # Создать 3 фотографии для альбома "Тоскана" с именами, содержащими "Tuscany"
         for i in range(3):

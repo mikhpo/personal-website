@@ -11,7 +11,7 @@ def main() -> None:  # noqa: D103
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "personal_website.settings")
 
     try:
-        from django.core.management import execute_from_command_line
+        from django.core.management import execute_from_command_line  # noqa: PLC0415
     except ImportError as exc:
         msg = (
             "Не удалось импортировать Django. Вы уверены, что Django установлен "

@@ -96,7 +96,7 @@ class PhotoAdmin(admin.ModelAdmin):
                 </tr>
                 <tr>
                     <td>Светочувствительность</td>
-                    <td>ISO {obj.iso }</td>
+                    <td>ISO {obj.iso}</td>
                 </tr>
         </table>
     """

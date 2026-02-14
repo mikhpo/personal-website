@@ -1,6 +1,6 @@
 """Утилиты для генерации данных для React компонентов."""
 
-from typing import Optional, TypedDict
+from typing import TypedDict
 
 from django.core.paginator import Page
 from django.http import HttpRequest
@@ -14,7 +14,7 @@ class PaginationData(TypedDict):
     baseUrl: str
 
 
-def get_pagination_data(request: HttpRequest, page_obj: Optional[Page]) -> Optional[PaginationData]:
+def get_pagination_data(request: HttpRequest, page_obj: Page | None) -> PaginationData | None:
     """
     Генерирует данные для React компонента пагинации.
 

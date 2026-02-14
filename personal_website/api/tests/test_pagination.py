@@ -1,13 +1,12 @@
 """Тесты для кастомных классов пагинации API."""
 
-from django.test import TestCase
 from rest_framework.request import Request
-from rest_framework.test import APIRequestFactory
+from rest_framework.test import APIRequestFactory, APITestCase
 
 from api.pagination import BlogArticlePagination, GalleryPhotoPagination, StandardResultsSetPagination
 
 
-class TestPagination(TestCase):
+class TestPagination(APITestCase):
     """Тесты для классов пагинации."""
 
     def setUp(self) -> None:

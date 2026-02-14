@@ -68,12 +68,12 @@ class IsPublicOrAuthor(permissions.BasePermission):
             if obj.public:
                 return True
             # Приватные объекты доступны только авторам
-            return self._is_author(cast(User | None, user), obj)
+            return self._is_author(cast("User | None", user), obj)
 
         # Для модификации и удаления требуется авторство или админ права
         # Если у объекта есть автор, проверяем авторство
         if hasattr(obj, "author"):
-            return self._is_author(cast(User | None, user), obj)
+            return self._is_author(cast("User | None", user), obj)
         # Если у объекта нет автора, то модификация разрешена только админам
         return False
 

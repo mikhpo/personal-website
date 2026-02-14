@@ -4,7 +4,7 @@ from pathlib import Path
 
 from django.test import SimpleTestCase
 from faker import Faker
-from faker_file.providers.txt_file import TxtFileProvider  # type:ignore[import-untyped]
+from faker_file.providers.txt_file import TxtFileProvider  # type: ignore[import-untyped]
 
 from personal_website.storages import FakerFileStorageAdapter
 from personal_website.templatetags.file_tags import file_exists

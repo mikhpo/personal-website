@@ -8,4 +8,6 @@ class AccountsConfig(AppConfig):  # noqa: D101
 
     def ready(self) -> None:
         """При инициации приложения подключить сигналы."""
-        from accounts import signals  # noqa: F401
+        # Нужно импортировать сигналы внутри метода ready для того,
+        # чтобы избежать циклических зависимостей
+        from accounts import signals  # noqa: F401, PLC0415

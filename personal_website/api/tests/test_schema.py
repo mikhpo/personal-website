@@ -2,12 +2,12 @@
 
 import json
 
-from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
+from rest_framework.test import APITestCase
 
 
-class TestSchemaGeneration(TestCase):
+class TestSchemaGeneration(APITestCase):
     """Тесты генерации OpenAPI схемы."""
 
     def test_api_root_redirect_to_docs(self) -> None:

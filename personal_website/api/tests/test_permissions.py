@@ -6,8 +6,8 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.db.models import Model
 from django.http import HttpRequest
-from django.test import TestCase
 from rest_framework.request import Request
+from rest_framework.test import APITestCase
 from rest_framework.views import View
 
 from api.permissions import IsPublicOrAuthor, IsStaffOrReadOnly
@@ -47,7 +47,7 @@ class MockModel(Model):
         self.author = author
 
 
-class TestIsPublicOrAuthor(TestCase):
+class TestIsPublicOrAuthor(APITestCase):
     """Тесты для permission IsPublicOrAuthor."""
 
     def setUp(self) -> None:
@@ -144,7 +144,7 @@ class TestIsPublicOrAuthor(TestCase):
         self.assertFalse(self.permission._is_author(None, obj))  # noqa: SLF001
 
 
-class TestIsStaffOrReadOnly(TestCase):
+class TestIsStaffOrReadOnly(APITestCase):
     """Тесты для permission IsStaffOrReadOnly."""
 
     def setUp(self) -> None:
