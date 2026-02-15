@@ -1,5 +1,6 @@
 ---
-description: "Создание описания для Pull Request"
+name: pr-description
+description: Создание описания для Pull Request на основе изменений в текущей ветке
 ---
 
 1. Получить diff текущей ветки по сравнению с веткой master во временный файл:
