@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import NavigationPagination from './NavigationPagination';
-import NumbersPagination from './NumbersPagination';
+import NavigationPagination from '@components/Pagination/NavigationPagination';
+import NumbersPagination from '@components/Pagination/NumbersPagination';
 
 /**
  * Основной компонент пагинации

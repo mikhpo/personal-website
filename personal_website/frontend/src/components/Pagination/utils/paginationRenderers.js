@@ -4,8 +4,8 @@
 
 import React from 'react';
 import { Pagination as BSPagination } from 'react-bootstrap';
-import { getPageUrl } from './paginationHelpers';
-import { getButtonText, getButtonClassName, isButtonDisabled, getButtonHref } from './buttonStates';
+import { getPageUrl } from '@components/Pagination/utils/paginationHelpers';
+import { getButtonText, getButtonClassName, isButtonDisabled, getButtonHref } from '@components/Pagination/utils/buttonStates';
 
 /**
  * Рендерит элемент пагинации с номерами страниц

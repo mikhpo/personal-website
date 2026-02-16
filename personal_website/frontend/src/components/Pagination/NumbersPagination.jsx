@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import PageNumbers from './PageNumbers';
+import PageNumbers from '@components/Pagination/PageNumbers';
 
 /**
  * Компонент пагинации с номерами страниц

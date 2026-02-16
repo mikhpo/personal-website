@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
-import Navbar from './Navbar';
+import Navbar from '@components/Navbar/Navbar';
 import BrandSection from './BrandSection';
 import NavLink from './NavLink';
 import OffcanvasTrigger from './OffcanvasTrigger';

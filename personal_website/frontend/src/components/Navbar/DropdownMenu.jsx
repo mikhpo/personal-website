@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { NavDropdown } from 'react-bootstrap';
-import OffcanvasTrigger from './OffcanvasTrigger';
+import OffcanvasTrigger from '@components/Navbar/OffcanvasTrigger';
 
 /**
  * Компонент выпадающего меню

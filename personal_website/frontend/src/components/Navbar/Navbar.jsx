@@ -1,9 +1,9 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { Navbar as BSNavbar, Nav, Container } from 'react-bootstrap';
-import BrandSection from './BrandSection';
-import NavLinksMapper from './NavLinksMapper';
-import UserAuthSection from './UserAuthSection';
+import BrandSection from '@components/Navbar/BrandSection';
+import NavLinksMapper from '@components/Navbar/NavLinksMapper';
+import UserAuthSection from '@components/Navbar/UserAuthSection';
 
 /**
  * Компонент навигационной панели

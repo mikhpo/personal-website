@@ -63,7 +63,6 @@ module.exports = {
     extensions: ['.js', '.jsx'],
     alias: {
       '@components': path.resolve(__dirname, 'personal_website/frontend/src/components'),
-      '@utils': path.resolve(__dirname, 'personal_website/frontend/src/utils'),
     },
   },
 

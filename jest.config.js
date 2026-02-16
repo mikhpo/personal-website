@@ -18,7 +18,6 @@ module.exports = {
   moduleNameMapper: {
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
     '^@components/(.*)$': '<rootDir>/personal_website/frontend/src/components/$1',
-    '^@utils/(.*)$': '<rootDir>/personal_website/frontend/src/utils/$1',
   },
   setupFilesAfterEnv: ['<rootDir>/personal_website/frontend/jest.setup.js'],
   collectCoverageFrom: [

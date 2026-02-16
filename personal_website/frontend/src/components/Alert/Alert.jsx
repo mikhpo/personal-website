@@ -33,6 +33,8 @@ import { Alert as BSAlert } from 'react-bootstrap';
  * @param {boolean} [props.dismissible=true] - Флаг, указывающий, можно ли пользователю вручную закрыть сообщение
  * @param {boolean} [props.autoClose=false] - Флаг, указывающий, должно ли сообщение автоматически закрываться через заданное время
  * @param {number} [props.autoCloseDelay=5000] - Время в миллисекундах до автоматического закрытия сообщения (по умолчанию 5000 мс)
+ * @param {React.ReactNode} [props.actions] - Дополнительные действия для отображения (например, кнопки, ссылки)
+ *                                                 Отображаются в отдельном блоке под основным сообщением
  *
  * @return {JSX.Element|null} Компонент сообщения с соответствующим оформлением или null, если сообщение было скрыто
  *
@@ -46,7 +48,7 @@ import { Alert as BSAlert } from 'react-bootstrap';
  * При активации autoClose компонент автоматически скроет себя через указанное время.
  * При активации dismissible пользователь может закрыть сообщение вручную с помощью кнопки закрытия.
  */
-const Alert = ({ message, level, dismissible, autoClose, autoCloseDelay }) => {
+const Alert = ({ message, level, dismissible, autoClose, autoCloseDelay, actions }) => {
   const [show, setShow] = useState(true);
 
   useEffect(() => {
@@ -80,6 +82,7 @@ const Alert = ({ message, level, dismissible, autoClose, autoCloseDelay }) => {
       dismissible={dismissible}
     >
       <div dangerouslySetInnerHTML={{ __html: message }} />
+      {actions && <div className="mt-2">{actions}</div>}
     </BSAlert>
   );
 };
@@ -90,6 +93,7 @@ Alert.propTypes = {
   dismissible: PropTypes.bool,
   autoClose: PropTypes.bool,
   autoCloseDelay: PropTypes.number,
+  actions: PropTypes.node,
 };
 
 Alert.defaultProps = {

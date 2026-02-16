@@ -1,25 +1,25 @@
 /**
- * @file AlertContainer.test.js
- * @description Тесты для компонента AlertContainer
+ * @file AlertList.test.js
+ * @description Тесты для компонента AlertList
  *
- * Этот файл содержит тесты для проверки функциональности контейнера сообщений,
+ * Этот файл содержит тесты для проверки функциональности компонента списка сообщений,
  * включая отображение списка сообщений, обработку пустого массива и передачу
  * свойств вложенным компонентам Alert.
  */
 
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import AlertContainer from './AlertContainer';
+import AlertList from '@components/Alert/AlertList';
 
 /**
- * @description Тестовый набор для компонента AlertContainer
+ * @description Тестовый набор для компонента AlertList
  *
- * Проверяет корректность работы всех основных функций контейнера:
+ * Проверяет корректность работы всех основных функций компонента списка:
  * - отображение списка сообщений
  * - корректную обработку пустого массива сообщений
  * - правильную передачу свойств вложенным компонентам Alert
  */
-describe('AlertContainer', () => {
+describe('AlertList', () => {
   /**
    * @test Проверяет отображение одного сообщения
    *
@@ -31,7 +31,7 @@ describe('AlertContainer', () => {
       { message: 'Тестовое сообщение', level: 'success' }
     ];
 
-    render(<AlertContainer messages={messages} />);
+    render(<AlertList messages={messages} />);
 
     expect(screen.getByText('Тестовое сообщение')).toBeInTheDocument();
   });
@@ -49,7 +49,7 @@ describe('AlertContainer', () => {
       { message: 'Третье сообщение', level: 'error' }
     ];
 
-    render(<AlertContainer messages={messages} />);
+    render(<AlertList messages={messages} />);
 
     expect(screen.getByText('Первое сообщение')).toBeInTheDocument();
     expect(screen.getByText('Второе сообщение')).toBeInTheDocument();
@@ -63,7 +63,7 @@ describe('AlertContainer', () => {
    * и не отображает ничего в DOM.
    */
   test('не отображает ничего при пустом массиве сообщений', () => {
-    const { container } = render(<AlertContainer messages={[]} />);
+    const { container } = render(<AlertList messages={[]} />);
 
     expect(container.firstChild).toBeNull();
   });
@@ -75,7 +75,7 @@ describe('AlertContainer', () => {
    * когда массив сообщений не передан (undefined).
    */
   test('не отображает ничего при отсутствии массива сообщений', () => {
-    const { container } = render(<AlertContainer />);
+    const { container } = render(<AlertList />);
 
     expect(container.firstChild).toBeNull();
   });
@@ -97,7 +97,7 @@ describe('AlertContainer', () => {
       }
     ];
 
-    render(<AlertContainer messages={messages} />);
+    render(<AlertList messages={messages} />);
 
     // Проверяем, что сообщение отображено
     expect(screen.getByText('Сообщение с авто-закрытием')).toBeInTheDocument();

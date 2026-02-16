@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import NavigationControls from './NavigationControls';
+import NavigationControls from '@components/Pagination/NavigationControls';
 
 /**
  * Компонент для отображения кнопок "следующая" и "последняя"

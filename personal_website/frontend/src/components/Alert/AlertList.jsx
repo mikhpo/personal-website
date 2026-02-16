@@ -1,33 +1,33 @@
-/* eslint-disable valid-jsdoc */
 import React from 'react';
 import PropTypes from 'prop-types';
-import Alert from './Alert';
+import Alert from '@components/Alert/Alert';
 
 /**
- * Контейнер для отображения множественных сообщений.
+ * Компонент для отображения списка сообщений.
  *
- * Отображает список сообщений различного уровня важности. Используется для
- * централизованного управления отображением системных уведомлений.
+ * Отображает коллекцию сообщений различного уровня важности. Представляет собой
+ * компонент типа Collection, который управляет массивом отдельных компонентов Alert.
  *
  * @component
  * @example
- * // Пример использования контейнера с массивом сообщений
+ * // Пример использования компонента с массивом сообщений
  * const messages = [
  *   { message: "Операция выполнена успешно!", level: "success", dismissible: true },
  *   { message: "Внимание! Требуется подтверждение действия.", level: "warning", autoClose: true }
  * ];
  *
- * <AlertContainer messages={messages} />
+ * <AlertList messages={messages} />
  *
  * @param {Object} props - Свойства компонента
  * @param {Array<Object>} props.messages - Массив сообщений для отображения
  * @param {string} props.messages[].message - Текст сообщения для отображения
  * @param {('success'|'info'|'warning'|'error'|'danger')} props.messages[].level - Уровень важности
- * @param {boolean} [props.messages[].dismissible] - Возможность ручного закрытия
- * @param {boolean} [props.messages[].autoClose=false] - Автоматическое закрытие
- * @param {number} [props.messages[].autoCloseDelay=5000] - Время до авто-закрытия в мс
+ * @param {oolean} [props.messages[].dismissible] - Возможность ручного закрытия
+ * @param {Boolean} [props.messages[].autoClose] - Автоматическое закрытие
+ * @param {number} [props.messages[].autoCloseDelay] - Время до авто-закрытия в мс
+ * @param {React.ReactNode} [props.messages[].actions] - Дополнительные действия для отображения
  *
- * @return {JSX.Element|null} Контейнер с сообщениями или null при их отсутствии
+ * @return {JSX.Element|null} Компонент списка сообщений или null при их отсутствии
  *
  * @description
  * Компонент принимает массив сообщений и отображает каждый элемент как
@@ -38,8 +38,12 @@ import Alert from './Alert';
  * - info: синий цвет для информационных сообщений
  * - warning: желтый цвет для предупреждений
  * - error/danger: красный цвет для ошибок
+ * 
+ * @note
+ * Используется для общих системных уведомлений (например, 
+ * результаты формы, статусные сообщения, уведомления о действиях пользователя).
  */
-const AlertContainer = ({ messages }) => {
+const AlertList = ({ messages }) => {
   if (!messages || messages.length === 0) {
     return null;
   }
@@ -54,13 +58,14 @@ const AlertContainer = ({ messages }) => {
           dismissible={msg.dismissible !== false}
           autoClose={msg.autoClose || false}
           autoCloseDelay={msg.autoCloseDelay || 5000}
+          actions={msg.actions}
         />
       ))}
     </div>
   );
 };
 
-AlertContainer.propTypes = {
+AlertList.propTypes = {
   messages: PropTypes.arrayOf(
     PropTypes.shape({
       message: PropTypes.string.isRequired,
@@ -68,12 +73,13 @@ AlertContainer.propTypes = {
       dismissible: PropTypes.bool,
       autoClose: PropTypes.bool,
       autoCloseDelay: PropTypes.number,
+      actions: PropTypes.node,
     })
   ),
 };
 
-AlertContainer.defaultProps = {
+AlertList.defaultProps = {
   messages: [],
 };
 
-export default AlertContainer;
+export default AlertList;

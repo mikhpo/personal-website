@@ -1,13 +1,13 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { Pagination as BSPagination } from 'react-bootstrap';
-import { calculatePageRange } from './utils/paginationHelpers';
+import { calculatePageRange } from '@components/Pagination/utils/paginationHelpers';
 import {
   createFirstPageElements,
   createMainPageElements,
   createLastPageElements
-} from './utils/pageItemsGenerator';
-import { renderPaginationItem } from './utils/paginationRenderers';
+} from '@components/Pagination/utils/pageItemsGenerator';
+import { renderPaginationItem } from '@components/Pagination/utils/paginationRenderers';
 
 /**
  * Компонент для отображения номеров страниц в пагинации

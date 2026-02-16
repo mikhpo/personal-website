@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import NavLink from './NavLink';
-import DropdownMenu from './DropdownMenu';
+import NavLink from '@components/Navbar/NavLink';
+import DropdownMenu from '@components/Navbar/DropdownMenu';
 
 /**
  * Компонент для отображения списка навигационных ссылок

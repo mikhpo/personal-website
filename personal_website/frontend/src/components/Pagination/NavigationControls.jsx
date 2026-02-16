@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { renderNavigationButton } from './utils/paginationRenderers';
+import { renderNavigationButton } from '@components/Pagination/utils/paginationRenderers';
 
 /**
  * Компонент для отображения кнопок навигации (Первая/Предыдущая/Следующая/Последняя)

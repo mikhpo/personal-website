@@ -1,8 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import PreviousButtons from './PreviousButtons';
-import NextButtons from './NextButtons';
-import PageInfo from './PageInfo';
+import PreviousButtons from '@components/Pagination/PreviousButtons';
+import NextButtons from '@components/Pagination/NextButtons';
+import PageInfo from '@components/Pagination/PageInfo';
 
 /**
  * Компонент навигационной пагинации
