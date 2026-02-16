@@ -104,12 +104,12 @@ describe('Alert', () => {
         Повторить
       </button>
     );
-    
+
     const { container } = render(
-      <Alert 
-        message="Ошибка загрузки данных" 
-        level="error" 
-        actions={actions} 
+      <Alert
+        message="Ошибка загрузки данных"
+        level="error"
+        actions={actions}
       />
     );
 
@@ -159,12 +159,12 @@ describe('Alert', () => {
         <a href="#" className="btn btn-secondary">Действие 2</a>
       </div>
     );
-    
+
     const { container } = render(
-      <Alert 
-        message="Сообщение с несколькими действиями" 
-        level="warning" 
-        actions={actions} 
+      <Alert
+        message="Сообщение с несколькими действиями"
+        level="warning"
+        actions={actions}
       />
     );
 
