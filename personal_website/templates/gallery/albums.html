@@ -3,11 +3,4 @@
 
 <div class="container-fluid">
     {% react_component "Gallery/AlbumList" apiUrl="/api/gallery/albums/" %}
-    
-    <!-- Fallback HTML rendering for testing purposes -->
-    {% for album in albums %}
-        <div class="album-test-fallback" style="display: none;">
-            {{ album }}
-        </div>
-    {% endfor %}
 </div>

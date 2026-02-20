@@ -29,9 +29,8 @@ class GalleryHomeView(TemplateView):
     template_name = "gallery/gallery_home.html"
 
     def get_context_data(self, **kwargs) -> dict:
-        """Добавить альбомы и тэги в контекст."""
+        """Добавить тэги в контекст."""
         context = super().get_context_data(**kwargs)
-        context["albums"] = Album.published.all()
         context["tags"] = Tag.objects.all()
         return context
 
