@@ -1,7 +1,7 @@
 """Представления раздела галереи."""
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from django.conf import settings
 from django.contrib import messages
@@ -10,22 +10,18 @@ from django.http import HttpRequest, HttpResponse
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 from django.utils.safestring import mark_safe
-from django.views.generic import DetailView, ListView, TemplateView
+from django.views.generic import DetailView, TemplateView
 from django.views.generic.edit import FormView
 from PIL import Image, UnidentifiedImageError
 
 from gallery.forms import UploadForm
 from gallery.models import Album, Photo, Tag
-from main.utils import get_pagination_data
-
-if TYPE_CHECKING:
-    from django.db.models import QuerySet
 
 logger = logging.getLogger(settings.PROJECT_NAME)
 
 
 class GalleryHomeView(TemplateView):
-    """Предствление главной страницы галереи."""
+    """Представление главной страницы галереи."""
 
     template_name = "gallery/gallery_home.html"
 
@@ -37,125 +33,46 @@ class GalleryHomeView(TemplateView):
         return context
 
 
-class PhotoDetailView(DetailView):
-    """Представление для показа единственной фотографии."""
-
-    model = Photo
-    template_name = "gallery/photo_detail.html"
-
-    def get_context_data(self, **kwargs) -> dict[str, Any]:
-        """Добавить в контекст следующую и предыдущую фотографии из альбома, а также все тэги фотографии."""
-        context = super().get_context_data(**kwargs)
-        obj: Photo = self.get_object()
-
-        album_photos = Photo.published.filter(album=obj.album)
-        next_photos = list(
-            filter(
-                lambda photo: photo.datetime_taken > obj.datetime_taken,
-                sorted(album_photos, key=lambda photo: photo.datetime_taken),
-            ),
-        )
-        previous_photos = list(
-            filter(
-                lambda photo: photo.datetime_taken < obj.datetime_taken,
-                sorted(album_photos, key=lambda photo: photo.datetime_taken, reverse=True),
-            ),
-        )
-        context["next_photo"] = next_photos[0] if next_photos else None
-        context["previous_photo"] = previous_photos[0] if previous_photos else None
-        context["tags"] = obj.tags.all()
-        return context
-
-
-class PhotoListView(ListView):
-    """Отображение списка фотографий."""
-
-    model = Photo
-    template_name = "gallery/photo_list.html"
-    paginate_by = 40
-
-    def get_queryset(self) -> list[Photo]:  # type: ignore[override]
-        """Отсортировать набор фотографий от новых к старым."""
-        photos = Photo.published.all()
-        return sorted(photos, key=lambda photo: photo.datetime_taken, reverse=True)
-
-    def get_context_data(self, **kwargs) -> dict[str, Any]:
-        """Добавить в контекст набор всхе тэгов фотографии."""
-        context = super().get_context_data(**kwargs)
-        context["tags"] = Tag.objects.all()
-        if "page_obj" in context:
-            pagination_data = get_pagination_data(self.request, context["page_obj"])
-            if pagination_data:
-                context["pagination_data"] = pagination_data
-        return context
-
-
 class AlbumDetailView(DetailView):
-    """Представление для показа альбома."""
+    """Представление детальной страницы альбома."""
 
     model = Album
     template_name = "gallery/album_detail.html"
+    context_object_name = "album"
+    slug_field = "slug"
+    slug_url_kwarg = "slug"
 
-    def get_context_data(self, **kwargs) -> dict[str, Any]:
-        """Добавить в контекст все фотографии альбома, отсортированные по времени съемки, и все тэги."""
-        context = super().get_context_data(**kwargs)
-        album: Album = context["album"]
-
-        # Получить коллекцию фотографий из даного альбома.
-        photos: QuerySet[Photo] = album.photo_set.filter(public=True)
-
-        # Добавить фотографии в контекст, отсортировав от старых к новым.
-        context["photos"] = sorted(photos, key=lambda photo: photo.datetime_taken)
-        context["tags"] = album.tags.all()
-        return context
+    def get_queryset(self):
+        """Возвращать только публичные альбомы для обычных пользователей."""
+        if hasattr(self.request.user, "is_staff") and self.request.user.is_staff:
+            return Album.objects.all()
+        return Album.published.all()
 
 
-class AlbumListView(ListView):
-    """Представление для показа списка альбомов."""
+class PhotoDetailView(DetailView):
+    """Представление детальной страницы фотографии."""
 
-    model = Album
-    template_name = "gallery/album_list.html"
-    queryset = Album.published.all()
-    paginate_by = 20
+    model = Photo
+    template_name = "gallery/photo_detail.html"
+    context_object_name = "photo"
+    slug_field = "slug"
+    slug_url_kwarg = "slug"
 
-    def get_context_data(self, **kwargs) -> dict[str, Any]:
-        """Добавить все тэги в контекст ответа."""
-        context = super().get_context_data(**kwargs)
-        context["tags"] = Tag.objects.all()
-        if "page_obj" in context:
-            pagination_data = get_pagination_data(self.request, context["page_obj"])
-            if pagination_data:
-                context["pagination_data"] = pagination_data
-        return context
+    def get_queryset(self):
+        """Возвращать только публичные фотографии для обычных пользователей."""
+        if hasattr(self.request.user, "is_staff") and self.request.user.is_staff:
+            return Photo.objects.all()
+        return Photo.published.all()
 
 
 class TagDetailView(DetailView):
-    """Представление для просмотра фотографий и альбомов по тэгу."""
+    """Представление детальной страницы тэга."""
 
     model = Tag
     template_name = "gallery/tag_detail.html"
-
-    def get_context_data(self, **kwargs) -> dict[str, Any]:
-        """Добавить объекты в контекст представления.
-
-        - Альбомы, отсортированные по дате создания, фотографии;
-        - Фотогафии, отсортированные по времени съемки;
-        - Все тэги.
-        """
-        # Получить тэг из контекста запроса
-        context = super().get_context_data(**kwargs)
-        tag: Tag = context["tag"]
-
-        # Получить альбомы и фотографии по данному тэгу.
-        albums: QuerySet[Album] = tag.tag_albums.all()
-        photos: QuerySet[Photo] = tag.tag_photos.all()
-
-        # Добавить полученные альбомы и фотографии в контекст.
-        # Отсортирофать альбомы и фотографии от новых к старым.
-        context["albums"] = sorted(albums, key=lambda album: album.created_at, reverse=True)
-        context["photos"] = sorted(photos, key=lambda photo: photo.datetime_taken, reverse=True)
-        context["tags"] = Tag.objects.all()
-        return context
+    context_object_name = "tag"
+    slug_field = "slug"
+    slug_url_kwarg = "slug"
 
 
 @method_decorator(staff_member_required, "dispatch")

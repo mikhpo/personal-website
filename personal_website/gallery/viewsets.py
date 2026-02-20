@@ -3,8 +3,11 @@
 from typing import TYPE_CHECKING, ClassVar
 
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, viewsets
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from PIL import Image, UnidentifiedImageError
+from rest_framework import filters, status, viewsets
+from rest_framework.decorators import action
+from rest_framework.permissions import IsAdminUser, IsAuthenticatedOrReadOnly
+from rest_framework.response import Response
 
 from api.permissions import IsPublicOrAuthor
 from gallery.models import Album, Photo, Tag
@@ -65,3 +68,64 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
     search_fields: ClassVar[list] = ["name"]
     ordering_fields: ClassVar[list] = ["name"]
     ordering: ClassVar[list] = ["name"]
+
+
+class PhotoUploadViewSet(viewsets.ViewSet):
+    """Набор представлений для загрузки фотографий."""
+
+    permission_classes: ClassVar[list] = [IsAdminUser]
+
+    @action(detail=False, methods=["post"])
+    def upload(self, request):  # noqa: ANN001, ANN201
+        """Загрузить одну или несколько фотографий в альбом."""
+        album_id = request.data.get("album_id")
+        files = request.FILES.getlist("photos")
+
+        if not album_id:
+            return Response(
+                {"error": "Album ID required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            album = Album.objects.get(id=album_id)
+        except Album.DoesNotExist:
+            return Response(
+                {"error": "Album not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        results = []
+        for file in files:
+            try:
+                # Валидация изображения
+                image = Image.open(file)
+                image.verify()
+
+                # Создание фотографии
+                photo = Photo.objects.create(image=file, album=album)
+                results.append(
+                    {
+                        "success": True,
+                        "filename": file.name,
+                        "id": photo.id,
+                    },
+                )
+            except UnidentifiedImageError:  # noqa: PERF203
+                results.append(
+                    {
+                        "success": False,
+                        "filename": file.name,
+                        "error": "Not an image",
+                    },
+                )
+            except Exception as e:  # noqa: BLE001
+                results.append(
+                    {
+                        "success": False,
+                        "filename": file.name,
+                        "error": str(e),
+                    },
+                )
+
+        return Response({"results": results}, status=status.HTTP_201_CREATED)
