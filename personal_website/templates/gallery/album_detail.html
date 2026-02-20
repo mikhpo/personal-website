@@ -1,17 +1,16 @@
 {% extends "gallery/gallery_home.html" %}
 {% load static %}
+{% load react %}
 {% block title %}
     {{ album.name }}
 {% endblock title %}
 {% block gallery %}
-    <div class="container-fluid">
-        <h4>
-            <p align="center">{{ album.name }}</p>
-        </h4>
-        <p>
-            {% if photos %}
-                {% include "gallery/photos.html" %}
-            {% endif %}
-        </p>
-    </div>
+<div class="container-fluid">
+    <h4>
+        <p align="center">{{ album.name }}</p>
+    </h4>
+    <p>
+        {% react_component "Gallery/PhotoList" apiUrl="/api/gallery/photos/?album__slug={{ album.slug }}" %}
+    </p>
+</div>
 {% endblock gallery %}
