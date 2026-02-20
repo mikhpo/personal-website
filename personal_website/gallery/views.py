@@ -1,7 +1,7 @@
 """Представления раздела галереи."""
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from django.conf import settings
 from django.contrib import messages
@@ -16,6 +16,9 @@ from PIL import Image, UnidentifiedImageError
 
 from gallery.forms import UploadForm
 from gallery.models import Album, Photo, Tag
+
+if TYPE_CHECKING:
+    from django.db.models.query import QuerySet
 
 logger = logging.getLogger(settings.PROJECT_NAME)
 
@@ -42,7 +45,7 @@ class AlbumDetailView(DetailView):
     slug_field = "slug"
     slug_url_kwarg = "slug"
 
-    def get_queryset(self):
+    def get_queryset(self) -> "QuerySet[Album]":
         """Возвращать только публичные альбомы для обычных пользователей."""
         if hasattr(self.request.user, "is_staff") and self.request.user.is_staff:
             return Album.objects.all()
@@ -58,7 +61,7 @@ class PhotoDetailView(DetailView):
     slug_field = "slug"
     slug_url_kwarg = "slug"
 
-    def get_queryset(self):
+    def get_queryset(self) -> "QuerySet[Photo]":
         """Возвращать только публичные фотографии для обычных пользователей."""
         if hasattr(self.request.user, "is_staff") and self.request.user.is_staff:
             return Photo.objects.all()

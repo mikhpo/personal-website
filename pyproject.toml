@@ -65,6 +65,7 @@ django-stubs = { extras = ["compatible-mypy"], version = "^5.2.9" }
 types-requests = "^2.32.4.20260107"
 pytest-playwright = "^0.7.2"
 djangorestframework-stubs = "^3.16.8"
+types-django-filter = "^25.2.0.20260213"
 
 [tool.black]
 line-length = 120
