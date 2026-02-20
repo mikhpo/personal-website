@@ -22,6 +22,9 @@ nginx/conf.d
 .ruff_cache
 TODO.md
 todo
+todos
+tasks
+plans
 /tmp/
 webpack-stats.json
 personal_website/frontend/dist/
