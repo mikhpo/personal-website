@@ -78,6 +78,24 @@
 
     python personal_website/manage.py <имя команды>
 
+## Режим разработки
+
+Для локальной разработки необходимо запускать фронтенд и бэкенд отдельно в режиме наблюдения за изменениями файлов.
+
+### Ручной запуск режима разработки
+
+* Запустить базу данных PostgreSQL через Docker Compose: `docker-compose up -d postgres`
+* Применить миграции базы данных: `poetry run python personal_website/manage.py migrate`
+* Собрать статические файлы: `poetry run python personal_website/manage.py collectstatic --noinput`
+* Запустить сборку фронтенда в режиме наблюдения (в первом терминале): `cd personal_website && npm run dev`
+* Запустить сервер разработки Django (во втором терминале): `poetry run python personal_website/manage.py runserver`
+* Открыть сайт в браузере: <http://localhost:8000> (админ-панель: <http://localhost:8000/admin/>)
+
+### Остановка режима разработки
+
+* Нажать `Ctrl+C` в обоих терминалах для остановки процессов
+* Остановить контейнеры Docker: `docker-compose down`
+
 ## Настройка файлового хранилища
 
 Проект поддерживает два типа файловых хранилищ:

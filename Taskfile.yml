@@ -86,29 +86,6 @@ tasks:
       - npm ci
       - npm run build
 
-  dev:
-    desc: Запустить сервер разработки с автоматической пересборкой фронтенда
-    summary: |
-      Команда запускает скрипт разработки, который автоматически пересобирает фронтенд
-      и запускает сервер разработки Django. Поддерживает режим наблюдения для
-      автоматической пересборки при изменении файлов.
-
-      Использование:
-      - task dev              # Однократная сборка и запуск сервера
-      - task dev -- watch    # Режим наблюдения с автоматической пересборкой
-
-      Перед запуском проверяется наличие необходимых инструментов (npm, poetry).
-    preconditions:
-      - test -f .env
-      - test -f tools/run-dev.sh
-    cmds:
-      - defer: docker-compose down
-      - docker-compose up -d postgres
-      - docker-compose ps
-      - poetry run python ./personal_website/manage.py migrate
-      - poetry run python ./personal_website/manage.py collectstatic --noinput
-      - bash ./tools/run-dev.sh {{.CLI_ARGS}}
-
   test-backend:
     desc: Выполнить тесты Django с использованием собранного React фронтенда
     summary: |
