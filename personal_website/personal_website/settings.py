@@ -247,6 +247,7 @@ TEMPLATES = [
             ],
             "libraries": {
                 "file_tags": "personal_website.templatetags.file_tags",
+                "react": "personal_website.templatetags.react",
             },
         },
     },
