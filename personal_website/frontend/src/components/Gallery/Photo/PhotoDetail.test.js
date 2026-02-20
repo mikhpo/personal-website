@@ -1,25 +1,25 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import PhotoCard from '@components/Gallery/Photo/PhotoCard/PhotoCard';
+import PhotoDetail from './PhotoDetail/PhotoDetail';
 
 // Мокаем хуки
-jest.mock('@components/Gallery/Photo/PhotoCard/hooks/usePhotoData');
-jest.mock('@components/Gallery/Photo/PhotoCard/hooks/useAlbumPhotos');
-jest.mock('@components/Gallery/Photo/PhotoCard/hooks/usePhotoNavigation');
+jest.mock('./PhotoDetail/hooks/usePhotoData');
+jest.mock('./PhotoDetail/hooks/useAlbumPhotos');
+jest.mock('./PhotoDetail/hooks/usePhotoNavigation');
 
-import usePhotoData from '@components/Gallery/Photo/PhotoCard/hooks/usePhotoData';
-import useAlbumPhotos from '@components/Gallery/Photo/PhotoCard/hooks/useAlbumPhotos';
-import usePhotoNavigation from '@components/Gallery/Photo/PhotoCard/hooks/usePhotoNavigation';
+import usePhotoData from './PhotoDetail/hooks/usePhotoData';
+import useAlbumPhotos from './PhotoDetail/hooks/useAlbumPhotos';
+import usePhotoNavigation from './PhotoDetail/hooks/usePhotoNavigation';
 
 /**
- * Тестовый набор для компонента PhotoCard.
+ * Тестовый набор для компонента PhotoDetail.
  *
  * Проверяет корректность отображения детальной информации о фотографии,
  * навигацию между фотографиями в альбоме, обработку ошибок загрузки
  * и различные граничные случаи.
  */
-describe('PhotoCard', () => {
+describe('PhotoDetail', () => {
   const mockPhoto = {
     id: 2,
     name: 'Тестовое фото',
@@ -74,7 +74,7 @@ describe('PhotoCard', () => {
    * Должен отображать название, описание и изображение фотографии.
    */
   test('рендерит фото после загрузки', async () => {
-    render(<PhotoCard photoSlug="test-photo" />);
+    render(<PhotoDetail photoSlug="test-photo" />);
     await waitFor(() => {
       expect(screen.getByText('Тестовое фото')).toBeInTheDocument();
       expect(screen.getByText('Описание фото')).toBeInTheDocument();
@@ -93,7 +93,7 @@ describe('PhotoCard', () => {
       error: null,
       refetch: jest.fn(),
     });
-    render(<PhotoCard photoSlug="test-photo" />);
+    render(<PhotoDetail photoSlug="test-photo" />);
     expect(screen.getByText('Загрузка фотографии...', { selector: 'p' })).toBeInTheDocument();
   });
 
@@ -102,7 +102,7 @@ describe('PhotoCard', () => {
    * Должен вызывать usePhotoData и useAlbumPhotos с правильными параметрами.
    */
   test('загружает фото и albumPhotos при монтировании', () => {
-    render(<PhotoCard photoSlug="test-photo" />);
+    render(<PhotoDetail photoSlug="test-photo" />);
     expect(usePhotoData).toHaveBeenCalledWith('test-photo', '/api/gallery/photos/');
     expect(useAlbumPhotos).toHaveBeenCalledWith(1, '/api/gallery/photos/');
   });
@@ -112,7 +112,7 @@ describe('PhotoCard', () => {
    * Должен вызывать usePhotoNavigation и отображать кнопки навигации.
    */
   test('вычисляет предыдущую и следующую фотографии', () => {
-    render(<PhotoCard photoSlug="test-photo" />);
+    render(<PhotoDetail photoSlug="test-photo" />);
     expect(usePhotoNavigation).toHaveBeenCalledWith(mockPhoto, mockAlbumPhotos);
     expect(screen.getByText('← Предыдущая')).toBeInTheDocument();
     expect(screen.getByText('Следующая →')).toBeInTheDocument();
@@ -123,7 +123,7 @@ describe('PhotoCard', () => {
    * Должен отображать название, описание и изображение фотографии.
    */
   test('рендерит фото после загрузки', async () => {
-    render(<PhotoCard photoSlug="test-photo" />);
+    render(<PhotoDetail photoSlug="test-photo" />);
     await waitFor(() => {
       expect(screen.getByText('Тестовое фото')).toBeInTheDocument();
       expect(screen.getByText('Описание фото')).toBeInTheDocument();
@@ -140,7 +140,7 @@ describe('PhotoCard', () => {
       previousPhoto: null,
       nextPhoto: mockNextPhoto,
     });
-    render(<PhotoCard photoSlug="test-photo" />);
+    render(<PhotoDetail photoSlug="test-photo" />);
     expect(screen.queryByText('← Предыдущая')).not.toBeInTheDocument();
     expect(screen.getByText('Следующая →')).toBeInTheDocument();
   });
@@ -154,7 +154,7 @@ describe('PhotoCard', () => {
       previousPhoto: mockPreviousPhoto,
       nextPhoto: null,
     });
-    render(<PhotoCard photoSlug="test-photo" />);
+    render(<PhotoDetail photoSlug="test-photo" />);
     expect(screen.getByText('← Предыдущая')).toBeInTheDocument();
     expect(screen.queryByText('Следующая →')).not.toBeInTheDocument();
   });
@@ -170,7 +170,7 @@ describe('PhotoCard', () => {
       error: 'Ошибка загрузки фото: 404',
       refetch: jest.fn(),
     });
-    render(<PhotoCard photoSlug="test-photo" />);
+    render(<PhotoDetail photoSlug="test-photo" />);
     expect(screen.getByText(/Ошибка загрузки фото: 404/)).toBeInTheDocument();
   });
 
@@ -185,7 +185,7 @@ describe('PhotoCard', () => {
       error: 'Ошибка загрузки фотографий альбома: 500',
       refetch: jest.fn(),
     });
-    render(<PhotoCard photoSlug="test-photo" />);
+    render(<PhotoDetail photoSlug="test-photo" />);
 
     // Ошибка albumPhotos не отображается напрямую, но хук должен быть вызван
     expect(useAlbumPhotos).toHaveBeenCalledWith(1, '/api/gallery/photos/');
@@ -202,7 +202,7 @@ describe('PhotoCard', () => {
       error: 'Network error',
       refetch: jest.fn(),
     });
-    render(<PhotoCard photoSlug="test-photo" />);
+    render(<PhotoDetail photoSlug="test-photo" />);
     expect(screen.getByText('Network error')).toBeInTheDocument();
   });
 
@@ -222,7 +222,7 @@ describe('PhotoCard', () => {
       refetch: refetchMock,
     });
 
-    render(<PhotoCard photoSlug="test-photo" />);
+    render(<PhotoDetail photoSlug="test-photo" />);
 
     expect(screen.getByText(/Ошибка загрузки фото: 500/)).toBeInTheDocument();
 
@@ -239,7 +239,7 @@ describe('PhotoCard', () => {
    * Должен отображать все теги, если они есть в данных фотографии.
    */
   test('отображает теги если есть', () => {
-    render(<PhotoCard photoSlug="test-photo" />);
+    render(<PhotoDetail photoSlug="test-photo" />);
     expect(screen.getByText('Природа')).toBeInTheDocument();
     expect(screen.getByText('Пейзаж')).toBeInTheDocument();
   });
@@ -255,7 +255,7 @@ describe('PhotoCard', () => {
       error: null,
       refetch: jest.fn(),
     });
-    render(<PhotoCard photoSlug="test-photo" />);
+    render(<PhotoDetail photoSlug="test-photo" />);
     expect(screen.queryByText('Тэги:')).not.toBeInTheDocument();
   });
 
@@ -264,7 +264,7 @@ describe('PhotoCard', () => {
    * Должен отображать информацию о камере и другие EXIF данные.
    */
   test('отображает EXIF данные если есть', () => {
-    render(<PhotoCard photoSlug="test-photo" />);
+    render(<PhotoDetail photoSlug="test-photo" />);
     expect(screen.getByText('Информация')).toBeInTheDocument();
     expect(screen.getByText('Canon EOS 5D')).toBeInTheDocument();
   });
@@ -280,7 +280,7 @@ describe('PhotoCard', () => {
       error: null,
       refetch: jest.fn(),
     });
-    render(<PhotoCard photoSlug="test-photo" />);
+    render(<PhotoDetail photoSlug="test-photo" />);
     expect(screen.queryByRole('img')).not.toBeInTheDocument();
   });
 
@@ -295,7 +295,7 @@ describe('PhotoCard', () => {
       error: null,
       refetch: jest.fn(),
     });
-    render(<PhotoCard photoSlug="test-photo" />);
+    render(<PhotoDetail photoSlug="test-photo" />);
     expect(screen.queryByText('Описание фото')).not.toBeInTheDocument();
   });
 
@@ -318,7 +318,7 @@ describe('PhotoCard', () => {
       refetch: jest.fn(),
     });
 
-    render(<PhotoCard photoSlug="test-photo" />);
+    render(<PhotoDetail photoSlug="test-photo" />);
 
     expect(screen.getByText('Тестовое фото')).toBeInTheDocument();
     expect(useAlbumPhotos).toHaveBeenCalledWith(null, '/api/gallery/photos/');
@@ -334,7 +334,7 @@ describe('PhotoCard', () => {
       nextPhoto: { id: 3, slug: 'photo-3' },
     });
 
-    render(<PhotoCard photoSlug="test-photo" />);
+    render(<PhotoDetail photoSlug="test-photo" />);
 
     const prevButton = screen.getByText('← Предыдущая');
     const nextButton = screen.getByText('Следующая →');
@@ -366,7 +366,7 @@ describe('PhotoCard', () => {
       refetch: jest.fn(),
     });
 
-    render(<PhotoCard photoSlug="test-photo" />);
+    render(<PhotoDetail photoSlug="test-photo" />);
 
     expect(screen.getByText('Тестовое фото')).toBeInTheDocument();
   });
@@ -380,7 +380,7 @@ describe('PhotoCard', () => {
       previousPhoto: null,
       nextPhoto: null,
     });
-    render(<PhotoCard photoSlug="test-photo" />);
+    render(<PhotoDetail photoSlug="test-photo" />);
     expect(screen.queryByText('← Предыдущая')).not.toBeInTheDocument();
     expect(screen.queryByText('Следующая →')).not.toBeInTheDocument();
   });
@@ -390,7 +390,7 @@ describe('PhotoCard', () => {
    * Должен передавать кастомный apiUrl в хуки загрузки данных.
    */
   test('использует кастомный apiUrl', () => {
-    render(<PhotoCard photoSlug="test-photo" apiUrl="/custom/api/" />);
+    render(<PhotoDetail photoSlug="test-photo" apiUrl="/custom/api/" />);
     expect(usePhotoData).toHaveBeenCalledWith('test-photo', '/custom/api/');
     expect(useAlbumPhotos).toHaveBeenCalledWith(1, '/custom/api/');
   });
@@ -400,9 +400,9 @@ describe('PhotoCard', () => {
    * Должен вызывать хуки с новым photoSlug при изменении пропса.
    */
   test('перезагружает данные при изменении photoSlug', () => {
-    const { rerender } = render(<PhotoCard photoSlug="photo-1" />);
+    const { rerender } = render(<PhotoDetail photoSlug="photo-1" />);
     expect(usePhotoData).toHaveBeenCalledWith('photo-1', '/api/gallery/photos/');
-    rerender(<PhotoCard photoSlug="photo-2" />);
+    rerender(<PhotoDetail photoSlug="photo-2" />);
     expect(usePhotoData).toHaveBeenCalledWith('photo-2', '/api/gallery/photos/');
   });
 
@@ -423,7 +423,7 @@ describe('PhotoCard', () => {
       nextPhoto: null,
     });
 
-    render(<PhotoCard photoSlug="test-photo" />);
+    render(<PhotoDetail photoSlug="test-photo" />);
 
     expect(screen.getByText('Тестовое фото')).toBeInTheDocument();
     expect(screen.queryByText('← Предыдущая')).not.toBeInTheDocument();
@@ -441,7 +441,7 @@ describe('PhotoCard', () => {
       refetch: jest.fn(),
     });
 
-    render(<PhotoCard photoSlug="test-photo" />);
+    render(<PhotoDetail photoSlug="test-photo" />);
 
     expect(screen.getByText('← Предыдущая')).toBeInTheDocument();
   });
@@ -457,7 +457,7 @@ describe('PhotoCard', () => {
       error: null,
       refetch: jest.fn(),
     });
-    render(<PhotoCard photoSlug="test-photo" />);
+    render(<PhotoDetail photoSlug="test-photo" />);
     expect(screen.getByText('Фотография не найдена')).toBeInTheDocument();
   });
 
@@ -472,7 +472,7 @@ describe('PhotoCard', () => {
       error: null,
       refetch: jest.fn(),
     });
-    render(<PhotoCard photoSlug="test-photo" />);
+    render(<PhotoDetail photoSlug="test-photo" />);
     expect(screen.getByText('Фотография не найдена')).toBeInTheDocument();
   });
 });

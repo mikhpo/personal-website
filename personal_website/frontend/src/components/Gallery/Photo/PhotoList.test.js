@@ -3,6 +3,14 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import PhotoList from './PhotoList';
 
+// Мокировать компонент PhotoCard для изоляции тестов
+jest.mock('./PhotoCard', () => ({
+  __esModule: true,
+  default: ({ photo }) => (
+    <div data-testid={`photo-card-${photo.id}`}>{photo.name}</div>
+  ),
+}));
+
 /**
  * Тесты для компонента PhotoList
  * 

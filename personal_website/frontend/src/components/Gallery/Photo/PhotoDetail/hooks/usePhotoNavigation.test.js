@@ -1,4 +1,4 @@
-import usePhotoNavigation from '@components/Gallery/Photo/PhotoCard/hooks/usePhotoNavigation';
+import usePhotoNavigation from '@components/Gallery/Photo/PhotoDetail/hooks/usePhotoNavigation';
 
 /**
  * Тесты для хука usePhotoNavigation.

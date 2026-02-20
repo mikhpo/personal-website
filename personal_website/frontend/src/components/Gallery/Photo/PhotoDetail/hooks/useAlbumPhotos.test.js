@@ -1,5 +1,5 @@
 import { renderHook, act } from '@testing-library/react';
-import useAlbumPhotos from '@components/Gallery/Photo/PhotoCard/hooks/useAlbumPhotos';
+import useAlbumPhotos from '@components/Gallery/Photo/PhotoDetail/hooks/useAlbumPhotos';
 
 /**
  * Тесты для хука useAlbumPhotos.

@@ -4,7 +4,7 @@ import { createRoot } from 'react-dom/client';
 // Импорт Gallery компонентов
 import AlbumCard from '@components/Gallery/Album/AlbumCard';
 import AlbumList from '@components/Gallery/Album/AlbumList';
-import PhotoCard from '@components/Gallery/Photo/PhotoCard/PhotoCard';
+import PhotoDetail from '@components/Gallery/Photo/PhotoDetail/PhotoDetail';
 import PhotoList from '@components/Gallery/Photo/PhotoList';
 import ExifData from '@components/Gallery/Photo/ExifData';
 import PhotoTags from '@components/Gallery/Photo/PhotoTags';
@@ -26,7 +26,7 @@ const componentRegistry = {
   // Gallery components
   'Gallery/AlbumCard': AlbumCard,
   'Gallery/AlbumList': AlbumList,
-  'Gallery/PhotoCard': PhotoCard,
+  'Gallery/PhotoDetail': PhotoDetail,
   'Gallery/PhotoList': PhotoList,
   'Gallery/ExifData': ExifData,
   'Gallery/PhotoTags': PhotoTags,

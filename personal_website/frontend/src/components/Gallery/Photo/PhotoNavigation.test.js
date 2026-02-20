@@ -91,7 +91,7 @@ describe('PhotoNavigation', () => {
    */
   test('обе кнопки имеют вариант "primary"', () => {
     render(<PhotoNavigation previousPhoto={previousPhoto} nextPhoto={nextPhoto} />);
-    const buttons = screen.getAllByRole('link');
+    const buttons = screen.getAllByRole('button');
     buttons.forEach(button => {
       expect(button).toHaveClass('btn-primary');
     });
@@ -141,7 +141,7 @@ describe('PhotoNavigation', () => {
    */
   test('кнопки являются ссылками', () => {
     render(<PhotoNavigation previousPhoto={previousPhoto} nextPhoto={nextPhoto} />);
-    const links = screen.getAllByRole('link');
+    const links = screen.getAllByRole('button');
     expect(links).toHaveLength(2);
   });
 

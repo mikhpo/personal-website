@@ -1,5 +1,5 @@
 import { renderHook, act } from '@testing-library/react';
-import usePhotoData from '@components/Gallery/Photo/PhotoCard/hooks/usePhotoData';
+import usePhotoData from '@components/Gallery/Photo/PhotoDetail/hooks/usePhotoData';
 
 /**
  * Тесты для хука usePhotoData

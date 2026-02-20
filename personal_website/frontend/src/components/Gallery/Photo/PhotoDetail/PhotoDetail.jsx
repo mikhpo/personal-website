@@ -6,21 +6,24 @@ import PhotoTags from '@components/Gallery/Photo/PhotoTags';
 import PhotoNavigation from '@components/Gallery/Photo/PhotoNavigation';
 import SpinnerComponent from '@components/Spinner/Spinner';
 import AlertList from '@components/Alert/AlertList';
-import usePhotoData from '@components/Gallery/Photo/PhotoCard/hooks/usePhotoData';
-import useAlbumPhotos from '@components/Gallery/Photo/PhotoCard/hooks/useAlbumPhotos';
-import usePhotoNavigation from '@components/Gallery/Photo/PhotoCard/hooks/usePhotoNavigation';
+import usePhotoData from '@components/Gallery/Photo/PhotoDetail/hooks/usePhotoData';
+import useAlbumPhotos from '@components/Gallery/Photo/PhotoDetail/hooks/useAlbumPhotos';
+import usePhotoNavigation from '@components/Gallery/Photo/PhotoDetail/hooks/usePhotoNavigation';
 
 /**
- * Компонент карточки фотографии с детальной информацией.
+ * Компонент детального просмотра фотографии (альтернативная реализация).
  *
- * Загружает фотографию и список фотографий альбома для навигации.
+ * Это сложный компонент с бизнес-логикой, который загружает данные фотографии 
+ * через API и отображает полную информацию о ней. Включает навигацию между 
+ * фотографиями в альбоме, отображение EXIF-данных, тегов и описания.
+ * Используется для отдельной страницы детального просмотра конкретной фотографии.
  *
  * @param {Object} props - Пропсы компонента
  * @param {string} props.photoSlug - Слаг фотографии
  * @param {string} [props.apiUrl] - Базовый URL API (опционально, по умолчанию /api/gallery/photos/)
- * @return {JSX.Element} Компонент карточки фотографии
+ * @return {JSX.Element} Компонент детального просмотра фотографии
  */
-const PhotoCard = ({ photoSlug, apiUrl = '/api/gallery/photos/' }) => {
+const PhotoDetail = ({ photoSlug, apiUrl = '/api/gallery/photos/' }) => {
   // Используем хуки для загрузки данных
   const { photo, loading, error, refetch: refetchPhoto } = usePhotoData(photoSlug, apiUrl);
   const { photos: albumPhotos, refetch: refetchAlbumPhotos } = useAlbumPhotos(photo?.album, apiUrl);
@@ -103,9 +106,9 @@ const PhotoCard = ({ photoSlug, apiUrl = '/api/gallery/photos/' }) => {
   );
 };
 
-PhotoCard.propTypes = {
+PhotoDetail.propTypes = {
   photoSlug: PropTypes.string.isRequired,
   apiUrl: PropTypes.string,
 };
 
-export default PhotoCard;
+export default PhotoDetail;

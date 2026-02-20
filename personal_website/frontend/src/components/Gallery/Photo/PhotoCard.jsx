@@ -3,10 +3,12 @@ import { Card } from 'react-bootstrap';
 import PropTypes from 'prop-types';
 
 /**
- * Компонент карточки фотографии.
+ * Компонент карточки фотографии для отображения в списке/галерее.
  *
- * Отображает превью фотографии с названием и датой съёмки.
- * Создает кликабельную карточку с миниатюрой фотографии, названием и датой съёмки.
+ * Это простой презентационный компонент, который отображает миниатюру фотографии 
+ * с названием и датой съёмки. Используется для массового отображения фотографий 
+ * в сетке галереи. Каждая карточка служит кликабельной ссылкой для перехода 
+ * к детальному просмотру фотографии.
  *
  * @component
  * @param {Object} props - Пропсы компонента
@@ -19,7 +21,7 @@ import PropTypes from 'prop-types';
  * @return {JSX.Element} Карточка фотографии с миниатюрой, названием и датой
  *
  * @example
- * // Пример использования компонента
+ * // Пример использования компонента в списке фотографий
  * const photoData = {
  *   id: 1,
  *   name: "Закат над озером",
@@ -30,7 +32,7 @@ import PropTypes from 'prop-types';
  *
  * return <PhotoCard photo={photoData} />;
  */
-const PhotoCard = ({ photo }) => {
+const PhotoCardComponent = ({ photo }) => {
   const photoUrl = `/gallery/photo/${photo.slug}/`;
 
   /**
@@ -81,7 +83,7 @@ const PhotoCard = ({ photo }) => {
   );
 };
 
-PhotoCard.propTypes = {
+PhotoCardComponent.propTypes = {
   photo: PropTypes.shape({
     id: PropTypes.number.isRequired,
     name: PropTypes.string.isRequired,
@@ -91,4 +93,4 @@ PhotoCard.propTypes = {
   }).isRequired,
 };
 
-export default PhotoCard;
+export default PhotoCardComponent;
