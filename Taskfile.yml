@@ -429,3 +429,15 @@ tasks:
       - task: stop-containers
       - docker volume rm -f $(docker volume ls -q) 2>/dev/null || true
       - docker volume ls
+
+  pre-commit:
+    desc: Выполнить pre-commit хуки
+    summary: |
+      Запускает pre-commit хуки для проверки кода перед коммитом.
+      Автоматически применяет форматирование и проверяет код.
+      Проверяет все файлы проекта.
+    preconditions:
+      - test -f .pre-commit-config.yaml
+      - test -f pyproject.toml
+    cmds:
+      - pre-commit run --all-files
