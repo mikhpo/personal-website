@@ -123,8 +123,6 @@ def navbar_data(request: HttpRequest) -> ContextNavbarData:
         )
         links.append(gallery_link)
 
-    links.append(gallery_link)
-
     return ContextNavbarData(
         navbar_data=NavbarData(
             brandName="Mikhail Polyakov",
