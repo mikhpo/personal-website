@@ -71,6 +71,7 @@ class TestPhotoFactory(TestCase):
             self.assertIn(34855, exif_dict)  # ISOSpeedRatings
             self.assertIn(37386, exif_dict)  # FocalLength
             self.assertIn(36867, exif_dict)  # DateTimeOriginal
+            self.assertIn(42036, exif_dict)  # LensModel
 
 
 class TestExifDataFactory(SimpleTestCase):
@@ -92,12 +93,14 @@ class TestGenerateImageWithExif(SimpleTestCase):
             exif = dict(img.getexif().items())
             self.assertIn(271, exif)  # Make
             self.assertIn(272, exif)  # Model
+            self.assertIn(42036, exif)  # LensModel
 
     def test_generate_image_with_exif_custom(self) -> None:
         """Функция генерирует изображение с переданными EXIF данными."""
-        custom_exif = ExifDataFactory.build(make="Nikon", model="D850")
+        custom_exif = ExifDataFactory.build(make="Nikon", model="D850", lens_model="EF 24-70mm f/2.8L II USM")
         image_file = generate_image_with_exif(custom_exif)
         with pImage.open(image_file) as img:
             exif = dict(img.getexif().items())
             self.assertEqual(exif.get(271), "Nikon")
             self.assertEqual(exif.get(272), "D850")
+            self.assertEqual(exif.get(42036), "EF 24-70mm f/2.8L II USM")

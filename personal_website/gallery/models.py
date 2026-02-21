@@ -1,5 +1,6 @@
 """Модели галереи."""
 
+import io
 from datetime import datetime
 from pathlib import Path
 from typing import Self
@@ -222,7 +223,10 @@ class Photo(models.Model):
         """Получить данные EXIF при помощи библиотеки PIL."""
         exif_data = {}
         if storage.exists(self.image.name):
-            with pImage.open(self.image) as img:
+            # Читаем файл в байты, чтобы избежать проблем с закрытием файла
+            with self.image.open() as f:
+                img_bytes = f.read()
+            with pImage.open(io.BytesIO(img_bytes)) as img:
                 if hasattr(img, "_getexif"):
                     info = img._getexif()  # noqa: SLF001
                     if not info:
@@ -230,7 +234,6 @@ class Photo(models.Model):
                     for tag, value in info.items():
                         decoded = TAGS.get(tag, tag)
                         exif_data[decoded] = value
-                img.close()
         return exif_data
 
     @cached_property

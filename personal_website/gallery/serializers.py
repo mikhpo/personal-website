@@ -22,6 +22,13 @@ class PhotoSerializer(serializers.ModelSerializer):
     thumbnail_url = serializers.SerializerMethodField()
     preview_url = serializers.SerializerMethodField()
     image_url = serializers.SerializerMethodField()
+    camera = serializers.SerializerMethodField()
+    lens_model = serializers.SerializerMethodField()
+    aperture = serializers.SerializerMethodField()
+    exposure = serializers.SerializerMethodField()
+    iso = serializers.SerializerMethodField()
+    focal_length = serializers.SerializerMethodField()
+    datetime_taken = serializers.SerializerMethodField()
 
     class Meta:
         """Мета-информация о сериализаторе фотографии."""
@@ -40,6 +47,36 @@ class PhotoSerializer(serializers.ModelSerializer):
     def get_image_url(self, obj: Photo) -> str:
         """Получить URL оригинального изображения."""
         return obj.image.url if obj.image else ""
+
+    def get_camera(self, obj: Photo) -> str:
+        """Получить название камеры."""
+        return obj.camera or ""
+
+    def get_lens_model(self, obj: Photo) -> str:
+        """Получить модель объектива."""
+        return obj.lens_model or ""
+
+    def get_aperture(self, obj: Photo) -> str | None:
+        """Получить диафрагму."""
+        return obj.aperture
+
+    def get_exposure(self, obj: Photo) -> str | None:
+        """Получить выдержку."""
+        return obj.exposure
+
+    def get_iso(self, obj: Photo) -> int | None:
+        """Получить ISO."""
+        return obj.iso
+
+    def get_focal_length(self, obj: Photo) -> int | None:
+        """Получить фокусное расстояние."""
+        return obj.focal_length
+
+    def get_datetime_taken(self, obj: Photo) -> str | None:
+        """Получить дату и время съемки."""
+        if obj.datetime_taken:
+            return obj.datetime_taken.isoformat()
+        return None
 
 
 class AlbumSerializer(serializers.ModelSerializer):
