@@ -11,8 +11,11 @@
 from typing import Any
 
 from django.core.management.base import BaseCommand, CommandParser
+from faker import Faker
 
 from gallery.factories import AlbumFactory, PhotoFactory, TagFactory
+
+fake = Faker(locale="ru_RU")
 
 
 class Command(BaseCommand):
@@ -65,11 +68,14 @@ class Command(BaseCommand):
         # Создание фотографий
         photos_count = options["photos"]
         self.stdout.write(f"Создание {photos_count} фотографий...")
-        photos = PhotoFactory.create_batch(
-            photos_count,
-            album=albums[0],
-            tags=tags[:2],
-        )
+
+        photos = []
+        for _ in range(photos_count):
+            photo = PhotoFactory.create(
+                album=fake.random_element(albums),
+                tags=fake.random_elements(tags, length=fake.random_int(1, len(tags)), unique=True),
+            )
+            photos.append(photo)
         self.stdout.write(f"Создано {len(photos)} фотографий")
 
         self.stdout.write(

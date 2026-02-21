@@ -104,7 +104,7 @@ def navbar_data(request: HttpRequest) -> ContextNavbarData:
 
     # Логика для ссылки "Галерея" - показываем dropdown только находясь в разделе галереи
     if request.path.startswith("/gallery/"):
-        gallery_link: NavbarLink = {
+        gallery_link_with_dropdown: NavbarLink = {
             "url": "/gallery/",
             "text": "Галерея",
             "active": True,
@@ -114,12 +114,14 @@ def navbar_data(request: HttpRequest) -> ContextNavbarData:
                 {"url": "#", "text": "Тэги", "offcanvas": True},
             ],
         }
+        links.append(gallery_link_with_dropdown)
     else:
         gallery_link: NavbarLink = {
             "url": "/gallery/",
             "text": "Галерея",
             "active": request.path.startswith("/gallery/"),
         }
+        links.append(gallery_link)
 
     links.append(gallery_link)
 
