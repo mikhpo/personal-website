@@ -48,14 +48,13 @@
       {% render_bundle 'main' 'js' %}
       <script>
         document.addEventListener('DOMContentLoaded', function() {
-          // Конфигурация компонентов для монтирования
-          const reactComponents = [
+          // Монтирование компонентов для navbar и alerts
+          const staticComponents = [
             { elementId: 'navbar-root', componentName: 'Navbar/Navbar' },
             { elementId: 'alerts-root', componentName: 'Alert/AlertList' }
           ];
 
-          // Монтирование всех компонентов
-          reactComponents.forEach(function(component) {
+          staticComponents.forEach(function(component) {
             const element = document.getElementById(component.elementId);
 
             if (element && element.dataset.props) {
@@ -67,6 +66,22 @@
               } catch (error) {
                 console.error(`Failed to mount component "${component.componentName}" to "${component.elementId}":`, error);
               }
+            }
+          });
+
+          // Автоматическое монтирование всех React компонентов с data-component-name атрибутом
+          const reactComponents = document.querySelectorAll('.react-component[data-component-name]');
+          reactComponents.forEach(function(element) {
+            try {
+              const componentName = element.getAttribute('data-component-name');
+              const propsJson = element.getAttribute('data-component-props');
+              const props = propsJson ? JSON.parse(propsJson) : {};
+              
+              if (typeof window.mountReactComponent === 'function') {
+                window.mountReactComponent(componentName, element.id, props);
+              }
+            } catch (error) {
+              console.error(`Failed to mount React component:`, error);
             }
           });
         });
