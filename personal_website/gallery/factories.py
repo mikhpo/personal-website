@@ -1,13 +1,47 @@
 """Фабрики для генерации объектов галереи со случайными данными."""
 
+import io
+from datetime import datetime
+
 import factory  # type: ignore[import-untyped]
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.utils.timezone import now
 from faker import Faker
+from PIL import Image as pImage
 
 from gallery.models import Album, Photo, Tag
 from gallery.schemas import ExifData
 
 fake = Faker(locale="ru_RU")
+
+
+
+def generate_image_with_exif(exif_data: ExifData | None = None) -> SimpleUploadedFile:
+    """Сгенерировать изображение с EXIF данными.
+
+    Args:
+        exif_data: Данные EXIF для записи в изображение. Если не указаны, генерируются случайно.
+    """
+    exif_obj = ExifDataFactory.build() if exif_data is None else exif_data
+    img = pImage.new("RGB", (800, 600), color=(73, 109, 137))
+    exif = img.getexif()
+    exif[0x010F] = exif_obj.make  # Make
+    exif[0x0110] = exif_obj.model  # Model
+    exif[0xA435] = exif_obj.lens_model  # LensModel
+    exif[0x829D] = exif_obj.f_number  # FNumber
+    exif[0x829A] = exif_obj.exposure_time  # ExposureTime
+    exif[0x8827] = exif_obj.iso_speed  # ISOSpeedRatings
+    exif[0x920A] = exif_obj.focal_length  # FocalLength
+    if isinstance(exif_obj.datetime_original, datetime):
+        exif[0x9003] = exif_obj.datetime_original.strftime("%Y:%m:%d %H:%M:%S")  # DateTimeOriginal
+    img_bytes = io.BytesIO()
+    img.save(img_bytes, format="JPEG", exif=exif)
+    img_bytes.seek(0)
+    return SimpleUploadedFile(
+        name=f"test_image_{fake.uuid4()}.jpg",
+        content=img_bytes.read(),
+        content_type="image/jpeg",
+    )
 
 
 class TagFactory(factory.django.DjangoModelFactory):
@@ -68,7 +102,7 @@ class PhotoFactory(factory.django.DjangoModelFactory):
         skip_postgeneration_save = True
         django_get_or_create = ("name",)
 
-    image = factory.django.ImageField()
+    image = factory.LazyAttribute(lambda _: generate_image_with_exif())
     name = factory.Faker("sentence")
     description = factory.Faker("sentence")
     slug = factory.LazyAttribute(lambda _: None)
