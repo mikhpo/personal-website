@@ -1,8 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import PreviousButtons from '@components/Pagination/PreviousButtons';
-import NextButtons from '@components/Pagination/NextButtons';
 import PageInfo from '@components/Pagination/PageInfo';
+import { renderNavigationButton } from '@components/Pagination/utils/paginationRenderers';
 
 /**
  * Компонент навигационной пагинации
@@ -18,22 +17,24 @@ const NavigationPagination = ({ currentPage, totalPages, baseUrl }) => {
   return (
     <span className="step-links">
       <div>
-        <PreviousButtons
-          currentPage={currentPage}
-          totalPages={totalPages}
-          baseUrl={baseUrl}
-        />
+        {currentPage > 1 && (
+          <>
+            {renderNavigationButton('first', currentPage, totalPages, baseUrl)}
+            {renderNavigationButton('prev', currentPage, totalPages, baseUrl)}
+          </>
+        )}
 
         <PageInfo
           currentPage={currentPage}
           totalPages={totalPages}
         />
 
-        <NextButtons
-          currentPage={currentPage}
-          totalPages={totalPages}
-          baseUrl={baseUrl}
-        />
+        {currentPage < totalPages && (
+          <>
+            {renderNavigationButton('next', currentPage, totalPages, baseUrl)}
+            {renderNavigationButton('last', currentPage, totalPages, baseUrl)}
+          </>
+        )}
       </div>
     </span>
   );

@@ -15,32 +15,16 @@ import NumbersPagination from '@components/Pagination/NumbersPagination';
  * @return {JSX.Element|null} Компонент пагинации или null, если страниц меньше 2
  */
 const Pagination = ({ currentPage, totalPages, baseUrl, type = 'navigation' }) => {
-  // Не отображаем пагинацию, если страниц мало
   if (totalPages <= 1) {
     return null;
   }
 
-  // Выбираем тип пагинации
-  if (type === 'numbers') {
-    return (
-      <div className="container">
-        <div className="pagination">
-          <NumbersPagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            baseUrl={baseUrl}
-          />
-        </div>
-        <br />
-      </div>
-    );
-  }
+  const PaginationComponent = type === 'numbers' ? NumbersPagination : NavigationPagination;
 
-  // По умолчанию используем навигационную пагинацию
   return (
     <div className="container">
       <div className="pagination">
-        <NavigationPagination
+        <PaginationComponent
           currentPage={currentPage}
           totalPages={totalPages}
           baseUrl={baseUrl}
