@@ -413,7 +413,7 @@ class TestUploadFormView(TestCase):
         """Проверить монтирование React компонента."""
         # Проверяем, что скрипт монтирования React компонента идет после загрузки React bundle
         react_bundle = response_content.find("main-")  # React bundle имеет имя main-[hash].js
-        alerts_mount = response_content.find("Alert/AlertContainer")
+        alerts_mount = response_content.find("Alert/AlertList")
         self.assertGreater(
             alerts_mount,
             react_bundle,
@@ -422,12 +422,12 @@ class TestUploadFormView(TestCase):
 
         # Проверяем наличие скрипта монтирования
         self.assertContains(response, "window.mountReactComponent")
-        self.assertContains(response, "Alert/AlertContainer")
+        self.assertContains(response, "Alert/AlertList")
 
     def _check_react_component_presence(self, response: HttpResponseBase) -> None:
         """Проверить наличие React компонента в ответе."""
         self.assertContains(response, "window.mountReactComponent")
-        self.assertContains(response, "Alert/AlertContainer")
+        self.assertContains(response, "Alert/AlertList")
         self.assertContains(response, "alerts-root")
 
     def _check_alerts_data(self, alerts_data: "AlertsData") -> None:

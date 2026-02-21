@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import Alert from '@components/Alert/Alert';
+import Alert from '@components/Alert/AlertDetail';
 
 /**
  * Компонент для отображения списка сообщений.

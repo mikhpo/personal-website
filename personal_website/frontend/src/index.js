@@ -1,6 +1,10 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 
+// Импорт Alert компонентов
+import Alert from '@components/Alert/AlertDetail';
+import AlertList from '@components/Alert/AlertList';
+
 // Импорт Gallery компонентов
 import AlbumCard from '@components/Gallery/Album/AlbumCard';
 import AlbumList from '@components/Gallery/Album/AlbumList';
@@ -23,6 +27,10 @@ import PhotoUploadForm from '@components/Gallery/Upload/PhotoUploadForm';
  * Содержит все предзагруженные компоненты для быстрого доступа
  */
 const componentRegistry = {
+  // Alert components
+  'Alert/Alert': Alert,
+  'Alert/AlertList': AlertList,
+  
   // Gallery components
   'Gallery/AlbumCard': AlbumCard,
   'Gallery/AlbumList': AlbumList,
