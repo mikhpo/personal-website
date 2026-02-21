@@ -1,8 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { Navbar as BSNavbar, Nav, Container } from 'react-bootstrap';
-import BrandSection from '@components/Navbar/BrandSection';
-import NavLinksMapper from '@components/Navbar/NavLinksMapper';
+import NavItems from '@components/Navbar/NavItems';
 import UserAuthSection from '@components/Navbar/UserAuthSection';
 
 /**
@@ -61,11 +60,11 @@ const Navbar = ({ brandName, brandUrl, links, userAuthenticated, userName, userI
   return (
     <BSNavbar bg="light" variant="light" expand="lg" className="shadow mb-5">
       <Container fluid>
-        <BrandSection brandName={brandName} brandUrl={brandUrl} />
+        <BSNavbar.Brand href={brandUrl}>{brandName}</BSNavbar.Brand>
         <BSNavbar.Toggle aria-controls="basic-navbar-nav" />
         <BSNavbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto">
-            <NavLinksMapper links={links} userIsStaff={userIsStaff} />
+            <NavItems links={links} userIsStaff={userIsStaff} />
           </Nav>
           <UserAuthSection
             userAuthenticated={userAuthenticated}
