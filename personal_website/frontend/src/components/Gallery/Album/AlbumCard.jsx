@@ -31,17 +31,20 @@ const AlbumCard = ({ album }) => {
           />
         </a>
       )}
+      {!album.cover_thumbnail_url && (
+        <div
+          className="card-img-top bg-light d-flex align-items-center justify-content-center"
+          style={{ height: '200px' }}
+        >
+          <span className="text-muted">Нет обложки</span>
+        </div>
+      )}
       <Card.Body className="d-flex flex-column">
-        <Card.Title>
+        <Card.Title className="mt-auto">
           <a href={albumUrl} className="text-decoration-none text-dark">
             {album.name}
           </a>
         </Card.Title>
-        {album.description && (
-          <Card.Text className="text-muted mt-auto">
-            {album.description}
-          </Card.Text>
-        )}
       </Card.Body>
     </Card>
   );
