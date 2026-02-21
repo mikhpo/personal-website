@@ -87,7 +87,7 @@
 * Запустить базу данных PostgreSQL через Docker Compose: `docker-compose up -d postgres`
 * Применить миграции базы данных: `poetry run python personal_website/manage.py migrate`
 * Собрать статические файлы: `poetry run python personal_website/manage.py collectstatic --noinput`
-* Запустить сборку фронтенда в режиме наблюдения (в первом терминале): `cd personal_website && npm run dev`
+* Запустить сборку фронтенда в режиме наблюдения (в первом терминале): `npm run dev`
 * Запустить сервер разработки Django (во втором терминале): `poetry run python personal_website/manage.py runserver`
 * Открыть сайт в браузере: <http://localhost:8000> (админ-панель: <http://localhost:8000/admin/>)
 
