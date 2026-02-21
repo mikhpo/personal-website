@@ -33,12 +33,12 @@ const getCookie = (name) => {
  * Позволяет выбрать альбом и загрузить фотографии через drag-and-drop или file input.
  *
  * @param {Object} props - Пропсы компонента
- * @param {string} [props.apiUrl="/api/gallery/photos/"] - URL API для загрузки фотографий
+ * @param {string} [props.apiUrl="/api/gallery/upload/"] - URL API для загрузки фотографий
  * @param {string} [props.albumsApiUrl="/api/gallery/albums/"] - URL API для загрузки альбомов
  * @return {JSX.Element} Компонент формы загрузки
  */
 const PhotoUploadForm = ({
-  apiUrl = '/api/gallery/photos/',
+  apiUrl = '/api/gallery/upload/',
   albumsApiUrl = '/api/gallery/albums/',
 }) => {
   const [albums, setAlbums] = useState([]);

@@ -12,7 +12,7 @@ from gallery.views import (
     TagDetailView,
     UploadFormView,
 )
-from gallery.viewsets import AlbumViewSet, PhotoUploadViewSet, PhotoViewSet, TagViewSet
+from gallery.viewsets import AlbumViewSet, PhotoViewSet, TagViewSet, UploadViewSet
 
 app_name = "gallery"
 
@@ -21,7 +21,7 @@ router = DefaultRouter()
 router.register(r"albums", AlbumViewSet, basename="album")
 router.register(r"photos", PhotoViewSet, basename="photo")
 router.register(r"tags", TagViewSet, basename="tag")
-router.register(r"photos", PhotoUploadViewSet, basename="photo-upload")
+router.register(r"", UploadViewSet, basename="upload")
 
 # Существующие URL для Django views
 urlpatterns = [

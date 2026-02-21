@@ -70,7 +70,7 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
     ordering: ClassVar[list] = ["name"]
 
 
-class PhotoUploadViewSet(viewsets.ViewSet):
+class UploadViewSet(viewsets.ViewSet):
     """Набор представлений для загрузки фотографий."""
 
     permission_classes: ClassVar[list] = [IsAdminUser]

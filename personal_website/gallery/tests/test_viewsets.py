@@ -1,6 +1,10 @@
 """Тесты API представлений галереи."""
 
+from io import BytesIO
+
 from django.contrib.auth import get_user_model
+from django.core.files.uploadedfile import SimpleUploadedFile
+from PIL import Image
 from rest_framework.test import APITestCase
 
 from gallery.factories import AlbumFactory, PhotoFactory, TagFactory
@@ -265,3 +269,123 @@ class TestAlbumViewSet(APITestCase):
         url = "/api/gallery/albums/"
         response = self.client.get(url, {"ordering": "order,-created_at"})
         self.assertEqual(response.status_code, 200)
+
+
+class TestUploadViewSet(APITestCase):
+    """Тесты для UploadViewSet."""
+
+    @classmethod
+    def setUpTestData(cls) -> None:
+        """Подготовка тестовых данных."""
+        cls.user = User.objects.create_user(username="testuser", password="testpass123")
+        cls.staff_user = User.objects.create_user(username="staffuser", password="testpass123", is_staff=True)
+        cls.album = AlbumFactory(name="Тестовый альбом", public=True)
+        cls.url = "/api/gallery/upload/"
+        super().setUpTestData()
+
+    def _create_test_image(self, filename: str = "test_image.jpg", color: str = "red") -> SimpleUploadedFile:
+        """Создать тестовое изображение для загрузки."""
+        image_io = BytesIO()
+        test_image = Image.new("RGB", (100, 100), color=color)
+        test_image.save(image_io, format="JPEG")
+        image_io.seek(0)
+        return SimpleUploadedFile(
+            filename,
+            image_io.read(),
+            content_type="image/jpeg",
+        )
+
+    def _create_invalid_file(
+        self,
+        filename: str = "invalid_file.jpg",
+        content: bytes = b"Not an image",
+    ) -> SimpleUploadedFile:
+        """Создать невалидный файл (не изображение) для загрузки."""
+        return SimpleUploadedFile(filename, content, content_type="image/jpeg")
+
+    def test_upload_unauthenticated(self) -> None:
+        """Загрузка фотографий неаутентифицированным пользователем - 401."""
+        response = self.client.post(self.url)
+        self.assertEqual(response.status_code, 401)
+
+    def test_upload_authenticated_not_staff(self) -> None:
+        """Загрузка фотографий обычным аутентифицированным пользователем - 403."""
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(self.url)
+        self.assertEqual(response.status_code, 403)
+
+    def test_upload_staff_no_album_id(self) -> None:
+        """Загрузка фотографий staff пользователем без album_id - 400."""
+        self.client.force_authenticate(user=self.staff_user)
+        response = self.client.post(self.url, {})
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("error", response.data)
+        self.assertEqual(response.data["error"], "Album ID required")
+
+    def test_upload_staff_album_not_found(self) -> None:
+        """Загрузка фотографий staff пользователем с несуществующим album_id - 404."""
+        self.client.force_authenticate(user=self.staff_user)
+        response = self.client.post(self.url, {"album_id": 99999})
+        self.assertEqual(response.status_code, 404)
+        self.assertIn("error", response.data)
+        self.assertEqual(response.data["error"], "Album not found")
+
+    def test_upload_staff_valid_album_no_files(self) -> None:
+        """Загрузка фотографий staff пользователем без файлов - успех (пустой результат)."""
+        self.client.force_authenticate(user=self.staff_user)
+        response = self.client.post(self.url, {"album_id": self.album.id})
+        self.assertEqual(response.status_code, 201)
+        self.assertIn("results", response.data)
+        self.assertEqual(len(response.data["results"]), 0)
+
+    def test_upload_staff_valid_album_with_valid_image(self) -> None:
+        """Загрузка валидного изображения staff пользователем - успех."""
+        self.client.force_authenticate(user=self.staff_user)
+        upload_file = self._create_test_image("test_image.jpg", "red")
+        response = self.client.post(self.url, {"album_id": self.album.id, "photos": [upload_file]})
+        self.assertEqual(response.status_code, 201)
+        self.assertIn("results", response.data)
+        self.assertEqual(len(response.data["results"]), 1)
+        self.assertTrue(response.data["results"][0]["success"])
+        self.assertEqual(response.data["results"][0]["filename"], "test_image.jpg")
+        self.assertIn("id", response.data["results"][0])
+
+    def test_upload_staff_invalid_image(self) -> None:
+        """Загрузка невалидного файла (не изображение) staff пользователем - ошибка."""
+        self.client.force_authenticate(user=self.staff_user)
+        upload_file = self._create_invalid_file("invalid_file.jpg")
+        response = self.client.post(self.url, {"album_id": self.album.id, "photos": [upload_file]})
+        self.assertEqual(response.status_code, 201)
+        self.assertIn("results", response.data)
+        self.assertEqual(len(response.data["results"]), 1)
+        self.assertFalse(response.data["results"][0]["success"])
+        self.assertEqual(response.data["results"][0]["filename"], "invalid_file.jpg")
+        self.assertIn("error", response.data["results"][0])
+
+    def test_upload_staff_multiple_images(self) -> None:
+        """Загрузка нескольких изображений staff пользователем - успех."""
+        self.client.force_authenticate(user=self.staff_user)
+        files = [self._create_test_image(f"test_image_{i}.jpg", "blue") for i in range(3)]
+        response = self.client.post(self.url, {"album_id": self.album.id, "photos": files})
+        self.assertEqual(response.status_code, 201)
+        self.assertIn("results", response.data)
+        self.assertEqual(len(response.data["results"]), 3)
+        for result in response.data["results"]:
+            self.assertTrue(result["success"])
+            self.assertIn("id", result)
+
+    def test_upload_staff_mixed_files(self) -> None:
+        """Загрузка смешанных файлов (валидные и невалидные) staff пользователем."""
+        self.client.force_authenticate(user=self.staff_user)
+        valid_file = self._create_test_image("valid_image.jpg", "green")
+        invalid_file = self._create_invalid_file("invalid_file.txt", b"Not an image")
+        response = self.client.post(self.url, {"album_id": self.album.id, "photos": [valid_file, invalid_file]})
+        self.assertEqual(response.status_code, 201)
+        self.assertIn("results", response.data)
+        self.assertEqual(len(response.data["results"]), 2)
+
+        # Найти результаты по имени файла
+        results_by_filename = {r["filename"]: r for r in response.data["results"]}
+        self.assertTrue(results_by_filename["valid_image.jpg"]["success"])
+        self.assertFalse(results_by_filename["invalid_file.txt"]["success"])
+        self.assertEqual(results_by_filename["invalid_file.txt"]["error"], "Not an image")
