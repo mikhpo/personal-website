@@ -90,51 +90,51 @@ def navbar_data(request: HttpRequest) -> ContextNavbarData:
     """
     # Базовые ссылки
     links: list[NavbarLink] = [
-        {
-            "url": "/",
-            "text": "Главная",
-            "active": "/main/" in request.path or request.path == "/",
-        },
-        {
-            "url": "/blog/",
-            "text": "Блог",
-            "active": request.path.startswith("/blog/"),
-        },
+        NavbarLink(
+            url="/",
+            text="Главная",
+            active="/main/" in request.path or request.path == "/",
+        ),
+        NavbarLink(
+            url="/blog/",
+            text="Блог",
+            active=request.path.startswith("/blog/"),
+        ),
     ]
 
     # Логика для ссылки "Галерея" - показываем dropdown только находясь в разделе галереи
     if request.path.startswith("/gallery/"):
-        gallery_link_with_dropdown: NavbarLink = {
-            "url": "/gallery/",
-            "text": "Галерея",
-            "active": True,
-            "dropdown": [
-                {"url": "/gallery/albums/", "text": "Альбомы"},
-                {"url": "/gallery/photos/", "text": "Фотографии"},
-                {"url": "#", "text": "Тэги", "offcanvas": True},
+        gallery_link_with_dropdown = NavbarLink(
+            url="/gallery/",
+            text="Галерея",
+            active=True,
+            dropdown=[
+                NavbarLinkDropdown(url="/gallery/albums/", text="Альбомы"),
+                NavbarLinkDropdown(url="/gallery/photos/", text="Фотографии"),
+                NavbarLinkDropdown(url="#", text="Тэги", offcanvas=True),
             ],
-        }
+        )
         links.append(gallery_link_with_dropdown)
     else:
-        gallery_link: NavbarLink = {
-            "url": "/gallery/",
-            "text": "Галерея",
-            "active": request.path.startswith("/gallery/"),
-        }
+        gallery_link = NavbarLink(
+            url="/gallery/",
+            text="Галерея",
+            active=request.path.startswith("/gallery/"),
+        )
         links.append(gallery_link)
 
     links.append(gallery_link)
 
-    return {
-        "navbar_data": {
-            "brandName": "Mikhail Polyakov",
-            "brandUrl": "/",
-            "links": links,
-            "userAuthenticated": request.user.is_authenticated,
-            "userName": request.user.username if request.user.is_authenticated else "",
-            "userIsStaff": request.user.is_staff if request.user.is_authenticated else False,
-        },
-    }
+    return ContextNavbarData(
+        navbar_data=NavbarData(
+            brandName="Mikhail Polyakov",
+            brandUrl="/",
+            links=links,
+            userAuthenticated=request.user.is_authenticated,
+            userName=request.user.username if request.user.is_authenticated else "",
+            userIsStaff=request.user.is_staff if request.user.is_authenticated else False,
+        ),
+    )
 
 
 def tags_data(request: HttpRequest) -> ContextTagsData:  # noqa: ARG001
@@ -147,9 +147,7 @@ def tags_data(request: HttpRequest) -> ContextTagsData:  # noqa: ARG001
     Returns:
         Словарь с тегами для offcanvas панели
     """
-    return {
-        "tags": Tag.objects.all(),
-    }
+    return ContextTagsData(tags=Tag.objects.all())  # type: ignore[arg-type]
 
 
 def alerts_data(request: HttpRequest) -> ContextAlertsData:
@@ -175,17 +173,17 @@ def alerts_data(request: HttpRequest) -> ContextAlertsData:
             "error": "danger",
         }
 
-        alert: AlertMessage = {
-            "message": message.message,
-            "level": level_map.get(message.tags, "info") if message.tags else "info",
-            "dismissible": True,
-            "autoClose": True,
-            "autoCloseDelay": DEFAULT_AUTO_CLOSE_DELAY,
-        }
+        alert = AlertMessage(
+            message=message.message,
+            level=level_map.get(message.tags, "info") if message.tags else "info",
+            dismissible=True,
+            autoClose=True,
+            autoCloseDelay=DEFAULT_AUTO_CLOSE_DELAY,
+        )
         alerts.append(alert)
 
-    return {
-        "alerts_data": {
-            "messages": alerts,
-        },
-    }
+    return ContextAlertsData(
+        alerts_data=AlertsData(
+            messages=alerts,  # type: ignore[arg-type]
+        ),
+    )
