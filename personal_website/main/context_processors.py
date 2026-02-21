@@ -88,6 +88,7 @@ def navbar_data(request: HttpRequest) -> ContextNavbarData:
     Returns:
         Словарь с данными для navbar
     """
+    # Базовые ссылки
     links: list[NavbarLink] = [
         {
             "url": "/",
@@ -99,17 +100,28 @@ def navbar_data(request: HttpRequest) -> ContextNavbarData:
             "text": "Блог",
             "active": request.path.startswith("/blog/"),
         },
-        {
+    ]
+
+    # Логика для ссылки "Галерея" - показываем dropdown только находясь в разделе галереи
+    if request.path.startswith("/gallery/"):
+        gallery_link: NavbarLink = {
             "url": "/gallery/",
             "text": "Галерея",
-            "active": request.path.startswith("/gallery/"),
+            "active": True,
             "dropdown": [
                 {"url": "/gallery/albums/", "text": "Альбомы"},
                 {"url": "/gallery/photos/", "text": "Фотографии"},
                 {"url": "#", "text": "Тэги", "offcanvas": True},
             ],
-        },
-    ]
+        }
+    else:
+        gallery_link: NavbarLink = {
+            "url": "/gallery/",
+            "text": "Галерея",
+            "active": request.path.startswith("/gallery/"),
+        }
+
+    links.append(gallery_link)
 
     return {
         "navbar_data": {
