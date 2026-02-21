@@ -10,7 +10,7 @@
         <p align="center">{{ album.name }}</p>
     </h4>
     <p>
-        {% react_component "Gallery/PhotoList" apiUrl="/api/gallery/photos/?album__slug={{ album.slug }}" %}
+        {% react_component "Gallery/PhotoList" apiUrl="/api/gallery/photos/?album__slug="|add:album.slug %}
     </p>
 </div>
 {% endblock gallery %}

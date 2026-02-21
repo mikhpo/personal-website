@@ -9,11 +9,13 @@ from typing import TYPE_CHECKING
 
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.http import HttpResponseBase
 from django.test import TestCase
 from django.urls import resolve, reverse
 from django.utils.crypto import get_random_string
+from playwright.sync_api import sync_playwright
 
 if TYPE_CHECKING:
     from main.context_processors import AlertMessage, AlertsData
@@ -63,8 +65,8 @@ UPLOAD_TEMPLATE_NAME = f"{APP_NAME}/upload.html"
 storage: StorageType = select_storage()
 
 
-class TestGalleryViews(TestCase):
-    """Тестирование представлений галереи."""
+class TestGalleryHomeView(TestCase):
+    """Тесты представления главной страницы галереи."""
 
     @classmethod
     def setUpTestData(cls) -> None:
@@ -120,6 +122,27 @@ class TestGalleryViews(TestCase):
             tags = Tag.objects.all()
             self.assertEqual(tags.count(), len(context["tags"]))
 
+
+class TestPhotoListView(TestCase):
+    """Тесты представления списка фотографий."""
+
+    @classmethod
+    def setUpTestData(cls) -> None:
+        """Создать первоначальные данные для проведения тестов."""
+        cls.tag = TagFactory()
+        cls.album = AlbumFactory()
+        cls.album.tags.add(cls.tag)
+        test_images_dir = "gallery/photos"
+        files = list_file_paths(test_images_dir)
+        images = [file for file in files if is_image(file)]
+        for image in images:
+            photo = PhotoFactory(image=image, name=None, album=cls.album, public=True)
+            photo.tags.add(cls.tag)
+        first_photo = Photo.objects.first()
+        cls.album.cover = first_photo
+        cls.album.save()
+        return super().setUpTestData()
+
     def test_photo_list_url(self) -> None:
         """Проверить работоспособность ссылки на просмотр всех фотографий."""
         with self.subTest("Проверка обычной ссылки на просмотр списка всех фотографий"):
@@ -158,6 +181,27 @@ class TestGalleryViews(TestCase):
             tags = Tag.objects.all()
             self.assertEqual(tags.count(), len(context["tags"]))
 
+
+class TestPhotoDetailView(TestCase):
+    """Тесты представления детального просмотра фотографии."""
+
+    @classmethod
+    def setUpTestData(cls) -> None:
+        """Создать первоначальные данные для проведения тестов."""
+        cls.tag = TagFactory()
+        cls.album = AlbumFactory()
+        cls.album.tags.add(cls.tag)
+        test_images_dir = "gallery/photos"
+        files = list_file_paths(test_images_dir)
+        images = [file for file in files if is_image(file)]
+        for image in images:
+            photo = PhotoFactory(image=image, name=None, album=cls.album, public=True)
+            photo.tags.add(cls.tag)
+        first_photo = Photo.objects.first()
+        cls.album.cover = first_photo
+        cls.album.save()
+        return super().setUpTestData()
+
     def test_photo_detail_url(self) -> None:
         """Проверить работоспособность ссылки на детальный просмотр фотографии."""
         first_photo = Photo.objects.first()
@@ -177,10 +221,10 @@ class TestGalleryViews(TestCase):
                 reverse_url = reverse(PHOTO_DETAIL_URL_NAME, args=(photo_slug,))
                 reverse_resolver_match = resolve(reverse_url)
                 reverse_response = self.client.get(reverse_url)
-                photo_url_name_func = reverse_resolver_match.func.view_class
-                self.assertEqual(photo_url_name_func, PhotoDetailView)
+                reverse_url_view_class = reverse_resolver_match.func.view_class
+                self.assertEqual(reverse_url_view_class, PhotoDetailView)
                 self.assertEqual(reverse_response.status_code, HTTPStatus.OK)
-                self.assertEqual(photo_url_func, photo_url_name_func)
+                self.assertEqual(photo_url_func, reverse_url_view_class)
 
             with self.subTest("Проверить шаблоны, использованные в представлении"):
                 self.assertEqual(response.templates, reverse_response.templates)
@@ -196,6 +240,27 @@ class TestGalleryViews(TestCase):
             url = f"{PHOTO_DETAIL_URL}/{first_photo.slug}/"
             response = self.client.get(url)
             self.assertEqual(response.status_code, HTTPStatus.OK)
+
+
+class TestAlbumListView(TestCase):
+    """Тесты представления списка альбомов."""
+
+    @classmethod
+    def setUpTestData(cls) -> None:
+        """Создать первоначальные данные для проведения тестов."""
+        cls.tag = TagFactory()
+        cls.album = AlbumFactory()
+        cls.album.tags.add(cls.tag)
+        test_images_dir = "gallery/photos"
+        files = list_file_paths(test_images_dir)
+        images = [file for file in files if is_image(file)]
+        for image in images:
+            photo = PhotoFactory(image=image, name=None, album=cls.album, public=True)
+            photo.tags.add(cls.tag)
+        first_photo = Photo.objects.first()
+        cls.album.cover = first_photo
+        cls.album.save()
+        return super().setUpTestData()
 
     def test_album_list_url(self) -> None:
         """Проверить работоспособность ссылки на просмотр всех альбомов."""
@@ -235,6 +300,27 @@ class TestGalleryViews(TestCase):
             tags = Tag.objects.all()
             self.assertEqual(tags.count(), len(context["tags"]))
 
+
+class TestAlbumDetailView(StaticLiveServerTestCase):
+    """Тесты представления детального просмотра альбома."""
+
+    def setUp(self) -> None:
+        """Создать тестовые данные для каждого теста."""
+        super().setUp()
+        self.tag = TagFactory()
+        self.album = AlbumFactory()
+        self.album.tags.add(self.tag)
+        test_images_dir = "gallery/photos"
+        files = list_file_paths(test_images_dir)
+        images = [file for file in files if is_image(file)]
+        for image in images:
+            photo = PhotoFactory(image=image, name=None, album=self.album, public=True)
+            photo.tags.add(self.tag)
+        first_photo = Photo.objects.first()
+        if first_photo:
+            self.album.cover = first_photo  # type: ignore[assignment]
+            self.album.save()
+
     def test_album_detail_url(self) -> None:
         """Проверить работоспособность ссылки на детальный просмотр альбома."""
         album_slug = self.album.slug
@@ -268,6 +354,40 @@ class TestGalleryViews(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
+    def test_album_shows_its_photos_e2e(self) -> None:
+        """E2E тест: страница альбома показывает фотографии из этого альбома."""
+        # Создать альбом с фотографиями
+        album = AlbumFactory()
+        photos: list[Photo] = PhotoFactory.create_batch(3, album=album, public=True)
+
+        with sync_playwright() as p:
+            browser = p.firefox.launch(headless=True)
+            page = browser.new_page()
+
+            try:
+                # Перейти на страницу альбома
+                url = f"{self.live_server_url}/gallery/album/{album.slug}/"
+                page.goto(url)
+
+                # Проверить, что фотографии альбома отображаются
+                for photo in photos:
+                    page.wait_for_selector(f"img[alt='{photo.name}']", timeout=10000)
+
+                # Проверить, что все фотографии из альбома на месте
+                photo_images = page.query_selector_all("img.card-img")
+                self.assertEqual(len(photo_images), len(photos), f"Должно отображаться {len(photos)} фотографий")
+            finally:
+                browser.close()
+
+
+class TestTagDetailView(TestCase):
+    """Тесты представления детального просмотра тега."""
+
+    @classmethod
+    def setUpTestData(cls) -> None:
+        """Создать тестовые данные."""
+        cls.tag = TagFactory()
+        return super().setUpTestData()
 
     def test_tag_detail_url(self) -> None:
         """Тестирование ссылки на детальный просмотр тега."""
