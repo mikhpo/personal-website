@@ -24,8 +24,10 @@ from gallery.models import Album, Photo, Tag
 from gallery.utils import is_image
 from gallery.views import (
     AlbumDetailView,
+    AlbumListView,
     GalleryHomeView,
     PhotoDetailView,
+    PhotoListView,
     TagDetailView,
     UploadFormView,
 )
@@ -36,8 +38,12 @@ APP_NAME = GalleryConfig.name
 
 GALLERY_URL = f"/{APP_NAME}/"
 GALLERY_URL_NAME = f"{APP_NAME}:{APP_NAME}"
+PHOTO_LIST_URL = f"/{APP_NAME}/photos/"
+PHOTO_LIST_URL_NAME = f"{APP_NAME}:photo-list"
 PHOTO_DETAIL_URL = f"/{APP_NAME}/photo"
 PHOTO_DETAIL_URL_NAME = f"{APP_NAME}:photo-detail"
+ALBUM_LIST_URL = f"/{APP_NAME}/albums/"
+ALBUM_LIST_URL_NAME = f"{APP_NAME}:album-list"
 ALBUM_DETAIL_URL = f"/{APP_NAME}/album"
 ALBUM_DETAIL_URL_NAME = f"{APP_NAME}:album-detail"
 TAG_DETAIL_URL = f"/{APP_NAME}/tag"
@@ -47,7 +53,9 @@ UPLOAD_URL_NAME = f"{APP_NAME}:upload"
 
 BASE_TEMPLATE_NAME = "base.html"
 GALLERY_TEMPLATE_NAME = f"{APP_NAME}/{APP_NAME}_home.html"
+PHOTO_LIST_TEMPLATE_NAME = f"{APP_NAME}/photo_list.html"
 PHOTO_DETAIL_TEMPLATE_NAME = f"{APP_NAME}/photo_detail.html"
+ALBUM_LIST_TEMPLATE_NAME = f"{APP_NAME}/album_list.html"
 ALBUM_DETAIL_TEMPLATE_NAME = f"{APP_NAME}/album_detail.html"
 TAG_DETAIL_TEMPLATE_NAME = f"{APP_NAME}/tag_detail.html"
 UPLOAD_TEMPLATE_NAME = f"{APP_NAME}/upload.html"
@@ -112,6 +120,43 @@ class TestGalleryViews(TestCase):
             tags = Tag.objects.all()
             self.assertEqual(tags.count(), len(context["tags"]))
 
+    def test_photo_list_url(self) -> None:
+        """Проверить работоспособность ссылки на просмотр всех фотографий."""
+        with self.subTest("Проверка обычной ссылки на просмотр списка всех фотографий"):
+            resolver_match = resolve(PHOTO_LIST_URL)
+            response = self.client.get(PHOTO_LIST_URL)
+            url_view_class = resolver_match.func.view_class
+            self.assertEqual(url_view_class, PhotoListView)
+            self.assertEqual(response.status_code, HTTPStatus.OK)
+
+        with self.subTest("Проверка именной ссылки на просмотр списка всех фотографий"):
+            reverse_url = reverse(PHOTO_LIST_URL_NAME)
+            reverse_resolver_match = resolve(reverse_url)
+            reverse_response = self.client.get(reverse_url)
+            reverse_url_view_class = reverse_resolver_match.func.view_class
+            self.assertEqual(reverse_url_view_class, PhotoListView)
+            self.assertEqual(reverse_response.status_code, HTTPStatus.OK)
+            self.assertEqual(url_view_class, reverse_url_view_class)
+
+        with self.subTest("Проверка используемых представлением шаблонов"):
+            self.assertEqual(response.templates, reverse_response.templates)
+            self.assertTemplateUsed(response, PHOTO_LIST_TEMPLATE_NAME)
+            self.assertTemplateUsed(response, BASE_TEMPLATE_NAME)
+
+    def test_photo_list_view_context(self) -> None:
+        """Проверить, что страница списка фотографий использует React компонент с правильным API endpoint."""
+        response = self.client.get(PHOTO_LIST_URL)
+
+        with self.subTest("Страница содержит React компонент PhotoList"):
+            self.assertContains(response, "Gallery/PhotoList")
+
+        with self.subTest("React компонент использует правильный API endpoint"):
+            self.assertContains(response, "/api/gallery/photos/")
+
+        with self.subTest("Представление содержит полный набор тэгов галереи в контексте"):
+            context = response.context
+            tags = Tag.objects.all()
+            self.assertEqual(tags.count(), len(context["tags"]))
 
     def test_photo_detail_url(self) -> None:
         """Проверить работоспособность ссылки на детальный просмотр фотографии."""
@@ -151,6 +196,44 @@ class TestGalleryViews(TestCase):
             url = f"{PHOTO_DETAIL_URL}/{first_photo.slug}/"
             response = self.client.get(url)
             self.assertEqual(response.status_code, HTTPStatus.OK)
+
+    def test_album_list_url(self) -> None:
+        """Проверить работоспособность ссылки на просмотр всех альбомов."""
+        with self.subTest("Проверка обычной ссылки на просмотр списка всех альбомов"):
+            resolver_match = resolve(ALBUM_LIST_URL)
+            response = self.client.get(ALBUM_LIST_URL)
+            url_view_class = resolver_match.func.view_class
+            self.assertEqual(url_view_class, AlbumListView)
+            self.assertEqual(response.status_code, HTTPStatus.OK)
+
+        with self.subTest("Проверка именной ссылки на просмотр списка всех альбомов"):
+            reverse_url = reverse(ALBUM_LIST_URL_NAME)
+            reverse_resolver_match = resolve(reverse_url)
+            reverse_response = self.client.get(reverse_url)
+            reverse_url_view_class = reverse_resolver_match.func.view_class
+            self.assertEqual(reverse_url_view_class, AlbumListView)
+            self.assertEqual(reverse_response.status_code, HTTPStatus.OK)
+            self.assertEqual(url_view_class, reverse_url_view_class)
+
+        with self.subTest("Проверка используемых представлением шаблонов"):
+            self.assertEqual(response.templates, reverse_response.templates)
+            self.assertTemplateUsed(response, ALBUM_LIST_TEMPLATE_NAME)
+            self.assertTemplateUsed(response, BASE_TEMPLATE_NAME)
+
+    def test_album_list_context(self) -> None:
+        """Проверить, что страница списка альбомов использует React компонент с правильным API endpoint."""
+        response = self.client.get(ALBUM_LIST_URL)
+
+        with self.subTest("Страница содержит React компонент AlbumList"):
+            self.assertContains(response, "Gallery/AlbumList")
+
+        with self.subTest("React компонент использует правильный API endpoint"):
+            self.assertContains(response, "/api/gallery/albums/")
+
+        with self.subTest("Представление содержит полный набор тэгов галереи в контексте"):
+            context = response.context
+            tags = Tag.objects.all()
+            self.assertEqual(tags.count(), len(context["tags"]))
 
     def test_album_detail_url(self) -> None:
         """Проверить работоспособность ссылки на детальный просмотр альбома."""

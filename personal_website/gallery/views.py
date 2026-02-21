@@ -10,7 +10,7 @@ from django.http import HttpRequest, HttpResponse
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 from django.utils.safestring import mark_safe
-from django.views.generic import DetailView, TemplateView
+from django.views.generic import DetailView, ListView, TemplateView
 from django.views.generic.edit import FormView
 from PIL import Image, UnidentifiedImageError
 
@@ -29,7 +29,22 @@ class GalleryHomeView(TemplateView):
     template_name = "gallery/gallery_home.html"
 
     def get_context_data(self, **kwargs) -> dict:
-        """Добавить тэги в контекст."""
+        """Добавить альбомы и тэги в контекст."""
+        context = super().get_context_data(**kwargs)
+        context["albums"] = Album.published.all()
+        context["tags"] = Tag.objects.all()
+        return context
+
+
+class AlbumListView(ListView):
+    """Представление для показа списка альбомов."""
+
+    model = Album
+    template_name = "gallery/album_list.html"
+    queryset = Album.published.all()
+
+    def get_context_data(self, **kwargs) -> dict[str, Any]:
+        """Добавить все тэги в контекст ответа."""
         context = super().get_context_data(**kwargs)
         context["tags"] = Tag.objects.all()
         return context
@@ -49,6 +64,25 @@ class AlbumDetailView(DetailView):
         if hasattr(self.request.user, "is_staff") and self.request.user.is_staff:
             return Album.objects.all()
         return Album.published.all()
+
+
+class PhotoListView(ListView):
+    """Отображение списка фотографий."""
+
+    model = Photo
+    template_name = "gallery/photo_list.html"
+    paginate_by = 40
+
+    def get_queryset(self) -> list[Photo]:  # type: ignore[override]
+        """Отсортировать набор фотографий от новых к старым."""
+        photos = Photo.published.all()
+        return sorted(photos, key=lambda photo: photo.datetime_taken, reverse=True)
+
+    def get_context_data(self, **kwargs) -> dict[str, Any]:
+        """Добавить в контекст набор всех тэгов фотографии."""
+        context = super().get_context_data(**kwargs)
+        context["tags"] = Tag.objects.all()
+        return context
 
 
 class PhotoDetailView(DetailView):
