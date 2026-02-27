@@ -56,14 +56,19 @@ class AlbumDetailView(DetailView):
     model = Album
     template_name = "gallery/album_detail.html"
     context_object_name = "album"
-    slug_field = "slug"
-    slug_url_kwarg = "slug"
+    pk_url_kwarg = "pk"
 
     def get_queryset(self) -> "QuerySet[Album]":
         """Возвращать только публичные альбомы для обычных пользователей."""
         if hasattr(self.request.user, "is_staff") and self.request.user.is_staff:
             return Album.objects.all()
         return Album.published.all()
+
+    def get_context_data(self, **kwargs) -> dict[str, Any]:
+        """Добавить URL API альбома в контекст."""
+        context = super().get_context_data(**kwargs)
+        context["album_api_url"] = f"/api/gallery/albums/{self.object.pk}/"
+        return context
 
 
 class PhotoListView(ListView):

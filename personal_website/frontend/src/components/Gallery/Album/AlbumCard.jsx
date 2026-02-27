@@ -9,15 +9,14 @@ import PropTypes from 'prop-types';
  *
  * @param {Object} props - Пропсы компонента
  * @param {Object} props.album - Объект альбома
- * @param {number} props.album.id - ID альбома
+ * @param {number} props.album.id - ID альбома (первичный ключ)
  * @param {string} props.album.name - Название альбома
- * @param {string} props.album.slug - Слаг альбома для URL
  * @param {string} [props.album.description] - Описание альбома
  * @param {string} [props.album.cover_thumbnail_url] - URL миниатюры обложки
  * @return {JSX.Element} Компонент карточки альбома
  */
 const AlbumCard = ({ album }) => {
-  const albumUrl = `/gallery/album/${album.slug}/`;
+  const albumUrl = `/gallery/album/${album.id}/`;
 
   return (
     <Card className="shadow bg-white rounded text-center h-100">
@@ -54,7 +53,6 @@ AlbumCard.propTypes = {
   album: PropTypes.shape({
     id: PropTypes.number.isRequired,
     name: PropTypes.string.isRequired,
-    slug: PropTypes.string.isRequired,
     description: PropTypes.string,
     cover_thumbnail_url: PropTypes.string,
   }).isRequired,

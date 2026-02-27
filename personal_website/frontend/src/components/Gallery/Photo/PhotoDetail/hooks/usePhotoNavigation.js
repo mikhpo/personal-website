@@ -3,6 +3,7 @@
  *
  * Вычисляет предыдущую и следующую фотографии на основе текущей фотографии
  * и списка фотографий альбома, отсортированных по дате съемки.
+ * Если дата съемки недоступна, используется дата загрузки как запасной вариант.
  *
  * @param {Object|null} photo - Текущая фотография
  * @param {Array} albumPhotos - Массив фотографий альбома
@@ -19,32 +20,19 @@ const usePhotoNavigation = (photo, albumPhotos) => {
     };
   }
 
-  // Проверяем, есть ли фотографии с datetime_taken
-  const photosWithDates = albumPhotos.filter(p => p.datetime_taken);
-  const hasDates = photosWithDates.length > 0;
-  const hasNullDates = albumPhotos.some(p => !p.datetime_taken);
-  
-  // Если есть смешанные даты (некоторые с датами, некоторые без), возвращаем null для обеих
-  // Это упрощенный подход для обработки смешанных данных
-  if (hasDates && hasNullDates) {
-    return {
-      previousPhoto: null,
-      nextPhoto: null
-    };
-  }
-  
-  // Если нет ни одной даты, возвращаем null для обеих
-  if (!hasDates) {
-    return {
-      previousPhoto: null,
-      nextPhoto: null
-    };
-  }
+  /**
+   * Получить значение для сортировки: предпочитаем datetime_taken, иначе uploaded_at.
+   *
+   * @param {Object} p - Объект фотографии
+   * @return {number} Метка времени в миллисекундах
+   */
+  const getSortKey = (p) => {
+    const dateStr = p.datetime_taken || p.uploaded_at;
+    return dateStr ? new Date(dateStr).getTime() : 0;
+  };
 
-  // Сортируем фотографии по дате съемки (все имеют даты)
-  const sortedPhotos = [...albumPhotos].sort((a, b) => {
-    return new Date(a.datetime_taken) - new Date(b.datetime_taken);
-  });
+  // Сортируем фотографии по дате съемки (от ранних к поздним)
+  const sortedPhotos = [...albumPhotos].sort((a, b) => getSortKey(a) - getSortKey(b));
 
   // Находим индекс текущей фотографии
   const currentIndex = sortedPhotos.findIndex(p => p.id === photo.id);

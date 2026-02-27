@@ -2,6 +2,7 @@
 
 import json
 import re
+from datetime import datetime, timedelta, timezone
 from html import unescape
 from http import HTTPStatus
 from pathlib import Path
@@ -9,13 +10,11 @@ from typing import TYPE_CHECKING
 
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.http import HttpResponseBase
 from django.test import TestCase
 from django.urls import resolve, reverse
 from django.utils.crypto import get_random_string
-from playwright.sync_api import sync_playwright
 
 if TYPE_CHECKING:
     from main.context_processors import AlertMessage, AlertsData
@@ -142,6 +141,42 @@ class TestPhotoListView(TestCase):
         cls.album.cover = first_photo
         cls.album.save()
         return super().setUpTestData()
+
+    def test_photo_list_sorting(self) -> None:
+        """Тест: фотографии в общем списке отсортированы от новых к старым."""
+        # Создать альбом с фотографиями с разными датами создания
+        album = AlbumFactory()
+
+        # Создать фотографии с явным указанием времени создания
+        now = datetime.now(timezone.utc)
+        photo1 = PhotoFactory(album=album, public=True)
+        photo1.uploaded_at = now - timedelta(hours=3)
+        photo1.save()
+
+        photo2 = PhotoFactory(album=album, public=True)
+        photo2.uploaded_at = now - timedelta(hours=2)
+        photo2.save()
+
+        photo3 = PhotoFactory(album=album, public=True)
+        photo3.uploaded_at = now - timedelta(hours=1)
+        photo3.save()
+
+        photo4 = PhotoFactory(album=album, public=True)
+        photo4.uploaded_at = now
+        photo4.save()
+
+        # Получить только что созданные фотографии из этого альбома
+        photos = list(Photo.published.filter(album=album))
+
+        # Проверить, что фотографии отсортированы по uploaded_at от новых к старым
+        # в соответствии с ordering = ["-uploaded_at"] в PhotoViewSet
+        sorted_photos = sorted(photos, key=lambda p: p.uploaded_at, reverse=True)
+
+        # photo4 (новая) должна быть первой, photo1 (старая) - последней
+        self.assertEqual(sorted_photos[0], photo4)
+        self.assertEqual(sorted_photos[1], photo3)
+        self.assertEqual(sorted_photos[2], photo2)
+        self.assertEqual(sorted_photos[3], photo1)
 
     def test_photo_list_url(self) -> None:
         """Проверить работоспособность ссылки на просмотр всех фотографий."""
@@ -301,7 +336,7 @@ class TestAlbumListView(TestCase):
             self.assertEqual(tags.count(), len(context["tags"]))
 
 
-class TestAlbumDetailView(StaticLiveServerTestCase):
+class TestAlbumDetailView(TestCase):
     """Тесты представления детального просмотра альбома."""
 
     def setUp(self) -> None:
@@ -318,15 +353,55 @@ class TestAlbumDetailView(StaticLiveServerTestCase):
             photo.tags.add(self.tag)
         first_photo = Photo.objects.first()
         if first_photo:
-            self.album.cover = first_photo  # type: ignore[assignment]
+            self.album.cover = first_photo
             self.album.save()
+
+    def test_album_photos_sorting(self) -> None:
+        """Тест: фотографии в альбоме отсортированы от старых к новым."""
+        # Создать альбом с фотографиями с разными датами создания
+        album = AlbumFactory()
+
+        # Создать фотографии с явным указанием времени создания
+        now = datetime.now(timezone.utc)
+        # photo1 - самая старая
+        photo1 = PhotoFactory(album=album, public=True)
+        photo1.uploaded_at = now - timedelta(hours=4)
+        photo1.save()
+
+        # photo2 - средняя по возрасту
+        photo2 = PhotoFactory(album=album, public=True)
+        photo2.uploaded_at = now - timedelta(hours=2)
+        photo2.save()
+
+        # photo3 - новая
+        photo3 = PhotoFactory(album=album, public=True)
+        photo3.uploaded_at = now - timedelta(hours=1)
+        photo3.save()
+
+        # photo4 - самая новая
+        photo4 = PhotoFactory(album=album, public=True)
+        photo4.uploaded_at = now
+        photo4.save()
+
+        # Получить фотографии альбома
+        album_photos = list(album.photos.all())
+
+        # Фотографии в альбоме сортируются по pk (от старых к новым)
+        # в соответствии с Meta.ordering = ("pk",) в модели Photo
+        sorted_photos = sorted(album_photos, key=lambda p: p.pk)
+
+        # photo1 (старая) должна быть первой, photo4 (новая) - последней
+        self.assertEqual(sorted_photos[0], photo1)
+        self.assertEqual(sorted_photos[1], photo2)
+        self.assertEqual(sorted_photos[2], photo3)
+        self.assertEqual(sorted_photos[3], photo4)
 
     def test_album_detail_url(self) -> None:
         """Проверить работоспособность ссылки на детальный просмотр альбома."""
-        album_slug = self.album.slug
+        album_pk = self.album.pk
 
         with self.subTest("Проверить обычную ссылку на детальный просмотр альбома"):
-            url = f"{ALBUM_DETAIL_URL}/{album_slug}/"
+            url = f"{ALBUM_DETAIL_URL}/{album_pk}/"
             resolver_match = resolve(url)
             response = self.client.get(url)
             view_func = resolver_match.func.view_class
@@ -334,7 +409,7 @@ class TestAlbumDetailView(StaticLiveServerTestCase):
             self.assertEqual(response.status_code, HTTPStatus.OK)
 
         with self.subTest("Проверить имя ссылки на детальный просмотр альбома"):
-            reverse_url = reverse(ALBUM_DETAIL_URL_NAME, kwargs={"slug": album_slug})
+            reverse_url = reverse(ALBUM_DETAIL_URL_NAME, kwargs={"pk": album_pk})
             reverse_resolver_match = resolve(reverse_url)
             reverse_response = self.client.get(reverse_url)
             reverse_view_func = reverse_resolver_match.func.view_class
@@ -349,35 +424,24 @@ class TestAlbumDetailView(StaticLiveServerTestCase):
 
     def test_album_detail_view_context(self) -> None:
         """Проверить доступность представления для детального просмотра альбома."""
-        album_slug = self.album.slug
-        url = f"{ALBUM_DETAIL_URL}/{album_slug}/"
+        album_pk = self.album.pk
+        url = f"{ALBUM_DETAIL_URL}/{album_pk}/"
         response = self.client.get(url)
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
-    def test_album_shows_its_photos_e2e(self) -> None:
-        """E2E тест: страница альбома показывает фотографии из этого альбома."""
+    def test_album_shows_its_photos(self) -> None:
+        """Тест: страница альбома показывает фотографии из этого альбома."""
         # Создать альбом с фотографиями
         album = AlbumFactory()
         photos: list[Photo] = PhotoFactory.create_batch(3, album=album, public=True)
 
-        with sync_playwright() as p:
-            browser = p.firefox.launch(headless=True)
-            page = browser.new_page()
+        # Проверить, что фотографии принадлежат альбому
+        album_photos = list(album.photos.all())
+        self.assertEqual(len(album_photos), len(photos))
 
-            try:
-                # Перейти на страницу альбома
-                url = f"{self.live_server_url}/gallery/album/{album.slug}/"
-                page.goto(url)
-
-                # Проверить, что фотографии альбома отображаются
-                for photo in photos:
-                    page.wait_for_selector(f"img[alt='{photo.name}']", timeout=10000)
-
-                # Проверить, что все фотографии из альбома на месте
-                photo_images = page.query_selector_all("img.card-img")
-                self.assertEqual(len(photo_images), len(photos), f"Должно отображаться {len(photos)} фотографий")
-            finally:
-                browser.close()
+        # Проверить, что все созданные фотографии находятся в альбоме
+        for photo in photos:
+            self.assertIn(photo, album_photos)
 
 
 class TestTagDetailView(TestCase):

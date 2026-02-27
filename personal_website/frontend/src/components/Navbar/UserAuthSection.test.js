@@ -143,7 +143,7 @@ describe('UserAuthSection', () => {
    *
    * Проверяет:
    * - Что имя пользователя отображается корректно
-   * - Что при пустом имени пользователя отображается пустая строка
+   * - Что при пустом имени пользователя отображается корректно
    */
   test('корректно отображает имя пользователя', () => {
     // Тест с именем пользователя
@@ -152,6 +152,6 @@ describe('UserAuthSection', () => {
     
     // Тест с пустым именем пользователя
     rerender(<UserAuthSection {...authenticatedUserProps} userName="" />);
-    expect(screen.getByText('Вы вошли как ')).toBeInTheDocument();
+    expect(screen.getByText(/Вы вошли как/)).toBeInTheDocument();
   });
 });

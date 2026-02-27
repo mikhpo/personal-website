@@ -112,7 +112,7 @@ class GalleryModelsTests(TestCase):
         tuscany_photos = Photo.objects.filter(name__contains="Tuscany")
 
         # Проверить количество фотографий в тосканском альбоме.
-        photos_in_album: QuerySet[Photo] = self.tuscany_album.photo_set
+        photos_in_album: QuerySet[Photo] = self.tuscany_album.photos
         self.assertEqual(photos_in_album.count(), 3)
         self.assertEqual(self.tuscany_album.photos_count, 3)
 
@@ -233,7 +233,7 @@ class GalleryModelsTests(TestCase):
         test_album = Album.objects.first()
         self.assertIsNotNone(test_album)
         if test_album:
-            test_photos: QuerySet = test_album.photo_set.all()
+            test_photos: QuerySet = test_album.photos.all()
             test_album.cover = test_photos.first()
             test_album.save()
             self.assertIsNotNone(test_album.cover)
@@ -264,7 +264,7 @@ class GalleryModelsTests(TestCase):
         if album:
             url = album.get_absolute_url()
             self.assertIsInstance(url, str)
-            self.assertIn(album.slug, url)
+            self.assertIn(str(album.pk), url)
 
     def test_tag_get_absolute_url(self) -> None:
         """Проверить корректность определения абсолютной ссылки для просмотра тега."""

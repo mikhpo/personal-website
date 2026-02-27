@@ -84,6 +84,7 @@ class AlbumSerializer(serializers.ModelSerializer):
 
     tags = TagSerializer(many=True, read_only=True)
     cover_thumbnail_url = serializers.SerializerMethodField()
+    photos = PhotoSerializer(many=True, read_only=True)
 
     class Meta:
         """Мета-информация о сериализаторе альбома."""

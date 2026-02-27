@@ -1,15 +1,18 @@
 """Фабрики для генерации объектов галереи со случайными данными."""
 
 import io
-from datetime import datetime
+from datetime import datetime, timezone
+from typing import TYPE_CHECKING, cast
 
 import factory  # type: ignore[import-untyped]
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.utils.timezone import now
 from faker import Faker
 from PIL import Image as pImage
 
 from gallery.models import Album, Photo, Tag
+
+if TYPE_CHECKING:
+    from gallery.models import Photo as PhotoType
 from gallery.schemas import ExifData
 
 fake = Faker(locale="ru_RU")
@@ -71,10 +74,10 @@ class AlbumFactory(factory.django.DjangoModelFactory):
     name = factory.Faker("sentence")
     description = factory.Faker("text")
     slug = factory.LazyAttribute(lambda _: None)
-    created_at = factory.LazyFunction(now)
-    updated_at = factory.LazyFunction(now)
+    created_at = cast("datetime", factory.LazyAttribute(lambda _: datetime.now(timezone.utc)))
+    updated_at = cast("datetime", factory.LazyAttribute(lambda _: datetime.now(timezone.utc)))
     public = factory.LazyAttribute(lambda _: True)
-    cover = factory.LazyAttribute(lambda _: None)
+    cover = cast("PhotoType | None", factory.LazyAttribute(lambda _: None))
     order = factory.Sequence(lambda n: n + 1)
 
     @factory.post_generation
@@ -106,8 +109,8 @@ class PhotoFactory(factory.django.DjangoModelFactory):
     name = factory.Faker("sentence")
     description = factory.Faker("sentence")
     slug = factory.LazyAttribute(lambda _: None)
-    uploaded_at = factory.LazyFunction(now)
-    modified_at = factory.LazyFunction(now)
+    uploaded_at = cast("datetime", factory.LazyAttribute(lambda _: datetime.now(timezone.utc)))
+    modified_at = cast("datetime", factory.LazyAttribute(lambda _: datetime.now(timezone.utc)))
     public = factory.LazyAttribute(lambda _: True)
     album = factory.SubFactory(AlbumFactory)
 

@@ -91,9 +91,9 @@ const PhotoList = ({ apiUrl = '/api/gallery/photos/' }) => {
 
       try {
         const data = await fetchUrl(apiUrl);
-        const photosList = data.results || data;
+        const photosList = data.photos || data.results || data;
         setPhotos(Array.isArray(photosList) ? photosList : []);
-        
+
         // Обновить данные пагинации
         const totalPages = data.count ? Math.ceil(data.count / photosList.length) : 0;
         setPagination({
@@ -248,9 +248,9 @@ const PhotoList = ({ apiUrl = '/api/gallery/photos/' }) => {
 
       try {
         const data = await fetchUrl(apiUrl);
-        const photosList = data.results || data;
+        const photosList = data.photos || data.results || data;
         setPhotos(Array.isArray(photosList) ? photosList : []);
-        
+
         const totalPages = data.count ? Math.ceil(data.count / photosList.length) : 0;
         setPagination({
           count: data.count || 0,

@@ -22,7 +22,7 @@ class AlbumViewSet(viewsets.ReadOnlyModelViewSet):
 
     serializer_class = AlbumSerializer
     permission_classes: ClassVar[list] = [IsPublicOrAuthor]
-    lookup_field = "slug"
+    lookup_field = "pk"
     filter_backends: ClassVar[list] = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields: ClassVar[list] = ["tags__slug"]
     search_fields: ClassVar[list] = ["name", "description"]
@@ -31,7 +31,7 @@ class AlbumViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self) -> "QuerySet[Album]":
         """Возвращать все альбомы для staff пользователей, только публичные для остальных."""
-        queryset = Album.objects.select_related("cover").prefetch_related("tags")
+        queryset = Album.objects.select_related("cover").prefetch_related("tags", "photos")
         if hasattr(self.request.user, "is_staff") and self.request.user.is_staff:
             return queryset
         return queryset.filter(public=True)
@@ -44,33 +44,17 @@ class PhotoViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes: ClassVar[list] = [IsPublicOrAuthor]
     lookup_field = "slug"
     filter_backends: ClassVar[list] = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields: ClassVar[list] = ["album__slug", "tags__slug", "album"]
+    filterset_fields: ClassVar[list] = ["tags__slug"]
     search_fields: ClassVar[list] = ["name", "description", "tags__name"]
     ordering_fields: ClassVar[list] = ["uploaded_at", "name"]
+    ordering: ClassVar[list] = ["-uploaded_at"]
 
     def get_queryset(self) -> "QuerySet[Photo]":
-        """Возвращать все фотографии для staff пользователей, только публичные для остальных.
-
-        При просмотре всех фотографий - сортировка от новых к старым.
-        При просмотре фотографий в альбоме - сортировка от старых к новым.
-        """
+        """Возвращать все фотографии для staff пользователей, только публичные для остальных."""
         queryset = Photo.objects.select_related("album").prefetch_related("tags")
         if hasattr(self.request.user, "is_staff") and self.request.user.is_staff:
-            pass
-        else:
-            queryset = queryset.filter(public=True)
-
-        # Определить сортировку в зависимости от контекста
-        # album__slug используется для фильтрации по слагу альбома
-        album_param = self.request.query_params.get('album__slug')
-        if album_param:
-            # При просмотре альбома - сортировка от старых к новым
-            queryset = queryset.order_by('uploaded_at')
-        else:
-            # При просмотре всех фотографий - сортировка от новых к старым
-            queryset = queryset.order_by('-uploaded_at')
-
-        return queryset
+            return queryset
+        return queryset.filter(public=True)
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):

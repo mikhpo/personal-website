@@ -1,25 +1,24 @@
 import { useState, useEffect } from 'react';
 
 /**
- * Хук для загрузки фотографий альбома.
+ * Хук для загрузки фотографий альбома через эндпоинт детального просмотра альбома.
  *
- * Загружает список фотографий альбома из API и управляет состоянием загрузки и ошибок.
+ * Загружает данные альбома из API и возвращает список вложенных фотографий.
  *
  * @param {number|null} albumId - ID альбома для загрузки фотографий (может быть null)
- * @param {string} [apiUrl='/api/gallery/photos/'] - Базовый URL API
+ * @param {string} [apiUrl='/api/gallery/albums/'] - Базовый URL API альбомов
  * @return {Object} Объект с данными о фотографиях альбома и состоянии загрузки
  * @property {Array} photos - Массив фотографий альбома
  * @property {boolean} loading - Состояние загрузки
  * @property {string|null} error - Сообщение об ошибке или null
  * @property {Function} refetch - Функция для повторной загрузки данных
  */
-const useAlbumPhotos = (albumId, apiUrl = '/api/gallery/photos/') => {
+const useAlbumPhotos = (albumId, apiUrl = '/api/gallery/albums/') => {
   const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const fetchAlbumPhotos = () => {
-    // Если albumId null или undefined, не загружаем фотографии
     if (albumId === null || albumId === undefined) {
       setPhotos([]);
       setLoading(false);
@@ -30,15 +29,15 @@ const useAlbumPhotos = (albumId, apiUrl = '/api/gallery/photos/') => {
     setLoading(true);
     setError(null);
 
-    fetch(`${apiUrl}?album=${albumId}`)
+    fetch(`${apiUrl}${albumId}/`)
       .then(response => {
         if (!response.ok) {
-          throw new Error(`Ошибка загрузки фотографий альбома: ${response.status}`);
+          throw new Error(`Ошибка загрузки данных альбома: ${response.status}`);
         }
         return response.json();
       })
       .then(data => {
-        const photosList = data.results || data;
+        const photosList = data.photos || [];
         setPhotos(Array.isArray(photosList) ? photosList : []);
         setLoading(false);
       })

@@ -29,7 +29,7 @@ urlpatterns = [
     path("albums/", AlbumListView.as_view(), name="album-list"),
     path("photos/", PhotoListView.as_view(), name="photo-list"),
     path("upload/", UploadFormView.as_view(), name="upload"),
-    path("album/<slug:slug>/", AlbumDetailView.as_view(), name="album-detail"),
+    path("album/<int:pk>/", AlbumDetailView.as_view(), name="album-detail"),
     path("photo/<slug:slug>/", PhotoDetailView.as_view(), name="photo-detail"),
     path("tag/<slug:slug>/", TagDetailView.as_view(), name="tag-detail"),
 ]

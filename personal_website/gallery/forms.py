@@ -46,7 +46,7 @@ class AlbumForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         if self.instance.pk:
             album: Album = self.instance
-            self.fields["cover"].queryset = album.photo_set.all()
+            self.fields["cover"].queryset = album.photos.all()
         else:
             self.fields["cover"].queryset = Photo.objects.none()
 

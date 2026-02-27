@@ -160,8 +160,8 @@ class GalleryAdminTests(TestCase):
         # Заполнить форму, отправить форму, проверить статус ответа.
         data = {
             "name": test_album_name,
-            "photo_set-TOTAL_FORMS": 0,
-            "photo_set-INITIAL_FORMS": 0,
+            "photos-TOTAL_FORMS": 0,
+            "photos-INITIAL_FORMS": 0,
         }
         response = self.client.post(url, data)
         self.assertEqual(response.status_code, HTTPStatus.FOUND)
@@ -187,8 +187,8 @@ class GalleryAdminTests(TestCase):
             data = {
                 "name": album.name,
                 "slug": new_slug,
-                "photo_set-TOTAL_FORMS": 0,
-                "photo_set-INITIAL_FORMS": 0,
+                "photos-TOTAL_FORMS": 0,
+                "photos-INITIAL_FORMS": 0,
             }
             response = self.client.post(url, data)
             album.refresh_from_db()

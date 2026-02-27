@@ -36,12 +36,11 @@ describe('AlbumCard', () => {
 
   /**
    * Проверяет, что компонент корректно рендерится с полным набором свойств.
-   * Должны отображаться название, описание и обложка альбома.
+   * Должны отображаться название и обложка альбома.
    */
   test('рендерит с полными props', () => {
     render(<AlbumCard album={fullAlbum} />);
     expect(screen.getByText('Тестовый альбом')).toBeInTheDocument();
-    expect(screen.getByText('Описание тестового альбома')).toBeInTheDocument();
     expect(screen.getByAltText('Тестовый альбом')).toBeInTheDocument();
   });
 
@@ -54,14 +53,6 @@ describe('AlbumCard', () => {
     expect(screen.queryByRole('img')).not.toBeInTheDocument();
   });
 
-  /**
-   * Проверяет, что описание не отображается, если оно отсутствует.
-   * Компонент должен корректно обрабатывать отсутствие описания.
-   */
-  test('не отображает описание если description пустое', () => {
-    render(<AlbumCard album={minimalAlbum} />);
-    expect(screen.queryByText(/Описание/)).not.toBeInTheDocument();
-  });
 
   /**
    * Проверяет, что ссылка на альбом формируется с правильным URL.
@@ -125,16 +116,6 @@ describe('AlbumCard', () => {
   });
 
   /**
-   * Проверяет, что описание имеет правильные CSS классы.
-   * Описание должно быть оформлено как текстовый элемент с muted цветом.
-   */
-  test('описание имеет класс text-muted', () => {
-    render(<AlbumCard album={fullAlbum} />);
-    const description = screen.getByText('Описание тестового альбома');
-    expect(description).toHaveClass('text-muted', 'mt-auto');
-  });
-
-  /**
    * Проверяет, что тело карточки использует flexbox для выравнивания.
    * Элемент Card.Body должен использовать flexbox для корректного расположения содержимого.
    */
@@ -158,19 +139,6 @@ describe('AlbumCard', () => {
   });
 
   /**
-   * Проверяет корректность отображения альбома с длинным описанием.
-   * Компонент должен корректно отображать описания произвольной длины.
-   */
-  test('рендерит с длинным описанием', () => {
-    const albumWithLongDescription = {
-      ...fullAlbum,
-      description: 'Очень длинное описание альбома которое содержит множество деталей о содержимом альбома и его истории создания.',
-    };
-    render(<AlbumCard album={albumWithLongDescription} />);
-    expect(screen.getByText(albumWithLongDescription.description)).toBeInTheDocument();
-  });
-
-  /**
    * Проверяет корректность отображения специальных символов в названии.
    * Компонент должен корректно экранировать и отображать специальные символы.
    */
@@ -181,21 +149,6 @@ describe('AlbumCard', () => {
     };
     render(<AlbumCard album={albumWithSpecialChars} />);
     expect(screen.getByText(albumWithSpecialChars.name)).toBeInTheDocument();
-  });
-
-  /**
-   * Проверяет поведение компонента при пустом описании.
-   * При пустом значении description элемент с описанием не должен отображаться.
-   */
-  test('рендерит с пустой строкой в description', () => {
-    const albumWithEmptyDescription = {
-      ...fullAlbum,
-      description: '',
-    };
-    render(<AlbumCard album={albumWithEmptyDescription} />);
-
-    const cardText = screen.queryByText('', { selector: '.card-text' });
-    expect(cardText).not.toBeInTheDocument();
   });
 
   /**

@@ -162,14 +162,6 @@ class TestPhotoViewSet(APITestCase):
         self.assertEqual(response.data["count"], 1)
         self.assertEqual(response.data["results"][0]["name"], "Закат в горах")
 
-    def test_filter_photos_by_album_slug(self) -> None:
-        """Фильтрация фотографий по слагу альбома."""
-        url = "/api/gallery/photos/"
-        response = self.client.get(url, {"album__slug": self.album1.slug})
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data["count"], 1)
-        self.assertEqual(response.data["results"][0]["name"], "Закат в горах")
-
     def test_filter_photos_by_tag_slug(self) -> None:
         """Фильтрация фотографий по слагу тега."""
         url = "/api/gallery/photos/"
@@ -240,13 +232,15 @@ class TestAlbumViewSet(APITestCase):
         self.assertEqual(response.data["count"], 2)  # Все альбомы
 
     def test_retrieve_album(self) -> None:
-        """Детальный просмотр альбома."""
-        url = f"/api/gallery/albums/{self.album1.slug}/"
+        """Детальный просмотр альбома содержит фотографии."""
+        url = f"/api/gallery/albums/{self.album1.pk}/"
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["name"], "Горные пейзажи")
         self.assertIn("cover_thumbnail_url", response.data)
         self.assertEqual(len(response.data["tags"]), 2)
+        self.assertIn("photos", response.data)
+        self.assertEqual(len(response.data["photos"]), 2)
 
     def test_search_albums(self) -> None:
         """Поиск альбомов по названию и описанию."""
@@ -269,6 +263,14 @@ class TestAlbumViewSet(APITestCase):
         url = "/api/gallery/albums/"
         response = self.client.get(url, {"ordering": "order,-created_at"})
         self.assertEqual(response.status_code, 200)
+
+    def test_album_viewset_returns_nested_photos(self) -> None:
+        """API-эндпоинт для альбома возвращает вложенные фотографии."""
+        url = f"/api/gallery/albums/{self.album1.pk}/"
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("photos", response.data)
+        self.assertEqual(len(response.data["photos"]), 2)
 
 
 class TestUploadViewSet(APITestCase):

@@ -115,8 +115,8 @@ class Album(models.Model):
         super().save(*args, **kwargs)
 
     def get_absolute_url(self) -> str:
-        """Абсолютная ссылка на альбом определяется слагом альбома."""
-        return reverse("gallery:album-detail", kwargs={"slug": self.slug})
+        """Абсолютная ссылка на альбом определяется первичным ключом альбома."""
+        return reverse("gallery:album-detail", kwargs={"pk": self.pk})
 
     @property
     def photos_count(self) -> int:
@@ -163,6 +163,7 @@ class Photo(models.Model):
         Album,
         verbose_name="Альбом",
         on_delete=models.CASCADE,
+        related_name="photos",
         help_text="Альбом, в котором размещена фотография",
     )
     tags = models.ManyToManyField(
