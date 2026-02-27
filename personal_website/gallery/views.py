@@ -74,9 +74,9 @@ class PhotoListView(ListView):
     paginate_by = 40
 
     def get_queryset(self) -> list[Photo]:  # type: ignore[override]
-        """Отсортировать набор фотографий от старых к новым."""
+        """Отсортировать набор фотографий от новых к старым."""
         photos = Photo.published.all()
-        return sorted(photos, key=lambda photo: photo.datetime_taken)
+        return sorted(photos, key=lambda photo: photo.datetime_taken, reverse=True)
 
     def get_context_data(self, **kwargs) -> dict[str, Any]:
         """Добавить в контекст набор всех тэгов фотографии."""

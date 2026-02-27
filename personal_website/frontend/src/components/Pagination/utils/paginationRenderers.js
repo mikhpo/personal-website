@@ -62,9 +62,10 @@ export const renderPaginationItem = (elementType, page, currentPage, totalPages,
  * @param {number} currentPage - Текущая страница
  * @param {number} totalPages - Общее количество страниц
  * @param {string} baseUrl - Базовый URL для формирования ссылок
+ * @param {function} [onPageChange] - Обработчик изменения страницы (опционально)
  * @return {JSX.Element} Навигационная кнопка
  */
-export const renderNavigationButton = (type, currentPage, totalPages, baseUrl) => {
+export const renderNavigationButton = (type, currentPage, totalPages, baseUrl, onPageChange) => {
   const disabled = isButtonDisabled(type, currentPage, totalPages);
   const href = getButtonHref(type, currentPage, totalPages, baseUrl);
   const text = getButtonText(type);
@@ -72,6 +73,21 @@ export const renderNavigationButton = (type, currentPage, totalPages, baseUrl) =
   let finalClassName = getButtonClassName(type);
   if (disabled) {
     finalClassName = finalClassName + ' disabled';
+  }
+
+  // Если передан onPageChange, используем кнопку с обработчиком
+  if (onPageChange) {
+    const targetPage = type === 'first' ? 1 : type === 'prev' ? currentPage - 1 : type === 'next' ? currentPage + 1 : totalPages;
+    return (
+      <button
+        className={finalClassName}
+        onClick={() => onPageChange(targetPage)}
+        disabled={disabled}
+        style={{ marginLeft: '4px', marginRight: '4px' }}
+      >
+        {text}
+      </button>
+    );
   }
 
   if (disabled) {

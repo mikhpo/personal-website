@@ -9,18 +9,42 @@ import { renderNavigationButton } from '@components/Pagination/utils/paginationR
  * @param {Object} props - Свойства компонента
  * @param {number} props.currentPage - Текущая страница
  * @param {number} props.totalPages - Общее количество страниц
+ * @param {boolean} props.hasNext - Есть ли следующая страница
+ * @param {boolean} props.hasPrevious - Есть ли предыдущая страница
+ * @param {function} props.onPageChange - Обработчик изменения страницы
+ * @param {function} props.onNext - Обработчик перехода на следующую страницу
+ * @param {function} props.onPrevious - Обработчик перехода на предыдущую страницу
  * @param {string} props.baseUrl - Базовый URL для формирования ссылок
  *
  * @return {JSX.Element} Элемент навигационной пагинации
  */
-const NavigationPagination = ({ currentPage, totalPages, baseUrl }) => {
+const NavigationPagination = ({
+  currentPage,
+  totalPages,
+  hasNext,
+  hasPrevious,
+  onPageChange,
+  onNext,
+  onPrevious,
+  baseUrl,
+}) => {
   return (
     <span className="step-links">
       <div>
-        {currentPage > 1 && (
+        {(currentPage > 1 || hasPrevious) && (
           <>
-            {renderNavigationButton('first', currentPage, totalPages, baseUrl)}
-            {renderNavigationButton('prev', currentPage, totalPages, baseUrl)}
+            {renderNavigationButton('first', currentPage, totalPages, baseUrl, onPageChange)}
+            {onPrevious ? (
+              <button
+                className="btn btn-outline-primary btn-sm"
+                onClick={() => onPrevious()}
+                disabled={!hasPrevious}
+              >
+                &laquo; Назад
+              </button>
+            ) : (
+              renderNavigationButton('prev', currentPage, totalPages, baseUrl, onPageChange)
+            )}
           </>
         )}
 
@@ -29,10 +53,20 @@ const NavigationPagination = ({ currentPage, totalPages, baseUrl }) => {
           totalPages={totalPages}
         />
 
-        {currentPage < totalPages && (
+        {(currentPage < totalPages || hasNext) && (
           <>
-            {renderNavigationButton('next', currentPage, totalPages, baseUrl)}
-            {renderNavigationButton('last', currentPage, totalPages, baseUrl)}
+            {onNext ? (
+              <button
+                className="btn btn-outline-primary btn-sm"
+                onClick={() => onNext()}
+                disabled={!hasNext}
+              >
+                Вперед &raquo;
+              </button>
+            ) : (
+              renderNavigationButton('next', currentPage, totalPages, baseUrl, onPageChange)
+            )}
+            {renderNavigationButton('last', currentPage, totalPages, baseUrl, onPageChange)}
           </>
         )}
       </div>
@@ -43,7 +77,21 @@ const NavigationPagination = ({ currentPage, totalPages, baseUrl }) => {
 NavigationPagination.propTypes = {
   currentPage: PropTypes.number.isRequired,
   totalPages: PropTypes.number.isRequired,
-  baseUrl: PropTypes.string.isRequired,
+  hasNext: PropTypes.bool,
+  hasPrevious: PropTypes.bool,
+  onPageChange: PropTypes.func,
+  onNext: PropTypes.func,
+  onPrevious: PropTypes.func,
+  baseUrl: PropTypes.string,
+};
+
+NavigationPagination.defaultProps = {
+  hasNext: false,
+  hasPrevious: false,
+  onPageChange: undefined,
+  onNext: undefined,
+  onPrevious: undefined,
+  baseUrl: '',
 };
 
 export default NavigationPagination;

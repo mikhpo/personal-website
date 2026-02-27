@@ -47,14 +47,30 @@ class PhotoViewSet(viewsets.ReadOnlyModelViewSet):
     filterset_fields: ClassVar[list] = ["album__slug", "tags__slug", "album"]
     search_fields: ClassVar[list] = ["name", "description", "tags__name"]
     ordering_fields: ClassVar[list] = ["uploaded_at", "name"]
-    ordering: ClassVar[list] = ["uploaded_at"]
 
     def get_queryset(self) -> "QuerySet[Photo]":
-        """Возвращать все фотографии для staff пользователей, только публичные для остальных."""
+        """Возвращать все фотографии для staff пользователей, только публичные для остальных.
+
+        При просмотре всех фотографий - сортировка от новых к старым.
+        При просмотре фотографий в альбоме - сортировка от старых к новым.
+        """
         queryset = Photo.objects.select_related("album").prefetch_related("tags")
         if hasattr(self.request.user, "is_staff") and self.request.user.is_staff:
-            return queryset
-        return queryset.filter(public=True)
+            pass
+        else:
+            queryset = queryset.filter(public=True)
+
+        # Определить сортировку в зависимости от контекста
+        # album__slug используется для фильтрации по слагу альбома
+        album_param = self.request.query_params.get('album__slug')
+        if album_param:
+            # При просмотре альбома - сортировка от старых к новым
+            queryset = queryset.order_by('uploaded_at')
+        else:
+            # При просмотре всех фотографий - сортировка от новых к старым
+            queryset = queryset.order_by('-uploaded_at')
+
+        return queryset
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):

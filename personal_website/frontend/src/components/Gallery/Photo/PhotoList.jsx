@@ -5,6 +5,7 @@ import PhotoCard from '@components/Gallery/Photo/PhotoCard';
 import SpinnerComponent from '@components/Spinner/Spinner';
 import AlertList from '@components/Alert/AlertList';
 import { Button } from 'react-bootstrap';
+import Pagination from '@components/Pagination/Pagination';
 
 /**
  * Компонент списка фотографий галереи.
@@ -12,6 +13,7 @@ import { Button } from 'react-bootstrap';
  * Загружает и отображает список фотографий из API галереи.
  * Обрабатывает состояния загрузки, ошибки и пустого списка.
  * Предоставляет возможность повторной попытки загрузки при ошибке.
+ * Поддерживает пагинацию для навигации по большому количеству фотографий.
  *
  * @component
  * @param {Object} props - Пропсы компонента
@@ -46,6 +48,33 @@ const PhotoList = ({ apiUrl = '/api/gallery/photos/' }) => {
   const [error, setError] = useState(null);
 
   /**
+   * Состояние данных пагинации
+   * @type {[Object, function]}
+   */
+  const [pagination, setPagination] = useState({
+    count: 0,
+    next: null,
+    previous: null,
+    currentPage: 1,
+    totalPages: 0,
+  });
+
+  /**
+   * Загрузить данные по указанному URL
+   * @async
+   * @function fetchUrl
+   * @param {string} url - URL для запроса
+   * @return {Promise<Object>} Данные из API
+   */
+  const fetchUrl = async (url) => {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Ошибка загрузки: ${response.status}`);
+    }
+    return await response.json();
+  };
+
+  /**
    * Эффект для загрузки фотографий при монтировании компонента или изменении apiUrl
    * Выполняет запрос к API и обновляет состояние компонента
    */
@@ -61,13 +90,19 @@ const PhotoList = ({ apiUrl = '/api/gallery/photos/' }) => {
       setError(null);
 
       try {
-        const response = await fetch(apiUrl);
-        if (!response.ok) {
-          throw new Error(`Ошибка загрузки: ${response.status}`);
-        }
-        const data = await response.json();
+        const data = await fetchUrl(apiUrl);
         const photosList = data.results || data;
         setPhotos(Array.isArray(photosList) ? photosList : []);
+        
+        // Обновить данные пагинации
+        const totalPages = data.count ? Math.ceil(data.count / photosList.length) : 0;
+        setPagination({
+          count: data.count || 0,
+          next: data.next,
+          previous: data.previous,
+          currentPage: 1,
+          totalPages: totalPages,
+        });
       } catch (err) {
         setError(err.message);
       } finally {
@@ -77,6 +112,122 @@ const PhotoList = ({ apiUrl = '/api/gallery/photos/' }) => {
 
     loadPhotos();
   }, [apiUrl]);
+
+  /**
+   * Обработчик изменения страницы пагинации
+   * @async
+   * @function handlePageChange
+   * @param {number} page - Номер страницы для перехода
+   * @return {Promise<void>}
+   */
+  const handlePageChange = async (page) => {
+    if (page < 1 || !pagination.totalPages || page > pagination.totalPages) {
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Построить URL с параметром страницы
+      const url = new URL(apiUrl, window.location.origin);
+      url.searchParams.set('page', page);
+      
+      const data = await fetchUrl(url.toString());
+      const photosList = data.results || data;
+      setPhotos(Array.isArray(photosList) ? photosList : []);
+      
+      // Обновить данные пагинации
+      setPagination({
+        count: data.count || 0,
+        next: data.next,
+        previous: data.previous,
+        currentPage: page,
+        totalPages: pagination.totalPages,
+      });
+      
+      // Прокрутить страницу вверх
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
+   * Обработчик перехода на следующую страницу
+   * @async
+   * @function handleNext
+   * @return {Promise<void>}
+   */
+  const handleNext = async () => {
+    if (pagination.next) {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const data = await fetchUrl(pagination.next);
+        const photosList = data.results || data;
+        setPhotos(Array.isArray(photosList) ? photosList : []);
+        
+        // Вычислить текущую страницу из URL
+        const url = new URL(pagination.next);
+        const page = parseInt(url.searchParams.get('page') || '1', 10);
+        
+        setPagination({
+          count: data.count || 0,
+          next: data.next,
+          previous: data.previous,
+          currentPage: page,
+          totalPages: pagination.totalPages,
+        });
+        
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  /**
+   * Обработчик перехода на предыдущую страницу
+   * @async
+   * @function handlePrevious
+   * @return {Promise<void>}
+   */
+  const handlePrevious = async () => {
+    if (pagination.previous) {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const data = await fetchUrl(pagination.previous);
+        const photosList = data.results || data;
+        setPhotos(Array.isArray(photosList) ? photosList : []);
+        
+        // Вычислить текущую страницу из URL
+        const url = new URL(pagination.previous);
+        const page = parseInt(url.searchParams.get('page') || '1', 10);
+        
+        setPagination({
+          count: data.count || 0,
+          next: data.next,
+          previous: data.previous,
+          currentPage: page,
+          totalPages: pagination.totalPages,
+        });
+        
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
 
   /**
    * Обработчик повторной попытки загрузки данных
@@ -96,13 +247,18 @@ const PhotoList = ({ apiUrl = '/api/gallery/photos/' }) => {
       setError(null);
 
       try {
-        const response = await fetch(apiUrl);
-        if (!response.ok) {
-          throw new Error(`Ошибка загрузки: ${response.status}`);
-        }
-        const data = await response.json();
+        const data = await fetchUrl(apiUrl);
         const photosList = data.results || data;
         setPhotos(Array.isArray(photosList) ? photosList : []);
+        
+        const totalPages = data.count ? Math.ceil(data.count / photosList.length) : 0;
+        setPagination({
+          count: data.count || 0,
+          next: data.next,
+          previous: data.previous,
+          currentPage: 1,
+          totalPages: totalPages,
+        });
       } catch (err) {
         setError(err.message);
       } finally {
@@ -146,7 +302,7 @@ const PhotoList = ({ apiUrl = '/api/gallery/photos/' }) => {
     return <AlertList messages={[{ message: "Нет доступных фотографий", level: "info" }]} />;
   }
 
-  // Отображение списка фотографий
+  // Отображение списка фотографий с пагинацией
   return (
     <Container>
       <Row xs={1} md={4} className="g-4 justify-content-center">
@@ -156,6 +312,15 @@ const PhotoList = ({ apiUrl = '/api/gallery/photos/' }) => {
           </Col>
         ))}
       </Row>
+      <Pagination
+        currentPage={pagination.currentPage}
+        totalPages={pagination.totalPages}
+        hasNext={!!pagination.next}
+        hasPrevious={!!pagination.previous}
+        onPageChange={handlePageChange}
+        onNext={handleNext}
+        onPrevious={handlePrevious}
+      />
     </Container>
   );
 };
