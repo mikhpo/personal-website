@@ -19,7 +19,8 @@ const useAlbumPhotos = (albumId, apiUrl = '/api/gallery/albums/') => {
   const [error, setError] = useState(null);
 
   const fetchAlbumPhotos = () => {
-    if (albumId === null || albumId === undefined) {
+    // Проверяем, что albumId существует и это число
+    if (albumId === null || albumId === undefined || albumId === '') {
       setPhotos([]);
       setLoading(false);
       setError(null);

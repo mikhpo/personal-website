@@ -96,8 +96,7 @@ class PhotoDetailView(DetailView):
     model = Photo
     template_name = "gallery/photo_detail.html"
     context_object_name = "photo"
-    slug_field = "slug"
-    slug_url_kwarg = "slug"
+    pk_url_kwarg = "pk"
 
     def get_queryset(self) -> "QuerySet[Photo]":
         """Возвращать только публичные фотографии для обычных пользователей."""
@@ -112,8 +111,13 @@ class TagDetailView(DetailView):
     model = Tag
     template_name = "gallery/tag_detail.html"
     context_object_name = "tag"
-    slug_field = "slug"
-    slug_url_kwarg = "slug"
+    pk_url_kwarg = "pk"
+
+    def get_context_data(self, **kwargs) -> dict[str, Any]:
+        """Добавить все тэги в контекст ответа."""
+        context = super().get_context_data(**kwargs)
+        context["tags"] = Tag.objects.all()
+        return context
 
 
 @method_decorator(staff_member_required, "dispatch")

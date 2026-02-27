@@ -13,13 +13,13 @@ import PropTypes from 'prop-types';
  * @param {Object} props - Пропсы компонента
  * @param {Object} props.photo - Объект фотографии
  * @param {number} props.photo.id - ID фотографии
+ * @param {number} props.photo.pk - Первичный ключ фотографии для URL
  * @param {string} props.photo.name - Название фотографии
- * @param {string} props.photo.slug - Слаг фотографии для URL
  * @param {string} [props.photo.thumbnail_url] - URL миниатюры
  * @return {JSX.Element} Карточка фотографии с миниатюрой
  */
 const PhotoCardComponent = ({ photo }) => {
-  const photoUrl = `/gallery/photo/${photo.slug}/`;
+  const photoUrl = `/gallery/photo/${photo.id}/`;
 
   return (
     <a href={photoUrl} className="text-decoration-none">
@@ -40,8 +40,8 @@ const PhotoCardComponent = ({ photo }) => {
 PhotoCardComponent.propTypes = {
   photo: PropTypes.shape({
     id: PropTypes.number.isRequired,
+    pk: PropTypes.number.isRequired,
     name: PropTypes.string.isRequired,
-    slug: PropTypes.string.isRequired,
     thumbnail_url: PropTypes.string,
   }).isRequired,
 };

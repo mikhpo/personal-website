@@ -52,8 +52,8 @@ class Tag(models.Model):
         super().save(*args, **kwargs)
 
     def get_absolute_url(self) -> str:
-        """Абсолютная ссылка на тэг определяется по слагу тэга."""
-        return reverse("gallery:tag-detail", kwargs={"slug": self.slug})
+        """Абсолютная ссылка на тэг определяется по первичному ключу тэга."""
+        return reverse("gallery:tag-detail", kwargs={"pk": self.pk})
 
 
 class Album(models.Model):
@@ -216,8 +216,8 @@ class Photo(models.Model):
         super().save(*args, **kwargs)
 
     def get_absolute_url(self) -> str:
-        """Абсолютная ссылка на фотографию определяется слагом фотографии."""
-        return reverse("gallery:photo-detail", kwargs={"slug": self.slug})
+        """Абсолютная ссылка на фотографию определяется первичным ключом фотографии."""
+        return reverse("gallery:photo-detail", kwargs={"pk": self.pk})
 
     @cached_property
     def exif(self) -> dict:

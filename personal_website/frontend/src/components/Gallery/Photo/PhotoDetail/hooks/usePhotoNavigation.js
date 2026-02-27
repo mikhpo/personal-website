@@ -13,7 +13,7 @@
  */
 const usePhotoNavigation = (photo, albumPhotos) => {
   // Если нет фотографии или списка фотографий, возвращаем null для обеих
-  if (!photo || !albumPhotos || albumPhotos.length === 0) {
+  if (!photo || !albumPhotos || !Array.isArray(albumPhotos) || albumPhotos.length === 0) {
     return {
       previousPhoto: null,
       nextPhoto: null
@@ -34,8 +34,8 @@ const usePhotoNavigation = (photo, albumPhotos) => {
   // Сортируем фотографии по дате съемки (от ранних к поздним)
   const sortedPhotos = [...albumPhotos].sort((a, b) => getSortKey(a) - getSortKey(b));
 
-  // Находим индекс текущей фотографии
-  const currentIndex = sortedPhotos.findIndex(p => p.id === photo.id);
+  // Находим индекс текущей фотографии (используем pk для совместимости)
+  const currentIndex = sortedPhotos.findIndex(p => (p.pk || p.id) === (photo.pk || photo.id));
 
   // Если фотография не найдена в списке, возвращаем null для обеих
   if (currentIndex === -1) {

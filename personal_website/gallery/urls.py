@@ -30,6 +30,6 @@ urlpatterns = [
     path("photos/", PhotoListView.as_view(), name="photo-list"),
     path("upload/", UploadFormView.as_view(), name="upload"),
     path("album/<int:pk>/", AlbumDetailView.as_view(), name="album-detail"),
-    path("photo/<slug:slug>/", PhotoDetailView.as_view(), name="photo-detail"),
-    path("tag/<slug:slug>/", TagDetailView.as_view(), name="tag-detail"),
+    path("photo/<int:pk>/", PhotoDetailView.as_view(), name="photo-detail"),
+    path("tag/<int:pk>/", TagDetailView.as_view(), name="tag-detail"),
 ]

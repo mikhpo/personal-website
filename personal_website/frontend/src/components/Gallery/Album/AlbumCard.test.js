@@ -62,7 +62,7 @@ describe('AlbumCard', () => {
     render(<AlbumCard album={fullAlbum} />);
     const links = screen.getAllByRole('link');
     links.forEach(link => {
-      expect(link).toHaveAttribute('href', '/gallery/album/test-album/');
+      expect(link).toHaveAttribute('href', '/gallery/album/1/');
     });
   });
 

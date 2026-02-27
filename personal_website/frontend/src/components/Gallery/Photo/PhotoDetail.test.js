@@ -60,21 +60,21 @@ describe('PhotoDetail', () => {
   });
 
   test('отображает изображение фотографии', () => {
-    render(<PhotoDetail photoSlug="test-photo" />);
+    render(<PhotoDetail photoId={2} />);
     const image = screen.getByAltText('Тестовое фото');
     expect(image).toBeInTheDocument();
     expect(image).toHaveAttribute('src', '/media/photo.jpg');
   });
 
   test('отображает кнопки навигации', () => {
-    render(<PhotoDetail photoSlug="test-photo" />);
+    render(<PhotoDetail photoId={2} />);
     expect(screen.getByText('<')).toBeInTheDocument();
     expect(screen.getByText('>')).toBeInTheDocument();
     expect(screen.getByText('О фото')).toBeInTheDocument();
   });
 
   test('отображает кнопку "О фото" для открытия EXIF модального окна', () => {
-    render(<PhotoDetail photoSlug="test-photo" />);
+    render(<PhotoDetail photoId={2} />);
     expect(screen.getByText('О фото')).toBeInTheDocument();
   });
 
@@ -84,7 +84,7 @@ describe('PhotoDetail', () => {
       loading: true,
       error: null,
     });
-    render(<PhotoDetail photoSlug="test-photo" />);
+    render(<PhotoDetail photoId={2} />);
     expect(screen.getByText('Загрузка фотографии...')).toBeInTheDocument();
   });
 
@@ -94,7 +94,7 @@ describe('PhotoDetail', () => {
       loading: false,
       error: 'Ошибка загрузки фото: 404',
     });
-    render(<PhotoDetail photoSlug="test-photo" />);
+    render(<PhotoDetail photoId={2} />);
     expect(screen.getByText('Ошибка загрузки фото: 404')).toBeInTheDocument();
   });
 
@@ -104,7 +104,7 @@ describe('PhotoDetail', () => {
       loading: false,
       error: null,
     });
-    render(<PhotoDetail photoSlug="test-photo" />);
+    render(<PhotoDetail photoId={2} />);
     expect(screen.getByText('Фотография не найдена')).toBeInTheDocument();
   });
 
@@ -113,7 +113,7 @@ describe('PhotoDetail', () => {
       previousPhoto: null,
       nextPhoto: mockNextPhoto,
     });
-    render(<PhotoDetail photoSlug="test-photo" />);
+    render(<PhotoDetail photoId={2} />);
     expect(screen.queryByText('<')).not.toBeInTheDocument();
   });
 
@@ -122,25 +122,25 @@ describe('PhotoDetail', () => {
       previousPhoto: mockPreviousPhoto,
       nextPhoto: null,
     });
-    render(<PhotoDetail photoSlug="test-photo" />);
+    render(<PhotoDetail photoId={2} />);
     expect(screen.queryByText('>')).not.toBeInTheDocument();
   });
 
   test('ссылка на предыдущую фотографию имеет правильный href', () => {
-    render(<PhotoDetail photoSlug="test-photo" />);
+    render(<PhotoDetail photoId={2} />);
     const prevLink = screen.getByText('<');
-    expect(prevLink).toHaveAttribute('href', '/gallery/photo/photo-1/');
+    expect(prevLink).toHaveAttribute('href', '/gallery/photo/1/');
   });
 
   test('ссылка на следующую фотографию имеет правильный href', () => {
-    render(<PhotoDetail photoSlug="test-photo" />);
+    render(<PhotoDetail photoId={2} />);
     const nextLink = screen.getByText('>');
-    expect(nextLink).toHaveAttribute('href', '/gallery/photo/photo-3/');
+    expect(nextLink).toHaveAttribute('href', '/gallery/photo/3/');
   });
 
   test('открывает модальное окно EXIF при нажатии на кнопку "О фото"', async () => {
     const user = userEvent.setup();
-    render(<PhotoDetail photoSlug="test-photo" />);
+    render(<PhotoDetail photoId={2} />);
     
     const exifButton = screen.getByText('О фото');
     await user.click(exifButton);
@@ -152,7 +152,7 @@ describe('PhotoDetail', () => {
 
   test('закрывает модальное окно EXIF при нажатии на кнопку закрытия', async () => {
     const user = userEvent.setup();
-    render(<PhotoDetail photoSlug="test-photo" />);
+    render(<PhotoDetail photoId={2} />);
     
     const exifButton = screen.getByText('О фото');
     await user.click(exifButton);
@@ -169,7 +169,7 @@ describe('PhotoDetail', () => {
       loading: false,
       error: null,
     });
-    render(<PhotoDetail photoSlug="test-photo" />);
+    render(<PhotoDetail photoId={2} />);
     expect(screen.queryByRole('img')).not.toBeInTheDocument();
   });
 });

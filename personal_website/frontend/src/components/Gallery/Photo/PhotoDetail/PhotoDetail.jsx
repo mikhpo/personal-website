@@ -13,13 +13,13 @@ import usePhotoNavigation from '@components/Gallery/Photo/PhotoDetail/hooks/useP
  * Соответствует старой Django реализации.
  *
  * @param {Object} props - Пропсы компонента
- * @param {string} props.photoSlug - Слаг фотографии
+ * @param {number} props.photoId - ID фотографии
  * @param {string} [props.apiUrl] - Базовый URL API
  * @return {JSX.Element} Компонент детального просмотра фотографии
  */
-const PhotoDetail = ({ photoSlug, apiUrl = '/api/gallery/photos/' }) => {
-  const { photo, loading, error } = usePhotoData(photoSlug, apiUrl);
-  const { photos: albumPhotos } = useAlbumPhotos(photo?.album, apiUrl);
+const PhotoDetail = ({ photoId, apiUrl = '/api/gallery/photos/' }) => {
+  const { photo, loading, error } = usePhotoData(photoId, apiUrl);
+  const { photos: albumPhotos } = useAlbumPhotos(photo?.album, '/api/gallery/albums/');
   const { previousPhoto, nextPhoto } = usePhotoNavigation(photo, albumPhotos);
   
   const [showExifModal, setShowExifModal] = useState(false);
@@ -63,11 +63,11 @@ const PhotoDetail = ({ photoSlug, apiUrl = '/api/gallery/photos/' }) => {
           <div className="btn-group" role="group" aria-label="Photo navigation buttons">
             {previousPhoto && (
               <a
-                href={`/gallery/photo/${previousPhoto.slug}/`}
+                href={`/gallery/photo/${previousPhoto.id}/`}
                 className="btn btn-outline-dark"
                 id="previous-photo-link"
               >
-                &lt;
+                {"<"}
               </a>
             )}
             <Button
@@ -78,11 +78,11 @@ const PhotoDetail = ({ photoSlug, apiUrl = '/api/gallery/photos/' }) => {
             </Button>
             {nextPhoto && (
               <a
-                href={`/gallery/photo/${nextPhoto.slug}/`}
+                href={`/gallery/photo/${nextPhoto.id}/`}
                 className="btn btn-outline-dark"
                 id="next-photo-link"
               >
-                &gt;
+                {">"}
               </a>
             )}
           </div>
@@ -107,7 +107,7 @@ const PhotoDetail = ({ photoSlug, apiUrl = '/api/gallery/photos/' }) => {
 };
 
 PhotoDetail.propTypes = {
-  photoSlug: PropTypes.string.isRequired,
+  photoId: PropTypes.number.isRequired,
   apiUrl: PropTypes.string,
 };
 

@@ -42,7 +42,7 @@ class PhotoViewSet(viewsets.ReadOnlyModelViewSet):
 
     serializer_class = PhotoSerializer
     permission_classes: ClassVar[list] = [IsPublicOrAuthor]
-    lookup_field = "slug"
+    lookup_field = "pk"
     filter_backends: ClassVar[list] = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields: ClassVar[list] = ["tags__slug"]
     search_fields: ClassVar[list] = ["name", "description", "tags__name"]
@@ -63,7 +63,7 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     permission_classes: ClassVar[list] = [IsAuthenticatedOrReadOnly]
-    lookup_field = "slug"
+    lookup_field = "pk"
     filter_backends: ClassVar[list] = [filters.SearchFilter, filters.OrderingFilter]
     search_fields: ClassVar[list] = ["name"]
     ordering_fields: ClassVar[list] = ["name"]
