@@ -2,11 +2,10 @@
  * Хук для вычисления навигации между фотографиями в альбоме.
  *
  * Вычисляет предыдущую и следующую фотографии на основе текущей фотографии
- * и списка фотографий альбома, отсортированных по дате съемки.
- * Если дата съемки недоступна, используется дата загрузки как запасной вариант.
+ * и списка фотографий альбома в порядке API.
  *
  * @param {Object|null} photo - Текущая фотография
- * @param {Array} albumPhotos - Массив фотографий альбома
+ * @param {Array} albumPhotos - Массив фотографий альбома (в порядке API)
  * @return {Object} Объект с предыдущей и следующей фотографиями
  * @property {Object|null} previousPhoto - Предыдущая фотография или null
  * @property {Object|null} nextPhoto - Следующая фотография или null
@@ -20,22 +19,10 @@ const usePhotoNavigation = (photo, albumPhotos) => {
     };
   }
 
-  /**
-   * Получить значение для сортировки: предпочитаем datetime_taken, иначе uploaded_at.
-   *
-   * @param {Object} p - Объект фотографии
-   * @return {number} Метка времени в миллисекундах
-   */
-  const getSortKey = (p) => {
-    const dateStr = p.datetime_taken || p.uploaded_at;
-    return dateStr ? new Date(dateStr).getTime() : 0;
-  };
-
-  // Сортируем фотографии по дате съемки (от ранних к поздним)
-  const sortedPhotos = [...albumPhotos].sort((a, b) => getSortKey(a) - getSortKey(b));
-
-  // Находим индекс текущей фотографии (используем pk для совместимости)
-  const currentIndex = sortedPhotos.findIndex(p => (p.pk || p.id) === (photo.pk || photo.id));
+  // Находим индекс текущей фотографии по ID
+  const currentIndex = albumPhotos.findIndex(function(p) {
+    return p.id === photo.id;
+  });
 
   // Если фотография не найдена в списке, возвращаем null для обеих
   if (currentIndex === -1) {
@@ -45,13 +32,21 @@ const usePhotoNavigation = (photo, albumPhotos) => {
     };
   }
 
-  // Вычисляем предыдущую и следующую фотографии
-  const previousPhoto = currentIndex > 0 ? sortedPhotos[currentIndex - 1] : null;
-  const nextPhoto = currentIndex < sortedPhotos.length - 1 ? sortedPhotos[currentIndex + 1] : null;
+  // Вычисляем предыдущую фотографию
+  let previousPhoto = null;
+  if (currentIndex > 0) {
+    previousPhoto = albumPhotos[currentIndex - 1];
+  }
+
+  // Вычисляем следующую фотографию
+  let nextPhoto = null;
+  if (currentIndex < albumPhotos.length - 1) {
+    nextPhoto = albumPhotos[currentIndex + 1];
+  }
 
   return {
-    previousPhoto,
-    nextPhoto
+    previousPhoto: previousPhoto,
+    nextPhoto: nextPhoto
   };
 };
 

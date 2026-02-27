@@ -19,7 +19,8 @@ import usePhotoNavigation from '@components/Gallery/Photo/PhotoDetail/hooks/useP
  */
 const PhotoDetail = ({ photoId, apiUrl = '/api/gallery/photos/' }) => {
   const { photo, loading, error } = usePhotoData(photoId, apiUrl);
-  const { photos: albumPhotos } = useAlbumPhotos(photo?.album, '/api/gallery/albums/');
+  const albumId = typeof photo?.album === 'number' ? photo.album : null;
+  const { photos: albumPhotos, loading: albumLoading } = useAlbumPhotos(albumId, '/api/gallery/albums/');
   const { previousPhoto, nextPhoto } = usePhotoNavigation(photo, albumPhotos);
   
   const [showExifModal, setShowExifModal] = useState(false);
