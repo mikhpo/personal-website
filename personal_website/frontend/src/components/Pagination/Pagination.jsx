@@ -37,7 +37,7 @@ const Pagination = ({
   const PaginationComponent = type === 'numbers' ? NumbersPagination : NavigationPagination;
 
   return (
-    <div className="container">
+    <div className="container mt-4">
       <div className="pagination">
         <PaginationComponent
           currentPage={currentPage}
@@ -50,7 +50,6 @@ const Pagination = ({
           baseUrl={baseUrl}
         />
       </div>
-      <br />
     </div>
   );
 };
