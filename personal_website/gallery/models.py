@@ -312,14 +312,20 @@ class Photo(models.Model):
 
     @cached_property
     def datetime_taken(self) -> datetime:
-        """Получить время съемки фотографии из EXIF или использовать время создания файла."""
+        """Получить время съемки фотографии из EXIF или использовать время создания файла.
+
+        EXIF данные DateTimeOriginal не содержат информацию о часовом поясе.
+        Для корректной сортировки фотографий все datetime объекты должны быть
+        одного типа. Используем naive datetime (без часового пояса), поскольку
+        невозможно определить часовой пояс места съемки.
+        """
         # Проверить наличие файла изображения.
         if not self.image.name or not storage.exists(self.image.name):
             return now()
 
         # Получить дату и время последнего изменения файла.
         modified_time = storage.get_modified_time(self.image.name)
-        date_time = modified_time.astimezone(current_timezone)
+        date_time = modified_time.replace(tzinfo=None)
 
         # Если в EXIF отсутствует дата и время съемки,
         # то вернуть дату и время последнего изменения.
