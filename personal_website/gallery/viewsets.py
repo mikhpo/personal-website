@@ -47,7 +47,7 @@ class PhotoViewSet(viewsets.ReadOnlyModelViewSet):
     filterset_fields: ClassVar[list] = ["album__slug", "tags__slug", "album"]
     search_fields: ClassVar[list] = ["name", "description", "tags__name"]
     ordering_fields: ClassVar[list] = ["uploaded_at", "name"]
-    ordering: ClassVar[list] = ["-uploaded_at"]
+    ordering: ClassVar[list] = ["uploaded_at"]
 
     def get_queryset(self) -> "QuerySet[Photo]":
         """Возвращать все фотографии для staff пользователей, только публичные для остальных."""
