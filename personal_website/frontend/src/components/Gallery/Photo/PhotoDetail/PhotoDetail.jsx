@@ -14,14 +14,13 @@ import usePhotoNavigation from '@components/Gallery/Photo/PhotoDetail/hooks/useP
  *
  * @param {Object} props - Пропсы компонента
  * @param {number} props.photoId - ID фотографии
+ * @param {number} [props.previousPhotoId] - ID предыдущей фотографии (опционально)
+ * @param {number} [props.nextPhotoId] - ID следующей фотографии (опционально)
  * @param {string} [props.apiUrl] - Базовый URL API
  * @return {JSX.Element} Компонент детального просмотра фотографии
  */
-const PhotoDetail = ({ photoId, apiUrl = '/api/gallery/photos/' }) => {
+const PhotoDetail = ({ photoId, previousPhotoId, nextPhotoId, apiUrl = '/api/gallery/photos/' }) => {
   const { photo, loading, error } = usePhotoData(photoId, apiUrl);
-  const albumId = typeof photo?.album === 'number' ? photo.album : null;
-  const { photos: albumPhotos, loading: albumLoading } = useAlbumPhotos(albumId, '/api/gallery/albums/');
-  const { previousPhoto, nextPhoto } = usePhotoNavigation(photo, albumPhotos);
   
   const [showExifModal, setShowExifModal] = useState(false);
 
@@ -62,9 +61,9 @@ const PhotoDetail = ({ photoId, apiUrl = '/api/gallery/photos/' }) => {
         )}
         <div className="card-footer" align="center">
           <div className="btn-group" role="group" aria-label="Photo navigation buttons">
-            {previousPhoto && (
+            {previousPhotoId && (
               <a
-                href={`/gallery/photo/${previousPhoto.id}/`}
+                href={`/gallery/photo/${previousPhotoId}/`}
                 className="btn btn-outline-dark"
                 id="previous-photo-link"
               >
@@ -77,9 +76,9 @@ const PhotoDetail = ({ photoId, apiUrl = '/api/gallery/photos/' }) => {
             >
               О фото
             </Button>
-            {nextPhoto && (
+            {nextPhotoId && (
               <a
-                href={`/gallery/photo/${nextPhoto.id}/`}
+                href={`/gallery/photo/${nextPhotoId}/`}
                 className="btn btn-outline-dark"
                 id="next-photo-link"
               >
@@ -109,6 +108,8 @@ const PhotoDetail = ({ photoId, apiUrl = '/api/gallery/photos/' }) => {
 
 PhotoDetail.propTypes = {
   photoId: PropTypes.number.isRequired,
+  previousPhotoId: PropTypes.number,
+  nextPhotoId: PropTypes.number,
   apiUrl: PropTypes.string,
 };
 

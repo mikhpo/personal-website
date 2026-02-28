@@ -79,9 +79,9 @@ class PhotoListView(ListView):
     paginate_by = 40
 
     def get_queryset(self) -> list[Photo]:  # type: ignore[override]
-        """Отсортировать набор фотографий от новых к старым."""
+        """Отсортировать набор фотографий по первичному ключу."""
         photos = Photo.published.all()
-        return sorted(photos, key=lambda photo: photo.datetime_taken, reverse=True)
+        return sorted(photos, key=lambda photo: photo.pk, reverse=True)
 
     def get_context_data(self, **kwargs) -> dict[str, Any]:
         """Добавить в контекст набор всех тэгов фотографии."""
@@ -103,6 +103,28 @@ class PhotoDetailView(DetailView):
         if hasattr(self.request.user, "is_staff") and self.request.user.is_staff:
             return Photo.objects.all()
         return Photo.published.all()
+
+    def get_context_data(self, **kwargs) -> dict[str, Any]:
+        """Добавить ID предыдущей и следующей фотографий в контекст."""
+        context: dict[str, Any] = super().get_context_data(**kwargs)
+        photo: Photo = self.object
+        album: Album = photo.album
+
+        # Получаем все фотографии альбома, отсортированные по первичному ключу
+        # Используем Django ORM для получения предыдущей и следующей фотографий
+        all_photos_qs: QuerySet[Photo] = album.photos.order_by("pk")
+
+        # Получаем фотографии с pk меньше текущего, сортируем по убыванию, берем первую (предыдущую)
+        previous_photo = all_photos_qs.filter(pk__lt=photo.pk).order_by("-pk").first()
+        if previous_photo:
+            context["previous_photo_id"] = previous_photo.pk
+
+        # Получаем фотографии с pk больше текущего, сортируем по возрастанию, берем первую (следующую)
+        next_photo = all_photos_qs.filter(pk__gt=photo.pk).order_by("pk").first()
+        if next_photo:
+            context["next_photo_id"] = next_photo.pk
+
+        return context
 
 
 class TagDetailView(DetailView):
