@@ -10,7 +10,7 @@ from rest_framework.request import Request
 from rest_framework.test import APITestCase
 from rest_framework.views import View
 
-from api.permissions import IsPublicOrAuthor, IsStaffOrReadOnly
+from api.permissions import IsAuthorOrReadOnly, IsPublicOrAuthor, IsStaffOrReadOnly
 
 if TYPE_CHECKING:
     from django.contrib.auth.models import AbstractUser
@@ -50,16 +50,17 @@ class MockModel(Model):
 class TestIsPublicOrAuthor(APITestCase):
     """Тесты для permission IsPublicOrAuthor."""
 
-    def setUp(self) -> None:
+    @classmethod
+    def setUpTestData(cls) -> None:
         """Подготовка тестовых данных."""
-        self.permission = IsPublicOrAuthor()
-        self.user = User.objects.create_user(username="testuser", password="testpass123")
-        self.staff_user = User.objects.create_user(
+        cls.permission = IsPublicOrAuthor()
+        cls.user = User.objects.create_user(username="testuser", password="testpass123")
+        cls.staff_user = User.objects.create_user(
             username="staffuser",
             password="testpass123",
             is_staff=True,
         )
-        self.other_user = User.objects.create_user(username="otheruser", password="testpass123")
+        cls.other_user = User.objects.create_user(username="otheruser", password="testpass123")
 
     def test_has_object_permission_staff_user(self) -> None:
         """Тест разрешения доступа для staff пользователя."""
@@ -147,11 +148,12 @@ class TestIsPublicOrAuthor(APITestCase):
 class TestIsStaffOrReadOnly(APITestCase):
     """Тесты для permission IsStaffOrReadOnly."""
 
-    def setUp(self) -> None:
+    @classmethod
+    def setUpTestData(cls) -> None:
         """Подготовка тестовых данных."""
-        self.permission = IsStaffOrReadOnly()
-        self.user = User.objects.create_user(username="testuser", password="testpass123")
-        self.staff_user = User.objects.create_user(
+        cls.permission = IsStaffOrReadOnly()
+        cls.user = User.objects.create_user(username="testuser", password="testpass123")
+        cls.staff_user = User.objects.create_user(
             username="staffuser",
             password="testpass123",
             is_staff=True,
@@ -180,3 +182,56 @@ class TestIsStaffOrReadOnly(APITestCase):
         request = MockRequest(user=self.staff_user, method="POST")
         view = MockView()
         self.assertTrue(self.permission.has_permission(request, view))
+
+
+class TestIsAuthorOrReadOnly(APITestCase):
+    """Тесты для permission IsAuthorOrReadOnly."""
+
+    @classmethod
+    def setUpTestData(cls) -> None:
+        """Подготовка тестовых данных."""
+        cls.permission = IsAuthorOrReadOnly()
+        cls.user = User.objects.create_user(username="testuser", password="testpass123")
+        cls.other_user = User.objects.create_user(username="otheruser", password="testpass123")
+
+    def test_has_object_permission_safe_methods_author(self) -> None:
+        """Тест разрешения доступа для безопасных методов автору объекта."""
+        request = MockRequest(user=self.user, method="GET")
+        view = MockView()
+        obj = MockModel(author=self.user)
+        self.assertTrue(self.permission.has_object_permission(request, view, obj))
+
+    def test_has_object_permission_safe_methods_non_author(self) -> None:
+        """Тест разрешения доступа для безопасных методов не-автору объекта."""
+        request = MockRequest(user=self.other_user, method="GET")
+        view = MockView()
+        obj = MockModel(author=self.user)
+        self.assertTrue(self.permission.has_object_permission(request, view, obj))
+
+    def test_has_object_permission_update_author(self) -> None:
+        """Тест разрешения доступа для метода PUT автору объекта."""
+        request = MockRequest(user=self.user, method="PUT")
+        view = MockView()
+        obj = MockModel(author=self.user)
+        self.assertTrue(self.permission.has_object_permission(request, view, obj))
+
+    def test_has_object_permission_update_non_author(self) -> None:
+        """Тест запрета доступа для метода PUT не-автору объекта."""
+        request = MockRequest(user=self.other_user, method="PUT")
+        view = MockView()
+        obj = MockModel(author=self.user)
+        self.assertFalse(self.permission.has_object_permission(request, view, obj))
+
+    def test_has_object_permission_delete_author(self) -> None:
+        """Тест разрешения доступа для метода DELETE автору объекта."""
+        request = MockRequest(user=self.user, method="DELETE")
+        view = MockView()
+        obj = MockModel(author=self.user)
+        self.assertTrue(self.permission.has_object_permission(request, view, obj))
+
+    def test_has_object_permission_delete_non_author(self) -> None:
+        """Тест запрета доступа для метода DELETE не-автору объекта."""
+        request = MockRequest(user=self.other_user, method="DELETE")
+        view = MockView()
+        obj = MockModel(author=self.user)
+        self.assertFalse(self.permission.has_object_permission(request, view, obj))

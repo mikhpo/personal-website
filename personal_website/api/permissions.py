@@ -122,3 +122,54 @@ class IsStaffOrReadOnly(permissions.BasePermission):
             return True
         user = request.user
         return bool(isinstance(user, AbstractBaseUser) and user.is_staff)
+
+
+class IsAuthorOrReadOnly(permissions.BasePermission):
+    """
+    Permission класс для объектов с автором.
+
+    Разрешает:
+    - Чтение всем
+    - Модификацию и удаление только автору объекта
+    """
+
+    def has_permission(self, request: Request, view: View) -> bool:  # noqa: ARG002
+        """
+        Проверка прав доступа на уровне view.
+
+        Args:
+            request: HTTP запрос
+            view: View, обрабатывающий запрос
+
+        Returns:
+            True если доступ разрешен, False иначе
+        """
+        # Для операций чтения разрешаем доступ всем
+        if request.method in permissions.SAFE_METHODS:
+            return True
+
+        # Для операций модификации/удаления требуется аутентификация
+        return bool(request.user and request.user.is_authenticated)
+
+    def has_object_permission(self, request: Request, view: View, obj: "Model") -> bool:  # noqa: ARG002
+        """
+        Проверка прав доступа к конкретному объекту.
+
+        Args:
+            request: HTTP запрос
+            view: View, обрабатывающий запрос
+            obj: Объект модели
+
+        Returns:
+            True если доступ разрешен, False иначе
+        """
+        # Для чтения разрешаем доступ всем
+        if request.method in permissions.SAFE_METHODS:
+            return True
+
+        # Для модификации и удаления проверяем авторство
+        if hasattr(obj, "author"):
+            return obj.author == request.user
+
+        # Если у объекта нет автора, запрещаем доступ
+        return False
