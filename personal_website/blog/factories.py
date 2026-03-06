@@ -74,7 +74,7 @@ class ArticleFactory(factory.django.DjangoModelFactory):
 
     title = factory.Faker("sentence")
     description = factory.Faker("paragraph")
-    content = factory.Faker("text")
+    content = factory.LazyAttribute(lambda _: generate_article_content())
     published_at = factory.LazyAttribute(lambda _: now())
     modified_at = factory.LazyAttribute(lambda _: now())
     slug = factory.LazyAttribute(lambda _: None)
@@ -121,6 +121,41 @@ class ArticleFactory(factory.django.DjangoModelFactory):
     def __new__(cls, *args, **kwargs) -> "Article":
         """Возвращается объект Article."""
         return super().__new__(*args, **kwargs)
+
+
+def generate_article_content() -> str:
+    """Генерирует HTML-контент статьи с переменной длиной.
+
+    Возвращает HTML-контент статьи разной длины:
+    - 30% статей: короткий контент (~100 слов)
+    - 50% статей: средний контент (~300 слов)
+    - 20% статей: длинный контент (~500 слов)
+    """
+    # Определяем длину контента (30% короткий, 50% средний, 20% длинный)
+    content_length = fake.random_element([0.1, 0.5, 0.9])
+    short_threshold = 0.3  # 30% для короткого контента
+    medium_threshold = 0.8  # 80% для среднего контента (30% + 50%)
+
+    if content_length < short_threshold:
+        word_count = fake.random_int(80, 120)
+    elif content_length < medium_threshold:
+        word_count = fake.random_int(250, 350)
+    else:
+        word_count = fake.random_int(450, 550)
+
+    # Генерируем HTML-контент из абзацев
+    words = fake.words(nb=word_count)
+    paragraphs = []
+
+    # Разбиваем слова на абзацы по 30-50 слов
+    i = 0
+    while i < len(words):
+        paragraph_length = fake.random_int(30, 50)
+        paragraph_words = words[i : i + paragraph_length]
+        paragraphs.append(f"<p>{' '.join(paragraph_words)}</p>")
+        i += paragraph_length
+
+    return "".join(paragraphs)
 
 
 class CommentFactory(factory.django.DjangoModelFactory):

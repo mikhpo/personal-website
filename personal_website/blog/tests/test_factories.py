@@ -1,11 +1,19 @@
 """Тесты фабрик для генерации экземпляров моделей со случайными данными."""
 
+import re
 from typing import TYPE_CHECKING
 
 from django.contrib.auth.models import User
-from django.test import TestCase
+from django.test import SimpleTestCase, TestCase
 
-from blog.factories import ArticleFactory, CategoryFactory, CommentFactory, SeriesFactory, TopicFactory
+from blog.factories import (
+    ArticleFactory,
+    CategoryFactory,
+    CommentFactory,
+    SeriesFactory,
+    TopicFactory,
+    generate_article_content,
+)
 from blog.models import Article, Category, Comment, Series, Topic
 from gallery.utils import is_image
 
@@ -107,3 +115,29 @@ class TestCommentFactory(TestCase):
         comment = CommentFactory()
         self.assertIsInstance(comment.article, Article)
         self.assertIsInstance(comment.author, User)
+
+
+class TestGenerateArticleContent(SimpleTestCase):
+    """Тесты функции генерации контента статьи."""
+
+    def test_returns_valid_html_string(self) -> None:
+        """Функция возвращает валидную HTML-строку с абзацами."""
+        content = generate_article_content()
+        self.assertIsInstance(content, str)
+        self.assertTrue(content.startswith("<p>"))
+        self.assertTrue(content.endswith("</p>"))
+
+    def test_generates_multiple_paragraphs(self) -> None:
+        """Функция генерирует контент состоящий из нескольких абзацев."""
+        content = generate_article_content()
+        paragraph_count = content.count("<p>")
+        self.assertGreater(paragraph_count, 1)
+
+    def test_generates_minimum_word_count(self) -> None:
+        """Функция генерирует контент с минимальным количеством слов (не менее 80)."""
+        content = generate_article_content()
+
+        # Удаляем все HTML-теги из контента, оставляя только текст
+        text_only = re.sub(r"<[^>]+>", "", content)
+        word_count = len(text_only.split())
+        self.assertGreaterEqual(word_count, 80)
