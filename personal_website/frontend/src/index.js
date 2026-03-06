@@ -5,6 +5,14 @@ import { createRoot } from 'react-dom/client';
 import Alert from '@components/Alert/AlertDetail';
 import AlertList from '@components/Alert/AlertList';
 
+// Импорт Blog компонентов
+import ArticleCard from '@components/Blog/Article/ArticleCard';
+import ArticleList from '@components/Blog/Article/ArticleList';
+import Comment from '@components/Blog/Comment/Comment';
+import CommentList from '@components/Blog/Comment/CommentList';
+import CommentForm from '@components/Blog/Comment/CommentForm';
+import ArticleDetail from '@components/Blog/Article/ArticleDetail';
+
 // Импорт Gallery компонентов
 import AlbumCard from '@components/Gallery/Album/AlbumCard';
 import AlbumList from '@components/Gallery/Album/AlbumList';
@@ -26,11 +34,19 @@ import PhotoUploadForm from '@components/Gallery/Upload/PhotoUploadForm';
  * Содержит все предзагруженные компоненты для быстрого доступа
  */
 const componentRegistry = {
-  // Alert components
+  // Компоненты алертов
   'Alert/Alert': Alert,
   'Alert/AlertList': AlertList,
   
-  // Gallery components
+  // Компоненты блога
+  'Blog/ArticleCard': ArticleCard,
+  'Blog/ArticleList': ArticleList,
+  'Blog/Comment': Comment,
+  'Blog/CommentList': CommentList,
+  'Blog/CommentForm': CommentForm,
+  'Blog/ArticleDetail': ArticleDetail,
+  
+  // Компоненты галереи
   'Gallery/AlbumCard': AlbumCard,
   'Gallery/AlbumList': AlbumList,
   'Gallery/PhotoDetail': PhotoDetail,
