@@ -1,109 +1,49 @@
 """Представления блога."""
 
 import logging
-from typing import Any
 
-from django.conf import settings
-from django.core.paginator import Page, Paginator
-from django.db.models import QuerySet
 from django.http import HttpRequest, HttpResponse
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, render
 from django.views.generic.detail import DetailView
 
-from blog.forms import NewCommentForm
-from blog.models import Article, Category, Comment, Series, Topic
-from main.utils import get_pagination_data
+from blog.models import Article, Category, Series, Topic
 
-logger = logging.getLogger(settings.PROJECT_NAME)
+logger = logging.getLogger(__name__)
 
 
 class ArticleDetailView(DetailView):
-    """
-    Представление одной статьи, в котором отображается статья,
-    детали (дата создания, дата редактирования) и комментарии.
-    """
+    """Представление одной статьи — рендерит React компонент ArticleDetail."""
 
     model = Article
 
-    def get_context_data(self, **kwargs) -> dict[str, Any]:
-        """В контекст ответа добавляются комментарии к статье и форма создания комментария."""
-        data = super().get_context_data(**kwargs)
-
-        # Добавляются комментарии к статье, отсортированные в порядке от старых к новым.
-        comments_connected = Comment.objects.filter(article=self.get_object())
-        data["comments"] = comments_connected
-
-        # Если пользователь авторизован, то появляется форма добавления комментария.
-        if self.request.user.is_authenticated:
-            data["comment_form"] = NewCommentForm(instance=self.request.user)
-
-        return data
-
-    def post(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
-        """Функция для добавления комментариев к статьям."""
-        new_comment = Comment(
-            content=request.POST.get("content"),
-            author=self.request.user,
-            article=self.get_object(),
-        )
-        new_comment.save()
-        user = self.request.user
-        article = self.get_object()
-        logger.info(f"Пользователь {user} оставил комментарий к статье {article}")
-        return self.get(request, *args, **kwargs)
-
-
-def paginate(request: HttpRequest, objects: QuerySet) -> Page:
-    """Фукнция для разбивки отображения списка объектов по страницам."""
-    paginator = Paginator(object_list=objects, per_page=5)
-    page_number = request.GET.get("page")
-    return paginator.get_page(page_number)
+    def get_context_data(self, **kwargs) -> dict:
+        """В контекст добавляется статья и URL для входа."""
+        context = super().get_context_data(**kwargs)
+        context["login_url"] = f"/accounts/login/?next={self.request.path}"
+        return context
 
 
 def blog(request: HttpRequest) -> HttpResponse:
     """
     Функция, определяющая порядок отображения статей на главной странице блога.
-    Добавлена разбивка по страницам. Здесь указано количество статей на страницу.
     Отображаются только те статьи, для которых не была установлена невидимость (черновики).
     """
-    content = Article.published.all()
-    page_obj = paginate(request, content)
-    context: dict[str, object] = {"page_obj": page_obj}
-    if pagination_data := get_pagination_data(request, page_obj):
-        context["pagination_data"] = pagination_data
-    return render(request, "blog/article_list.html", context)
+    return render(request, "blog/article_list.html", {})
 
 
 def category(request: HttpRequest, slug: str) -> HttpResponse:
-    """Вывод всех статей, соответствующих определенной категории."""
-    category = Category.objects.get(slug=slug)
-    articles = category.article_set.filter(public=True)
-    page_obj = paginate(request, articles)
-    context: dict[str, object] = {"page_obj": page_obj}
-    if pagination_data := get_pagination_data(request, page_obj):
-        context["pagination_data"] = pagination_data
-    return render(request, "blog/article_list.html", context)
+    """Вывод страницы категории с React компонентом фильтрации."""
+    category_obj = get_object_or_404(Category, slug=slug)
+    return render(request, "blog/category_detail.html", {"category": category_obj})
 
 
 def series(request: HttpRequest, slug: str) -> HttpResponse:
-    """Вывод всех статей, соответствующих определенной серии."""
-    series = Series.objects.get(slug=slug)
-    articles = series.article_set.filter(public=True)
-    page_obj = paginate(request, articles)
-    pagination_data = get_pagination_data(request, page_obj)
-    context: dict[str, object] = {"page_obj": page_obj}
-    if pagination_data := get_pagination_data(request, page_obj):
-        context["pagination_data"] = pagination_data
-    return render(request, "blog/article_list.html", context)
+    """Вывод страницы серии с React компонентом фильтрации."""
+    series_obj = get_object_or_404(Series, slug=slug)
+    return render(request, "blog/series_detail.html", {"series": series_obj})
 
 
 def topic(request: HttpRequest, slug: str) -> HttpResponse:
-    """Вывод всех статей, соответствующих определенной теме."""
-    topic = Topic.objects.get(slug=slug)
-    articles = topic.article_set.filter(public=True)
-    page_obj = paginate(request, articles)
-    pagination_data = get_pagination_data(request, page_obj)
-    context: dict[str, object] = {"page_obj": page_obj}
-    if pagination_data := get_pagination_data(request, page_obj):
-        context["pagination_data"] = pagination_data
-    return render(request, "blog/article_list.html", context)
+    """Вывод страницы темы с React компонентом фильтрации."""
+    topic_obj = get_object_or_404(Topic, slug=slug)
+    return render(request, "blog/topic_detail.html", {"topic": topic_obj})

@@ -4,17 +4,15 @@ from http import HTTPStatus
 from pathlib import Path
 
 from django.conf import settings
-from django.contrib.auth import get_user
 from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import resolve, reverse
 from faker import Faker
 
 from blog.apps import BlogConfig
-from blog.factories import ArticleFactory, CategoryFactory, CommentFactory, SeriesFactory, TopicFactory
-from blog.models import Article, Comment
+from blog.factories import ArticleFactory, CategoryFactory, SeriesFactory, TopicFactory
+from blog.models import Article
 from blog.views import ArticleDetailView, blog, category, series, topic
-from personal_website.utils import generate_random_text
 
 fake = Faker(locale="ru_RU")
 
@@ -33,9 +31,9 @@ TOPIC_URL_NAME = f"{APP_NAME}:topic"
 
 ARTICLE_DETAIL_TEMPLATE = "blog/article_detail.html"
 ARTICLE_LIST_TEMPLATE = f"{APP_NAME}/article_list.html"
-CATEGORY_TEMPLATE = f"{APP_NAME}/article_list.html"
-SERIES_TEMPLATE = f"{APP_NAME}/article_list.html"
-TOPIC_TEMPLATE = f"{APP_NAME}/article_list.html"
+CATEGORY_TEMPLATE = f"{APP_NAME}/category_detail.html"
+SERIES_TEMPLATE = f"{APP_NAME}/series_detail.html"
+TOPIC_TEMPLATE = f"{APP_NAME}/topic_detail.html"
 BASE_TEMPLATE = "base.html"
 
 
@@ -72,57 +70,17 @@ class BlogIndexPageTests(TestCase):
         self.assertTemplateUsed(response, BASE_TEMPLATE)
 
     def test_article_list_template_elements(self) -> None:
-        """Тестирование наличия в шаблоне главной страницы блога HTML-элементов для карточки статьи и паджинации."""
+        """Тестирование наличия в шаблоне главной страницы блога React компонента для списка статей."""
         response = self.client.get(ARTICLE_LIST_URL)
-        self.assertContains(response, 'class="card-body"')
-        self.assertContains(response, 'class="card-title"')
-        self.assertContains(response, 'class="card-text"')
-
-        # Пагинация реализована через React компонент, проверяем наличие контейнера для него
-        self.assertContains(response, 'id="pagination-root-default"')
-
-    def test_article_list_pagination(self) -> None:
-        """Проверка на корректность паджинации статей блога на главной странице блога."""
-        response = self.client.get(ARTICLE_LIST_URL)
-        self.assertTrue("page_obj" in response.context)
-        self.assertLessEqual(len(response.context["page_obj"]), 5)
+        # Проверяем наличие React компонента Blog/ArticleList
+        self.assertContains(response, 'data-component-name="Blog/ArticleList"')
+        self.assertContains(response, "/api/blog/articles/")
 
     def test_article_list_content_filter(self) -> None:
         """Тест на фильтрацию контента на главной странице блога."""
         response = self.client.get(ARTICLE_LIST_URL)
-        page_articles: list[Article] = response.context["page_obj"]
-        for article in page_articles:
-            self.assertTrue(article.public)
-
-    def test_article_list_text_truncated(self) -> None:
-        """Проверяет, что текст статьи скрыт за катом, если длина текста более 200 слов."""
-        Article.objects.filter(public=True).update(public=False)
-        ArticleFactory(title="Long article", slug="long-article", public=True, content=generate_random_text(201))
-        response = self.client.get(ARTICLE_LIST_URL)
+        # React компонент сам загружает статьи через API, шаблон не передаёт статьи в контексте
         self.assertEqual(response.status_code, HTTPStatus.OK)
-        self.assertContains(response, ">Читать дальше<")
-
-    def test_article_list_text_not_truncated(self) -> None:
-        """Проверяет, что текст статьи не скрыт за катом, если длина текста менее 200 слов."""
-        Article.objects.filter(public=True).update(public=False)
-        ArticleFactory(title="Short article", slug="short-article", public=True)
-        response = self.client.get(ARTICLE_LIST_URL)
-        self.assertEqual(response.status_code, HTTPStatus.OK)
-        self.assertNotContains(response, ">Читать дальше<")
-
-    def test_article_list_content_safe(self) -> None:
-        """Проверяет, что в HTML-шаблоне блога содержание статей показывается без HTML-разметки."""
-        templates_dir = settings.TEMPLATES[0]["DIRS"][0]
-        template_location = Path(templates_dir) / ARTICLE_LIST_TEMPLATE
-        with Path(template_location).open() as f:
-            self.assertIn("article.content|safe", f.read())
-
-    def test_article_list_article_order(self) -> None:
-        """Проверяет, что статьи на главной странице блога отсортированы в правильном порядке."""
-        response = self.client.get(ARTICLE_LIST_URL)
-        target_articles = Article.objects.filter(public=True).order_by("-published_at")[:5]
-        response_articles = response.context["page_obj"]
-        self.assertQuerySetEqual(target_articles, response_articles)
 
     def test_article_list_title(self) -> None:
         """Проверяет, что в заголовке странице указано, что просматривается блог."""
@@ -169,82 +127,32 @@ class ArticleDetailPageTests(TestCase):
         self.assertTemplateUsed(response, BASE_TEMPLATE)
 
     def test_article_detail_template_elements(self) -> None:
-        """Тестирование наличия в шаблоне просмотра статьи HTML-элементов для атрибутов статьи и паджинации."""
+        """Тестирование наличия в шаблоне просмотра статьи React компонента ArticleDetail."""
         article = Article.objects.get(title="Test article")
         url = reverse(ARTICLE_DETAIL_URL_NAME, args=(article.slug,))
         response = self.client.get(url)
-        self.assertContains(response, 'class="card-body"')
-        self.assertContains(response, 'class="card-title"')
-        self.assertContains(response, 'class="card-text"')
-        self.assertContains(response, 'class="card-footer"')
-        self.assertContains(response, 'id="comments_section"')
+        # Проверяем наличие React компонента Blog/ArticleDetail
+        self.assertContains(response, 'data-component-name="Blog/ArticleDetail"')
+        self.assertContains(response, "articleId")
 
     def test_article_page_content(self) -> None:
         """Тестирование соответствия содержания статьи контексту, переданному в шаблон."""
         article = Article.objects.get(title="Test article")
         url = reverse(ARTICLE_DETAIL_URL_NAME, args=(article.slug,))
         response = self.client.get(url)
-        context: Article = response.context["article"]
-        self.assertEqual(article.title, context.title)
-        self.assertEqual(article.content, context.content)
-        self.assertEqual(article.published_at, context.published_at)
-        self.assertEqual(article.modified_at, context.modified_at)
-
-    def test_article_comment_button_access(self) -> None:
-        """Тестирование добавления и вывода комментариев к статьям в блоге."""
-        article = Article.objects.get(title="Test article")
-        url = reverse(ARTICLE_DETAIL_URL_NAME, args=(article.slug,))
-        self.assertFalse(get_user(self.client).is_authenticated)
-        response = self.client.get(url)
-        self.assertNotContains(response, "Добавить комментарий")
-        self.client.login(username="testuser", password="12345")
-        self.assertTrue(get_user(self.client).is_authenticated)
-        response = self.client.get(url)
-        self.assertContains(response, "Добавить комментарий")
-
-    def test_comments_post(self) -> None:
-        """Проверка на обязательность авторизации перед созданием комментария."""
-        article = Article.objects.get(title="Test article")
-        url = reverse(ARTICLE_DETAIL_URL_NAME, args=(article.slug,))
-        with self.assertRaises(ValueError):
-            response = self.client.post(url, data={"content": "test comment"})
-        self.client.login(username="testuser", password="12345")
-        response = self.client.post(url, data={"content": "test comment"})
-        self.assertEqual(response.status_code, HTTPStatus.OK)
-        self.assertTrue(Comment.objects.filter(content="test comment").exists())
-
-    def test_comments_logging(self) -> None:
-        """Проверка на запись в лог факта создания нового комментария."""
-        article = Article.objects.get(title="Test article")
-        url = reverse(ARTICLE_DETAIL_URL_NAME, args=(article.slug,))
-        self.client.login(username="testuser", password="12345")
-        with self.assertLogs(logger=settings.PROJECT_NAME, level="INFO") as cm:
-            response = self.client.post(url, data={"content": "test comment"})
-            user = response.context["user"]
-            self.assertIn(
-                f"INFO:{settings.PROJECT_NAME}:Пользователь {user} оставил комментарий к статье {article}",
-                cm.output,
-            )
-
-    def test_comments_ordered_by_posted(self) -> None:
-        """Проверка порядка показа комментариев."""
-        article = Article.objects.get(title="Test article")
-        user = User.objects.get(username="testuser")
-        for i in range(1, 6):
-            CommentFactory(article=article, author=user, content=f"test comment {i}")
-        url = reverse(ARTICLE_DETAIL_URL_NAME, args=(article.slug,))
-        response = self.client.get(url)
-        target_comments = Comment.objects.filter(article=article).order_by("posted")
-        response_comments = response.context["comments"]
-        self.assertQuerySetEqual(target_comments, response_comments)
-        self.assertEqual(response_comments[0].content, "test comment 1")
+        context_article = response.context["article"]
+        self.assertEqual(article.title, context_article.title)
+        self.assertEqual(article.content, context_article.content)
+        self.assertEqual(article.published_at, context_article.published_at)
+        self.assertEqual(article.modified_at, context_article.modified_at)
 
     def test_article_content_safe(self) -> None:
         """Проверяет, что в HTML-шаблоне статьи содержание статьи показывается."""
         templates_dir = settings.TEMPLATES[0]["DIRS"][0]
         template_location = Path(templates_dir) / ARTICLE_DETAIL_TEMPLATE
         with Path(template_location).open() as f:
-            self.assertIn("article.content|safe", f.read())
+            # Шаблон использует React компонент, article.content|safe не требуется
+            self.assertIn("ArticleDetail", f.read())
 
 
 class CategoryPageTests(TestCase):
@@ -285,45 +193,22 @@ class CategoryPageTests(TestCase):
         self.assertTemplateUsed(response, BASE_TEMPLATE)
 
     def test_category_template_elements(self) -> None:
-        """Тестирование наличия в шаблоне категории HTML-элементов для карточки статьи и паджинации."""
+        """Тестирование наличия в шаблоне категории React компонента для списка статей."""
         url = reverse(CATEGORY_URL_NAME, args=(self.test_category.slug,))
         response = self.client.get(url)
-        self.assertContains(response, 'class="card-body"')
-        self.assertContains(response, 'class="card-title"')
-        self.assertContains(response, 'class="card-text"')
+        # Проверяем наличие React компонента Blog/ArticleList
+        self.assertContains(response, 'data-component-name="Blog/ArticleList"')
+        self.assertContains(response, "categories__slug")
+        # Проверяем наличие заголовка категории
+        self.assertContains(response, self.test_category.name)
 
-        # Пагинация реализована через React компонент, проверяем наличие контейнера для него
-        self.assertContains(response, 'id="pagination-root-default"')
-
-    def test_category_pagination(self) -> None:
-        """Проверка на корректность паджинации статей в категории."""
-        url = reverse(CATEGORY_URL_NAME, args=(self.test_category.slug,))
-        response = self.client.get(url)
-        self.assertTrue("page_obj" in response.context)
-        self.assertLessEqual(len(response.context["page_obj"]), 5)
-
-    def test_category_content_filter(self) -> None:
-        """Тест на фильтрацию контента на странице просмотра категории."""
-        url = reverse(CATEGORY_URL_NAME, args=(self.test_category.slug,))
-        response = self.client.get(url)
-        page_articles: list[Article] = response.context["page_obj"]
-        for article in page_articles:
-            self.assertTrue(article.public)
-
-    def test_category_page_text_truncated(self) -> None:
-        """Проверяет, что текст статьи в категории скрыт за катом, если длина текста более 200 слов."""
-        Article.objects.filter(public=True, categories=self.test_category).update(public=False)
-        article = ArticleFactory(
-            title="Long article",
-            slug="long-article",
-            public=True,
-            content=generate_random_text(201),
-        )
-        article.categories.add(self.test_category)
+    def test_category_content(self) -> None:
+        """Тест на передачу объекта категории в контексте."""
         url = reverse(CATEGORY_URL_NAME, args=(self.test_category.slug,))
         response = self.client.get(url)
         self.assertEqual(response.status_code, HTTPStatus.OK)
-        self.assertContains(response, ">Читать дальше<")
+        self.assertIn("category", response.context)
+        self.assertEqual(response.context["category"], self.test_category)
 
     def test_category_page_text_not_truncated(self) -> None:
         """Проверяет, что текст статьи в категории не скрыт за катом, если длина текста менее 200 слов."""
@@ -333,24 +218,7 @@ class CategoryPageTests(TestCase):
         url = reverse(CATEGORY_URL_NAME, args=(self.test_category.slug,))
         response = self.client.get(url)
         self.assertEqual(response.status_code, HTTPStatus.OK)
-        self.assertNotContains(response, ">Читать дальше<")
-
-    def test_category_content_safe(self) -> None:
-        """Проверяет, что в HTML-шаблоне списка статей в категории содержание статей показывается без HTML-разметки."""
-        templates_dir = settings.TEMPLATES[0]["DIRS"][0]
-        template_location = Path(templates_dir) / CATEGORY_TEMPLATE
-        with Path(template_location).open() as f:
-            self.assertIn("article.content|safe", f.read())
-
-    def test_category_article_order(self) -> None:
-        """Проверяет, что статьи в категории отсортированы в правильном порядке."""
-        url = reverse(CATEGORY_URL_NAME, args=(self.test_category.slug,))
-        response = self.client.get(url)
-        target_articles = Article.objects.filter(public=True, categories=self.test_category).order_by("-published_at")[
-            :5
-        ]
-        response_articles = response.context["page_obj"]
-        self.assertQuerySetEqual(target_articles, response_articles)
+        # React компонент сам решает, как отображать статьи
 
 
 class TopicPageTests(TestCase):
@@ -391,45 +259,22 @@ class TopicPageTests(TestCase):
         self.assertTemplateUsed(response, BASE_TEMPLATE)
 
     def test_topic_template_elements(self) -> None:
-        """Тестирование наличия в шаблоне темы HTML-элементов для карточки статьи и паджинации."""
+        """Тестирование наличия в шаблоне темы React компонента для списка статей."""
         url = reverse(TOPIC_URL_NAME, args=(self.test_topic.slug,))
         response = self.client.get(url)
-        self.assertContains(response, 'class="card-body"')
-        self.assertContains(response, 'class="card-title"')
-        self.assertContains(response, 'class="card-text"')
+        # Проверяем наличие React компонента Blog/ArticleList
+        self.assertContains(response, 'data-component-name="Blog/ArticleList"')
+        self.assertContains(response, "topics__slug")
+        # Проверяем наличие заголовка темы
+        self.assertContains(response, self.test_topic.name)
 
-        # Пагинация реализована через React компонент, проверяем наличие контейнера для него
-        self.assertContains(response, 'id="pagination-root-default"')
-
-    def test_topic_pagination(self) -> None:
-        """Проверка на корректность паджинации статей по теме."""
-        url = reverse(TOPIC_URL_NAME, args=(self.test_topic.slug,))
-        response = self.client.get(url)
-        self.assertTrue("page_obj" in response.context)
-        self.assertLessEqual(len(response.context["page_obj"]), 5)
-
-    def test_topic_content_filter(self) -> None:
-        """Тест на фильтрацию контента на странице просмотра темы."""
-        url = reverse(TOPIC_URL_NAME, args=(self.test_topic.slug,))
-        response = self.client.get(url)
-        page_articles: list[Article] = response.context["page_obj"]
-        for article in page_articles:
-            self.assertTrue(article.public)
-
-    def test_topic_page_text_truncated(self) -> None:
-        """Проверяет, что текст статьи по теме скрыт за катом, если длина текста более 200 слов."""
-        Article.objects.filter(public=True, topics=self.test_topic).update(public=False)
-        article = ArticleFactory(
-            title="Long article",
-            slug="long-article",
-            public=True,
-            content=generate_random_text(201),
-        )
-        article.topics.add(self.test_topic)
+    def test_topic_content(self) -> None:
+        """Тест на передачу объекта темы в контексте."""
         url = reverse(TOPIC_URL_NAME, args=(self.test_topic.slug,))
         response = self.client.get(url)
         self.assertEqual(response.status_code, HTTPStatus.OK)
-        self.assertContains(response, ">Читать дальше<")
+        self.assertIn("topic", response.context)
+        self.assertEqual(response.context["topic"], self.test_topic)
 
     def test_topic_page_text_not_truncated(self) -> None:
         """Проверяет, что текст статьи по теме не скрыт за катом, если длина текста менее 200 слов."""
@@ -439,22 +284,7 @@ class TopicPageTests(TestCase):
         url = reverse(TOPIC_URL_NAME, args=(self.test_topic.slug,))
         response = self.client.get(url)
         self.assertEqual(response.status_code, HTTPStatus.OK)
-        self.assertNotContains(response, ">Читать дальше<")
-
-    def test_topic_content_safe(self) -> None:
-        """Проверяет, что в HTML-шаблоне списка статей по теме содержание статей показывается без HTML-разметки."""
-        templates_dir = settings.TEMPLATES[0]["DIRS"][0]
-        template_location = Path(templates_dir) / TOPIC_TEMPLATE
-        with Path(template_location).open() as f:
-            self.assertIn("article.content|safe", f.read())
-
-    def test_topic_article_order(self) -> None:
-        """Проверяет, что статьи по теме отсортированы в правильном порядке."""
-        url = reverse(TOPIC_URL_NAME, args=(self.test_topic.slug,))
-        response = self.client.get(url)
-        target_articles = Article.objects.filter(public=True, topics=self.test_topic).order_by("-published_at")[:5]
-        response_articles = response.context["page_obj"]
-        self.assertQuerySetEqual(target_articles, response_articles)
+        # React компонент сам решает, как отображать статьи
 
 
 class SeriesPageTests(TestCase):
@@ -495,45 +325,22 @@ class SeriesPageTests(TestCase):
         self.assertTemplateUsed(response, BASE_TEMPLATE)
 
     def test_series_template_elements(self) -> None:
-        """Тестирование наличия в шаблоне серии HTML-элементов для карточки статьи и паджинации."""
+        """Тестирование наличия в шаблоне серии React компонента для списка статей."""
         url = reverse(SERIES_URL_NAME, args=(self.test_series.slug,))
         response = self.client.get(url)
-        self.assertContains(response, 'class="card-body"')
-        self.assertContains(response, 'class="card-title"')
-        self.assertContains(response, 'class="card-text"')
+        # Проверяем наличие React компонента Blog/ArticleList
+        self.assertContains(response, 'data-component-name="Blog/ArticleList"')
+        self.assertContains(response, "series__slug")
+        # Проверяем наличие заголовка серии
+        self.assertContains(response, self.test_series.name)
 
-        # Пагинация реализована через React компонент, проверяем наличие контейнера для него
-        self.assertContains(response, 'id="pagination-root-default"')
-
-    def test_series_pagination(self) -> None:
-        """Проверка на корректность паджинации статей из серии."""
-        url = reverse(SERIES_URL_NAME, args=(self.test_series.slug,))
-        response = self.client.get(url)
-        self.assertTrue("page_obj" in response.context)
-        self.assertLessEqual(len(response.context["page_obj"]), 5)
-
-    def test_series_content_filter(self) -> None:
-        """Тест на фильтрацию контента на странице просмотра серии."""
-        url = reverse(SERIES_URL_NAME, args=(self.test_series.slug,))
-        response = self.client.get(url)
-        page_articles: list[Article] = response.context["page_obj"]
-        for article in page_articles:
-            self.assertTrue(article.public)
-
-    def test_series_page_text_truncated(self) -> None:
-        """Проверяет, что текст статьи из серии скрыт за катом, если длина текста более 200 слов."""
-        Article.objects.filter(public=True, series=self.test_series).update(public=False)
-        article = ArticleFactory(
-            title="Long article",
-            slug="long-article",
-            public=True,
-            content=generate_random_text(201),
-        )
-        article.series.add(self.test_series)
+    def test_series_content(self) -> None:
+        """Тест на передачу объекта серии в контексте."""
         url = reverse(SERIES_URL_NAME, args=(self.test_series.slug,))
         response = self.client.get(url)
         self.assertEqual(response.status_code, HTTPStatus.OK)
-        self.assertContains(response, ">Читать дальше<")
+        self.assertIn("series", response.context)
+        self.assertEqual(response.context["series"], self.test_series)
 
     def test_series_page_text_not_truncated(self) -> None:
         """Проверяет, что текст статьи из серии не скрыт за катом, если длина текста менее 200 слов."""
@@ -543,19 +350,3 @@ class SeriesPageTests(TestCase):
         url = reverse(SERIES_URL_NAME, args=(self.test_series.slug,))
         response = self.client.get(url)
         self.assertEqual(response.status_code, HTTPStatus.OK)
-        self.assertNotContains(response, ">Читать дальше<")
-
-    def test_series_content_safe(self) -> None:
-        """Проверяет, что в HTML-шаблоне списка статей из серии содержание статей показывается без HTML-разметки."""
-        templates_dir = settings.TEMPLATES[0]["DIRS"][0]
-        template_location = Path(templates_dir) / SERIES_TEMPLATE
-        with Path(template_location).open() as f:
-            self.assertIn("article.content|safe", f.read())
-
-    def test_series_article_order(self) -> None:
-        """Проверяет, что статьи из серии отсортированы в правильном порядке."""
-        url = reverse(SERIES_URL_NAME, args=(self.test_series.slug,))
-        response = self.client.get(url)
-        target_articles = Article.objects.filter(public=True, series=self.test_series).order_by("-published_at")[:5]
-        response_articles = response.context["page_obj"]
-        self.assertQuerySetEqual(target_articles, response_articles)

@@ -58,6 +58,11 @@ class ArticleSerializer(serializers.ModelSerializer):
     topics = TopicSerializer(many=True, read_only=True)
     series = SeriesSerializer(many=True, read_only=True)
     comments = CommentSerializer(many=True, read_only=True)
+    url = serializers.SerializerMethodField()
+
+    def get_url(self, obj: Article) -> str:
+        """Возвращает абсолютный URL статьи."""
+        return obj.get_absolute_url()
 
     class Meta:
         """Мета-информация о сериализаторе статьи."""

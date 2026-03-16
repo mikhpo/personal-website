@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% load react %}
+<!-- Шаблон страницы серии блога. -->
+{% block title %}
+    {{ series.name }}
+{% endblock title %}
+{% block content %}
+    <div class="container">
+        <h2>{{ series.name }}</h2>
+        {% if series.description %}<p>{{ series.description }}</p>{% endif %}
+        {% react_component "Blog/ArticleList" apiUrl="/api/blog/articles/?series__slug={{ series.slug }}" %}
+    </div>
+{% endblock content %}

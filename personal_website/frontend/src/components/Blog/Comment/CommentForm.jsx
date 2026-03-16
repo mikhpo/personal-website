@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import { Form, Button } from 'react-bootstrap';
+import { Button } from 'react-bootstrap';
+import SimpleWysiwygEditor from 'react-simple-wysiwyg';
 import AlertList from '@components/Alert/AlertList';
 
 /**
@@ -18,9 +19,9 @@ const getCookie = (name) => {
 };
 
 /**
- * Компонент формы добавления комментария.
+ * Компонент формы добавления комментария с WYSIWYG редактором react-simple-wysiwyg.
  *
- * Для авторизованных пользователей отображает форму с полем ввода и кнопкой отправки.
+ * Для авторизованных пользователей отображает форму с WYSIWYG редактором и кнопкой отправки.
  * Для неавторизованных — ссылку на страницу входа.
  * Использует сессионную аутентификацию Django (CSRF-токен из cookie).
  *
@@ -80,7 +81,9 @@ const CommentForm = ({ articleId, isAuthenticated, loginUrl, onSuccess }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!content.trim()) {
+    // Удаляем HTML-теги для проверки пустого содержимого
+    const plainText = content.replace(/<[^>]*>/g, '').trim();
+    if (!plainText) {
       setError('Комментарий не может быть пустым');
       return;
     }
@@ -124,12 +127,12 @@ const CommentForm = ({ articleId, isAuthenticated, loginUrl, onSuccess }) => {
         />
       )}
       <div className="form-group">
-        <Form.Control
-          as="textarea"
-          rows={3}
+        <SimpleWysiwygEditor
           value={content}
           onChange={(e) => setContent(e.target.value)}
+          placeholder="Введите текст комментария..."
           disabled={submitting}
+          className="bg-white"
         />
         <br />
         <Button

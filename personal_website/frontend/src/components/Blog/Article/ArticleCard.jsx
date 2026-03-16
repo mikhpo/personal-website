@@ -28,7 +28,7 @@ import { Card } from 'react-bootstrap';
  * return <ArticleCard article={articleData} />;
  */
 const ArticleCard = ({ article }) => {
-    const articleUrl = `/blog/${article.id}/`;
+  const articleUrl = article.url || `/blog/${article.id}/`;
 
   /**
    * Проверяет, является ли контент длинным (более 200 слов)
@@ -69,6 +69,7 @@ ArticleCard.propTypes = {
     id: PropTypes.number.isRequired,
     title: PropTypes.string.isRequired,
     content: PropTypes.string,
+    url: PropTypes.string,
   }).isRequired,
 };
 
