@@ -163,7 +163,7 @@ const ArticleDetail = ({ articleId, isAuthenticated, loginUrl }) => {
   }
 
   return (
-    <div className="container">
+    <div className="container mb-3 pb-3">
       <Card className="shadow bg-white rounded justify-content">
         <Card.Body>
           <h4 className="card-title">{article.title}</h4>

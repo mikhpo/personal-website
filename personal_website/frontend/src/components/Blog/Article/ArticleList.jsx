@@ -178,7 +178,7 @@ const ArticleList = ({ apiUrl = '/api/blog/articles/' }) => {
 
   // Отображение списка статей
   return (
-    <>
+    <div className="mb-3 pb-3">
       {articles.map(article => (
         <ArticleCard key={article.id} article={article} />
       ))}
@@ -192,7 +192,7 @@ const ArticleList = ({ apiUrl = '/api/blog/articles/' }) => {
         onPrevious={() => setCurrentPage(p => p - 1)}
         type="navigation"
       />
-    </>
+    </div>
   );
 };
 

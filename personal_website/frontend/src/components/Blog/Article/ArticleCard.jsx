@@ -45,7 +45,7 @@ const ArticleCard = ({ article }) => {
     : article.content;
 
   return (
-    <div className="container">
+    <div className="container mb-3 pb-3">
       <Card className="shadow mb-4 bg-white rounded justify-content">
         <Card.Body>
           <h4 className="card-title">
