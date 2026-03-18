@@ -94,13 +94,12 @@ class ArticleDetailPageTests(TestCase):
     @classmethod
     def setUpTestData(cls) -> None:
         """Подготовить тестовые данные."""
-        User.objects.create_user(username="testuser", email="testuser@example.com", password="12345")
-        ArticleFactory(title="Test article", slug="article-test")
+        cls.user = User.objects.create_user(username="testuser", email="testuser@example.com", password="12345")
+        cls.article = ArticleFactory(title="Test article", slug="article-test", author=cls.user)
 
     def test_article_detail_url(self) -> None:
         """Тестирование ссылки на детальный просмотр статьи блога."""
-        article = Article.objects.get(title="Test article")
-        url = ARTICLE_DETAIL_URL + article.slug + "/"
+        url = ARTICLE_DETAIL_URL + self.article.slug + "/"
         resolver = resolve(url)
         response = self.client.get(url)
         self.assertEqual(resolver.func.view_class, ArticleDetailView)
@@ -108,10 +107,9 @@ class ArticleDetailPageTests(TestCase):
 
     def test_article_detail_reverse_url(self) -> None:
         """Тестирование обратной ссылки на детальный просмотр статьи блога."""
-        article = Article.objects.get(title="Test article")
-        url = ARTICLE_DETAIL_URL + article.slug + "/"
+        url = ARTICLE_DETAIL_URL + self.article.slug + "/"
         response = self.client.get(url)
-        reverse_url = reverse(ARTICLE_DETAIL_URL_NAME, args=(article.slug,))
+        reverse_url = reverse(ARTICLE_DETAIL_URL_NAME, args=(self.article.slug,))
         resolver = resolve(reverse_url)
         reverse_response = self.client.get(reverse_url)
         self.assertEqual(resolver.func.view_class, ArticleDetailView)
@@ -120,16 +118,14 @@ class ArticleDetailPageTests(TestCase):
 
     def test_article_detail_template(self) -> None:
         """Тестирование корректности загрузки шаблона для просмотра статьи."""
-        article = Article.objects.get(title="Test article")
-        url = ARTICLE_DETAIL_URL + article.slug + "/"
+        url = ARTICLE_DETAIL_URL + self.article.slug + "/"
         response = self.client.get(url)
         self.assertTemplateUsed(response, ARTICLE_DETAIL_TEMPLATE)
         self.assertTemplateUsed(response, BASE_TEMPLATE)
 
     def test_article_detail_template_elements(self) -> None:
         """Тестирование наличия в шаблоне просмотра статьи React компонента ArticleDetail."""
-        article = Article.objects.get(title="Test article")
-        url = reverse(ARTICLE_DETAIL_URL_NAME, args=(article.slug,))
+        url = reverse(ARTICLE_DETAIL_URL_NAME, args=(self.article.slug,))
         response = self.client.get(url)
         # Проверяем наличие React компонента Blog/ArticleDetail
         self.assertContains(response, 'data-component-name="Blog/ArticleDetail"')
@@ -137,14 +133,13 @@ class ArticleDetailPageTests(TestCase):
 
     def test_article_page_content(self) -> None:
         """Тестирование соответствия содержания статьи контексту, переданному в шаблон."""
-        article = Article.objects.get(title="Test article")
-        url = reverse(ARTICLE_DETAIL_URL_NAME, args=(article.slug,))
+        url = reverse(ARTICLE_DETAIL_URL_NAME, args=(self.article.slug,))
         response = self.client.get(url)
         context_article = response.context["article"]
-        self.assertEqual(article.title, context_article.title)
-        self.assertEqual(article.content, context_article.content)
-        self.assertEqual(article.published_at, context_article.published_at)
-        self.assertEqual(article.modified_at, context_article.modified_at)
+        self.assertEqual(self.article.title, context_article.title)
+        self.assertEqual(self.article.content, context_article.content)
+        self.assertEqual(self.article.published_at, context_article.published_at)
+        self.assertEqual(self.article.modified_at, context_article.modified_at)
 
     def test_article_content_safe(self) -> None:
         """Проверяет, что в HTML-шаблоне статьи содержание статьи показывается."""
