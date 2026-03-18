@@ -39,7 +39,7 @@ class TestTagViewSet(APITestCase):
 
     def test_retrieve_tag(self) -> None:
         """Детальный просмотр тега."""
-        url = f"/api/gallery/tags/{self.tag1.slug}/"
+        url = f"/api/gallery/tags/{self.tag1.pk}/"
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["name"], self.tag1.name)
@@ -123,7 +123,7 @@ class TestPhotoViewSet(APITestCase):
 
     def test_retrieve_public_photo(self) -> None:
         """Детальный просмотр публичной фотографии."""
-        url = f"/api/gallery/photos/{self.photo1.slug}/"
+        url = f"/api/gallery/photos/{self.photo1.pk}/"
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["name"], "Закат в горах")
@@ -135,21 +135,21 @@ class TestPhotoViewSet(APITestCase):
 
     def test_retrieve_private_photo_unauthenticated(self) -> None:
         """Детальный просмотр приватной фотографии неаутентифицированным пользователем - 404."""
-        url = f"/api/gallery/photos/{self.photo2.slug}/"
+        url = f"/api/gallery/photos/{self.photo2.pk}/"
         response = self.client.get(url)
         self.assertEqual(response.status_code, 404)
 
     def test_retrieve_private_photo_authenticated(self) -> None:
         """Детальный просмотр приватной фотографии обычным пользователем - 404."""
         self.client.force_authenticate(user=self.user)
-        url = f"/api/gallery/photos/{self.photo2.slug}/"
+        url = f"/api/gallery/photos/{self.photo2.pk}/"
         response = self.client.get(url)
         self.assertEqual(response.status_code, 404)
 
     def test_retrieve_private_photo_staff(self) -> None:
         """Детальный просмотр приватной фотографии staff пользователем - успех."""
         self.client.force_authenticate(user=self.staff_user)
-        url = f"/api/gallery/photos/{self.photo2.slug}/"
+        url = f"/api/gallery/photos/{self.photo2.pk}/"
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["name"], "Ночной город")
