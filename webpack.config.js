@@ -12,6 +12,7 @@
 const path = require('path');
 const BundleTracker = require('webpack-bundle-tracker');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = {
   /**
@@ -75,17 +76,29 @@ module.exports = {
 
   /**
    * Плагины Webpack.
-   * Определяет дополнительные инструменты для сборки.
-   * Файл `webpack-stats.json` генерируется плагином `webpack-bundle-tracker` во время сборки проекта.
-   * Он содержит информацию о созданных бандлах (их имена, хеши, пути), которую использует `django-webpack-loader`
-   * для подключения правильных файлов в Django шаблонах. Это особенно важно в production окружении,
-   * где имена файлов могут содержать хеши для обхода кеширования браузером.
    */
   plugins: [
+    // Очищает папку dist/ перед каждой пересборкой, чтобы устаревшие файлы с прошлыми
+    // хешами в именах (например, main-abc123.js) не накапливались между сборками.
     new CleanWebpackPlugin(),
+    // Генерирует webpack-stats.json с информацией о собранных бандлах (имена, хеши, пути).
+    // django-webpack-loader читает этот файл, чтобы подключать правильные файлы в шаблонах.
     new BundleTracker({
       path: __dirname,
       filename: 'webpack-stats.json',
+    }),
+    // TinyMCE в отличие от обычных npm-пакетов не может быть полностью включён в бандл:
+    // во время работы редактор динамически загружает плагины, темы и скины через отдельные
+    // HTTP-запросы по статическим URL (например, /static/tinymce/themes/silver/theme.min.js).
+    // Webpack не знает об этих файлах, поэтому копируем всю папку node_modules/tinymce
+    // в dist/tinymce/ — откуда Django раздаёт их по URL /static/tinymce/.
+    new CopyWebpackPlugin({
+      patterns: [
+        {
+          from: path.resolve(__dirname, 'node_modules/tinymce'),
+          to: path.resolve(__dirname, 'personal_website/frontend/dist/tinymce'),
+        },
+      ],
     }),
   ],
 

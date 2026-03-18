@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { Button } from 'react-bootstrap';
-import SimpleWysiwygEditor from 'react-simple-wysiwyg';
+import { Editor } from '@tinymce/tinymce-react';
 import AlertList from '@components/Alert/AlertList';
 
 /**
@@ -19,11 +19,12 @@ const getCookie = (name) => {
 };
 
 /**
- * Компонент формы добавления комментария с WYSIWYG редактором react-simple-wysiwyg.
+ * Компонент формы добавления комментария с WYSIWYG редактором TinyMCE.
  *
  * Для авторизованных пользователей отображает форму с WYSIWYG редактором и кнопкой отправки.
  * Для неавторизованных — ссылку на страницу входа.
  * Использует сессионную аутентификацию Django (CSRF-токен из cookie).
+ * Все ресурсы TinyMCE загружаются локально, без использования CDN и API-ключа.
  *
  * @component
  * @param {Object} props - Пропсы компонента
@@ -127,12 +128,26 @@ const CommentForm = ({ articleId, isAuthenticated, loginUrl, onSuccess }) => {
         />
       )}
       <div className="form-group">
-        <SimpleWysiwygEditor
+        <Editor
+          tinymceScriptSrc="/static/tinymce/tinymce.min.js"
           value={content}
-          onChange={(e) => setContent(e.target.value)}
-          placeholder="Введите текст комментария..."
+          onEditorChange={(newValue) => setContent(newValue)}
           disabled={submitting}
-          className="bg-white"
+          init={{
+            license_key: 'gpl',
+            menubar: true,
+            statusbar: true,
+            branding: false,
+            promotion: false,
+            plugins: [
+              'link', 'image', 'media', 'preview', 'codesample',
+              'table', 'code', 'lists', 'fullscreen', 'insertdatetime', 'nonbreaking',
+              'directionality', 'searchreplace', 'wordcount', 'visualblocks',
+              'visualchars', 'autolink', 'charmap', 'anchor', 'pagebreak', 'autoresize',
+            ],
+            toolbar1: 'fullscreen preview bold italic underline | fontfamily fontsize | forecolor backcolor | alignleft alignright | aligncenter alignjustify | indent outdent | bullist numlist table | link image media | codesample',
+            toolbar2: 'visualblocks visualchars | charmap hr pagebreak nonbreaking anchor | code',
+          }}
         />
         <br />
         <Button

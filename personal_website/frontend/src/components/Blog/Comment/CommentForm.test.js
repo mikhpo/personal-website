@@ -9,6 +9,17 @@ import React from 'react';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import CommentForm from './CommentForm';
 
+// Мок для @tinymce/tinymce-react: TinyMCE использует iframe, который не работает в jsdom
+jest.mock('@tinymce/tinymce-react', () => ({
+  Editor: ({ value, onEditorChange, disabled }) => (
+    <textarea
+      value={value}
+      onChange={(e) => onEditorChange(e.target.value)}
+      disabled={disabled}
+    />
+  ),
+}));
+
 // Мок для компонента AlertList
 jest.mock('@components/Alert/AlertList', () => {
   return function MockAlertList({ messages }) {
