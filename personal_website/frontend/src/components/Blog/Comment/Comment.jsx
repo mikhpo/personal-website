@@ -32,6 +32,7 @@ const Comment = ({ comment }) => {
       <div>
         <span>
           <strong className="fw-bolder">{comment.author_username}</strong>
+          <span className="mx-2">&middot;</span>
           <small className="text-muted">{comment.posted}</small>
         </span>
         <p dangerouslySetInnerHTML={{ __html: comment.content }} />
