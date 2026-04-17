@@ -37,7 +37,7 @@ TOPIC_TEMPLATE = f"{APP_NAME}/topic_detail.html"
 BASE_TEMPLATE = "base.html"
 
 
-class BlogIndexPageTests(TestCase):
+class TestBlogIndexPage(TestCase):
     """Тесты главной страницы блога."""
 
     @classmethod
@@ -88,7 +88,7 @@ class BlogIndexPageTests(TestCase):
         self.assertContains(response, "Михаил Поляков - Блог")
 
 
-class ArticleDetailPageTests(TestCase):
+class TestArticleDetailPage(TestCase):
     """Тесты детального просмотра статей."""
 
     @classmethod
@@ -149,8 +149,32 @@ class ArticleDetailPageTests(TestCase):
             # Шаблон использует React компонент, article.content|safe не требуется
             self.assertIn("ArticleDetail", f.read())
 
+    def test_article_detail_authentication_context(self) -> None:
+        """Тестирование передачи контекста аутентификации в React компонент."""
+        url = reverse(ARTICLE_DETAIL_URL_NAME, args=(self.article.slug,))
 
-class CategoryPageTests(TestCase):
+        # Неаутентифицированный пользователь
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        # Проверяем наличие isAuthenticated: false в JSON атрибутах
+        self.assertContains(response, '"isAuthenticated": false')
+
+        # Аутентифицированный пользователь
+        self.client.force_login(self.user)
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertContains(response, '"isAuthenticated": true')
+
+    def test_article_detail_login_url(self) -> None:
+        """Тестирование передачи loginUrl в React компонент."""
+        url = reverse(ARTICLE_DETAIL_URL_NAME, args=(self.article.slug,))
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertContains(response, "loginUrl")
+
+
+class TestCategoryPage(TestCase):
     """Тесты страницы просмотра статей по определенной категории."""
 
     @classmethod
@@ -216,7 +240,7 @@ class CategoryPageTests(TestCase):
         # React компонент сам решает, как отображать статьи
 
 
-class TopicPageTests(TestCase):
+class TestTopicPage(TestCase):
     """Тесты страницы просмотра статей, посвященных определенной теме."""
 
     @classmethod
@@ -282,7 +306,7 @@ class TopicPageTests(TestCase):
         # React компонент сам решает, как отображать статьи
 
 
-class SeriesPageTests(TestCase):
+class TestSeriesPage(TestCase):
     """Тесты страницы просмотра статей из определенной серии."""
 
     @classmethod
