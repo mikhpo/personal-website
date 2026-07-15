@@ -84,7 +84,7 @@
 
 ### Ручной запуск режима разработки
 
-* Запустить базу данных PostgreSQL через Docker Compose: `docker-compose up -d postgres`
+* Запустить базу данных PostgreSQL через Docker Compose: `docker compose up -d postgres`
 * Применить миграции базы данных: `poetry run python personal_website/manage.py migrate`
 * Собрать статические файлы: `poetry run python personal_website/manage.py collectstatic --noinput`
 * Запустить сборку фронтенда в режиме наблюдения (в первом терминале): `npm run dev`
@@ -94,7 +94,7 @@
 ### Остановка режима разработки
 
 * Нажать `Ctrl+C` в обоих терминалах для остановки процессов
-* Остановить контейнеры Docker: `docker-compose down`
+* Остановить контейнеры Docker: `docker compose down` (или `docker-compose down` для V1)
 
 ## Настройка файлового хранилища
 

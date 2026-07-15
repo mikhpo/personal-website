@@ -44,7 +44,7 @@ Poetry сконфигурирован таким образом, чтобы ви
 
 Последовательность команд для запуска сервера базы данных PostgreSQL, выполнения миграций БД, сбора статический файлов и запуска приложения.
 
-    docker-compose up -d postgres
+    docker compose up -d postgres
     poetry run python personal_website/manage.py migrate
     poetry run python personal_website/manage.py collectstatic --noinput
     poetry run python personal_website/manage.py runserver

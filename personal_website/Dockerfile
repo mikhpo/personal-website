@@ -20,7 +20,7 @@ RUN npm ci && \
 RUN npm run build
 
 # Этап 2: Приложение Python
-FROM debian:bookworm
+FROM python:3.12-bookworm
 
 # Обновление и установка общих системных пакетов.
 # Версия утилит PostgreSQL должна совпадать с версией кластера.
@@ -35,26 +35,18 @@ RUN apt-get update && \
     ca-certificates \
     postgresql-client-${POSTGRES_VERSION} \
     rsync \
-    python3 \
-    python3-pip \
-    pipx \
-    wget \
     wkhtmltopdf && \
     rm -rf /var/lib/apt/lists/*
 
-# Установить Poetry через pipx и обновить переменную PATH.
-RUN pipx ensurepath && \
-    pipx install poetry
-ENV PATH="/root/.local/bin:$PATH"
+# Установить Poetry через pip.
+RUN pip install --no-cache-dir poetry
 
 # Установить локаль.
 RUN localedef -i ru_RU -c -f UTF-8 -A /usr/share/locale/locale.alias ru_RU.UTF-8
 ENV LANG=ru_RU.utf8
 
-# Установить клиент MinIO.
-RUN wget --no-check-certificate https://dl.min.io/client/mc/release/linux-amd64/mc && \
-    chmod +x mc && \
-    mv mc /usr/local/bin/mc
+# Установить клиент MinIO из официального образа.
+COPY --from=minio/mc:latest /usr/bin/mc /usr/local/bin/mc
 
 # Создать каталог для проекта и перейти в него.
 ENV WORK_DIR=/srv/website

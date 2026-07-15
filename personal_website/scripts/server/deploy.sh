@@ -112,7 +112,9 @@ function install_node() {
 # После установки путь добавляетя в переменную PATH.
 #######################################
 function install_minio() {
-    wget https://dl.min.io/client/mc/release/linux-amd64/mc && \
+    curl -fL --retry 5 --retry-delay 3 --retry-connrefused \
+    -o mc \
+    https://dl.min.io/client/mc/release/linux-amd64/mc && \
     sudo chmod +x mc && \
     sudo mv mc "$MC_PATH"
 }
