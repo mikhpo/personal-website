@@ -56,9 +56,6 @@ export default [
       ...reactX.configs['recommended-typescript'].rules,
       'react-refresh/only-export-components': 'warn',
       'no-unused-vars': ['error', { varsIgnorePattern: '^React$' }],
-      'react-x/jsx-no-undef': 'error',
-      'react-x/jsx-uses-react': 'error',
-      'react-x/jsx-uses-vars': 'error',
     },
   },
   {

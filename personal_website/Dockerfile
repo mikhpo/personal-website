@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # Этап 1: Сборка Node.js для фронтенда React
-FROM node:20-bookworm AS node-builder
+FROM node:22-bookworm AS node-builder
 
 # Создать каталог для проекта и перейти в него.
 WORKDIR /app
