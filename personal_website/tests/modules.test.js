@@ -17,7 +17,7 @@ function moduleInstalled(module) {
   try {
     require.resolve(module);
     return true;
-  } catch (e) {
+  } catch {
     return false;
   }
 }
