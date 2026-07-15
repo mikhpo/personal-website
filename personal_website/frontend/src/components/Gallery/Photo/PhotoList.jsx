@@ -34,13 +34,13 @@ const PhotoList = ({ apiUrl = '/api/gallery/photos/' }) => {
    * @type {[Array, function]}
    */
   const [photos, setPhotos] = useState([]);
-  
+
   /**
    * Состояние загрузки данных
    * @type {[boolean, function]}
    */
   const [loading, setLoading] = useState(true);
-  
+
   /**
    * Состояние ошибки при загрузке данных
    * @type {[string|null, function]}
@@ -132,11 +132,11 @@ const PhotoList = ({ apiUrl = '/api/gallery/photos/' }) => {
       // Построить URL с параметром страницы
       const url = new URL(apiUrl, window.location.origin);
       url.searchParams.set('page', page);
-      
+
       const data = await fetchUrl(url.toString());
       const photosList = data.results || data;
       setPhotos(Array.isArray(photosList) ? photosList : []);
-      
+
       // Обновить данные пагинации
       setPagination({
         count: data.count || 0,
@@ -145,7 +145,7 @@ const PhotoList = ({ apiUrl = '/api/gallery/photos/' }) => {
         currentPage: page,
         totalPages: pagination.totalPages,
       });
-      
+
       // Прокрутить страницу вверх
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {
@@ -170,11 +170,11 @@ const PhotoList = ({ apiUrl = '/api/gallery/photos/' }) => {
         const data = await fetchUrl(pagination.next);
         const photosList = data.results || data;
         setPhotos(Array.isArray(photosList) ? photosList : []);
-        
+
         // Вычислить текущую страницу из URL
         const url = new URL(pagination.next);
         const page = parseInt(url.searchParams.get('page') || '1', 10);
-        
+
         setPagination({
           count: data.count || 0,
           next: data.next,
@@ -182,7 +182,7 @@ const PhotoList = ({ apiUrl = '/api/gallery/photos/' }) => {
           currentPage: page,
           totalPages: pagination.totalPages,
         });
-        
+
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } catch (err) {
         setError(err.message);
@@ -207,11 +207,11 @@ const PhotoList = ({ apiUrl = '/api/gallery/photos/' }) => {
         const data = await fetchUrl(pagination.previous);
         const photosList = data.results || data;
         setPhotos(Array.isArray(photosList) ? photosList : []);
-        
+
         // Вычислить текущую страницу из URL
         const url = new URL(pagination.previous);
         const page = parseInt(url.searchParams.get('page') || '1', 10);
-        
+
         setPagination({
           count: data.count || 0,
           next: data.next,
@@ -219,7 +219,7 @@ const PhotoList = ({ apiUrl = '/api/gallery/photos/' }) => {
           currentPage: page,
           totalPages: pagination.totalPages,
         });
-        
+
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } catch (err) {
         setError(err.message);

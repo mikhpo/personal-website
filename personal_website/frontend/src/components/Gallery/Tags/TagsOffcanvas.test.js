@@ -281,7 +281,7 @@ describe('TagsOffcanvas', () => {
       });
 
     const user = userEvent.setup();
-    
+
     await act(async () => {
       render(<TagsOffcanvas show={true} onHide={jest.fn()} />);
     });

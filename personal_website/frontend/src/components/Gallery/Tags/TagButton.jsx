@@ -18,7 +18,7 @@ import PropTypes from 'prop-types';
 const TagButton = ({ tag, onClick }) => {
   const tagUrl = `/gallery/tag/${tag.slug}/`;
 
-  const handleClick = (e) => {
+  const handleClick = () => {
     if (onClick) {
       onClick(tag);
     }

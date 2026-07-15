@@ -18,7 +18,6 @@ from gallery.schemas import ExifData
 fake = Faker(locale="ru_RU")
 
 
-
 def generate_image_with_exif(exif_data: ExifData | None = None) -> SimpleUploadedFile:
     """Сгенерировать изображение с EXIF данными.
 

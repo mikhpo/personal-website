@@ -41,7 +41,7 @@ const TagsOffcanvas = ({ show, onHide, tagsApiUrl = '/api/gallery/tags/' }) => {
     const loadTags = async () => {
       try {
         if (!isMounted) return;
-        
+
         setLoading(true);
         setError(null);
 
@@ -49,10 +49,10 @@ const TagsOffcanvas = ({ show, onHide, tagsApiUrl = '/api/gallery/tags/' }) => {
         if (!response.ok) {
           throw new Error(`Ошибка загрузки: ${response.status}`);
         }
-        
+
         const data = await response.json();
         const tagsList = data.results || data;
-        
+
         if (isMounted) {
           setTags(Array.isArray(tagsList) ? tagsList : []);
           setLoading(false);
@@ -100,7 +100,7 @@ const TagsOffcanvas = ({ show, onHide, tagsApiUrl = '/api/gallery/tags/' }) => {
     const retryLoadTags = async () => {
       try {
         if (!isMounted) return;
-        
+
         setLoading(true);
         setError(null);
 
@@ -108,10 +108,10 @@ const TagsOffcanvas = ({ show, onHide, tagsApiUrl = '/api/gallery/tags/' }) => {
         if (!response.ok) {
           throw new Error(`Ошибка загрузки: ${response.status}`);
         }
-        
+
         const data = await response.json();
         const tagsList = data.results || data;
-        
+
         if (isMounted) {
           setTags(Array.isArray(tagsList) ? tagsList : []);
           setLoading(false);
@@ -139,13 +139,13 @@ const TagsOffcanvas = ({ show, onHide, tagsApiUrl = '/api/gallery/tags/' }) => {
       <Offcanvas.Body>
         {loading && <SpinnerComponent message="Загрузка тегов..." />}
         {error && (
-          <AlertList 
+          <AlertList
             messages={[
-              { 
-                message: error, 
+              {
+                message: error,
                 level: 'error',
                 actions: (
-                  <button 
+                  <button
                     className="btn btn-outline-primary btn-sm"
                     onClick={handleRetry}
                   >
@@ -153,7 +153,7 @@ const TagsOffcanvas = ({ show, onHide, tagsApiUrl = '/api/gallery/tags/' }) => {
                   </button>
                 )
               }
-            ]} 
+            ]}
           />
         )}
         {!loading && !error && tags.length === 0 && (

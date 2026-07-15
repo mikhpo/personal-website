@@ -13,8 +13,8 @@ jest.mock('./PhotoCard', () => ({
 
 /**
  * Тесты для компонента PhotoList
- * 
- * Проверяет корректность отображения списка фотографий, 
+ *
+ * Проверяет корректность отображения списка фотографий,
  * обработку различных состояний (загрузка, ошибка, пустой список)
  * и функциональность повторной загрузки данных
  */
@@ -150,11 +150,11 @@ describe('PhotoList', () => {
     await waitFor(() => {
       expect(screen.getByText(/Ошибка загрузки: 500/)).toBeInTheDocument();
     });
-    
+
     // Найти кнопку повтора
     const retryButton = screen.getByText('Повторить');
     await user.click(retryButton);
-    
+
     // Дождаться появления фотографий
     await waitFor(() => {
       expect(screen.getByText('Фото 1')).toBeInTheDocument();

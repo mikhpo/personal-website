@@ -3,8 +3,6 @@ import { Modal, Button } from 'react-bootstrap';
 import PropTypes from 'prop-types';
 import ExifData from '@components/Gallery/Photo/ExifData';
 import usePhotoData from '@components/Gallery/Photo/PhotoDetail/hooks/usePhotoData';
-import useAlbumPhotos from '@components/Gallery/Photo/PhotoDetail/hooks/useAlbumPhotos';
-import usePhotoNavigation from '@components/Gallery/Photo/PhotoDetail/hooks/usePhotoNavigation';
 
 /**
  * Компонент детального просмотра фотографии.
@@ -21,7 +19,7 @@ import usePhotoNavigation from '@components/Gallery/Photo/PhotoDetail/hooks/useP
  */
 const PhotoDetail = ({ photoId, previousPhotoId, nextPhotoId, apiUrl = '/api/gallery/photos/' }) => {
   const { photo, loading, error } = usePhotoData(photoId, apiUrl);
-  
+
   const [showExifModal, setShowExifModal] = useState(false);
 
   if (loading) {

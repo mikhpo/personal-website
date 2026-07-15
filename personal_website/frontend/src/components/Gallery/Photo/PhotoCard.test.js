@@ -28,7 +28,7 @@ describe('PhotoCard', () => {
   test('рендерит с минимальными props', () => {
     render(<PhotoCard photo={minimalPhoto} />);
     const link = screen.getByRole('link');
-    expect(link).toHaveAttribute('href', '/gallery/photo/test-photo/');
+    expect(link).toHaveAttribute('href', '/gallery/photo/1/');
   });
 
   /**
@@ -55,7 +55,7 @@ describe('PhotoCard', () => {
     render(<PhotoCard photo={fullPhoto} />);
     const links = screen.getAllByRole('link');
     links.forEach(link => {
-      expect(link).toHaveAttribute('href', '/gallery/photo/test-photo/');
+      expect(link).toHaveAttribute('href', '/gallery/photo/1/');
     });
   });
 

@@ -55,7 +55,7 @@ const usePhotoData = (photoPk, apiUrl = '/api/gallery/photos/') => {
       setError(null);
       return;
     }
-    
+
     fetchPhoto();
   }, [photoPk, apiUrl]);
 

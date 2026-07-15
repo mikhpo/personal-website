@@ -11,6 +11,12 @@ import usePhotoData from './PhotoDetail/hooks/usePhotoData';
 import useAlbumPhotos from './PhotoDetail/hooks/useAlbumPhotos';
 import usePhotoNavigation from './PhotoDetail/hooks/usePhotoNavigation';
 
+/**
+ * Набор тестов для компонента PhotoDetail.
+ *
+ * Проверяет отображение фотографии, навигацию между фотографиями,
+ * состояния загрузки и ошибок, а также работу модального окна EXIF.
+ */
 describe('PhotoDetail', () => {
   const mockPhoto = {
     id: 2,
@@ -33,25 +39,28 @@ describe('PhotoDetail', () => {
     { id: 3, slug: 'photo-3', datetime_taken: '2024-01-16T10:00:00Z' },
   ];
 
-  const mockPreviousPhoto = mockAlbumPhotos[0];
-  const mockNextPhoto = mockAlbumPhotos[2];
+  // ID соседних фотографий для навигации (mockPhoto имеет id=2)
+  const mockPreviousPhotoId = 1; // Предыдущая фотография в альбоме
+  const mockNextPhotoId = 3; // Следующая фотография в альбомe
 
+  // Настройка: изолируем тесты от реальных API запросов
+  // PhotoDetail использует хуки для загрузки данных, мокаем их чтобы не делать сетевые вызовы
   beforeEach(() => {
     usePhotoData.mockReturnValue({
       photo: mockPhoto,
       loading: false,
       error: null,
     });
-    
+
     useAlbumPhotos.mockReturnValue({
       photos: mockAlbumPhotos,
       loading: false,
       error: null,
     });
-    
+
     usePhotoNavigation.mockReturnValue({
-      previousPhoto: mockPreviousPhoto,
-      nextPhoto: mockNextPhoto,
+      previousPhotoId: mockPreviousPhotoId,
+      nextPhotoId: mockNextPhotoId,
     });
   });
 
@@ -59,25 +68,41 @@ describe('PhotoDetail', () => {
     jest.clearAllMocks();
   });
 
+  /**
+   * Проверяет, что компонент отображает изображение фотографии
+   * с правильным alt-текстом и src-адресом.
+   */
   test('отображает изображение фотографии', () => {
-    render(<PhotoDetail photoId={2} />);
+    render(<PhotoDetail photoId={2} previousPhotoId={mockPreviousPhotoId} nextPhotoId={mockNextPhotoId} />);
     const image = screen.getByAltText('Тестовое фото');
     expect(image).toBeInTheDocument();
     expect(image).toHaveAttribute('src', '/media/photo.jpg');
   });
 
+  /**
+   * Проверяет, что компонент отображает кнопки навигации:
+   * "Предыдущая" (<), "Следующая" (>) и "О фото".
+   */
   test('отображает кнопки навигации', () => {
-    render(<PhotoDetail photoId={2} />);
+    render(<PhotoDetail photoId={2} previousPhotoId={mockPreviousPhotoId} nextPhotoId={mockNextPhotoId} />);
     expect(screen.getByText('<')).toBeInTheDocument();
     expect(screen.getByText('>')).toBeInTheDocument();
     expect(screen.getByText('О фото')).toBeInTheDocument();
   });
 
+  /**
+   * Проверяет, что кнопка "О фото" присутствует в DOM
+   * и предназначена для открытия модального окна с EXIF-данными.
+   */
   test('отображает кнопку "О фото" для открытия EXIF модального окна', () => {
-    render(<PhotoDetail photoId={2} />);
+    render(<PhotoDetail photoId={2} previousPhotoId={mockPreviousPhotoId} nextPhotoId={mockNextPhotoId} />);
     expect(screen.getByText('О фото')).toBeInTheDocument();
   });
 
+  /**
+   * Проверяет, что во время загрузки данных отображается
+   * индикатор загрузки с соответствующим сообщением.
+   */
   test('отображает индикатор загрузки', () => {
     usePhotoData.mockReturnValueOnce({
       photo: null,
@@ -88,6 +113,10 @@ describe('PhotoDetail', () => {
     expect(screen.getByText('Загрузка фотографии...')).toBeInTheDocument();
   });
 
+  /**
+   * Проверяет, что при ошибке загрузки данных отображается
+   * сообщение об ошибке с переданным текстом.
+   */
   test('отображает ошибку загрузки', () => {
     usePhotoData.mockReturnValueOnce({
       photo: null,
@@ -98,6 +127,10 @@ describe('PhotoDetail', () => {
     expect(screen.getByText('Ошибка загрузки фото: 404')).toBeInTheDocument();
   });
 
+  /**
+   * Проверяет, что если фотография не найдена (photo === null без ошибки),
+   * отображается соответствующее сообщение.
+   */
   test('отображает сообщение если фото не найдено', () => {
     usePhotoData.mockReturnValueOnce({
       photo: null,
@@ -108,61 +141,90 @@ describe('PhotoDetail', () => {
     expect(screen.getByText('Фотография не найдена')).toBeInTheDocument();
   });
 
-  test('нет кнопки "Предыдущая" если previousPhoto null', () => {
+  /**
+   * Проверяет, что кнопка "Предыдущая" не отображается,
+   * если previousPhotoId равен null.
+   */
+  test('нет кнопки "Предыдущая" если previousPhotoId null', () => {
     usePhotoNavigation.mockReturnValueOnce({
-      previousPhoto: null,
-      nextPhoto: mockNextPhoto,
+      previousPhotoId: null,
+      nextPhotoId: mockNextPhotoId,
     });
     render(<PhotoDetail photoId={2} />);
     expect(screen.queryByText('<')).not.toBeInTheDocument();
   });
 
-  test('нет кнопки "Следующая" если nextPhoto null', () => {
+  /**
+   * Проверяет, что кнопка "Следующая" не отображается,
+   * если nextPhotoId равен null.
+   */
+  test('нет кнопки "Следующая" если nextPhotoId null', () => {
     usePhotoNavigation.mockReturnValueOnce({
-      previousPhoto: mockPreviousPhoto,
-      nextPhoto: null,
+      previousPhotoId: mockPreviousPhotoId,
+      nextPhotoId: null,
     });
     render(<PhotoDetail photoId={2} />);
     expect(screen.queryByText('>')).not.toBeInTheDocument();
   });
 
+  /**
+   * Проверяет, что ссылка на предыдущую фотографию ведёт
+   * на правильный URL вида /gallery/photo/{id}/.
+   */
   test('ссылка на предыдущую фотографию имеет правильный href', () => {
-    render(<PhotoDetail photoId={2} />);
+    render(<PhotoDetail photoId={2} previousPhotoId={mockPreviousPhotoId} nextPhotoId={mockNextPhotoId} />);
     const prevLink = screen.getByText('<');
     expect(prevLink).toHaveAttribute('href', '/gallery/photo/1/');
   });
 
+  /**
+   * Проверяет, что ссылка на следующую фотографию ведёт
+   * на правильный URL вида /gallery/photo/{id}/.
+   */
   test('ссылка на следующую фотографию имеет правильный href', () => {
-    render(<PhotoDetail photoId={2} />);
+    render(<PhotoDetail photoId={2} previousPhotoId={mockPreviousPhotoId} nextPhotoId={mockNextPhotoId} />);
     const nextLink = screen.getByText('>');
     expect(nextLink).toHaveAttribute('href', '/gallery/photo/3/');
   });
 
+  /**
+   * Проверяет, что при нажатии на кнопку "О фото" открывается
+   * модальное окно с EXIF-данными: заголовок "EXIF", поле "Камера"
+   * и значение "Canon EOS 5D".
+   */
   test('открывает модальное окно EXIF при нажатии на кнопку "О фото"', async () => {
     const user = userEvent.setup();
-    render(<PhotoDetail photoId={2} />);
-    
+    render(<PhotoDetail photoId={2} previousPhotoId={mockPreviousPhotoId} nextPhotoId={mockNextPhotoId} />);
+
     const exifButton = screen.getByText('О фото');
     await user.click(exifButton);
-    
+
     expect(await screen.findByText('EXIF')).toBeInTheDocument();
     expect(await screen.findByText('Камера')).toBeInTheDocument();
     expect(await screen.findByText('Canon EOS 5D')).toBeInTheDocument();
   });
 
+  /**
+   * Проверяет, что модальное окно EXIF закрывается при нажатии
+   * на кнопку "Закрыть" — заголовок "EXIF" исчезает из DOM.
+   */
   test('закрывает модальное окно EXIF при нажатии на кнопку закрытия', async () => {
     const user = userEvent.setup();
-    render(<PhotoDetail photoId={2} />);
-    
+    render(<PhotoDetail photoId={2} previousPhotoId={mockPreviousPhotoId} nextPhotoId={mockNextPhotoId} />);
+
     const exifButton = screen.getByText('О фото');
     await user.click(exifButton);
-    
+
     const closeButton = await screen.findByText('Закрыть');
     await user.click(closeButton);
-    
+
     expect(screen.queryByText('EXIF')).not.toBeInTheDocument();
   });
 
+  /**
+   * Проверяет, что если у фотографии отсутствует image_url,
+   * элемент img не рендерится.
+   */
   test('не отображает изображение если нет image_url', () => {
     usePhotoData.mockReturnValueOnce({
       photo: { ...mockPhoto, image_url: null },

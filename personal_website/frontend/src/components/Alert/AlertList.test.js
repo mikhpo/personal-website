@@ -10,7 +10,6 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import AlertList from '@components/Alert/AlertList';
-import Alert from '@components/Alert/AlertDetail';
 
 /**
  * @description Тестовый набор для компонента AlertList

@@ -50,7 +50,7 @@ const ExifData = ({ photo }) => {
       const date = new Date(dateString);
       if (isNaN(date.getTime())) return null;
       return date.toLocaleString('ru-RU');
-    } catch (error) {
+    } catch {
       return null;
     }
   };

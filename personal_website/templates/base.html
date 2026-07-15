@@ -76,7 +76,7 @@
               const componentName = element.getAttribute('data-component-name');
               const propsJson = element.getAttribute('data-component-props');
               const props = propsJson ? JSON.parse(propsJson) : {};
-              
+
               if (typeof window.mountReactComponent === 'function') {
                 window.mountReactComponent(componentName, element.id, props);
               }

@@ -4,17 +4,17 @@ import { Nav, NavDropdown } from 'react-bootstrap';
 
 /**
  * Компонент списка навигационных ссылок
- * 
+ *
  * Отображает навигационные ссылки в виде обычных ссылок или выпадающих меню.
  * Поддерживает отображение специальных элементов для администраторов.
- * 
+ *
  * @component
  * @example
  * const links = [
  *   { url: '/', text: 'Главная', active: true },
- *   { 
- *     url: '/gallery', 
- *     text: 'Галерея', 
+ *   {
+ *     url: '/gallery',
+ *     text: 'Галерея',
  *     dropdown: [
  *       { url: '/gallery/albums', text: 'Альбомы' },
  *       { url: '/gallery/tags', text: 'Теги', offcanvas: true }
@@ -23,7 +23,7 @@ import { Nav, NavDropdown } from 'react-bootstrap';
  * ];
  * const userIsStaff = true;
  * return <NavItems links={links} userIsStaff={userIsStaff} />;
- * 
+ *
  * @param {Array<Object>} links - Массив объектов ссылок для отображения
  * @param {string} links[].url - URL ссылки
  * @param {string} links[].text - Текст ссылки
@@ -33,7 +33,7 @@ import { Nav, NavDropdown } from 'react-bootstrap';
  * @param {string} links[].dropdown[].text - Текст элемента меню
  * @param {boolean} [links[].dropdown[].offcanvas=false] - Флаг открытия offcanvas панели
  * @param {boolean} [userIsStaff=false] - Флаг принадлежности пользователя к администраторам
- * 
+ *
  * @return {JSX.Element} Компонент навигационных ссылок
  */
 const NavItems = ({ links, userIsStaff }) => (

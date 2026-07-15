@@ -68,14 +68,14 @@ describe('UserAuthSection', () => {
    */
   test('рендерит элементы для аутентифицированного пользователя', () => {
     render(<UserAuthSection {...authenticatedUserProps} />);
-    
+
     // Проверяем отображение имени пользователя
     expect(screen.getByText('Вы вошли как Тестовый Пользователь')).toBeInTheDocument();
-    
+
     // Проверяем наличие ссылки для выхода
     expect(screen.getByText('Выйти')).toBeInTheDocument();
     expect(screen.getByText('Выйти')).toHaveAttribute('href', '/accounts/logout/');
-    
+
     // Проверяем отсутствие ссылок для регистрации и входа
     expect(screen.queryByText('Регистрация')).not.toBeInTheDocument();
     expect(screen.queryByText('Войти')).not.toBeInTheDocument();
@@ -93,18 +93,18 @@ describe('UserAuthSection', () => {
    */
   test('рендерит элементы для неаутентифицированного пользователя', () => {
     render(<UserAuthSection {...unauthenticatedUserProps} />);
-    
+
     // Проверяем наличие ссылки для регистрации
     expect(screen.getByText('Регистрация')).toBeInTheDocument();
     expect(screen.getByText('Регистрация')).toHaveAttribute('href', '/accounts/signup/');
-    
+
     // Проверяем наличие ссылки для входа
     expect(screen.getByText('Войти')).toBeInTheDocument();
     expect(screen.getByText('Войти')).toHaveAttribute('href', '/accounts/login/');
-    
+
     // Проверяем отсутствие текста с именем пользователя
     expect(screen.queryByText(/Вы вошли как/)).not.toBeInTheDocument();
-    
+
     // Проверяем отсутствие ссылки для выхода
     expect(screen.queryByText('Выйти')).not.toBeInTheDocument();
   });
@@ -118,7 +118,7 @@ describe('UserAuthSection', () => {
    */
   test('рендерит ссылку администрирования для staff пользователя', () => {
     render(<UserAuthSection {...staffUserProps} />);
-    
+
     // Проверяем наличие ссылки на административную панель
     expect(screen.getByText('Администрирование')).toBeInTheDocument();
     expect(screen.getByText('Администрирование')).toHaveAttribute('href', '/admin/');
@@ -133,7 +133,7 @@ describe('UserAuthSection', () => {
    */
   test('не рендерит ссылку администрирования для обычного пользователя', () => {
     render(<UserAuthSection {...authenticatedUserProps} />);
-    
+
     // Проверяем отсутствие ссылки на административную панель
     expect(screen.queryByText('Администрирование')).not.toBeInTheDocument();
   });
@@ -149,7 +149,7 @@ describe('UserAuthSection', () => {
     // Тест с именем пользователя
     const { rerender } = render(<UserAuthSection {...authenticatedUserProps} />);
     expect(screen.getByText('Вы вошли как Тестовый Пользователь')).toBeInTheDocument();
-    
+
     // Тест с пустым именем пользователя
     rerender(<UserAuthSection {...authenticatedUserProps} userName="" />);
     expect(screen.getByText(/Вы вошли как/)).toBeInTheDocument();

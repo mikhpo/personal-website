@@ -5,7 +5,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("gallery", "0007_alter_album_options_alter_photo_options_and_more"),
     ]
