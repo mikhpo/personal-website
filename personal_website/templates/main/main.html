@@ -1,68 +1,12 @@
 {% extends "base.html" %}
+{% load static %}
+{% load react %}
 <!--
     Главная страница сайта. Взаимосвязана с блогом.
     Отображает категории и серии статей из блога,
     сгруппированные в виде карточек.
+    Рендерится через React компонент HomePage.
 -->
 {% block content %}
-    <!-- Категории. -->
-    {% if categories %}
-        <div class="container">
-            <h4>
-                <p align="center">Выберите категорию</p>
-            </h4>
-            <div class="row row-cols-1 row-cols-md-3 g-4 justify-content-center">
-                {% for category in categories %}
-                    <div class="col">
-                        <div class="card shadow bg-white rounded text-center">
-                            {% if category.image %}
-                                <a href="{{ category.get_absolute_url }}">
-                                    <img src="{{ category.image.url }}" class="card-img-top">
-                                </a>
-                            {% endif %}
-                            <div class="card-body">
-                                <h5 class="card-title">
-                                    <a href="{{ category.get_absolute_url }}">{{ category.name }}</a>
-                                </h5>
-                                <p class="card-text">{{ category.description }}</p>
-                            </div>
-                        </div>
-                    </div>
-                {% endfor %}
-            </div>
-        </div>
-        <br>
-        <br>
-    {% endif %}
-    <!-- Серии. -->
-    {% if series %}
-        <div class="container">
-            <h4>
-                <p align="center">Или серию</p>
-            </h4>
-            <div class="row row-cols-1 row-cols-md-3 g-4 justify-content-center">
-                {% for serial in series %}
-                    <div class="col">
-                        <div class="card shadow bg-white rounded text-center">
-                            {% if serial.image %}
-                                <a href="{{ serial.get_absolute_url }}">
-                                    <img src="{{ serial.image.url }}" class="card-img-top">
-                                </a>
-                            {% endif %}
-                            <div class="card-body">
-                                <h6 class="card-title">
-                                    <a href="{{ serial.get_absolute_url }}">{{ serial.name }}</a>
-                                </h6>
-                                <p class="card-text">
-                                    <a href="{{ serial.get_absolute_url }}">{{ serial.description }}</a>
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                {% endfor %}
-            </div>
-        </div>
-        <br>
-        <br>
-    {% endif %}
+    {% react_component "Main/HomePage" %}
 {% endblock content %}

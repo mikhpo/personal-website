@@ -27,6 +27,13 @@ import FileDropzone from '@components/Gallery/Upload/FileDropzone';
 import UploadProgress from '@components/Gallery/Upload/UploadProgress';
 import PhotoUploadForm from '@components/Gallery/Upload/PhotoUploadForm';
 
+// Импорт Main компонентов
+import HomePage from '@components/Main/HomePage';
+import CategoryCard from '@components/Main/CategoryCard';
+import CategoryGrid from '@components/Main/CategoryGrid';
+import SeriesCard from '@components/Main/SeriesCard';
+import SeriesGrid from '@components/Main/SeriesGrid';
+
 /**
  * Реестр зарегистрированных компонентов
  *
@@ -37,7 +44,7 @@ const componentRegistry = {
   // Компоненты алертов
   'Alert/Alert': Alert,
   'Alert/AlertList': AlertList,
-  
+
   // Компоненты блога
   'Blog/ArticleCard': ArticleCard,
   'Blog/ArticleList': ArticleList,
@@ -45,7 +52,7 @@ const componentRegistry = {
   'Blog/CommentList': CommentList,
   'Blog/CommentForm': CommentForm,
   'Blog/ArticleDetail': ArticleDetail,
-  
+
   // Компоненты галереи
   'Gallery/AlbumCard': AlbumCard,
   'Gallery/AlbumList': AlbumList,
@@ -59,6 +66,13 @@ const componentRegistry = {
   'Gallery/FileDropzone': FileDropzone,
   'Gallery/UploadProgress': UploadProgress,
   'Gallery/PhotoUploadForm': PhotoUploadForm,
+
+  // Компоненты Main
+  'Main/HomePage': HomePage,
+  'Main/CategoryCard': CategoryCard,
+  'Main/CategoryGrid': CategoryGrid,
+  'Main/SeriesCard': SeriesCard,
+  'Main/SeriesGrid': SeriesGrid,
 };
 
 /**

@@ -6,7 +6,6 @@ from django.contrib.sitemaps.views import sitemap
 from django.test import TestCase
 from django.urls import resolve, reverse
 
-from blog.models import Category, Series
 from main.views import main
 
 
@@ -17,33 +16,6 @@ class TestMainPage(TestCase):
     reverse_main_url = "main:main"
     template = "main/main.html"
     base_template = "base.html"
-
-    @classmethod
-    def setUpTestData(cls) -> None:  # noqa: D102
-        Category.objects.bulk_create(
-            [
-                Category(
-                    name="Category 1",
-                    slug="category-1",
-                    image="image_1.jpg",
-                    public=True,
-                ),
-                Category(
-                    name="Category 2",
-                    slug="category-2",
-                    image="image_2.jpg",
-                    public=False,
-                ),
-                Category(name="Category 3", slug="category-3", image="", public=True),
-            ],
-        )
-        Series.objects.bulk_create(
-            [
-                Series(name="Series 1", slug="series-1", image="image_1.jpg", public=True),
-                Series(name="Series 2", slug="series-2", image="image_1.jpg", public=False),
-                Series(name="Series 3", slug="series-3", image="", public=True),
-            ],
-        )
 
     def test_main_page_redirect_url(self) -> None:
         """Тестирование редиректа на главную страницу."""
@@ -76,17 +48,11 @@ class TestMainPage(TestCase):
         response = self.client.get(self.main_url)
         self.assertContains(response, "Михаил Поляков")
 
-    def test_main_page_categories_filter(self) -> None:
-        """Проверка на корректность фильтрации категорий для главной страницы."""
+    def test_main_page_react_component(self) -> None:
+        """Проверяет, что на странице присутствует React компонент."""
         response = self.client.get(self.main_url)
-        target_categories = Category.objects.filter(public=True).exclude(image="")
-        self.assertQuerySetEqual(target_categories, response.context["categories"])
-
-    def test_main_page_series_filter(self) -> None:
-        """Проверка на корректность фильтрации серий для главной страницы."""
-        response = self.client.get(self.main_url)
-        target_series = Series.objects.filter(public=True).exclude(image="")
-        self.assertQuerySetEqual(target_series, response.context["series"])
+        # Проверяем наличие data-component-name для React компонента
+        self.assertContains(response, "data-component-name")
 
 
 class TestSitemap(TestCase):
