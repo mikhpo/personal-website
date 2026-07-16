@@ -5,9 +5,13 @@
 
 import os
 import sys
+from pathlib import Path
 
 
 def main() -> None:  # noqa: D103
+    # Добавить родительскую директорию backend/ в PYTHONPATH
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "personal_website.settings")
 
     try:

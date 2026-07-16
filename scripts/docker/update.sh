@@ -25,12 +25,12 @@ function detect_compose_cmd() {
 COMPOSE_CMD="$(detect_compose_cmd)"
 readonly COMPOSE_CMD
 
-project_root="$(dirname "$(dirname "$(dirname "$(dirname "$(readlink -f "$0")")")")")"
+project_root="$(dirname "$(dirname "$(dirname "$(readlink -f "$0")")")")"
 cd "$project_root" || exit
 
 # Создать резервную копию базы данных и загруженных файлов.
-bash "$project_root"/personal_website/scripts/pgbackup.sh
-bash "$project_root"/personal_website/scripts/pgrestore.sh
+bash "$project_root"/scripts/pgbackup.sh
+bash "$project_root"/scripts/s3backup.sh
 
 # Вытянуть изменения основной ветки
 git fetch origin

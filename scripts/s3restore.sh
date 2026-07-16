@@ -6,7 +6,7 @@
 set -e
 
 # Прочитать переменные окружения из файла .env в корневом каталоге проекта.
-project_root="$(dirname "$(dirname "$(dirname "$(readlink -f "$0")")")")"
+project_root="$(dirname "$(readlink -f "$0")")"
 readonly dotenv="$project_root/.env"
 if [ -f "$dotenv" ]; then
     eval export "$(cat "$dotenv")"

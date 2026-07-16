@@ -13,17 +13,17 @@
  */
 module.exports = {
   testEnvironment: 'jsdom',
-  roots: ['<rootDir>/personal_website/frontend'],
+  roots: ['<rootDir>'],
   testMatch: ['**/__tests__/**/*.js', '**/?(*.)+(spec|test).js'],
   moduleNameMapper: {
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
-    '^@components/(.*)$': '<rootDir>/personal_website/frontend/src/components/$1',
+    '^@components/(.*)$': '<rootDir>/src/components/$1',
   },
-  setupFilesAfterEnv: ['<rootDir>/personal_website/frontend/jest.setup.js'],
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   collectCoverageFrom: [
-    'personal_website/frontend/src/**/*.{js,jsx}',
-    '!personal_website/frontend/src/**/*.test.{js,jsx}',
-    '!personal_website/frontend/src/**/__tests__/**',
+    'src/**/*.{js,jsx}',
+    '!src/**/*.test.{js,jsx}',
+    '!src/**/__tests__/**',
   ],
   coverageThreshold: {
     global: {

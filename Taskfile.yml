@@ -44,9 +44,9 @@ tasks:
       - defer: "{{.COMPOSE_CMD}} down"
       - "{{.COMPOSE_CMD}} up -d postgres"
       - "{{.COMPOSE_CMD}} ps"
-      - poetry run python ./personal_website/manage.py migrate
-      - poetry run python ./personal_website/manage.py collectstatic --noinput
-      - poetry run python ./personal_website/manage.py runserver
+      - poetry run python ./backend/manage.py migrate
+      - poetry run python ./backend/manage.py collectstatic --noinput
+      - poetry run python ./backend/manage.py runserver
 
   migrate:
     desc: Подготовить и выполнить миграции, экспортировать новые диаграммы моделей
@@ -62,8 +62,8 @@ tasks:
       - defer: "{{.COMPOSE_CMD}} down"
       - "{{.COMPOSE_CMD}} up -d postgres"
       - "{{.COMPOSE_CMD}} ps"
-      - poetry run python ./personal_website/manage.py makemigrations
-      - poetry run python ./personal_website/manage.py migrate
+      - poetry run python ./backend/manage.py makemigrations
+      - poetry run python ./backend/manage.py migrate
       - task: graph-models
 
   test-frontend:
@@ -219,7 +219,7 @@ tasks:
       - task: mypy
       - task: eslint
       - task: markdownlint
-      - poetry run python personal_website/manage.py check
+      - poetry run python backend/manage.py check
 
   install:
     desc: Установить зависимости Python и Node.js
@@ -371,7 +371,7 @@ tasks:
       - defer: "{{.COMPOSE_CMD}} down"
       - "{{.COMPOSE_CMD}} up -d postgres"
       - "{{.COMPOSE_CMD}} ps"
-      - poetry run python personal_website/manage.py makemigrations --dry-run --check
+      - poetry run python backend/manage.py makemigrations --dry-run --check
 
   clean-cache:
     desc: Удалить файлы кэша

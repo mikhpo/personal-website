@@ -11,8 +11,8 @@ readonly NEWLINE=$'\n'
 
 # Определение путей файлов.
 bash=$(which bash)
-project_root="$(dirname "$(dirname "$(dirname "$(readlink -fm "$0")")")")"
-scripts="$project_root/personal_website/scripts"
+project_root="$(dirname "$(readlink -fm "$0")")"
+scripts="$project_root/scripts"
 default_logs_dir="$project_root/logs"
 
 # Считывание переменных окружения из файла .env.

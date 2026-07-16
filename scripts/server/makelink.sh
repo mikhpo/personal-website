@@ -3,9 +3,8 @@
 # Создает символическую ссылку на node_modules в папке static.
 # Адрес корневого каталога проекта определяется автоматически.
 
-repository_root="$(dirname "$(dirname "$(dirname "$(dirname "$(readlink -f "$0")")")")")"
-readonly PROJECT_NAME="personal_website"
-readonly source_path=$repository_root/$PROJECT_NAME/staticfiles/node_modules
+repository_root="$(dirname "$(dirname "$(dirname "$(readlink -f "$0")")")")"
+readonly source_path=$repository_root/backend/staticfiles/node_modules
 readonly destination_path=$repository_root/node_modules
 
 echo "Создание символической ссылки на директорию node_modules"

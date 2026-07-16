@@ -7,12 +7,15 @@ FROM node:22-bookworm AS node-builder
 WORKDIR /app
 
 # Скопировать конфигурационные файлы и зависимости Node.js
-COPY package.json package-lock.json .babelrc webpack.config.js ./
+COPY package.json package-lock.json ./
+
+# Скопировать конфигурационные файлы в frontend/ директорию
+COPY frontend/webpack.config.js frontend/.babelrc frontend/jest.config.js frontend/jest.setup.js ./frontend/
 
 # Скопировать исходники frontend
-COPY personal_website/frontend ./personal_website/frontend
+COPY frontend/src ./frontend/src
 
-# Установить зависимости Node.js через npm.
+# Установить зависимости Node.js через npm (создаст node_modules в /app)
 RUN npm ci && \
     npm cache clean --force
 
@@ -61,12 +64,12 @@ RUN poetry install --no-interaction && \
 COPY . .
 
 # Копирование собранного React бандла
-COPY --from=node-builder /app/personal_website/frontend/dist /app/personal_website/frontend/dist
-COPY --from=node-builder /app/webpack-stats.json /app/webpack-stats.json
+COPY --from=node-builder /app/frontend/dist $WORK_DIR/frontend/dist
+COPY --from=node-builder /app/frontend/webpack-stats.json $WORK_DIR/webpack-stats.json
 
 # Установить расписание запуска скриптов в cron.
-RUN bash personal_website/scripts/cronjobs.sh
+RUN bash scripts/cronjobs.sh
 
 # Выполнить скрипт, запускающий сервер.
 ENV PYTHONPATH=.
-ENTRYPOINT ["/bin/bash", "personal_website/entrypoint.sh"]
+ENTRYPOINT ["/bin/bash", "backend/entrypoint.sh"]

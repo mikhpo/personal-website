@@ -33,7 +33,7 @@
 
 ## Структура проекта
 
-Проект использует стандартную структуру каталогов, сформированную командой `django-admin startproject personal_website`:
+Проект использует монорепозиторийную структуру с разделением на бэкенд и фронтенд:
 
     personal-website/           # корневая директория репозитория
     ├── .git/
@@ -45,38 +45,52 @@
     ├── tools/                  # вспомогательные скрипты для разработки
     ├── tests/                  # пакет интеграционных тестов
     ├── nginx/                  # файлы для сборки Nginx в контейнере
-    └── personal_website/       # базовая директория проекта Django
-        ├── manage.py
-        ├── Dockerfile          # параметры сборки контейнера приложения
-        ├── entrypoint.sh       # скрипт для запуска приложения в контейнере
-        ├── scripts/            # скрипты для рантайма
-        ├── config/             # шаблоны конфигурационных файлов для рантайма
-        ├── personal_website/   # директория с настройками проекта
-        │   ├── __init__.py
-        │   ├── settings.py
-        │   ├── urls.py
-        │   ├── asgi.py
-        │   ├── storages.py     # настройки файловых хранилищ (локальная файловая система, S3)
-        │   └── wsgi.py
-        ├── app1/               # приложение Django
-        │   └── tests/          # пакет тестов приложения Django
-        └── app2/               # приложение Django
-            └── tests/          # пакет тестов приложения Django
+    ├── backend/                # Django бэкенд
+    │   ├── manage.py
+    │   ├── Dockerfile          # параметры сборки контейнера приложения
+    │   ├── entrypoint.sh       # скрипт для запуска приложения в контейнере
+    │   ├── scripts/            # скрипты для рантайма
+    │   ├── config/             # шаблоны конфигурационных файлов для рантайма
+    │   ├── personal_website/   # директория с настройками проекта
+    │   │   ├── __init__.py
+    │   │   ├── settings.py
+    │   │   ├── urls.py
+    │   │   ├── asgi.py
+    │   │   ├── storages.py     # настройки файловых хранилищ (локальная файловая система, S3)
+    │   │   └── wsgi.py
+    │   ├── accounts/           # приложение Django (управление пользователями)
+    │   ├── blog/               # приложение Django (блог)
+    │   ├── gallery/            # приложение Django (галерея)
+    │   ├── main/               # приложение Django (главная страница)
+    │   ├── api/                # приложение Django (REST API)
+    │   ├── staticfiles/        # статические файлы Django
+    │   ├── templates/          # шаблоны Django
+    │   └── tests/              # пакет тестов бэкенда
+    └── frontend/               # React фронтенд
+        ├── src/                # исходный код React компонентов
+        │   ├── components/     # React компоненты
+        │   ├── index.js        # точка входа
+        │   └── ...
+        ├── webpack.config.js   # конфигурация Webpack
+        ├── jest.config.js      # конфигурация Jest
+        ├── eslint.config.mjs   # конфигурация ESLint
+        ├── .babelrc            # конфигурация Babel
+        └── package.json       # зависимости фронтенда (симлинк на корневой)
 
 ## Административные команды
 
 Для запуска веб-сервера Django используется команда:
 
-    python personal_website/manage.py runserver
+    python backend/manage.py runserver
 
 После внесения изменений в модели необходимо произвести миграцию таблиц базы данных. Django имеет встроенный инструмент управления миграциями. Для проведения миграций используются команды:
 
-    python personal_website/manage.py makemigrations
-    python personal_website/manage.py migrate
+    python backend/manage.py makemigrations
+    python backend/manage.py migrate
 
 В данном проекте созданы пользовательские административные команды, которые используются для выполнения обособленных скриптов. Вызываются аналогичным образом:
 
-    python personal_website/manage.py <имя команды>
+    python backend/manage.py <имя команды>
 
 ## Режим разработки
 
@@ -85,10 +99,10 @@
 ### Ручной запуск режима разработки
 
 * Запустить базу данных PostgreSQL через Docker Compose: `docker compose up -d postgres`
-* Применить миграции базы данных: `poetry run python personal_website/manage.py migrate`
-* Собрать статические файлы: `poetry run python personal_website/manage.py collectstatic --noinput`
+* Применить миграции базы данных: `poetry run python backend/manage.py migrate`
+* Собрать статические файлы: `poetry run python backend/manage.py collectstatic --noinput`
 * Запустить сборку фронтенда в режиме наблюдения (в первом терминале): `npm run dev`
-* Запустить сервер разработки Django (во втором терминале): `poetry run python personal_website/manage.py runserver`
+* Запустить сервер разработки Django (во втором терминале): `poetry run python backend/manage.py runserver`
 * Открыть сайт в браузере: <http://localhost:8000> (админ-панель: <http://localhost:8000/admin/>)
 
 ### Остановка режима разработки

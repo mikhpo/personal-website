@@ -20,7 +20,7 @@ module.exports = {
    * Определяет начальные файлы для сборки.
    */
   entry: {
-    main: './personal_website/frontend/src/index.js',
+    main: path.resolve(__dirname, 'src/index.js'),
   },
 
   /**
@@ -28,7 +28,7 @@ module.exports = {
    * Определяет, где и как будут сохранены собранные файлы.
    */
   output: {
-    path: path.resolve(__dirname, 'personal_website/frontend/dist'),
+    path: path.resolve(__dirname, 'dist'),
     filename: '[name]-[contenthash].js',
     publicPath: '/static/',
   },
@@ -70,7 +70,7 @@ module.exports = {
   resolve: {
     extensions: ['.js', '.jsx'],
     alias: {
-      '@components': path.resolve(__dirname, 'personal_website/frontend/src/components'),
+      '@components': path.resolve(__dirname, 'src/components'),
     },
   },
 
@@ -95,8 +95,8 @@ module.exports = {
     new CopyWebpackPlugin({
       patterns: [
         {
-          from: path.resolve(__dirname, 'node_modules/tinymce'),
-          to: path.resolve(__dirname, 'personal_website/frontend/dist/tinymce'),
+          from: path.resolve(__dirname, '../node_modules/tinymce'),
+          to: path.resolve(__dirname, 'dist/tinymce'),
         },
       ],
     }),

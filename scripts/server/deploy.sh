@@ -7,8 +7,8 @@
 set -e
 
 # Определение рабочих файлов проекта.
-project_root="$(dirname "$(dirname "$(dirname "$(dirname "$(readlink -f "$0")")")")")"
-readonly config_dir="$project_root/personal_website/config"
+project_root="$(dirname "$(dirname "$(dirname "$(readlink -f "$0")")")")"
+readonly config_dir="$project_root/backend/config"
 readonly dotenv="$project_root/.env"
 cd "$project_root" || exit
 
@@ -217,7 +217,7 @@ function setup_certbot() {
 # Поставить скрипты на расписание в cron.
 #######################################
 function add_cronjobs() {
-    bash "$project_root"/personal_website/scripts/cronjobs.sh
+    bash "$project_root"/scripts/cronjobs.sh
 }
 
 #######################################

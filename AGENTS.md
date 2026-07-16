@@ -7,9 +7,9 @@
 ## Команды установки
 
 - Установить зависимости: `poetry install`
-- Применить миграции: `poetry run python personal_website/manage.py migrate`
-- Собрать статические файлы: `poetry run python personal_website/manage.py collectstatic --no-input`
-- Запустить сервер разработки: `poetry run python personal_website/manage.py runserver`
+- Применить миграции: `poetry run python backend/manage.py migrate`
+- Собрать статические файлы: `poetry run python backend/manage.py collectstatic --no-input`
+- Запустить сервер разработки: `poetry run python backend/manage.py runserver`
 - Запустить тесты: `poetry run pytest`
 
 ## Docker Compose

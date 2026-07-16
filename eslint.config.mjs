@@ -3,7 +3,7 @@ import reactRefresh from 'eslint-plugin-react-refresh';
 
 export default [
   {
-    files: ['**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx'],
+    files: ['frontend/**/*.js', 'frontend/**/*.jsx', 'frontend/**/*.ts', 'frontend/**/*.tsx'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
@@ -63,8 +63,10 @@ export default [
       'node_modules/**',
       'static/**',
       'htmlcov/**',
-      'personal_website/staticfiles/**',
-      'personal_website/frontend/dist/**',
+      'backend/staticfiles/**',
+      'static/**',
+      'dist/**',
+      'frontend/dist/**',
       '.venv/**',
       '**/*.min.js',
       '**/*.d.ts',

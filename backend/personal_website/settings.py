@@ -132,9 +132,9 @@ STATIC_ROOT = os.getenv("STATIC_ROOT", default=PROJECT_DIR / "static")
 
 # NPM-зависимости в корневом каталоге проекта.
 STATICFILES_DIRS = [
-    BASE_DIR / "staticfiles",
+    BASE_DIR / "staticfiles",  # backend/staticfiles
     PROJECT_DIR / "node_modules",
-    BASE_DIR / "frontend/dist",
+    PROJECT_DIR / "frontend/dist",  # Корень/frontend/dist
 ]
 
 # На проде статические файлы раздаются через WhiteNoise.
@@ -417,7 +417,7 @@ GALLERY_RESIZE_QUALITY = 100
 WEBPACK_LOADER = {
     "DEFAULT": {
         "BUNDLE_DIR_NAME": "frontend/dist/",
-        "STATS_FILE": BASE_DIR.parent / "webpack-stats.json",
+        "STATS_FILE": PROJECT_DIR / "webpack-stats.json",
         "POLL_INTERVAL": 0.1,
         "TIMEOUT": None,
         "IGNORE": [r".+\.hot-update.js", r".+\.map"],

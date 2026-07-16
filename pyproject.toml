@@ -73,12 +73,12 @@ line-length = 120
 [tool.isort]
 line_length = 120
 profile = "black"
-src_paths = ["personal_website"]
+src_paths = ["backend", "tests"]
 
 [tool.ruff]
 line-length = 120
 unsafe-fixes = true
-src = ["personal_website"]
+src = ["backend", "tests"]
 
 [tool.ruff.lint]
 select = ["ALL"]
@@ -126,11 +126,11 @@ docstring-code-format = true
 ignore = "H006,H013"
 
 [tool.pytest.ini_options]
-pythonpath = "personal_website"
+pythonpath = "backend"
 python_files = ["tests.py", "test_*.py", "*_tests.py"]
 DJANGO_SETTINGS_MODULE = "personal_website.settings"
-testpaths = "personal_website"
-addopts = "--cov=personal_website --cov-report term-missing:skip-covered --cov-report html"
+testpaths = ["backend", "tests"]
+addopts = "--cov=backend --cov-report term-missing:skip-covered --cov-report html"
 
 [tool.coverage.run]
 branch = true
