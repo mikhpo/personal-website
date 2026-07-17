@@ -3,13 +3,11 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import PhotoDetail from './PhotoDetail/PhotoDetail';
 
-jest.mock('./PhotoDetail/hooks/usePhotoData');
-jest.mock('./PhotoDetail/hooks/useAlbumPhotos');
-jest.mock('./PhotoDetail/hooks/usePhotoNavigation');
+jest.mock('@hooks/usePhotoData');
+jest.mock('@hooks/useAlbumPhotos');
+jest.mock('@hooks/usePhotoNavigation');
 
-import usePhotoData from './PhotoDetail/hooks/usePhotoData';
-import useAlbumPhotos from './PhotoDetail/hooks/useAlbumPhotos';
-import usePhotoNavigation from './PhotoDetail/hooks/usePhotoNavigation';
+import { usePhotoData, useAlbumPhotos, usePhotoNavigation } from '@hooks';
 
 /**
  * Набор тестов для компонента PhotoDetail.

@@ -2,12 +2,16 @@ import React from 'react';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import PhotoUploadForm from './PhotoUploadForm';
+import { galleryService } from '@services';
 
 /**
  * Тесты для компонента PhotoUploadForm.
  * Проверяют загрузку альбомов, выбор файлов, процесс загрузки фотографий,
  * обработку ошибок и отображение прогресса загрузки.
  */
+
+// Мок для galleryService
+jest.mock('@services');
 
 // Мок для document.cookie для эмуляции CSRF токена
 Object.defineProperty(document, 'cookie', {
@@ -22,9 +26,10 @@ describe('PhotoUploadForm', () => {
     { id: 2, name: 'Альбом 2' },
   ];
 
-  // Настройка mock fetch перед каждым тестом
+  // Настройка mock перед каждым тестом
   beforeEach(() => {
-    global.fetch = jest.fn();
+    galleryService.getAlbums.mockClear();
+    galleryService.uploadPhotos.mockClear();
   });
 
   // Восстановление всех моков после каждого теста
@@ -34,21 +39,18 @@ describe('PhotoUploadForm', () => {
 
   // Проверяет автоматическую загрузку списка альбомов при монтировании компонента
   test('загружает список альбомов при монтировании', async () => {
-    global.fetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ results: mockAlbums }),
-    });
+    galleryService.getAlbums.mockResolvedValue({ results: mockAlbums });
 
     render(<PhotoUploadForm />);
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith('/api/gallery/albums/');
+      expect(galleryService.getAlbums).toHaveBeenCalled();
     });
   });
 
   // Проверяет отображение индикатора загрузки во время получения списка альбомов
   test('отображает индикатор загрузки альбомов', () => {
-    global.fetch.mockImplementationOnce(() => new Promise(() => {}));
+    galleryService.getAlbums.mockImplementation(() => new Promise(() => {}));
 
     render(<PhotoUploadForm />);
 
@@ -58,10 +60,7 @@ describe('PhotoUploadForm', () => {
 
   // Проверяет отображение формы после успешной загрузки альбомов
   test('отображает форму после загрузки альбомов', async () => {
-    global.fetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ results: mockAlbums }),
-    });
+    galleryService.getAlbums.mockResolvedValue({ results: mockAlbums });
 
     render(<PhotoUploadForm />);
 
@@ -73,10 +72,7 @@ describe('PhotoUploadForm', () => {
 
   // Проверяет отображение сообщения об ошибке при неудачной загрузке альбомов
   test('отображает ошибку загрузки альбомов', async () => {
-    global.fetch.mockResolvedValueOnce({
-      ok: false,
-      status: 500,
-    });
+    galleryService.getAlbums.mockRejectedValue(new Error('Ошибка загрузки альбомов: 500'));
 
     render(<PhotoUploadForm />);
 
@@ -89,15 +85,9 @@ describe('PhotoUploadForm', () => {
   test('повторная загрузка альбомов работает после ошибки', async () => {
     const user = userEvent.setup();
 
-    global.fetch
-      .mockResolvedValueOnce({
-        ok: false,
-        status: 500,
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ results: mockAlbums }),
-      });
+    galleryService.getAlbums
+      .mockRejectedValueOnce(new Error('Ошибка загрузки альбомов'))
+      .mockResolvedValueOnce({ results: mockAlbums });
 
     render(<PhotoUploadForm />);
 
@@ -115,10 +105,7 @@ describe('PhotoUploadForm', () => {
 
   // Проверяет блокировку кнопки загрузки при отсутствии выбранного альбома
   test('кнопка загрузки отключена без выбранного альбома', async () => {
-    global.fetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ results: mockAlbums }),
-    });
+    galleryService.getAlbums.mockResolvedValue({ results: mockAlbums });
 
     render(<PhotoUploadForm />);
 
@@ -132,10 +119,7 @@ describe('PhotoUploadForm', () => {
   test('кнопка загрузки отключена без файлов', async () => {
     const user = userEvent.setup();
 
-    global.fetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ results: mockAlbums }),
-    });
+    galleryService.getAlbums.mockResolvedValue({ results: mockAlbums });
 
     render(<PhotoUploadForm />);
 
@@ -152,10 +136,7 @@ describe('PhotoUploadForm', () => {
 
   // Проверяет блокировку кнопки загрузки при наличии файлов, но отсутствии выбранного альбома
   test('кнопка disabled если альбом не выбран', async () => {
-    global.fetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ results: mockAlbums }),
-    });
+    galleryService.getAlbums.mockResolvedValue({ results: mockAlbums });
 
     render(<PhotoUploadForm />);
 
@@ -180,15 +161,10 @@ describe('PhotoUploadForm', () => {
   test('успешная загрузка файлов', async () => {
     const user = userEvent.setup();
 
-    global.fetch
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ results: mockAlbums }),
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ results: [{ success: true }] }),
-      });
+    galleryService.getAlbums.mockResolvedValue({ results: mockAlbums });
+    galleryService.uploadPhotos.mockResolvedValue([
+      { file: 'test.jpg', success: true },
+    ]);
 
     render(<PhotoUploadForm />);
 
@@ -220,23 +196,15 @@ describe('PhotoUploadForm', () => {
   test('отображает прогресс загрузки', async () => {
     const user = userEvent.setup();
 
-    global.fetch
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ results: mockAlbums }),
-      })
-      .mockImplementationOnce(() =>
-        new Promise(resolve =>
-          setTimeout(
-            () =>
-              resolve({
-                ok: true,
-                json: async () => ({ results: [{ success: true }] }),
-              }),
-            100
-          )
-        )
-      );
+    galleryService.getAlbums.mockResolvedValue({ results: mockAlbums });
+
+    // Mock uploadPhotos with callback support - use a promise to control timing
+    let resolveUpload;
+    galleryService.uploadPhotos.mockImplementation(() => {
+      return new Promise((resolve) => {
+        resolveUpload = resolve;
+      });
+    });
 
     render(<PhotoUploadForm />);
 
@@ -259,9 +227,24 @@ describe('PhotoUploadForm', () => {
     const uploadButton = screen.getByText('Загрузить');
     await user.click(uploadButton);
 
+    // Wait a bit for the upload to start
+    await waitFor(() => {
+      expect(galleryService.uploadPhotos).toHaveBeenCalled();
+    });
+
+    // Now check that we can see the progress section
+    // The component should have set some progress state
+    // Since we're mocking the service, we need to manually trigger the progress callback
+    const uploadCall = galleryService.uploadPhotos.mock.calls[0];
+    const onProgress = uploadCall[2];
+    onProgress('test.jpg', { progress: 50, status: 'uploading' });
+
     await waitFor(() => {
       expect(screen.getByText('Прогресс загрузки:')).toBeInTheDocument();
     });
+
+    // Now resolve the upload
+    resolveUpload([{ file: 'test.jpg', success: true }]);
 
     await waitFor(() => {
       expect(screen.getByText('Фотографии успешно загружены!')).toBeInTheDocument();
@@ -272,15 +255,10 @@ describe('PhotoUploadForm', () => {
   test('обрабатывает ошибку загрузки файла', async () => {
     const user = userEvent.setup();
 
-    global.fetch
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ results: mockAlbums }),
-      })
-      .mockResolvedValueOnce({
-        ok: false,
-        status: 500,
-      });
+    galleryService.getAlbums.mockResolvedValue({ results: mockAlbums });
+    galleryService.uploadPhotos.mockResolvedValue([
+      { file: 'test.jpg', success: false, error: 'Upload failed' },
+    ]);
 
     render(<PhotoUploadForm />);
 
@@ -312,12 +290,8 @@ describe('PhotoUploadForm', () => {
   test('кнопка отключена во время загрузки', async () => {
     const user = userEvent.setup();
 
-    global.fetch
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ results: mockAlbums }),
-      })
-      .mockImplementationOnce(() => new Promise(() => {}));
+    galleryService.getAlbums.mockResolvedValue({ results: mockAlbums });
+    galleryService.uploadPhotos.mockImplementation(() => new Promise(() => {}));
 
     render(<PhotoUploadForm />);
 
@@ -344,21 +318,16 @@ describe('PhotoUploadForm', () => {
     expect(uploadButton).toBeDisabled();
   });
 
-  // Проверяет использование кастомного URL для API загрузки
-  test('использует кастомный apiUrl', async () => {
+  // Проверяет использование galleryService для загрузки файлов
+  test('использует galleryService для загрузки', async () => {
     const user = userEvent.setup();
 
-    global.fetch
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ results: mockAlbums }),
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ results: [{ success: true }] }),
-      });
+    galleryService.getAlbums.mockResolvedValue({ results: mockAlbums });
+    galleryService.uploadPhotos.mockResolvedValue([
+      { file: 'test.jpg', success: true },
+    ]);
 
-    render(<PhotoUploadForm apiUrl="/custom/api/" />);
+    render(<PhotoUploadForm />);
 
     await waitFor(() => {
       expect(screen.getByText('Загрузка фотографий')).toBeInTheDocument();
@@ -380,24 +349,22 @@ describe('PhotoUploadForm', () => {
     await user.click(uploadButton);
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith(
-        '/custom/api/upload/',
-        expect.any(Object)
+      expect(galleryService.uploadPhotos).toHaveBeenCalledWith(
+        1,
+        [file],
+        expect.any(Function)
       );
     });
   });
 
-  // Проверяет использование кастомного URL для API альбомов
-  test('использует кастомный albumsApiUrl', async () => {
-    global.fetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ results: mockAlbums }),
-    });
+  // Проверяет использование galleryService для загрузки альбомов
+  test('использует galleryService для загрузки альбомов', async () => {
+    galleryService.getAlbums.mockResolvedValue({ results: mockAlbums });
 
-    render(<PhotoUploadForm albumsApiUrl="/custom/albums/" />);
+    render(<PhotoUploadForm />);
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith('/custom/albums/');
+      expect(galleryService.getAlbums).toHaveBeenCalled();
     });
   });
 
@@ -405,15 +372,10 @@ describe('PhotoUploadForm', () => {
   test('сбрасывает форму после успешной загрузки', async () => {
     const user = userEvent.setup();
 
-    global.fetch
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ results: mockAlbums }),
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ results: [{ success: true }] }),
-      });
+    galleryService.getAlbums.mockResolvedValue({ results: mockAlbums });
+    galleryService.uploadPhotos.mockResolvedValue([
+      { file: 'test.jpg', success: true },
+    ]);
 
     render(<PhotoUploadForm />);
 
@@ -442,59 +404,9 @@ describe('PhotoUploadForm', () => {
     });
   });
 
-  // Проверяет передачу CSRF токена в заголовках запроса
-  test('отправляет CSRF токен в заголовках', async () => {
-    const user = userEvent.setup();
-
-    global.fetch
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ results: mockAlbums }),
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ results: [{ success: true }] }),
-      });
-
-    render(<PhotoUploadForm />);
-
-    await waitFor(() => {
-      expect(screen.getByText('Загрузка фотографий')).toBeInTheDocument();
-    });
-
-    const select = screen.getByRole('combobox');
-    await user.selectOptions(select, '1');
-
-    const file = new File(['content'], 'test.jpg', { type: 'image/jpeg' });
-    const input = document.querySelector('input[type="file"]');
-
-    fireEvent.change(input, { target: { files: [file] } });
-
-    await waitFor(() => {
-      expect(screen.getByText('test.jpg')).toBeInTheDocument();
-    });
-
-    const uploadButton = screen.getByText('Загрузить');
-    await user.click(uploadButton);
-
-    await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.objectContaining({
-          headers: expect.objectContaining({
-            'X-CSRFToken': 'test-csrf-token',
-          }),
-        })
-      );
-    });
-  });
-
   // Проверяет корректную обработку ответа API в виде прямого массива без обёртки results
   test('обрабатывает прямой массив альбомов без results', async () => {
-    global.fetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockAlbums,
-    });
+    galleryService.getAlbums.mockResolvedValue(mockAlbums);
 
     render(<PhotoUploadForm />);
 
@@ -505,7 +417,7 @@ describe('PhotoUploadForm', () => {
 
   // Проверяет обработку сетевой ошибки при загрузке альбомов
   test('обрабатывает network error при загрузке альбомов', async () => {
-    global.fetch.mockRejectedValueOnce(new Error('Network error'));
+    galleryService.getAlbums.mockRejectedValue(new Error('Network error'));
 
     render(<PhotoUploadForm />);
 
@@ -518,10 +430,7 @@ describe('PhotoUploadForm', () => {
   test('очищает ошибки и успех при выборе новых файлов', async () => {
     const user = userEvent.setup();
 
-    global.fetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ results: mockAlbums }),
-    });
+    galleryService.getAlbums.mockResolvedValue({ results: mockAlbums });
 
     render(<PhotoUploadForm />);
 

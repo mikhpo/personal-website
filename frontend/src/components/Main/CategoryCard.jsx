@@ -1,6 +1,6 @@
 import React from 'react';
-import { Card } from 'react-bootstrap';
 import PropTypes from 'prop-types';
+import { BaseCard } from '@ui';
 
 /**
  * Компонент карточки категории блога.
@@ -29,28 +29,13 @@ const CategoryCard = ({ category }) => {
   const categoryUrl = `/blog/category/${category.slug}/`;
 
   return (
-    <Card className="shadow bg-white rounded text-center h-100">
-      {category.image && (
-        <a href={categoryUrl}>
-          <Card.Img
-            variant="top"
-            src={category.image}
-            alt={category.name}
-            loading="lazy"
-          />
-        </a>
-      )}
-      <Card.Body className="d-flex flex-column">
-        <Card.Title className="mt-auto">
-          <a href={categoryUrl} className="text-decoration-none text-dark">
-            {category.name}
-          </a>
-        </Card.Title>
-        {category.description && (
-          <Card.Text>{category.description}</Card.Text>
-        )}
-      </Card.Body>
-    </Card>
+    <BaseCard
+      title={category.name}
+      url={categoryUrl}
+      image={category.image}
+      description={category.description}
+      imageAlt={category.name}
+    />
   );
 };
 

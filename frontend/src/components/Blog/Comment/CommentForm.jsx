@@ -3,20 +3,7 @@ import PropTypes from 'prop-types';
 import { Button } from 'react-bootstrap';
 import { Editor } from '@tinymce/tinymce-react';
 import AlertList from '@components/Alert/AlertList';
-
-/**
- * Читает значение cookie по имени.
- *
- * @function getCookie
- * @param {string} name - Имя cookie
- * @return {string|null} Значение cookie или null
- */
-const getCookie = (name) => {
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop().split(';').shift();
-  return null;
-};
+import { blogService } from '@services';
 
 /**
  * Компонент формы добавления комментария с WYSIWYG редактором TinyMCE.
@@ -92,25 +79,8 @@ const CommentForm = ({ articleId, isAuthenticated, loginUrl, onSuccess }) => {
     setSubmitting(true);
     setError(null);
 
-    const csrfToken = getCookie('csrftoken');
-
     try {
-      const response = await fetch('/api/blog/comments/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': csrfToken,
-        },
-        body: JSON.stringify({
-          article: articleId,
-          content,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Ошибка отправки комментария');
-      }
-
+      await blogService.createComment(articleId, { content });
       setContent('');
       if (onSuccess) onSuccess();
     } catch (err) {

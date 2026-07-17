@@ -1,31 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Button, Alert } from 'react-bootstrap';
-import PropTypes from 'prop-types';
 import AlbumSelector from '@components/Gallery/Upload/AlbumSelector';
 import FileDropzone from '@components/Gallery/Upload/FileDropzone';
 import UploadProgress from '@components/Gallery/Upload/UploadProgress';
 import SpinnerComponent from '@components/Spinner/Spinner';
-
-/**
- * Получить значение cookie по имени.
- *
- * @param {string} name - Имя cookie
- * @return {string|null} Значение cookie или null
- */
-const getCookie = (name) => {
-  let cookieValue = null;
-  if (document.cookie && document.cookie !== '') {
-    const cookies = document.cookie.split(';');
-    for (let i = 0; i < cookies.length; i++) {
-      const cookie = cookies[i].trim();
-      if (cookie.substring(0, name.length + 1) === name + '=') {
-        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-        break;
-      }
-    }
-  }
-  return cookieValue;
-};
+import { galleryService } from '@services';
 
 /**
  * Компонент формы загрузки фотографий.
@@ -33,14 +12,9 @@ const getCookie = (name) => {
  * Позволяет выбрать альбом и загрузить фотографии через drag-and-drop или file input.
  *
  * @param {Object} props - Пропсы компонента
- * @param {string} [props.apiUrl="/api/gallery/upload/"] - URL API для загрузки фотографий
- * @param {string} [props.albumsApiUrl="/api/gallery/albums/"] - URL API для загрузки альбомов
  * @return {JSX.Element} Компонент формы загрузки
  */
-const PhotoUploadForm = ({
-  apiUrl = '/api/gallery/upload/',
-  albumsApiUrl = '/api/gallery/albums/',
-}) => {
+const PhotoUploadForm = () => {
   const [albums, setAlbums] = useState([]);
   const [selectedAlbum, setSelectedAlbum] = useState(null);
   const [files, setFiles] = useState([]);
@@ -55,13 +29,7 @@ const PhotoUploadForm = ({
     setLoadingAlbums(true);
     setAlbumsError(null);
 
-    fetch(albumsApiUrl)
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`Ошибка загрузки альбомов: ${response.status}`);
-        }
-        return response.json();
-      })
+    galleryService.getAlbums()
       .then(data => {
         const albumsList = data.results || data;
         setAlbums(Array.isArray(albumsList) ? albumsList : []);
@@ -71,7 +39,7 @@ const PhotoUploadForm = ({
         setAlbumsError(err.message);
         setLoadingAlbums(false);
       });
-  }, [albumsApiUrl]);
+  }, []);
 
   /**
    * Обработчик выбора файлов пользователем.
@@ -114,49 +82,20 @@ const PhotoUploadForm = ({
     }
 
     setUploading(true);
-    const csrfToken = getCookie('csrftoken');
-    const uploadResults = [];
 
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      const formData = new FormData();
-      formData.append('album_id', selectedAlbum);
-      formData.append('photos', file);
-
+    // Колбэк для обновления прогресса загрузки
+    const onProgress = (fileName, progressData) => {
       setUploadProgress(prev => ({
         ...prev,
-        [file.name]: { progress: 0, status: 'uploading' },
+        [fileName]: progressData,
       }));
+    };
 
-      try {
-        const response = await fetch(`${apiUrl}upload/`, {
-          method: 'POST',
-          headers: {
-            'X-CSRFToken': csrfToken,
-          },
-          body: formData,
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-
-        setUploadProgress(prev => ({
-          ...prev,
-          [file.name]: { progress: 100, status: 'success' },
-        }));
-
-        uploadResults.push({ file: file.name, success: true });
-      } catch (error) {
-        setUploadProgress(prev => ({
-          ...prev,
-          [file.name]: { progress: 0, status: 'error' },
-        }));
-
-        uploadResults.push({ file: file.name, success: false, error: error.message });
-      }
-    }
+    const uploadResults = await galleryService.uploadPhotos(
+      selectedAlbum,
+      files,
+      onProgress
+    );
 
     setUploading(false);
 
@@ -189,13 +128,7 @@ const PhotoUploadForm = ({
     setLoadingAlbums(true);
     setAlbumsError(null);
 
-    fetch(albumsApiUrl)
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`Ошибка загрузки альбомов: ${response.status}`);
-        }
-        return response.json();
-      })
+    galleryService.getAlbums()
       .then(data => {
         const albumsList = data.results || data;
         setAlbums(Array.isArray(albumsList) ? albumsList : []);
@@ -291,9 +224,6 @@ const PhotoUploadForm = ({
   );
 };
 
-PhotoUploadForm.propTypes = {
-  apiUrl: PropTypes.string,
-  albumsApiUrl: PropTypes.string,
-};
+PhotoUploadForm.propTypes = {};
 
 export default PhotoUploadForm;

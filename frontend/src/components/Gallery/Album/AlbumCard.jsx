@@ -1,6 +1,6 @@
 import React from 'react';
-import { Card } from 'react-bootstrap';
 import PropTypes from 'prop-types';
+import { BaseCard } from '@ui';
 
 /**
  * Компонент карточки альбома.
@@ -18,34 +18,39 @@ import PropTypes from 'prop-types';
 const AlbumCard = ({ album }) => {
   const albumUrl = `/gallery/album/${album.id}/`;
 
+  // Если есть обложка, используем BaseCard
+  if (album.cover_thumbnail_url) {
+    return (
+      <BaseCard
+        title={album.name}
+        url={albumUrl}
+        image={album.cover_thumbnail_url}
+        description={album.description}
+        imageAlt={album.name}
+      />
+    );
+  }
+
+  // Если обложки нет, отображаем плейсхолдер
   return (
-    <Card className="shadow bg-white rounded text-center h-100">
-      {album.cover_thumbnail_url && (
-        <a href={albumUrl}>
-          <Card.Img
-            variant="top"
-            src={album.cover_thumbnail_url}
-            alt={album.name}
-            loading="lazy"
-          />
-        </a>
-      )}
-      {!album.cover_thumbnail_url && (
-        <div
-          className="card-img-top bg-light d-flex align-items-center justify-content-center"
-          style={{ height: '200px' }}
-        >
-          <span className="text-muted">Нет обложки</span>
-        </div>
-      )}
-      <Card.Body className="d-flex flex-column">
-        <Card.Title className="mt-auto">
+    <div className="card shadow bg-white rounded text-center h-100">
+      <div
+        className="card-img-top bg-light d-flex align-items-center justify-content-center"
+        style={{ height: '200px' }}
+      >
+        <span className="text-muted">Нет обложки</span>
+      </div>
+      <div className="card-body d-flex flex-column">
+        <h5 className="card-title mt-auto">
           <a href={albumUrl} className="text-decoration-none text-dark">
             {album.name}
           </a>
-        </Card.Title>
-      </Card.Body>
-    </Card>
+        </h5>
+        {album.description && (
+          <p className="card-text">{album.description}</p>
+        )}
+      </div>
+    </div>
   );
 };
 

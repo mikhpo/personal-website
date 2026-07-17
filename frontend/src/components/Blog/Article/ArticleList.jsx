@@ -5,6 +5,7 @@ import ArticleCard from '@components/Blog/Article/ArticleCard';
 import SpinnerComponent from '@components/Spinner/Spinner';
 import AlertList from '@components/Alert/AlertList';
 import Pagination from '@components/Pagination/Pagination';
+import { blogService } from '@services';
 
 /**
  * Компонент списка статей блога.
@@ -84,13 +85,17 @@ const ArticleList = ({ apiUrl = '/api/blog/articles/' }) => {
       setError(null);
 
       try {
-        const separator = apiUrl.includes('?') ? '&' : '?';
-        const url = currentPage > 1 ? `${apiUrl}${separator}page=${currentPage}` : apiUrl;
-        const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error(`Ошибка загрузки: ${response.status}`);
+        // Парсим URL для извлечения параметров запроса
+        const url = new URL(apiUrl, window.location.origin);
+        const params = {};
+        for (const [key, value] of url.searchParams.entries()) {
+          params[key] = value;
         }
-        const data = await response.json();
+        if (currentPage > 1) {
+          params.page = currentPage;
+        }
+
+        const data = await blogService.getArticles(params);
         const articlesList = data.results || data;
         setArticles(Array.isArray(articlesList) ? articlesList : []);
         if (data.count !== undefined) {
@@ -126,11 +131,14 @@ const ArticleList = ({ apiUrl = '/api/blog/articles/' }) => {
       setError(null);
 
       try {
-        const response = await fetch(apiUrl);
-        if (!response.ok) {
-          throw new Error(`Ошибка загрузки: ${response.status}`);
+        // Парсим URL для извлечения параметров запроса
+        const url = new URL(apiUrl, window.location.origin);
+        const params = {};
+        for (const [key, value] of url.searchParams.entries()) {
+          params[key] = value;
         }
-        const data = await response.json();
+
+        const data = await blogService.getArticles(params);
         const articlesList = data.results || data;
         setArticles(Array.isArray(articlesList) ? articlesList : []);
       } catch (err) {

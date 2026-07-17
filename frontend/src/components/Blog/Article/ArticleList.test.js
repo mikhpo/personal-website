@@ -8,6 +8,10 @@
 import React from 'react';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import ArticleList from './ArticleList';
+import { blogService } from '@services';
+
+// Мок для blogService
+jest.mock('@services');
 
 // Мок для компонента ArticleCard
 jest.mock('@components/Blog/Article/ArticleCard', () => {
@@ -84,7 +88,7 @@ describe('ArticleList', () => {
   };
 
   beforeEach(() => {
-    global.fetch = jest.fn();
+    blogService.getArticles.mockClear();
   });
 
   afterEach(() => {
@@ -96,7 +100,7 @@ describe('ArticleList', () => {
    * Компонент должен показывать спиннер до получения данных от API.
    */
   test('отображает индикатор загрузки при монтировании', () => {
-    global.fetch.mockImplementation(() => new Promise(() => {}));
+    blogService.getArticles.mockImplementation(() => new Promise(() => {}));
     render(<ArticleList />);
     expect(screen.getByTestId('spinner')).toBeInTheDocument();
     expect(screen.getByText('Загрузка статей...')).toBeInTheDocument();
@@ -107,10 +111,7 @@ describe('ArticleList', () => {
    * Данные должны корректно отображаться после получения от API.
    */
   test('отображает список статей при успешной загрузке', async () => {
-    global.fetch.mockResolvedValue({
-      ok: true,
-      json: async () => mockApiResponse,
-    });
+    blogService.getArticles.mockResolvedValue(mockApiResponse);
 
     render(<ArticleList />);
 
@@ -127,10 +128,7 @@ describe('ArticleList', () => {
    * Компонент должен показывать элементы управления страницами.
    */
   test('отображает пагинацию при наличии нескольких страниц', async () => {
-    global.fetch.mockResolvedValue({
-      ok: true,
-      json: async () => mockApiResponse,
-    });
+    blogService.getArticles.mockResolvedValue(mockApiResponse);
 
     render(<ArticleList />);
 
@@ -144,10 +142,7 @@ describe('ArticleList', () => {
    * Компонент должен поддерживать оба формата ответов.
    */
   test('обрабатывает ответ API без results (плоский список)', async () => {
-    global.fetch.mockResolvedValue({
-      ok: true,
-      json: async () => mockFlatApiResponse,
-    });
+    blogService.getArticles.mockResolvedValue(mockFlatApiResponse);
 
     render(<ArticleList />);
 
@@ -161,7 +156,7 @@ describe('ArticleList', () => {
    * Компонент должен показывать сообщение об ошибке.
    */
   test('отображает ошибку при неудачной загрузке', async () => {
-    global.fetch.mockRejectedValue(new Error('Ошибка сети'));
+    blogService.getArticles.mockRejectedValue(new Error('Ошибка сети'));
 
     render(<ArticleList />);
 
@@ -177,7 +172,7 @@ describe('ArticleList', () => {
    * Пользователь должен иметь возможность повторить запрос.
    */
   test('отображает кнопку "Повторить" при ошибке', async () => {
-    global.fetch.mockRejectedValueOnce(new Error('Ошибка сети'));
+    blogService.getArticles.mockRejectedValueOnce(new Error('Ошибка сети'));
 
     render(<ArticleList />);
 
@@ -191,12 +186,9 @@ describe('ArticleList', () => {
    * Компонент должен повторять запрос при клике на кнопку.
    */
   test('повторная попытка загрузки при нажатии кнопки "Повторить"', async () => {
-    global.fetch
+    blogService.getArticles
       .mockRejectedValueOnce(new Error('Ошибка сети'))
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockApiResponse,
-      });
+      .mockResolvedValueOnce(mockApiResponse);
 
     render(<ArticleList />);
 
@@ -216,10 +208,7 @@ describe('ArticleList', () => {
    * Компонент должен информировать пользователя об отсутствии статей.
    */
   test('отображает сообщение при пустом списке статей', async () => {
-    global.fetch.mockResolvedValue({
-      ok: true,
-      json: async () => mockEmptyApiResponse,
-    });
+    blogService.getArticles.mockResolvedValue(mockEmptyApiResponse);
 
     render(<ArticleList />);
 
@@ -235,18 +224,12 @@ describe('ArticleList', () => {
    * Компонент должен загружать данные для следующей страницы.
    */
   test('переходит на следующую страницу', async () => {
-    global.fetch
+    blogService.getArticles
+      .mockResolvedValueOnce(mockApiResponse)
       .mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockApiResponse,
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          ...mockApiResponse,
-          previous: '/api/blog/articles/',
-          next: null,
-        }),
+        ...mockApiResponse,
+        previous: '/api/blog/articles/',
+        next: null,
       });
 
     render(<ArticleList />);
@@ -258,7 +241,7 @@ describe('ArticleList', () => {
     fireEvent.click(screen.getByText('След.'));
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledTimes(2);
+      expect(blogService.getArticles).toHaveBeenCalledTimes(2);
     });
   });
 
@@ -273,15 +256,9 @@ describe('ArticleList', () => {
       next: null,
     };
 
-    global.fetch
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => responseWithPrevious,
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockApiResponse,
-      });
+    blogService.getArticles
+      .mockResolvedValueOnce(responseWithPrevious)
+      .mockResolvedValueOnce(mockApiResponse);
 
     render(<ArticleList apiUrl="/api/blog/articles/?page=2" />);
 
@@ -292,7 +269,7 @@ describe('ArticleList', () => {
     fireEvent.click(screen.getByText('Пред.'));
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalled();
+      expect(blogService.getArticles).toHaveBeenCalled();
     });
   });
 
@@ -302,15 +279,14 @@ describe('ArticleList', () => {
    */
   test('использует пользовательский URL для загрузки', async () => {
     const customUrl = '/api/blog/articles/?categories__slug=react';
-    global.fetch.mockResolvedValue({
-      ok: true,
-      json: async () => mockApiResponse,
-    });
+    blogService.getArticles.mockResolvedValue(mockApiResponse);
 
     render(<ArticleList apiUrl={customUrl} />);
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining(customUrl));
+      expect(blogService.getArticles).toHaveBeenCalledWith(
+        expect.objectContaining({ categories__slug: 'react' })
+      );
     });
   });
 });

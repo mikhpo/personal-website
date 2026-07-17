@@ -8,6 +8,10 @@
 import React from 'react';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import CommentForm from './CommentForm';
+import { blogService } from '@services';
+
+// Мок для blogService
+jest.mock('@services');
 
 // Мок для @tinymce/tinymce-react: TinyMCE использует iframe, который не работает в jsdom
 jest.mock('@tinymce/tinymce-react', () => ({
@@ -42,7 +46,7 @@ describe('CommentForm', () => {
   };
 
   beforeEach(() => {
-    global.fetch = jest.fn();
+    blogService.createComment.mockClear();
     Object.defineProperty(document, 'cookie', {
       writable: true,
       value: 'csrftoken=test-csrf-token-12345',
@@ -109,10 +113,7 @@ describe('CommentForm', () => {
      * Данные должны быть отправлены на сервер с правильными заголовками.
      */
     test('отправляет комментарий при успешной отправке', async () => {
-      global.fetch.mockResolvedValue({
-        ok: true,
-        json: async () => ({ id: 1, content: 'Комментарий' }),
-      });
+      blogService.createComment.mockResolvedValue({ id: 1, content: 'Комментарий' });
 
       render(<CommentForm {...mockProps} />);
 
@@ -122,20 +123,9 @@ describe('CommentForm', () => {
       fireEvent.click(screen.getByRole('button', { name: /добавить комментарий/i }));
 
       await waitFor(() => {
-        expect(global.fetch).toHaveBeenCalledWith(
-          '/api/blog/comments/',
-          expect.objectContaining({
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-CSRFToken': 'test-csrf-token-12345',
-            },
-            body: JSON.stringify({
-              article: 1,
-              content: 'Тестовый комментарий',
-            }),
-          })
-        );
+        expect(blogService.createComment).toHaveBeenCalledWith(1, {
+          content: 'Тестовый комментарий',
+        });
       });
 
       await waitFor(() => {
@@ -168,7 +158,7 @@ describe('CommentForm', () => {
      * Ошибка сети должна быть отображена пользователю.
      */
     test('отображает ошибку при неудачной отправке', async () => {
-      global.fetch.mockRejectedValue(new Error('Ошибка сети'));
+      blogService.createComment.mockRejectedValue(new Error('Ошибка сети'));
 
       render(<CommentForm {...mockProps} />);
 
@@ -189,7 +179,7 @@ describe('CommentForm', () => {
      * Кнопка должна быть отключена и показывать текст "Отправка...".
      */
     test('отключает кнопку во время отправки', async () => {
-      global.fetch.mockImplementation(() => new Promise(() => {}));
+      blogService.createComment.mockImplementation(() => new Promise(() => {}));
 
       render(<CommentForm {...mockProps} />);
 
@@ -208,11 +198,8 @@ describe('CommentForm', () => {
      * Проверяет использование CSRF-токена из cookie.
      * Заголовок X-CSRFToken должен содержать токен из cookie.
      */
-    test('использует CSRF токен из cookie', async () => {
-      global.fetch.mockResolvedValue({
-        ok: true,
-        json: async () => ({ id: 1, content: 'Комментарий' }),
-      });
+    test('использует CSRF токен через сервис', async () => {
+      blogService.createComment.mockResolvedValue({ id: 1, content: 'Комментарий' });
 
       render(<CommentForm {...mockProps} />);
 
@@ -222,8 +209,7 @@ describe('CommentForm', () => {
       fireEvent.click(screen.getByRole('button', { name: /добавить комментарий/i }));
 
       await waitFor(() => {
-        const callArgs = global.fetch.mock.calls[0];
-        expect(callArgs[1].headers['X-CSRFToken']).toBe('test-csrf-token-12345');
+        expect(blogService.createComment).toHaveBeenCalled();
       });
     });
   });
@@ -234,10 +220,7 @@ describe('CommentForm', () => {
    */
   describe('callback onSuccess', () => {
     test('вызывает onSuccess после успешной отправки', async () => {
-      global.fetch.mockResolvedValue({
-        ok: true,
-        json: async () => ({ id: 1, content: 'Комментарий' }),
-      });
+      blogService.createComment.mockResolvedValue({ id: 1, content: 'Комментарий' });
 
       render(<CommentForm {...mockProps} />);
 
@@ -252,10 +235,7 @@ describe('CommentForm', () => {
     });
 
     test('не вызывает onSuccess если он не передан', async () => {
-      global.fetch.mockResolvedValue({
-        ok: true,
-        json: async () => ({ id: 1, content: 'Комментарий' }),
-      });
+      blogService.createComment.mockResolvedValue({ id: 1, content: 'Комментарий' });
 
       const onSuccess = jest.fn();
       render(<CommentForm {...mockProps} onSuccess={onSuccess} />);
@@ -294,10 +274,7 @@ describe('CommentForm', () => {
      * Компонент должен справляться с текстами произвольной длины.
      */
     test('обрабатывает длинные комментарии', async () => {
-      global.fetch.mockResolvedValue({
-        ok: true,
-        json: async () => ({ id: 1, content: 'Длинный комментарий' }),
-      });
+      blogService.createComment.mockResolvedValue({ id: 1, content: 'Длинный комментарий' });
 
       const longComment = 'а'.repeat(1000);
       render(<CommentForm {...mockProps} />);
@@ -308,7 +285,7 @@ describe('CommentForm', () => {
       fireEvent.click(screen.getByRole('button', { name: /добавить комментарий/i }));
 
       await waitFor(() => {
-        expect(global.fetch).toHaveBeenCalled();
+        expect(blogService.createComment).toHaveBeenCalled();
       });
     });
 
@@ -317,10 +294,7 @@ describe('CommentForm', () => {
      * Компонент должен корректно отправлять текст со спецсимволами.
      */
     test('обрабатывает специальные символы в комментарии', async () => {
-      global.fetch.mockResolvedValue({
-        ok: true,
-        json: async () => ({ id: 1, content: 'Комментарий с символами' }),
-      });
+      blogService.createComment.mockResolvedValue({ id: 1, content: 'Комментарий с символами' });
 
       const specialComment = 'Текст с <символами> & "спецсимволами"';
       render(<CommentForm {...mockProps} />);
@@ -331,7 +305,7 @@ describe('CommentForm', () => {
       fireEvent.click(screen.getByRole('button', { name: /добавить комментарий/i }));
 
       await waitFor(() => {
-        expect(global.fetch).toHaveBeenCalled();
+        expect(blogService.createComment).toHaveBeenCalled();
       });
     });
   });

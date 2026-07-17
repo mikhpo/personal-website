@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Modal, Button } from 'react-bootstrap';
 import PropTypes from 'prop-types';
 import ExifData from '@components/Gallery/Photo/ExifData';
-import usePhotoData from '@components/Gallery/Photo/PhotoDetail/hooks/usePhotoData';
+import { usePhotoData } from '@hooks';
 
 /**
  * Компонент детального просмотра фотографии.
