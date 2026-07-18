@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { BaseCard } from '@ui';
+import BaseCard from '@components/Card/BaseCard';
 
 /**
  * Компонент карточки категории блога.

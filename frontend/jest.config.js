@@ -28,8 +28,6 @@ module.exports = {
     '^@utils$': '<rootDir>/src/utils/index.js',
     '^@hooks/(.*)$': '<rootDir>/src/hooks/$1',
     '^@hooks$': '<rootDir>/src/hooks/index.js',
-    '^@ui/(.*)$': '<rootDir>/src/ui/$1',
-    '^@ui$': '<rootDir>/src/ui/index.js',
   },
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   collectCoverageFrom: [
