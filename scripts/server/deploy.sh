@@ -221,6 +221,29 @@ function add_cronjobs() {
 }
 
 #######################################
+# Установить зависимости проекта и собрать фронтенд.
+#######################################
+function install_project_dependencies() {
+    readonly python="$project_root/.venv/bin/python"
+    readonly manage="$project_root/backend/manage.py"
+
+    cd "$project_root" || exit
+
+    echo "Установка зависимостей Node.js и сборка фронтенда..."
+    npm install
+    npm run build
+
+    echo "Установка зависимостей Python..."
+    poetry install
+
+    echo "Сборка статических файлов Django..."
+    $python "$manage" collectstatic --noinput
+
+    echo "Выполнение миграций базы данных..."
+    $python "$manage" migrate
+}
+
+#######################################
 # Последовательный вызов основных функций скрипта.
 #######################################
 function main() {
@@ -231,6 +254,7 @@ function main() {
     install_poetry
     install_node
     install_minio
+    install_project_dependencies
     setup_gunicorn
     setup_nginx
     setup_certbot
