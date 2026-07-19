@@ -21,7 +21,9 @@ class UserViewSet(viewsets.ModelViewSet):
         - list/retrieve: IsAuthenticatedOrReadOnly (чтение доступно всем, запись только аутентифицированным)
         - update/destroy: IsAuthenticatedOrReadOnly (чтение доступно всем, запись только аутентифицированным).
         """
-        permission_classes = [AllowAny] if self.action == "create" else [IsAuthenticatedOrReadOnly]  # type: ignore[list-item]
+        permission_classes: list[type[BasePermission]] = (
+            [AllowAny] if self.action == "create" else [IsAuthenticatedOrReadOnly]
+        )
         return [permission() for permission in permission_classes]
 
     def perform_create(self, serializer: BaseSerializer) -> None:
