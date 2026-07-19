@@ -126,11 +126,14 @@ docstring-code-format = true
 ignore = "H006,H013"
 
 [tool.pytest.ini_options]
+markers = [
+    "integration: метка для интеграционных тестов, требующих внешние сервисы",
+]
 pythonpath = "backend"
 python_files = ["tests.py", "test_*.py", "*_tests.py"]
 DJANGO_SETTINGS_MODULE = "personal_website.settings"
-testpaths = ["backend", "tests"]
-addopts = "--cov=backend --cov-report term-missing:skip-covered --cov-report html"
+testpaths = ["backend"]
+addopts = "--cov=backend --cov-report term-missing:skip-covered --cov-report html -m 'not integration'"
 
 [tool.coverage.run]
 branch = true

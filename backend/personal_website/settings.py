@@ -128,11 +128,11 @@ USE_TZ = True
 STATIC_URL = "/static/"
 
 # Абсолютный путь до папки, в которой собраны статические файлы.
-STATIC_ROOT = os.getenv("STATIC_ROOT", default=PROJECT_DIR / "static")
+STATIC_ROOT = os.getenv("STATIC_ROOT", default=BASE_DIR / "static")
 
 # NPM-зависимости в корневом каталоге проекта.
 STATICFILES_DIRS = [
-    BASE_DIR / "staticfiles",  # backend/staticfiles
+    BASE_DIR / "staticfiles",  # backend/staticfiles - исходные статические файлы
     PROJECT_DIR / "node_modules",
     PROJECT_DIR / "frontend/dist",  # Корень/frontend/dist
 ]
@@ -417,7 +417,7 @@ GALLERY_RESIZE_QUALITY = 100
 WEBPACK_LOADER = {
     "DEFAULT": {
         "BUNDLE_DIR_NAME": "frontend/dist/",
-        "STATS_FILE": PROJECT_DIR / "webpack-stats.json",
+        "STATS_FILE": PROJECT_DIR / "frontend" / "webpack-stats.json",
         "POLL_INTERVAL": 0.1,
         "TIMEOUT": None,
         "IGNORE": [r".+\.hot-update.js", r".+\.map"],

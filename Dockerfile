@@ -65,7 +65,7 @@ COPY . .
 
 # Копирование собранного React бандла
 COPY --from=node-builder /app/frontend/dist $WORK_DIR/frontend/dist
-COPY --from=node-builder /app/frontend/webpack-stats.json $WORK_DIR/webpack-stats.json
+COPY --from=node-builder /app/frontend/webpack-stats.json $WORK_DIR/frontend/webpack-stats.json
 
 # Установить расписание запуска скриптов в cron.
 RUN bash scripts/cronjobs.sh

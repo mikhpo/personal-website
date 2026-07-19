@@ -128,7 +128,7 @@ workflows:
                 echo "$YC_OAUTH_TOKEN" | \
                 docker login --username oauth --password-stdin cr.yandex
 
-              # Сборка Docker-образа с использованием Dockerfile из директории personal_website
+              # Сборка Docker-образа с использованием Dockerfile из корня проекта
               - |
                 echo "Сборка Docker-образа приложения"
                 docker build \
@@ -297,4 +297,4 @@ workflows:
               key: ${{ secrets.DEPLOY_SSH_KEY }}
               script: |
                 cd /root/personal-website
-                bash personal_website/scripts/server/update.sh
+                bash scripts/server/update.sh

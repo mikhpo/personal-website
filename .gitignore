@@ -15,6 +15,7 @@ htmlcov
 CACHE
 /logs/
 /static/
+/backend/static/
 /storage/
 /backups/
 /temp/
@@ -27,5 +28,5 @@ tasks
 plans
 issues
 /tmp/
-webpack-stats.json
+frontend/webpack-stats.json
 frontend/dist/
