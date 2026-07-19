@@ -145,6 +145,12 @@ class TestIsPublicOrAuthor(APITestCase):
         is_author = self.permission._is_author(AnonymousUser(), obj)  # noqa: SLF001
         self.assertFalse(is_author)
 
+    def test_is_author_with_none_user(self) -> None:
+        """Тест метода _is_author с None пользователем (не должен вызывать ошибку)."""
+        obj = MockModel(author=self.user)
+        is_author = self.permission._is_author(None, obj)  # noqa: SLF001
+        self.assertFalse(is_author)
+
 
 class TestIsStaffOrReadOnly(APITestCase):
     """Тесты для permission IsStaffOrReadOnly."""
@@ -233,6 +239,13 @@ class TestIsAuthorOrReadOnly(APITestCase):
     def test_has_object_permission_delete_non_author(self) -> None:
         """Тест запрета доступа для метода DELETE не-автору объекта."""
         request = MockRequest(user=self.other_user, method="DELETE")
+        view = MockView()
+        obj = MockModel(author=self.user)
+        self.assertFalse(self.permission.has_object_permission(request, view, obj))
+
+    def test_has_object_permission_modify_none_user(self) -> None:
+        """Тест запрета доступа для метода PUT с None пользователем (не должен вызывать ошибку)."""
+        request = MockRequest(user=None, method="PUT")
         view = MockView()
         obj = MockModel(author=self.user)
         self.assertFalse(self.permission.has_object_permission(request, view, obj))

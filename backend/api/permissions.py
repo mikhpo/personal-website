@@ -77,18 +77,19 @@ class IsPublicOrAuthor(permissions.BasePermission):
         # Если у объекта нет автора, то модификация разрешена только админам
         return False
 
-    def _is_author(self, user: AbstractBaseUser | AnonymousUser, obj: "Model") -> bool:
+    def _is_author(self, user: AbstractBaseUser | AnonymousUser | None, obj: "Model") -> bool:
         """
         Проверка, является ли пользователь автором объекта.
 
         Args:
-            user: Пользователь (аутентифицированный или анонимный)
+            user: Пользователь (аутентифицированный, анонимный или None)
             obj: Объект модели
 
         Returns:
             True если пользователь является автором, False иначе
         """
-        if not user.is_authenticated:
+        # Защита от None и неаутентифицированных пользователей
+        if user is None or not user.is_authenticated:
             return False
 
         # Проверяем наличие поля author
@@ -168,8 +169,9 @@ class IsAuthorOrReadOnly(permissions.BasePermission):
             return True
 
         # Для модификации и удаления проверяем авторство
+        # Добавляем проверку на None для request.user, чтобы избежать ошибок сравнения
         if hasattr(obj, "author"):
-            return obj.author == request.user
+            return request.user is not None and obj.author == request.user
 
         # Если у объекта нет автора, запрещаем доступ
         return False
