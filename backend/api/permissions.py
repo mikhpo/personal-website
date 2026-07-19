@@ -1,9 +1,9 @@
 """Кастомные permissions для REST API."""
 
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
 from django.contrib.auth.base_user import AbstractBaseUser
-from django.contrib.auth.models import User
+from django.contrib.auth.models import AnonymousUser
 from rest_framework import permissions
 from rest_framework.request import Request
 from rest_framework.views import View
@@ -68,27 +68,27 @@ class IsPublicOrAuthor(permissions.BasePermission):
             if obj.public:
                 return True
             # Приватные объекты доступны только авторам
-            return self._is_author(cast("User | None", user), obj)
+            return self._is_author(user, obj)
 
         # Для модификации и удаления требуется авторство или админ права
         # Если у объекта есть автор, проверяем авторство
         if hasattr(obj, "author"):
-            return self._is_author(cast("User | None", user), obj)
+            return self._is_author(user, obj)
         # Если у объекта нет автора, то модификация разрешена только админам
         return False
 
-    def _is_author(self, user: User | None, obj: "Model") -> bool:
+    def _is_author(self, user: AbstractBaseUser | AnonymousUser, obj: "Model") -> bool:
         """
         Проверка, является ли пользователь автором объекта.
 
         Args:
-            user: Пользователь
+            user: Пользователь (аутентифицированный или анонимный)
             obj: Объект модели
 
         Returns:
             True если пользователь является автором, False иначе
         """
-        if not user or not user.is_authenticated:
+        if not user.is_authenticated:
             return False
 
         # Проверяем наличие поля author

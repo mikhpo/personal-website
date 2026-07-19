@@ -140,9 +140,10 @@ class TestIsPublicOrAuthor(APITestCase):
         self.assertFalse(self.permission._is_author(self.other_user, obj))  # noqa: SLF001
 
     def test_is_author_with_unauthenticated_user(self) -> None:
-        """Тест метода _is_author с неаутентифицированным пользователем."""
+        """Тест метода _is_author с анонимным (неаутентифицированным) пользователем."""
         obj = MockModel(author=self.user)
-        self.assertFalse(self.permission._is_author(None, obj))  # noqa: SLF001
+        is_author = self.permission._is_author(AnonymousUser(), obj)  # noqa: SLF001
+        self.assertFalse(is_author)
 
 
 class TestIsStaffOrReadOnly(APITestCase):
