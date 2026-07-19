@@ -1,5 +1,6 @@
 # Конфигурация CI/CD для SourceCraft
 # Функционально повторяет имеющиеся GitHub Workflow с учетом ограничения не более 3 тасок на 1 рабочий процесс
+# Updated to support new monorepo structure with backend/ and frontend/ directories
 
 # Определение событий-триггеров для запуска рабочих процессов.
 on:
