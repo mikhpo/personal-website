@@ -45,14 +45,14 @@ Poetry сконфигурирован таким образом, чтобы ви
 Последовательность команд для запуска сервера базы данных PostgreSQL, выполнения миграций БД, сбора статический файлов и запуска приложения.
 
     docker compose up -d postgres
-    poetry run python personal_website/manage.py migrate
-    poetry run python personal_website/manage.py collectstatic --noinput
-    poetry run python personal_website/manage.py runserver
+    poetry run python backend/manage.py migrate
+    poetry run python backend/manage.py collectstatic --noinput
+    poetry run python backend/manage.py runserver
 
 Предварительно активировать виртуальное окружение при этом не нужно. Однако можно запустить сервер разработки и традиционным способом - через предварительную активацию виртуального окружения:
 
     .venv/scripts/activate
-    python personal_website/manage.py runserver
+    python backend/manage.py runserver
 
 ## Управление статическими файлами
 
@@ -89,7 +89,7 @@ Poetry сконфигурирован таким образом, чтобы ви
 
 Для запуска тестов Python/Django можно воспользоваться командой:
 
-    python manage.py test
+    python backend/manage.py test
 
 Также проект подготовлен для тестирования при помощи Pytest:
 
@@ -227,6 +227,42 @@ Certbot используется для получения и обновлени
 
     task --summary <command>
 
+### Основные команды Taskfile
+
+* task runserver - запустить сервер Django с PostgreSQL
+* task watch - режим разработки с hot-reload
+* task test - полный цикл тестирования (фронтенд + бэкенд)
+* task test-frontend - тестирование React компонентов
+* task test-backend - тестирование Django с собранным фронтендом
+* task check - статический анализ (Ruff, Mypy, ESLint, markdownlint)
+* task build-frontend - сборка React фронтенда
+* task migrate - создание и применение миграций
+* task install - установка зависимостей Python и Node.js
+
+## Frontend разработка
+
+### Запуск режима разработки
+
+Сборка фронтенда в режиме наблюдения:
+
+    npm run dev
+
+### Frontend тестирование
+
+Запуск Jest тестов:
+
+    npm test
+
+Запуск тестов в режиме наблюдения:
+
+    npm run test:watch
+
+### Линтинг
+
+Проверка JavaScript/React кода:
+
+    npm run eslint
+
 ## Развертывание
 
 Общий порядок действий:
@@ -238,8 +274,8 @@ Certbot используется для получения и обновлени
 1. Сменить рабочую директорию на `/srv/personal-website`
 1. Заполнить файл .env с конфигурационными параметрами: `nano .env`
 1. Запустить скрипт для развертывания:
-    * `bash personal_website/scripts/docker/deploy.sh` для развертывания в контейнере
-    * `bash personal_website/scripts/server/deploy.sh` для развертывание в ОС хоста
+    * `bash scripts/docker/deploy.sh` для развертывания в контейнере
+    * `bash scripts/server/deploy.sh` для развертывание в ОС хоста
 
 ### Добавление SSH-ключей хоста в GitHub
 
@@ -262,7 +298,7 @@ Certbot используется для получения и обновлени
 
 Пример генерации схемы моделей всех приложений проекта в формате PNG:
 
-    poetry run python personal_website/manage.py graph_models -a -g -o docs/images/project_models.png
+    poetry run python backend/manage.py graph_models -a -g -o docs/images/project_models.png
 
 В связи с тем, что имеет смысл создавать диаграммы разного уровня детализации (для проекта, приложений, каждого приложения), целесообразнее запускать скрипт [graph-models.sh](../tools/graph-models.sh) для генерации диаграмм моделей:
 

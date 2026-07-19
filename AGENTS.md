@@ -21,12 +21,32 @@
 
 ## Структура проекта
 
-Основные приложения Django:
+Проект использует монорепозитарную архитектуру с разделением на backend и frontend:
 
-- accounts: управление пользователями
-- blog: система статей и комментариев
-- gallery: фотогалерея
-- main: главная страница и основные компоненты
+### Backend (Django)
+
+- `personal_website/` - настройки проекта
+- `accounts/` - управление пользователями
+- `blog/` - блог (статьи, категории, серии, темы, комментарии)
+- `gallery/` - галерея (альбомы, фотографии, теги)
+- `main/` - главная страница
+- `api/` - REST API (JWT аутентификация, эндпоинты)
+- `templates/` - Django шаблоны для React интеграции
+
+### Frontend (React)
+
+- `src/components/` - React компоненты
+  - `Alert/` - алерты и уведомления
+  - `Blog/` - компоненты блога
+  - `Gallery/` - компоненты галереи
+  - `Main/` - компоненты главной страницы
+  - `Navbar/` - навигация
+  - `Card/` - базовый компонент карточки
+  - `Pagination/` - пагинация
+  - `Spinner/` - индикатор загрузки
+- `src/hooks/` - кастомные React хуки
+- `src/services/` - API сервисы
+- `dist/` - production бандл
 
 Рекомендуемые паттерны:
 
@@ -56,12 +76,23 @@
 - Есть система комментариев
 - Поддержка TinyMCE редактора для статей
 
-## Особенности API документации
+## REST API
 
-- Используется drf-spectacular для генерации OpenAPI 3.0 схемы
-- Swagger UI и ReDoc доступны по адресам `/api/docs/swagger/` и `/api/docs/redoc/`
-- Документация работает полностью в offline режиме без подключения к интернету
-- Статические файлы Swagger UI и Redoc собираются локально при помощи drf-spectacular-sidecar
+### Стек технологий
+
+- Django REST Framework для REST API
+- djangorestframework-simplejwt для JWT аутентификации
+- drf-spectacular для генерации OpenAPI 3.0 схемы
+- django-filter для фильтрации наборов данных
+- django-cors-headers для CORS поддержки
+
+### API документация
+
+- Swagger UI: `/api/docs/swagger/`
+- ReDoc: `/api/docs/redoc/`
+- OpenAPI схема: `/api/schema/`
+
+Документация работает полностью в offline режиме за счет drf-spectacular-sidecar.
 
 ## Работа с данными
 
@@ -181,11 +212,30 @@
 - Проверять Markdown файлы с помощью markdownlint: `npx markdownlint-cli *.md docs/*.md`
 - Выполнять все проверки перед коммитом через pre-commit хуки
 
-## Сборка фронтенда
+## Frontend стек
+
+### Технологии
+
+- React 19.2.7 - UI библиотека
+- Bootstrap 5.3.8 - стили
+- Webpack 5 - сборка
+- Babel - транспиляция JSX и ES6+
+- Jest - тестирование компонентов
+- django-webpack-loader - интеграция бандлов с Django
+
+### Frontend компоненты
+
+- `components/` - React компоненты (Navbar, Card, Gallery, Blog, Alert, Pagination, Spinner)
+- `hooks/` - кастомные хуки (useApiData, usePagination, usePhotoData, usePhotoNavigation, useToggle)
+- `services/` - API сервисы (api.js, blogService.js, galleryService.js)
+
+### Команды фронтенда
 
 - Установить зависимости: `npm install`
-- Запустить сборку в режиме разработки с автосборкой: `npm run dev`
-- Запустить тесты JavaScript: `npm test` или `npm run test:watch` для режима наблюдения
+- Запустить сборку в режиме наблюдения: `npm run dev`
+- Production сборка: `npm run build`
+- Запустить тесты: `npm test` или `npm run test:watch` для режима наблюдения
+- Проверка кода ESLint: `npm run eslint`
 
 ## Безопасность
 
