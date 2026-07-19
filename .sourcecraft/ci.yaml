@@ -48,7 +48,7 @@ workflows:
               - echo "Установка зависимостей Node.js"
               - npm install
               - echo "Запуск ESLint для проверки JavaScript/TypeScript кода"
-              - npx eslint . --ext .js,.jsx,.ts,.tsx
+              - npm run eslint
               - echo "Проверка Markdown файлов с помощью markdownlint"
               - npx markdownlint-cli *.md docs/*.md
 
@@ -67,6 +67,9 @@ workflows:
           - name: "pytest"
             image: docker.io/library/python:3.13-bookworm
             script:
+              - echo "Установка Node.js для сборки фронтенда"
+              - curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
+              - apt-get install -y nodejs
               - echo "Обновление системы и установка необходимых пакетов"
               - apt-get update
               - apt-get install -y wkhtmltopdf locales
@@ -75,6 +78,9 @@ workflows:
               - echo "Установка Poetry и зависимостей проекта"
               - pip install poetry
               - poetry install
+              - echo "Сборка React фронтенда"
+              - npm install
+              - npm run build
               - echo "Запуск тестов Python с помощью Pytest"
               - poetry run pytest
 
@@ -127,7 +133,7 @@ workflows:
                 echo "Сборка Docker-образа приложения"
                 docker build \
                   -t $DOCKER_USERNAME/$PROJECT_NAME:$TEST_TAG \
-                  -f personal_website/Dockerfile .
+                  -f Dockerfile .
 
               # Тегирование образа для Yandex Cloud Container Registry
               - |
