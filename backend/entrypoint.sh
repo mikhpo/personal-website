@@ -93,7 +93,7 @@ function main() {
             --bind="$DJANGO_HOST":"$DJANGO_PORT" \
             --workers="$num_workers" \
             --pythonpath="$website_dir" \
-            "personal_website.wsgi:application"
+            "backend.personal_website.wsgi:application"
     fi
 }
 

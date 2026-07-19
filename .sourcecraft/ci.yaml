@@ -80,7 +80,15 @@ workflows:
               - poetry install
               - echo "Сборка React фронтенда"
               - npm install
-              - npm run build
+              - echo "Проверка прав на директорию frontend/"
+              - touch frontend/test-write || (echo "Нет прав на запись в frontend/" && exit 1)
+              - rm frontend/test-write
+              - npm run build && echo "Сборка завершена успешно" || (echo "Сборка завершилась с ошибкой" && exit 1)
+              - echo "Проверка создания webpack-stats.json"
+              - ls -la frontend/ || echo "Директория frontend/ не найдена"
+              - ls -la frontend/webpack-stats.json || echo "Файл webpack-stats.json не найден"
+              - echo "Содержимое рабочей директории:"
+              - ls -la
               - echo "Запуск тестов Python с помощью Pytest"
               - poetry run pytest
 
