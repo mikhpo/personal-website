@@ -16,7 +16,7 @@ import ArticleDetail from '@components/Blog/Article/ArticleDetail';
 // Импорт Gallery компонентов
 import AlbumCard from '@components/Gallery/Album/AlbumCard';
 import AlbumList from '@components/Gallery/Album/AlbumList';
-import PhotoDetail from '@components/Gallery/Photo/PhotoDetail/PhotoDetail';
+import PhotoDetail from '@components/Gallery/Photo/PhotoDetail';
 import PhotoList from '@components/Gallery/Photo/PhotoList';
 import ExifData from '@components/Gallery/Photo/ExifData';
 import PhotoNavigation from '@components/Gallery/Photo/PhotoNavigation';

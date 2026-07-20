@@ -63,7 +63,7 @@ export default [
       'node_modules/**',
       'static/**',
       'htmlcov/**',
-      'backend/staticfiles/**',
+      'backend/static/**',
       'static/**',
       'dist/**',
       'frontend/dist/**',

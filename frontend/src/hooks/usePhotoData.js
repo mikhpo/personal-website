@@ -22,7 +22,7 @@ const usePhotoData = (photoPk, apiUrl = '/api/gallery/photos/') => {
     // Если photoPk пустой, не выполняем загрузку
     if (!photoPk) {
       setPhoto(null);
-      setLoading(true); // Оставляем loading=true как в тестах
+      setLoading(true);
       setError(null);
       return;
     }
@@ -51,7 +51,7 @@ const usePhotoData = (photoPk, apiUrl = '/api/gallery/photos/') => {
     // Если photoPk пустой, не выполняем загрузку
     if (!photoPk) {
       setPhoto(null);
-      setLoading(true); // Оставляем loading=true как в тестах
+      setLoading(true);
       setError(null);
       return;
     }
