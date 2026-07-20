@@ -9,7 +9,7 @@ from django.conf import settings
 from django.db import models
 from django.urls import reverse
 from django.utils.functional import cached_property
-from django.utils.timezone import get_current_timezone, now
+from django.utils.timezone import get_current_timezone, is_aware, make_naive, now
 from imagekit.models import ImageSpecField  # type: ignore[import-untyped]
 from imagekit.processors import ResizeToFit  # type: ignore[import-untyped]
 from PIL import Image as pImage
@@ -319,14 +319,20 @@ class Photo(models.Model):
         Для корректной сортировки фотографий все datetime объекты должны быть
         одного типа. Используем naive datetime (без часового пояса), поскольку
         невозможно определить часовой пояс места съемки.
+
+        Время изменения файла, получаемое из хранилища, может быть timezone-aware
+        (при USE_TZ=True). Для корректного преобразования aware datetime в naive
+        используется timezone.make_naive(), который переводит время в текущий
+        часовой пояс перед удалением информации о нём.
         """
         # Проверить наличие файла изображения.
         if not self.image.name or not storage.exists(self.image.name):
             return now()
 
-        # Получить дату и время последнего изменения файла.
+        # Получить дату и время последнего изменения файла и преобразовать
+        # timezone-aware datetime в naive с учётом текущего часового пояса.
         modified_time = storage.get_modified_time(self.image.name)
-        date_time = modified_time.replace(tzinfo=None)
+        date_time = make_naive(modified_time) if is_aware(modified_time) else modified_time
 
         # Если в EXIF отсутствует дата и время съемки,
         # то вернуть дату и время последнего изменения.
