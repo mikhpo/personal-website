@@ -50,9 +50,9 @@ const AlertList = ({ messages }) => {
 
   return (
     <div className="container mt-3">
-      {messages.map((msg, index) => (
+      {messages.map((msg) => (
         <Alert
-          key={`${msg.level}-${index}`}
+          key={`${msg.level}-${msg.message}`}
           message={msg.message}
           level={msg.level}
           dismissible={msg.dismissible !== false}

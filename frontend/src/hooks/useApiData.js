@@ -34,19 +34,13 @@ import { useState, useEffect, useCallback } from 'react';
  *   []
  * );
  */
-const useApiData = (fetchFunction, deps = [], options = {}) => {
+const useApiData = (fetchFunction, options = {}) => {
   const { immediate = true, initialData = null } = options;
 
   const [data, setData] = useState(initialData);
   const [loading, setLoading] = useState(immediate);
   const [error, setError] = useState(null);
 
-  /**
-   * Функция для загрузки данных.
-   * @async
-   * @function
-   * @return {Promise<void>}
-   */
   const fetchData = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -61,10 +55,6 @@ const useApiData = (fetchFunction, deps = [], options = {}) => {
     }
   }, [fetchFunction]);
 
-  /**
-   * Функция для повторной загрузки данных.
-   * @function
-   */
   const refetch = useCallback(() => {
     fetchData();
   }, [fetchData]);
@@ -73,7 +63,7 @@ const useApiData = (fetchFunction, deps = [], options = {}) => {
     if (immediate) {
       fetchData();
     }
-  }, [immediate, ...deps]);
+  }, [immediate, fetchData]);
 
   return {
     data,

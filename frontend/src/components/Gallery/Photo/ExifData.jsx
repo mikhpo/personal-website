@@ -74,8 +74,8 @@ const ExifData = ({ photo }) => {
   return (
     <Table striped bordered size="sm" className="mb-0">
       <tbody>
-        {filledFields.map((field, index) => (
-          <tr key={index}>
+        {filledFields.map((field) => (
+          <tr key={field.label}>
             <td className="fw-bold" style={{ width: '40%' }}>
               {field.label}
             </td>

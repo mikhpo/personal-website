@@ -14,8 +14,8 @@ jest.mock('@components/Blog/Comment/CommentList', () => {
   return function MockCommentList({ comments }) {
     return (
       <div data-testid="comment-list">
-        {comments && comments.map((c, i) => (
-          <div key={i} data-testid="comment">{c.author_username}</div>
+        {comments && comments.map((c) => (
+          <div key={c.id} data-testid="comment">{c.author_username}</div>
         ))}
       </div>
     );
@@ -46,8 +46,8 @@ jest.mock('@components/Alert/AlertList', () => {
   return function MockAlertList({ messages }) {
     return (
       <div data-testid="alert-list">
-        {messages.map((msg, i) => (
-          <div key={i} data-testid={`alert-${msg.level}-${i}`}>
+        {messages.map((msg) => (
+          <div key={`${msg.level}-${msg.message}`} data-testid={`alert-${msg.level}-${messages.indexOf(msg)}`}>
             {msg.message}
             {msg.actions}
           </div>

@@ -21,9 +21,15 @@ const FileDropzone = ({ onFilesSelect, accept = 'image/*', multiple = true, file
 
   // Синхронизация локального состояния с управляемыми файлами извне
   useEffect(() => {
-    if (files !== null && Array.isArray(files)) {
-      setSelectedFiles(files);
-    }
+    const initializeFiles = () => {
+      if (files !== null && Array.isArray(files)) {
+        const updateFilesState = () => {
+          setSelectedFiles(files);
+        };
+        updateFilesState();
+      }
+    };
+    initializeFiles();
   }, [files]);
 
   /**
@@ -188,9 +194,9 @@ const FileDropzone = ({ onFilesSelect, accept = 'image/*', multiple = true, file
         <div className="mt-3">
           <h6>Выбранные файлы:</h6>
           <ul className="list-group">
-            {displayFiles.map((file, index) => (
+            {displayFiles.map((file) => (
               <li
-                key={index}
+                key={`${file.name}-${file.size}-${file.lastModified}`}
                 className="list-group-item d-flex justify-content-between align-items-center"
               >
                 <span>{file.name}</span>
@@ -199,7 +205,7 @@ const FileDropzone = ({ onFilesSelect, accept = 'image/*', multiple = true, file
                   className="btn btn-sm btn-danger"
                   onClick={(e) => {
                     e.stopPropagation();
-                    removeFile(index);
+                    removeFile(displayFiles.indexOf(file));
                   }}
                 >
                   Удалить

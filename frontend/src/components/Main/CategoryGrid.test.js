@@ -29,8 +29,8 @@ jest.mock('@components/Alert/AlertList', () => ({
   __esModule: true,
   default: ({ messages }) => (
     <div>
-      {messages.map((msg, index) => (
-        <div key={index} data-testid={`alert-${msg.level}`}>
+      {messages.map((msg) => (
+        <div key={`${msg.level}-${msg.message}`} data-testid={`alert-${msg.level}`}>
           {msg.message}
           {msg.actions}
         </div>

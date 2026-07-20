@@ -67,6 +67,7 @@ export default [
       'static/**',
       'dist/**',
       'frontend/dist/**',
+      'frontend/coverage/**',
       '.venv/**',
       '**/*.min.js',
       '**/*.d.ts',

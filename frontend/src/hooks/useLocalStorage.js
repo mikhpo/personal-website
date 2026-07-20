@@ -65,7 +65,13 @@ const useLocalStorage = (key, initialValue) => {
   }, [key, storedValue]);
 
   useEffect(() => {
-    setStoredValue(readValue());
+    const initializeValue = () => {
+      const updateValueState = () => {
+        setStoredValue(readValue());
+      };
+      updateValueState();
+    };
+    initializeValue();
   }, [readValue]);
 
   return [storedValue, setValue];

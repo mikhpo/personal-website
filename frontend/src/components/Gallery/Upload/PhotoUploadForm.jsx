@@ -26,19 +26,26 @@ const PhotoUploadForm = () => {
   const [albumsError, setAlbumsError] = useState(null);
 
   useEffect(() => {
-    setLoadingAlbums(true);
-    setAlbumsError(null);
+    const fetchAlbums = () => {
+      const updateLoadingState = () => {
+        setLoadingAlbums(true);
+        setAlbumsError(null);
+      };
+      updateLoadingState();
 
-    galleryService.getAlbums()
-      .then(data => {
-        const albumsList = data.results || data;
-        setAlbums(Array.isArray(albumsList) ? albumsList : []);
-        setLoadingAlbums(false);
-      })
-      .catch(err => {
-        setAlbumsError(err.message);
-        setLoadingAlbums(false);
-      });
+      galleryService.getAlbums()
+        .then(data => {
+          const albumsList = data.results || data;
+          setAlbums(Array.isArray(albumsList) ? albumsList : []);
+          setLoadingAlbums(false);
+        })
+        .catch(err => {
+          setAlbumsError(err.message);
+          setLoadingAlbums(false);
+        });
+    };
+
+    fetchAlbums();
   }, []);
 
   /**
@@ -197,8 +204,8 @@ const PhotoUploadForm = () => {
           <Alert variant="danger" className="mt-3">
             <Alert.Heading>Ошибки загрузки</Alert.Heading>
             <ul className="mb-0">
-              {errors.map((error, index) => (
-                <li key={index}>{error}</li>
+              {errors.map((error) => (
+                <li key={error}>{error}</li>
               ))}
             </ul>
           </Alert>

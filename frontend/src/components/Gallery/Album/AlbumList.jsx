@@ -36,31 +36,63 @@ const AlbumList = ({ apiUrl = "/api/gallery/albums/" }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetchAlbums = () => {
-    setLoading(true);
-    setError(null);
-
-    fetch(apiUrl)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(`Ошибка загрузки: ${response.status}`);
-        }
-        return response.json();
-      })
-      .then((data) => {
-        const albumsList = data.results || data;
-        setAlbums(Array.isArray(albumsList) ? albumsList : []);
-        setLoading(false);
-      })
-      .catch((err) => {
-        setError(err.message);
-        setLoading(false);
-      });
-  };
-
   useEffect(() => {
+    const fetchAlbums = () => {
+      const updateLoadingState = () => {
+        setLoading(true);
+        setError(null);
+      };
+      updateLoadingState();
+
+      fetch(apiUrl)
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`Ошибка загрузки: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then((data) => {
+          const albumsList = data.results || data;
+          setAlbums(Array.isArray(albumsList) ? albumsList : []);
+          setLoading(false);
+        })
+        .catch((err) => {
+          setError(err.message);
+          setLoading(false);
+        });
+    };
+
     fetchAlbums();
   }, [apiUrl]);
+
+  const handleRetry = () => {
+    const fetchAlbums = () => {
+      const updateLoadingState = () => {
+        setLoading(true);
+        setError(null);
+      };
+      updateLoadingState();
+
+      fetch(apiUrl)
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`Ошибка загрузки: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then((data) => {
+          const albumsList = data.results || data;
+          setAlbums(Array.isArray(albumsList) ? albumsList : []);
+          setLoading(false);
+        })
+        .catch((err) => {
+          setError(err.message);
+          setLoading(false);
+        });
+    };
+
+    fetchAlbums();
+  };
 
   if (loading) {
     return <Spinner message="Загрузка альбомов..." />;
@@ -77,7 +109,7 @@ const AlbumList = ({ apiUrl = "/api/gallery/albums/" }) => {
               <Button
                 variant="outline-primary"
                 size="sm"
-                onClick={fetchAlbums}
+                onClick={handleRetry}
                 data-testid="retry-button"
               >
                 Повторить

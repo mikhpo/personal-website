@@ -4,10 +4,8 @@ import userEvent from '@testing-library/user-event';
 import PhotoDetail from './PhotoDetail';
 
 jest.mock('@hooks/usePhotoData');
-jest.mock('@hooks/useAlbumPhotos');
-jest.mock('@hooks/usePhotoNavigation');
 
-import { usePhotoData, useAlbumPhotos, usePhotoNavigation } from '@hooks';
+import { usePhotoData } from '@hooks';
 
 /**
  * Набор тестов для компонента PhotoDetail.
@@ -31,34 +29,17 @@ describe('PhotoDetail', () => {
     datetime_taken: '2024-01-15T10:00:00Z',
   };
 
-  const mockAlbumPhotos = [
-    { id: 1, slug: 'photo-1', datetime_taken: '2024-01-14T10:00:00Z' },
-    { id: 2, slug: 'photo-2', datetime_taken: '2024-01-15T10:00:00Z' },
-    { id: 3, slug: 'photo-3', datetime_taken: '2024-01-16T10:00:00Z' },
-  ];
-
   // ID соседних фотографий для навигации (mockPhoto имеет id=2)
   const mockPreviousPhotoId = 1; // Предыдущая фотография в альбоме
   const mockNextPhotoId = 3; // Следующая фотография в альбомe
 
   // Настройка: изолируем тесты от реальных API запросов
-  // PhotoDetail использует хуки для загрузки данных, мокаем их чтобы не делать сетевые вызовы
+  // PhotoDetail использует хук usePhotoData для загрузки данных
   beforeEach(() => {
     usePhotoData.mockReturnValue({
       photo: mockPhoto,
       loading: false,
       error: null,
-    });
-
-    useAlbumPhotos.mockReturnValue({
-      photos: mockAlbumPhotos,
-      loading: false,
-      error: null,
-    });
-
-    usePhotoNavigation.mockReturnValue({
-      previousPhotoId: mockPreviousPhotoId,
-      nextPhotoId: mockNextPhotoId,
     });
   });
 
@@ -144,11 +125,7 @@ describe('PhotoDetail', () => {
    * если previousPhotoId равен null.
    */
   test('нет кнопки "Предыдущая" если previousPhotoId null', () => {
-    usePhotoNavigation.mockReturnValueOnce({
-      previousPhotoId: null,
-      nextPhotoId: mockNextPhotoId,
-    });
-    render(<PhotoDetail photoId={2} />);
+    render(<PhotoDetail photoId={2} previousPhotoId={null} nextPhotoId={mockNextPhotoId} />);
     expect(screen.queryByText('<')).not.toBeInTheDocument();
   });
 
@@ -157,11 +134,7 @@ describe('PhotoDetail', () => {
    * если nextPhotoId равен null.
    */
   test('нет кнопки "Следующая" если nextPhotoId null', () => {
-    usePhotoNavigation.mockReturnValueOnce({
-      previousPhotoId: mockPreviousPhotoId,
-      nextPhotoId: null,
-    });
-    render(<PhotoDetail photoId={2} />);
+    render(<PhotoDetail photoId={2} previousPhotoId={mockPreviousPhotoId} nextPhotoId={null} />);
     expect(screen.queryByText('>')).not.toBeInTheDocument();
   });
 

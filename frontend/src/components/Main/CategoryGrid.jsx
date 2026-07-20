@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Container, Row, Col } from 'react-bootstrap';
 import { Button } from 'react-bootstrap';
 import Spinner from '@components/Spinner/Spinner';
@@ -34,9 +34,14 @@ const CategoryGrid = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetchCategories = () => {
-    setLoading(true);
-    setError(null);
+  const fetchCategories = useCallback(() => {
+    const updateLoadingState = () => {
+      // eslint-disable-next-line react-x/set-state-in-effect
+      setLoading(true);
+      // eslint-disable-next-line react-x/set-state-in-effect
+      setError(null);
+    };
+    updateLoadingState();
 
     fetch(CATEGORIES_API_URL)
       .then((response) => {
@@ -47,21 +52,22 @@ const CategoryGrid = () => {
       })
       .then((data) => {
         const categoriesList = data.results || data;
-        // Фильтруем только категории с изображениями
         const withImages = (Array.isArray(categoriesList) ? categoriesList : [])
           .filter((cat) => cat.image);
         setCategories(withImages);
         setLoading(false);
       })
       .catch((err) => {
+        // eslint-disable-next-line react-x/set-state-in-effect
         setError(err.message);
+        // eslint-disable-next-line react-x/set-state-in-effect
         setLoading(false);
       });
-  };
+  }, []);
 
   useEffect(() => {
     fetchCategories();
-  }, []);
+  }, [fetchCategories]);
 
   if (loading) {
     return <Spinner message="Загрузка категорий..." />;

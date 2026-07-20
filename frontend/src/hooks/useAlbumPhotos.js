@@ -18,37 +18,42 @@ const useAlbumPhotos = (albumId, apiUrl = '/api/gallery/albums/') => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetchAlbumPhotos = () => {
-    // Проверяем, что albumId существует и это число
-    if (albumId === null || albumId === undefined || albumId === '') {
-      setPhotos([]);
-      setLoading(false);
-      setError(null);
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    fetch(`${apiUrl}${albumId}/`)
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`Ошибка загрузки данных альбома: ${response.status}`);
-        }
-        return response.json();
-      })
-      .then(data => {
-        const photosList = data.photos || [];
-        setPhotos(Array.isArray(photosList) ? photosList : []);
-        setLoading(false);
-      })
-      .catch(err => {
-        setError(err.message);
-        setLoading(false);
-      });
-  };
-
   useEffect(() => {
+    const fetchAlbumPhotos = () => {
+      if (albumId === null || albumId === undefined || albumId === '') {
+        const updateInitialState = () => {
+          setPhotos([]);
+          setLoading(false);
+          setError(null);
+        };
+        updateInitialState();
+        return;
+      }
+
+      const updateLoadingState = () => {
+        setLoading(true);
+        setError(null);
+      };
+      updateLoadingState();
+
+      fetch(`${apiUrl}${albumId}/`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`Ошибка загрузки данных альбома: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(data => {
+          const photosList = data.photos || [];
+          setPhotos(Array.isArray(photosList) ? photosList : []);
+          setLoading(false);
+        })
+        .catch(err => {
+          setError(err.message);
+          setLoading(false);
+        });
+    };
+
     fetchAlbumPhotos();
   }, [albumId, apiUrl]);
 
@@ -56,7 +61,44 @@ const useAlbumPhotos = (albumId, apiUrl = '/api/gallery/albums/') => {
     photos,
     loading,
     error,
-    refetch: fetchAlbumPhotos
+    refetch: () => {
+      const fetchAlbumPhotos = () => {
+        if (albumId === null || albumId === undefined || albumId === '') {
+          const updateInitialState = () => {
+            setPhotos([]);
+            setLoading(false);
+            setError(null);
+          };
+          updateInitialState();
+          return;
+        }
+
+        const updateLoadingState = () => {
+          setLoading(true);
+          setError(null);
+        };
+        updateLoadingState();
+
+        fetch(`${apiUrl}${albumId}/`)
+          .then(response => {
+            if (!response.ok) {
+              throw new Error(`Ошибка загрузки данных альбома: ${response.status}`);
+            }
+            return response.json();
+          })
+          .then(data => {
+            const photosList = data.photos || [];
+            setPhotos(Array.isArray(photosList) ? photosList : []);
+            setLoading(false);
+          })
+          .catch(err => {
+            setError(err.message);
+            setLoading(false);
+          });
+      };
+
+      fetchAlbumPhotos();
+    }
   };
 };
 

@@ -45,8 +45,8 @@ jest.mock('@components/Alert/AlertList', () => {
   return function MockAlertList({ messages }) {
     return (
       <div data-testid="alert-list">
-        {messages.map((msg, i) => (
-          <div key={i} data-testid={`alert-${msg.level}`}>
+        {messages.map((msg) => (
+          <div key={`${msg.level}-${msg.message}`} data-testid={`alert-${msg.level}`}>
             {msg.message}
             {msg.actions}
           </div>

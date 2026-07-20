@@ -15,5 +15,4 @@ export { default as useLocalStorage } from './useLocalStorage';
 
 // Специализированные хуки галереи
 export { default as usePhotoData } from './usePhotoData';
-export { default as usePhotoNavigation } from './usePhotoNavigation';
 export { default as useAlbumPhotos } from './useAlbumPhotos';

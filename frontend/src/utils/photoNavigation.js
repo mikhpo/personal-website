@@ -1,5 +1,5 @@
 /**
- * Хук для вычисления навигации между фотографиями в альбоме.
+ * Утилита для вычисления навигации между фотографиями в альбоме.
  *
  * Вычисляет предыдущую и следующую фотографии на основе текущей фотографии
  * и списка фотографий альбома в порядке API.
@@ -10,25 +10,23 @@
  * @property {Object|null} previousPhoto - Предыдущая фотография или null
  * @property {Object|null} nextPhoto - Следующая фотография или null
  */
-const usePhotoNavigation = (photo, albumPhotos) => {
+const getPhotoNavigation = (photo, albumPhotos) => {
   // Если нет фотографии или списка фотографий, возвращаем null для обеих
   if (!photo || !albumPhotos || !Array.isArray(albumPhotos) || albumPhotos.length === 0) {
     return {
       previousPhoto: null,
-      nextPhoto: null
+      nextPhoto: null,
     };
   }
 
   // Находим индекс текущей фотографии по ID
-  const currentIndex = albumPhotos.findIndex(function(p) {
-    return p.id === photo.id;
-  });
+  const currentIndex = albumPhotos.findIndex((p) => p.id === photo.id);
 
   // Если фотография не найдена в списке, возвращаем null для обеих
   if (currentIndex === -1) {
     return {
       previousPhoto: null,
-      nextPhoto: null
+      nextPhoto: null,
     };
   }
 
@@ -45,9 +43,9 @@ const usePhotoNavigation = (photo, albumPhotos) => {
   }
 
   return {
-    previousPhoto: previousPhoto,
-    nextPhoto: nextPhoto
+    previousPhoto,
+    nextPhoto,
   };
 };
 
-export default usePhotoNavigation;
+export default getPhotoNavigation;
