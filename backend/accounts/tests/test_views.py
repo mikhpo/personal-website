@@ -46,6 +46,7 @@ class TestUserPermissions(TestCase):
         response = self.client.get(self.url)
         self.assertContains(response, 'id="navbar-root"')
 
+        self.assertIn("navbar_data", response.context)
         navbar_data: NavbarData = response.context["navbar_data"]
         self.assertTrue(navbar_data["userAuthenticated"])
         self.assertEqual(navbar_data["userName"], "user")
@@ -59,6 +60,7 @@ class TestUserPermissions(TestCase):
         response = self.client.get(self.url)
         self.assertContains(response, 'id="navbar-root"')
 
+        self.assertIn("navbar_data", response.context)
         navbar_data_staff: NavbarData = response.context["navbar_data"]
         self.assertTrue(navbar_data_staff["userAuthenticated"])
         self.assertEqual(navbar_data_staff["userName"], "staff")
@@ -72,6 +74,7 @@ class TestUserPermissions(TestCase):
         response = self.client.get(self.url)
         self.assertContains(response, 'id="navbar-root"')
 
+        self.assertIn("navbar_data", response.context)
         navbar_data_super: NavbarData = response.context["navbar_data"]
         self.assertTrue(navbar_data_super["userAuthenticated"])
         self.assertEqual(navbar_data_super["userName"], "superuser")
@@ -86,6 +89,7 @@ class TestUserPermissions(TestCase):
 
         # Ссылки на регистрацию и вход находятся в навигационной панели,
         # реализованной через React компонент. Проверяем наличие контейнера для React компонента навигации.
+        self.assertIn("navbar_data", response.context)
         navbar_data = response.context["navbar_data"]
         self.assertContains(response, 'id="navbar-root"')
         self.assertFalse(navbar_data["userAuthenticated"])
