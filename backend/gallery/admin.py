@@ -67,7 +67,7 @@ class PhotoAdmin(admin.ModelAdmin):
     @admin.display(description="Создана")
     def taken_at(self, obj: Photo) -> str:
         """Дата и время съемки."""
-        return format_local_datetime(obj.datetime_taken)
+        return format_local_datetime(obj.taken_at)
 
     @admin.display(description="EXIF")
     def exif_table(self, obj: Photo) -> SafeText | str:

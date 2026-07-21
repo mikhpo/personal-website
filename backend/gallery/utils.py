@@ -1,8 +1,10 @@
 """Вспомогательные функции галереи."""
 
+from datetime import datetime
 from io import BytesIO
 
 from django.db.models import Model
+from django.utils.timezone import is_aware, make_naive, now
 from faker import Faker
 from PIL import Image, UnidentifiedImageError
 from PIL.ExifTags import TAGS, Base
@@ -107,3 +109,53 @@ def write_exif(image: str, exif_data: ExifData) -> None:
         with BytesIO() as output:
             img.save(output, format=img.format, exif=exif.tobytes())
             storage.save(image, output.getvalue())
+
+
+def compute_datetime_taken(photo: Model) -> datetime:
+    """Вычислить дату и время съемки фотографии.
+
+    Функция извлекает дату и время съемки из EXIF данных изображения.
+    Если EXIF данные отсутствуют или не содержат DateTimeOriginal,
+    используется время изменения файла.
+
+    EXIF данные DateTimeOriginal не содержат информацию о часовом поясе.
+    Для корректной сортировки фотографий все datetime объекты должны быть
+    одного типа. Используется naive datetime (без часового пояса), поскольку
+    невозможно определить часовой пояс места съемки.
+
+    Время изменения файла, получаемое из хранилища, может быть timezone-aware
+    (при USE_TZ=True). Для корректного преобразования aware datetime в naive
+    используется timezone.make_naive(), который переводит время в текущий
+    часовой пояс перед удалением информации о нём.
+
+    Args:
+        photo: Экземпляр модели Photo.
+
+    Returns:
+        Naive datetime (без часового пояса) с датой и временем съемки
+        или текущим временем в случае отсутствия файла.
+    """
+    # Проверить наличие файла изображения.
+    if not photo.image.name or not storage.exists(photo.image.name):
+        return now()
+
+    # Получить дату и время последнего изменения файла и преобразовать
+    # timezone-aware datetime в naive с учётом текущего часового пояса.
+    modified_time = storage.get_modified_time(photo.image.name)
+    date_time = make_naive(modified_time) if is_aware(modified_time) else modified_time
+
+    # Получить EXIF данные фотографии.
+    photo_exif = photo.exif
+
+    # Если в EXIF отсутствует дата и время съемки,
+    # то вернуть дату и время последнего изменения.
+    original_exif = photo_exif.get("DateTimeOriginal")
+    if not original_exif:
+        return date_time
+
+    # Получить дату и время съемки из EXIF, если не перехвачено исключение.
+    # Если перехвачено исключение, то вернуть дату и время изменения файла.
+    try:
+        return datetime.strptime(original_exif, "%Y:%m:%d %H:%M:%S")  # noqa: DTZ007
+    except ValueError:
+        return date_time

@@ -78,10 +78,9 @@ class PhotoListView(ListView):
     template_name = "gallery/photo_list.html"
     paginate_by = 40
 
-    def get_queryset(self) -> list[Photo]:  # type: ignore[override]
-        """Отсортировать набор фотографий по первичному ключу."""
-        photos = Photo.published.all()
-        return sorted(photos, key=lambda photo: photo.pk, reverse=True)
+    def get_queryset(self) -> "QuerySet[Photo]":  # type: ignore[override]
+        """Отсортировать набор фотографий по дате съемки."""
+        return Photo.published.all().order_by("-taken_at")
 
     def get_context_data(self, **kwargs) -> dict[str, Any]:
         """Добавить в контекст набор всех тэгов фотографии."""
@@ -110,17 +109,17 @@ class PhotoDetailView(DetailView):
         photo: Photo = self.object
         album: Album = photo.album
 
-        # Получаем все фотографии альбома, отсортированные по первичному ключу
+        # Получаем все фотографии альбома, отсортированные по дате съемки
         # Используем Django ORM для получения предыдущей и следующей фотографий
-        all_photos_qs: QuerySet[Photo] = album.photos.order_by("pk")
+        all_photos_qs: QuerySet[Photo] = album.photos.order_by("taken_at")
 
-        # Получаем фотографии с pk меньше текущего, сортируем по убыванию, берем первую (предыдущую)
-        previous_photo = all_photos_qs.filter(pk__lt=photo.pk).order_by("-pk").first()
+        # Получаем фотографии с taken_at меньше текущего, сортируем по убыванию, берем первую (предыдущую)
+        previous_photo = all_photos_qs.filter(taken_at__lt=photo.taken_at).order_by("-taken_at").first()
         if previous_photo:
             context["previous_photo_id"] = previous_photo.pk
 
-        # Получаем фотографии с pk больше текущего, сортируем по возрастанию, берем первую (следующую)
-        next_photo = all_photos_qs.filter(pk__gt=photo.pk).order_by("pk").first()
+        # Получаем фотографии с taken_at больше текущего, сортируем по возрастанию, берем первую (следующую)
+        next_photo = all_photos_qs.filter(taken_at__gt=photo.taken_at).order_by("taken_at").first()
         if next_photo:
             context["next_photo_id"] = next_photo.pk
 

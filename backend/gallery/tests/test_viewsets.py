@@ -171,9 +171,9 @@ class TestPhotoViewSet(APITestCase):
         self.assertEqual(response.data["results"][0]["name"], "Закат в горах")
 
     def test_ordering_photos(self) -> None:
-        """Сортировка фотографий по дате загрузки."""
+        """Сортировка фотографий по дате съемки."""
         url = "/api/gallery/photos/"
-        response = self.client.get(url, {"ordering": "-uploaded_at"})
+        response = self.client.get(url, {"ordering": "-taken_at"})
         self.assertEqual(response.status_code, 200)
 
 

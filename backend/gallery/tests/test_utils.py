@@ -1,6 +1,8 @@
 """Тесты вспомогательных утилит галереи."""
 
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 from django.test import SimpleTestCase, TestCase
 from faker import Faker
@@ -12,6 +14,7 @@ from gallery.factories import AlbumFactory, ExifDataFactory, PhotoFactory
 from gallery.models import Photo
 from gallery.schemas import ExifData
 from gallery.utils import (
+    compute_datetime_taken,
     is_image,
     move_photo_image,
     photo_image_upload_full_path,
@@ -141,3 +144,112 @@ class TestExifUtils(SimpleTestCase):
         self.assertIsInstance(exif, ExifData)
         self.assertIsNotNone(exif.model)
         self.assertEqual(exif.model, exif_data.model)
+
+
+class TestComputeDateTimeTaken(SimpleTestCase):
+    """Тесты функции вычисления даты и времени съемки."""
+
+    def test_with_exif_datetime_original(self) -> None:
+        """Функция возвращает дату из EXIF DateTimeOriginal."""
+        photo = MagicMock(spec=Photo)
+        photo.image.name = "test.jpg"
+        photo.exif = {"DateTimeOriginal": "2024:07:21 15:30:45"}
+
+        file_time = datetime.now(timezone.utc).replace(microsecond=0, tzinfo=None) - timedelta(hours=1)
+
+        with (
+            patch("gallery.utils.storage.exists", return_value=True),
+            patch("gallery.utils.storage.get_modified_time", return_value=file_time),
+        ):
+            result = compute_datetime_taken(photo)
+
+        self.assertIsInstance(result, datetime)
+        self.assertEqual(result.year, 2024)
+        self.assertEqual(result.month, 7)
+        self.assertEqual(result.day, 21)
+        self.assertEqual(result.hour, 15)
+        self.assertEqual(result.minute, 30)
+
+    def test_without_exif_fallback_to_file_time(self) -> None:
+        """Функция использует время файла при отсутствии EXIF DateTimeOriginal."""
+        photo = MagicMock(spec=Photo)
+        photo.image.name = "test.jpg"
+        photo.exif = {}
+
+        file_time = datetime.now(timezone.utc).replace(microsecond=0, tzinfo=None) - timedelta(hours=1)
+
+        with (
+            patch("gallery.utils.storage.exists", return_value=True),
+            patch(
+                "gallery.utils.storage.get_modified_time",
+                return_value=file_time,
+            ),
+        ):
+            result = compute_datetime_taken(photo)
+
+        self.assertIsInstance(result, datetime)
+        self.assertEqual(result, file_time)
+
+    def test_missing_file_returns_now(self) -> None:
+        """Функция возвращает текущее время при отсутствии файла."""
+        photo = MagicMock(spec=Photo)
+        photo.image.name = "test.jpg"
+
+        with patch("gallery.utils.storage.exists", return_value=False):
+            result = compute_datetime_taken(photo)
+
+        self.assertIsInstance(result, datetime)
+
+    def test_empty_image_name_returns_now(self) -> None:
+        """Функция возвращает текущее время при пустом имени файла."""
+        photo = MagicMock(spec=Photo)
+        photo.image.name = ""
+        result = compute_datetime_taken(photo)
+        self.assertIsInstance(result, datetime)
+
+    def test_invalid_exif_datetime_fallback_to_file_time(self) -> None:
+        """Функция использует время файла при невалидном формате EXIF DateTimeOriginal."""
+        photo = MagicMock(spec=Photo)
+        photo.image.name = "test.jpg"
+        photo.exif = {"DateTimeOriginal": "invalid_format"}
+
+        file_time = datetime.now(timezone.utc).replace(microsecond=0, tzinfo=None) - timedelta(hours=1)
+
+        with (
+            patch("gallery.utils.storage.exists", return_value=True),
+            patch(
+                "gallery.utils.storage.get_modified_time",
+                return_value=file_time,
+            ),
+        ):
+            result = compute_datetime_taken(photo)
+
+        self.assertIsInstance(result, datetime)
+        self.assertEqual(result, file_time)
+
+    def test_timezone_aware_conversion_to_naive(self) -> None:
+        """Функция преобразует timezone-aware datetime в naive."""
+        photo = MagicMock(spec=Photo)
+        photo.image.name = "test.jpg"
+        photo.exif = {}
+
+        # timezone-aware datetime
+        file_time = datetime.now(timezone.utc).replace(microsecond=0, tzinfo=None) - timedelta(hours=1)
+
+        with (
+            patch("gallery.utils.storage.exists", return_value=True),
+            patch(
+                "gallery.utils.storage.get_modified_time",
+                return_value=file_time,
+            ),
+            patch("gallery.utils.is_aware", return_value=True),
+            patch(
+                "gallery.utils.make_naive",
+                side_effect=lambda x: x.replace(tzinfo=None),
+            ) as mock_make_naive,
+        ):
+            result = compute_datetime_taken(photo)
+
+        self.assertIsInstance(result, datetime)
+        self.assertIsNone(result.tzinfo)
+        mock_make_naive.assert_called_once()

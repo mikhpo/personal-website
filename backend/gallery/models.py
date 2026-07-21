@@ -17,7 +17,7 @@ from PIL.ExifTags import TAGS
 from PIL.TiffImagePlugin import IFDRational
 
 from gallery.managers import PublicAlbumManager, PublicPhotoManager
-from gallery.utils import move_photo_image, photo_image_upload_path
+from gallery.utils import compute_datetime_taken, move_photo_image, photo_image_upload_path
 from personal_website.storages import StorageType, select_storage
 from personal_website.utils import get_unique_slug
 
@@ -153,6 +153,12 @@ class Photo(models.Model):
         auto_now_add=True,
         help_text="Дата и время загрузки фотографии",
     )
+    taken_at = models.DateTimeField(
+        verbose_name="Создана",
+        null=False,
+        blank=False,
+        help_text="Дата и время съемки фотографии",
+    )
     modified_at = models.DateTimeField(
         verbose_name="Изменена",
         auto_now=True,
@@ -190,7 +196,7 @@ class Photo(models.Model):
     published = PublicPhotoManager()
 
     class Meta:  # noqa: D106
-        ordering = ("pk",)
+        ordering = ("-taken_at",)
         verbose_name = "Фотография"
         verbose_name_plural = "Фотографии"
 
@@ -201,10 +207,15 @@ class Photo(models.Model):
     def save(self, *args, **kwargs) -> None:
         """Операции, выполняемые при каждом сохранении модели.
 
+        - Вычисляет taken_at если изображение изменилось или для нового экземпляра.
         - Если был изменен альбом фотографии, то изменяется адрес хранения фотографии.
         - Если у фотографии не указано название, то получить его из имени файла.
         - Если у фотографии не указан слаг, то определить его из названия.
         """
+        # Вычислить taken_at до сохранения для валидации null=False
+        if self.should_update_taken_at():
+            self.taken_at = compute_datetime_taken(self)
+
         if self.pk:
             previous = Photo.objects.get(pk=self.pk)
             if previous.album != self.album:
@@ -218,6 +229,34 @@ class Photo(models.Model):
     def get_absolute_url(self) -> str:
         """Абсолютная ссылка на фотографию определяется первичным ключом фотографии."""
         return reverse("gallery:photo-detail", kwargs={"pk": self.pk})
+
+    def should_update_taken_at(self) -> bool:
+        """Проверить, нужно ли обновить поле taken_at.
+
+        Returns:
+            True если поле нужно обновить, False в противном случае.
+        """
+        # Новый экземпляр - всегда вычисляем
+        if not self.pk:
+            return True
+
+        # Проверяем изменилось ли изображение
+        try:
+            prev = Photo.objects.get(pk=self.pk)
+
+            # Разные файлы - нужно обновить
+            if prev.image.name != self.image.name:
+                return True
+
+            # То же имя файла - проверяем modification time
+            current_mtime = storage.get_modified_time(self.image.name)
+            previous_mtime = storage.get_modified_time(prev.image.name)
+            return current_mtime != previous_mtime
+
+        except Photo.DoesNotExist:
+            return True
+        else:
+            return False
 
     @cached_property
     def exif(self) -> dict:

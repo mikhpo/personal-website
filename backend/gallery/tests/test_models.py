@@ -277,12 +277,33 @@ class GalleryModelsTests(TestCase):
             self.assertEqual(status_code, HTTPStatus.OK)
 
     def test_datetime_taken(self) -> None:
-        """Проверка получения даты и времени съемки фотографии."""
+        """Проверка поля даты и времени съемки фотографии."""
         first_photo = Photo.objects.first()
         self.assertIsInstance(first_photo, Photo)
         if first_photo:
-            datetime_taken = first_photo.datetime_taken
-            self.assertIsInstance(datetime_taken, datetime.datetime)
+            self.assertIsNotNone(first_photo.taken_at)
+            self.assertIsInstance(first_photo.taken_at, datetime.datetime)
+
+    def test_should_update_taken_at_new_instance(self) -> None:
+        """Метод should_update_taken_at возвращает True для нового экземпляра."""
+        photo = Photo()
+        self.assertTrue(photo.should_update_taken_at())
+
+    def test_should_update_taken_at_image_changed(self) -> None:
+        """Метод should_update_taken_at возвращает True при изменении изображения."""
+        photo1 = PhotoFactory(album=self.tuscany_album)
+        photo2 = PhotoFactory(album=self.tuscany_album)
+
+        # Имитация изменения изображения
+        photo2.image.name = photo1.image.name
+        self.assertTrue(photo2.should_update_taken_at())
+
+    def test_should_update_taken_at_same_image(self) -> None:
+        """Метод should_update_taken_at возвращает False при том же изображении."""
+        photo = PhotoFactory(album=self.tuscany_album)
+        original_pk = photo.pk
+        photo_from_db = Photo.objects.get(pk=original_pk)
+        self.assertFalse(photo_from_db.should_update_taken_at())
 
     def test_photo_album_changed(self) -> None:
         """Путь фотографии изменяется после изменения альбома фотографии."""

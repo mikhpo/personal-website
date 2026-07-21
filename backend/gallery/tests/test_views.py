@@ -143,34 +143,34 @@ class TestPhotoListView(TestCase):
         return super().setUpTestData()
 
     def test_photo_list_sorting(self) -> None:
-        """Тест: фотографии в общем списке отсортированы от новых к старым."""
-        # Создать альбом с фотографиями с разными датами создания
+        """Тест: фотографии в общем списке отсортированы от новых к старым по taken_at."""
+        # Создать альбом с фотографиями с разными датами съемки
         album = AlbumFactory()
 
-        # Создать фотографии с явным указанием времени создания
+        # Создать фотографии с явным указанием времени съемки
         now = datetime.now(timezone.utc)
         photo1 = PhotoFactory(album=album, public=True)
-        photo1.uploaded_at = now - timedelta(hours=3)
+        photo1.taken_at = now - timedelta(hours=3)
         photo1.save()
 
         photo2 = PhotoFactory(album=album, public=True)
-        photo2.uploaded_at = now - timedelta(hours=2)
+        photo2.taken_at = now - timedelta(hours=2)
         photo2.save()
 
         photo3 = PhotoFactory(album=album, public=True)
-        photo3.uploaded_at = now - timedelta(hours=1)
+        photo3.taken_at = now - timedelta(hours=1)
         photo3.save()
 
         photo4 = PhotoFactory(album=album, public=True)
-        photo4.uploaded_at = now
+        photo4.taken_at = now
         photo4.save()
 
         # Получить только что созданные фотографии из этого альбома
         photos = list(Photo.published.filter(album=album))
 
-        # Проверить, что фотографии отсортированы по uploaded_at от новых к старым
-        # в соответствии с ordering = ["-uploaded_at"] в PhotoViewSet
-        sorted_photos = sorted(photos, key=lambda p: p.uploaded_at, reverse=True)
+        # Проверить, что фотографии отсортированы по taken_at от новых к старым
+        # в соответствии с ordering = ["-taken_at"]
+        sorted_photos = sorted(photos, key=lambda p: p.taken_at, reverse=True)
 
         # photo4 (новая) должна быть первой, photo1 (старая) - последней
         self.assertEqual(sorted_photos[0], photo4)
@@ -357,38 +357,38 @@ class TestAlbumDetailView(TestCase):
             self.album.save()
 
     def test_album_photos_sorting(self) -> None:
-        """Тест: фотографии в альбоме отсортированы от старых к новым."""
-        # Создать альбом с фотографиями с разными датами создания
+        """Тест: фотографии в альбоме отсортированы от старых к новым по taken_at."""
+        # Создать альбом с фотографиями с разными датами съемки
         album = AlbumFactory()
 
-        # Создать фотографии с явным указанием времени создания
+        # Создать фотографии с явным указанием времени съемки
         now = datetime.now(timezone.utc)
         # photo1 - самая старая
         photo1 = PhotoFactory(album=album, public=True)
-        photo1.uploaded_at = now - timedelta(hours=4)
+        photo1.taken_at = now - timedelta(hours=4)
         photo1.save()
 
         # photo2 - средняя по возрасту
         photo2 = PhotoFactory(album=album, public=True)
-        photo2.uploaded_at = now - timedelta(hours=2)
+        photo2.taken_at = now - timedelta(hours=2)
         photo2.save()
 
         # photo3 - новая
         photo3 = PhotoFactory(album=album, public=True)
-        photo3.uploaded_at = now - timedelta(hours=1)
+        photo3.taken_at = now - timedelta(hours=1)
         photo3.save()
 
         # photo4 - самая новая
         photo4 = PhotoFactory(album=album, public=True)
-        photo4.uploaded_at = now
+        photo4.taken_at = now
         photo4.save()
 
         # Получить фотографии альбома
         album_photos = list(album.photos.all())
 
-        # Фотографии в альбоме сортируются по pk (от старых к новым)
-        # в соответствии с Meta.ordering = ("pk",) в модели Photo
-        sorted_photos = sorted(album_photos, key=lambda p: p.pk)
+        # Фотографии в альбоме сортируются по taken_at (от старых к новым)
+        # в соответствии с Meta.ordering = ("-taken_at",) в модели Photo
+        sorted_photos = sorted(album_photos, key=lambda p: p.taken_at)
 
         # photo1 (старая) должна быть первой, photo4 (новая) - последней
         self.assertEqual(sorted_photos[0], photo1)

@@ -46,8 +46,8 @@ class PhotoViewSet(viewsets.ReadOnlyModelViewSet):
     filter_backends: ClassVar[list] = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields: ClassVar[list] = ["tags__slug"]
     search_fields: ClassVar[list] = ["name", "description", "tags__name"]
-    ordering_fields: ClassVar[list] = ["uploaded_at", "name"]
-    ordering: ClassVar[list] = ["-uploaded_at"]
+    ordering_fields: ClassVar[list] = ["taken_at", "uploaded_at", "name"]
+    ordering: ClassVar[list] = ["-taken_at"]
 
     def get_queryset(self) -> "QuerySet[Photo]":
         """Возвращать все фотографии для staff пользователей, только публичные для остальных."""
