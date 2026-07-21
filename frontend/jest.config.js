@@ -8,6 +8,8 @@
  * - testMatch: Паттерны для поиска файлов с тестами
  * - moduleNameMapper: Сопоставление импортов модулей (для CSS файлов и алиасов)
  * - setupFilesAfterEnv: Файлы настройки, выполняемые перед запуском тестов
+ * - modulePathIgnorePatterns: Пути, исключаемые из поиска модулей (например,
+ *   результат collectstatic в backend/static, дублирующий пакеты node_modules)
  * - collectCoverageFrom: Паттерны файлов для сбора информации о покрытии кода тестами
  * - coverageThreshold: Минимальные требования к покрытию кода тестами (в процентах)
  */
@@ -30,6 +32,9 @@ module.exports = {
     '^@hooks$': '<rootDir>/src/hooks/index.js',
   },
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+  // Исключаем результат collectstatic: backend/static
+  // содержит дубликаты пакетов из node_modules.
+  modulePathIgnorePatterns: ['<rootDir>/../backend/static'],
   collectCoverageFrom: [
     'src/**/*.{js,jsx}',
     '!src/**/*.test.{js,jsx}',

@@ -23,15 +23,13 @@ import { useState, useEffect, useCallback } from 'react';
  * // Использование с сервисом API
  * const { data, loading, error, refetch } = useApiData(
  *   () => blogService.getArticles({ page: 1 }),
- *   [],
  *   { immediate: true }
  * );
  *
  * @example
  * // Использование с URL
  * const { data, loading, error } = useApiData(
- *   async () => await api.get('/api/photos/'),
- *   []
+ *   async () => await api.get('/api/photos/')
  * );
  */
 const useApiData = (fetchFunction, options = {}) => {
