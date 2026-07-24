@@ -8,43 +8,7 @@ from django.db import migrations, models
 from django.db.models.fields.files import FieldFile
 from django.utils.timezone import is_aware, make_naive
 from PIL import Image as pImage
-
-# EXIF теги для чтения данных
-TAGS = {
-    36864: "ExifVersion",
-    36867: "DateTimeOriginal",
-    36868: "DateTimeDigitized",
-    37121: "ComponentsConfiguration",
-    37377: "ShutterSpeedValue",
-    37378: "ApertureValue",
-    37379: "BrightnessValue",
-    37380: "ExposureBiasValue",
-    37381: "MaxApertureValue",
-    37382: "SubjectDistance",
-    37383: "MeteringMode",
-    37384: "LightSource",
-    37385: "Flash",
-    37386: "FocalLength",
-    37520: "SubsecTime",
-    37510: "SubsecTimeOriginal",
-    37521: "SubsecTimeDigitized",
-    41987: "CustomRendered",
-    41988: "ExposureMode",
-    41989: "WhiteBalance",
-    41990: "DigitalZoomRatio",
-    41991: "FocalLengthIn35mmFilm",
-    41992: "SceneCaptureType",
-    41993: "GainControl",
-    41994: "Contrast",
-    41995: "Saturation",
-    41996: "Sharpness",
-    41997: "SubjectDistanceRange",
-    33434: "ExposureTime",
-    33437: "FNumber",
-    34855: "ISOSpeedRatings",
-    "Make": "Make",
-    "Model": "Model",
-}
+from PIL.ExifTags import TAGS
 
 
 def get_exif_from_image(image_field: FieldFile) -> dict:
