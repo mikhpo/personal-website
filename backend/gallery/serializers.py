@@ -72,41 +72,42 @@ class PhotoSerializer(serializers.ModelSerializer):
         return obj.focal_length
 
 
-class AlbumListSerializer(serializers.ModelSerializer):
+class AlbumBaseSerializer(serializers.ModelSerializer):
+    """Базовый сериализатор для альбома с общими полями."""
+
+    tags = TagSerializer(many=True, read_only=True)
+    cover_thumbnail_url = serializers.SerializerMethodField()
+
+    def get_cover_thumbnail_url(self, obj: Album) -> str:
+        """Получить URL миниатюры обложки альбома."""
+        if obj.cover and obj.cover.image_thumbnail:
+            return obj.cover.image_thumbnail.url
+        return ""
+
+    class Meta:
+        """Мета-информация о сериализаторе альбома."""
+
+        model = Album
+        abstract = True
+
+
+class AlbumListSerializer(AlbumBaseSerializer):
     """Сериализатор для списка альбомов (без фотографий)."""
 
-    tags = TagSerializer(many=True, read_only=True)
-    cover_thumbnail_url = serializers.SerializerMethodField()
     photos_count = serializers.IntegerField(source="photos.count", read_only=True)
 
-    class Meta:
+    class Meta(AlbumBaseSerializer.Meta):
         """Мета-информация о сериализаторе альбома."""
 
-        model = Album
         fields = "__all__"
 
-    def get_cover_thumbnail_url(self, obj: Album) -> str:
-        """Получить URL миниатюры обложки альбома."""
-        if obj.cover and obj.cover.image_thumbnail:
-            return obj.cover.image_thumbnail.url
-        return ""
 
-
-class AlbumDetailSerializer(serializers.ModelSerializer):
+class AlbumDetailSerializer(AlbumBaseSerializer):
     """Сериализатор для детального просмотра альбома (с фотографиями)."""
 
-    tags = TagSerializer(many=True, read_only=True)
-    cover_thumbnail_url = serializers.SerializerMethodField()
     photos = PhotoSerializer(many=True, read_only=True)
 
-    class Meta:
+    class Meta(AlbumBaseSerializer.Meta):
         """Мета-информация о сериализаторе альбома."""
 
-        model = Album
         fields = "__all__"
-
-    def get_cover_thumbnail_url(self, obj: Album) -> str:
-        """Получить URL миниатюры обложки альбома."""
-        if obj.cover and obj.cover.image_thumbnail:
-            return obj.cover.image_thumbnail.url
-        return ""
