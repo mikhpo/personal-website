@@ -25,7 +25,7 @@ readonly DESTINATION_DIR="/etc/systemd/system/"
 cd "$project_root" || exit
 
 # Вытянуть изменения из удаленного репозитория.
-git fetch origin
+git fetch sourcecraft
 git checkout main
 git pull
 
