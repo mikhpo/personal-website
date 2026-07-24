@@ -72,21 +72,42 @@ class PhotoSerializer(serializers.ModelSerializer):
         return obj.focal_length
 
 
-class AlbumSerializer(serializers.ModelSerializer):
-    """Сериализатор для модели альбома."""
+class AlbumBaseSerializer(serializers.ModelSerializer):
+    """Базовый сериализатор для альбома с общими полями."""
 
     tags = TagSerializer(many=True, read_only=True)
     cover_thumbnail_url = serializers.SerializerMethodField()
-    photos = PhotoSerializer(many=True, read_only=True)
-
-    class Meta:
-        """Мета-информация о сериализаторе альбома."""
-
-        model = Album
-        fields = "__all__"
 
     def get_cover_thumbnail_url(self, obj: Album) -> str:
         """Получить URL миниатюры обложки альбома."""
         if obj.cover and obj.cover.image_thumbnail:
             return obj.cover.image_thumbnail.url
         return ""
+
+    class Meta:
+        """Мета-информация о сериализаторе альбома."""
+
+        model = Album
+        abstract = True
+
+
+class AlbumListSerializer(AlbumBaseSerializer):
+    """Сериализатор для списка альбомов (без фотографий)."""
+
+    photos_count = serializers.IntegerField(source="photos.count", read_only=True)
+
+    class Meta(AlbumBaseSerializer.Meta):
+        """Мета-информация о сериализаторе альбома."""
+
+        fields = "__all__"
+
+
+class AlbumDetailSerializer(AlbumBaseSerializer):
+    """Сериализатор для детального просмотра альбома (с фотографиями)."""
+
+    photos = PhotoSerializer(many=True, read_only=True)
+
+    class Meta(AlbumBaseSerializer.Meta):
+        """Мета-информация о сериализаторе альбома."""
+
+        fields = "__all__"

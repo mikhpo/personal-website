@@ -3,11 +3,11 @@
 from django.test import TestCase
 
 from gallery.factories import AlbumFactory, PhotoFactory
-from gallery.serializers import AlbumSerializer
+from gallery.serializers import AlbumDetailSerializer
 
 
-class TestAlbumSerializer(TestCase):
-    """Тесты для AlbumSerializer."""
+class TestAlbumDetailSerializer(TestCase):
+    """Тесты для AlbumDetailSerializer."""
 
     @classmethod
     def setUpTestData(cls) -> None:
@@ -19,6 +19,6 @@ class TestAlbumSerializer(TestCase):
 
     def test_album_serializer_contains_nested_photos(self) -> None:
         """Сериализатор альбома возвращает вложенные фотографии."""
-        data = AlbumSerializer(self.album).data
+        data = AlbumDetailSerializer(self.album).data
         self.assertIn("photos", data)
         self.assertEqual(len(data["photos"]), 2)

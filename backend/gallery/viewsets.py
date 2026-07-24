@@ -11,7 +11,12 @@ from rest_framework.response import Response
 
 from api.permissions import IsPublicOrAuthor
 from gallery.models import Album, Photo, Tag
-from gallery.serializers import AlbumSerializer, PhotoSerializer, TagSerializer
+from gallery.serializers import (
+    AlbumDetailSerializer,
+    AlbumListSerializer,
+    PhotoSerializer,
+    TagSerializer,
+)
 
 if TYPE_CHECKING:
     from django.db.models.query import QuerySet
@@ -20,7 +25,7 @@ if TYPE_CHECKING:
 class AlbumViewSet(viewsets.ReadOnlyModelViewSet):
     """Набор представлений для работы с альбомами."""
 
-    serializer_class = AlbumSerializer
+    serializer_class = AlbumListSerializer
     permission_classes: ClassVar[list] = [IsPublicOrAuthor]
     lookup_field = "pk"
     filter_backends: ClassVar[list] = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
@@ -29,9 +34,18 @@ class AlbumViewSet(viewsets.ReadOnlyModelViewSet):
     ordering_fields: ClassVar[list] = ["created_at", "name", "order"]
     ordering: ClassVar[list] = ["order", "-created_at"]
 
+    def get_serializer_class(self) -> type:
+        """Возвращает сериализатор в зависимости от action."""
+        if self.action == "retrieve":
+            return AlbumDetailSerializer
+        return AlbumListSerializer
+
     def get_queryset(self) -> "QuerySet[Album]":
         """Возвращать все альбомы для staff пользователей, только публичные для остальных."""
-        queryset = Album.objects.select_related("cover").prefetch_related("tags", "photos")
+        queryset = Album.objects.select_related("cover").prefetch_related("tags")
+        # Загружать фотографии только для детального просмотра
+        if self.action == "retrieve":
+            queryset = queryset.prefetch_related("photos")
         if hasattr(self.request.user, "is_staff") and self.request.user.is_staff:
             return queryset
         return queryset.filter(public=True)
