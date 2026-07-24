@@ -2,6 +2,10 @@ version: '3'
 
 dotenv: ['.env']
 
+vars:
+  COMPOSE_CMD:
+    sh: docker compose version >/dev/null 2>&1 && echo "docker compose" || echo "docker-compose"
+
 tasks:
   commit:
     desc: Зафиксировать и отправить изменения в удаленный репозиторий
@@ -37,12 +41,12 @@ tasks:
     env:
       POSTGRES_HOST: localhost
     cmds:
-      - defer: docker-compose down
-      - docker-compose up -d postgres
-      - docker-compose ps
-      - poetry run python ./personal_website/manage.py migrate
-      - poetry run python ./personal_website/manage.py collectstatic --noinput
-      - poetry run python ./personal_website/manage.py runserver
+      - defer: "{{.COMPOSE_CMD}} down"
+      - "{{.COMPOSE_CMD}} up -d postgres"
+      - "{{.COMPOSE_CMD}} ps"
+      - poetry run python ./backend/manage.py migrate
+      - poetry run python ./backend/manage.py collectstatic --noinput
+      - poetry run python ./backend/manage.py runserver
 
   migrate:
     desc: Подготовить и выполнить миграции, экспортировать новые диаграммы моделей
@@ -55,19 +59,43 @@ tasks:
     env:
       POSTGRES_HOST: localhost
     cmds:
-      - defer: docker-compose down
-      - docker-compose up -d postgres
-      - docker-compose ps
-      - poetry run python ./personal_website/manage.py makemigrations
-      - poetry run python ./personal_website/manage.py migrate
+      - defer: "{{.COMPOSE_CMD}} down"
+      - "{{.COMPOSE_CMD}} up -d postgres"
+      - "{{.COMPOSE_CMD}} ps"
+      - poetry run python ./backend/manage.py makemigrations
+      - poetry run python ./backend/manage.py migrate
       - task: graph-models
 
-  test:
-    desc: Выполнить тесты
+  test-frontend:
+    desc: Выполнить модульные тесты React компонентов с проверкой покрытия кода
     summary: |
-      Команда выполянет тесты проекта Python/Django через Pytest с формированием отчета Coverage в формате HTML
-      и тесты вспомогательных модулей Node.js. Интерпретатор Python запускается через Poetry из виртуального
-      окружения проекта. Сервер базы данных PostgreSQL запускается в контейнере через Docker Compose.
+      Команда устанавливает зависимости Node.js и запускает Jest тесты для React компонентов.
+      Включает генерацию отчета о покрытии кода тестами.
+      Используется при локальной разработке и в CI/CD для проверки качества фронтенда.
+    preconditions:
+      - test -f package.json
+    cmds:
+      - npm ci
+      - npm test -- --coverage --watchAll=false
+
+  build-frontend:
+    desc: Собрать React фронтенд в production-ready бандл
+    summary: |
+      Команда устанавливает зависимости Node.js и выполняет production сборку React приложения.
+      Результатом является оптимизированный бандл и файл webpack-stats.json,
+      необходимый для интеграции с Django через django-webpack-loader.
+    preconditions:
+      - test -f package.json
+    cmds:
+      - npm ci
+      - npm run build
+
+  test-backend:
+    desc: Выполнить тесты Django с использованием собранного React фронтенда
+    summary: |
+      Команда запускает Django тесты с отключенным кэшем webpack-loader.
+      Перед запуском тестов выполняет сборку фронтенда для обеспечения актуального состояния бандлов.
+      Используется для проверки интеграции React компонентов с Django шаблонами.
     preconditions:
       - test -f compose.yaml
       - test -f pyproject.toml
@@ -76,12 +104,35 @@ tasks:
       POSTGRES_HOST: localhost
       MINIO_SERVER_URL: http://127.0.0.1:9000
       MINIO_BROWSER_REDIRECT_URL: http://127.0.0.1:9001
+      WEBPACK_LOADER_CACHE: 'False'
     cmds:
-      - defer: docker-compose down
-      - docker-compose up -d postgres
-      - docker-compose ps
-      - npm test
+      - defer: "{{.COMPOSE_CMD}} down"
+      - "{{.COMPOSE_CMD}} up -d postgres"
+      - "{{.COMPOSE_CMD}} ps"
+      - task: build-frontend
       - poetry run pytest {{.CLI_ARGS}}
+
+  test:
+    desc: Выполнить полный цикл тестирования приложения (фронтенд + бэкенд)
+    summary: |
+      Команда выполняет полный цикл тестирования, включающий как фронтенд, так и бэкенд.
+      Сначала запускает тесты React компонентов, затем тестирует интеграцию с Django.
+      Используется для финальной проверки перед коммитом и в CI/CD пайплайне.
+    preconditions:
+      - test -f compose.yaml
+      - test -f pyproject.toml
+      - test -f package.json
+      - test -f .env
+    env:
+      POSTGRES_HOST: localhost
+      MINIO_SERVER_URL: http://127.0.0.1:9000
+      MINIO_BROWSER_REDIRECT_URL: http://127.0.0.1:9001
+    cmds:
+      - defer: "{{.COMPOSE_CMD}} down"
+      - "{{.COMPOSE_CMD}} up -d postgres"
+      - "{{.COMPOSE_CMD}} ps"
+      - task: test-frontend
+      - task: test-backend
 
   test-container:
     desc: Выполнить тесты в контейнере
@@ -95,11 +146,11 @@ tasks:
     env:
       POSTGRES_HOST: postgres
     cmds:
-      - defer: docker-compose down
-      - docker-compose up -d website postgres
-      - docker-compose ps
-      - docker-compose exec website npm test
-      - docker-compose exec website poetry run pytest {{.CLI_ARGS}}
+      - defer: "{{.COMPOSE_CMD}} down"
+      - "{{.COMPOSE_CMD}} up -d website postgres"
+      - "{{.COMPOSE_CMD}} ps"
+      - "{{.COMPOSE_CMD}} exec website npm test"
+      - "{{.COMPOSE_CMD}} exec website poetry run pytest {{.CLI_ARGS}}"
 
   test-integration:
     desc: Выполнить интеграционные тесты
@@ -116,9 +167,9 @@ tasks:
       MINIO_SERVER_URL: http://127.0.0.1:9000
       MINIO_BROWSER_REDIRECT_URL: http://127.0.0.1:9001
     cmds:
-      - defer: docker-compose down
-      - docker-compose up -d postgres nginx minio
-      - docker-compose ps
+      - defer: "{{.COMPOSE_CMD}} down"
+      - "{{.COMPOSE_CMD}} up -d postgres nginx minio"
+      - "{{.COMPOSE_CMD}} ps"
       - poetry run pytest ./tests {{.CLI_ARGS}}
 
   ruff:
@@ -137,15 +188,38 @@ tasks:
     cmds:
       - poetry run mypy .
 
+  eslint:
+    desc: Выполнить статический анализ кода JavaScript/React при помощи ESLint
+    summary: |
+      Проверяет качество кода JavaScript и React компонентов с помощью ESLint.
+      Использует конфигурацию из .eslintrc.json.
+    preconditions:
+      - test -f package.json
+    cmds:
+      - npm run eslint
+
+  markdownlint:
+    desc: Выполнить проверку Markdown файлов при помощи markdownlint
+    summary: |
+      Проверяет качество Markdown документации с помощью markdownlint.
+      Использует конфигурацию из .markdownlint.json.
+    preconditions:
+      - test -f package.json
+    cmds:
+      - npm run markdownlint
+
   check:
     desc: Выполнить статический анализ кода и проверки Django
-    summary: Команда запускает проверки Ruff, Mypy и Django
+    summary: Команда запускает проверки Ruff, Mypy, ESLint, markdownlint и Django
     preconditions:
       - test -f pyproject.toml
+      - test -f package.json
     cmds:
       - task: ruff
       - task: mypy
-      - poetry run python personal_website/manage.py check
+      - task: eslint
+      - task: markdownlint
+      - poetry run python backend/manage.py check
 
   install:
     desc: Установить зависимости Python и Node.js
@@ -181,7 +255,7 @@ tasks:
       - test -f compose.yaml
       - test -f .env
     cmds:
-      - docker-compose build
+      - "{{.COMPOSE_CMD}} build"
 
   up-detached:
     desc: Запустить контейнеры в фоновом режиме
@@ -191,8 +265,8 @@ tasks:
       - test -f compose.yaml
       - test -f .env
     cmds:
-      - docker-compose up -d website postgres minio
-      - docker-compose ps
+      - "{{.COMPOSE_CMD}} up -d website postgres minio"
+      - "{{.COMPOSE_CMD}} ps"
 
   restart:
     desc: Перезапускает контейнеры сервисов
@@ -203,8 +277,8 @@ tasks:
       - test -f compose.yaml
       - test -f .env
     cmds:
-      - docker-compose up --detach --force-recreate
-      - docker-compose ps
+      - "{{.COMPOSE_CMD}} up --detach --force-recreate"
+      - "{{.COMPOSE_CMD}} ps"
 
   watch:
     desc: Запустить контейнеры в фоновом режиме и отслеживать изменения кода
@@ -218,18 +292,18 @@ tasks:
       MINIO_SERVER_URL: http://minio:9000
       MINIO_BROWSER_REDIRECT_URL: http://minio:9001
     cmds:
-      - docker-compose up -d
-      - docker-compose ps
-      - docker-compose watch
+      - "{{.COMPOSE_CMD}} up -d"
+      - "{{.COMPOSE_CMD}} ps"
+      - "{{.COMPOSE_CMD}} watch"
 
   down:
     desc: Остановить контейнеры и удалить остановленные контейнеры, тома и сети
     summary: |
-      Аналог команды `docker-compose down`: останавливает запущенные контейнеры, удаляет контейнеры, тома и сети.
+      Аналог команды `docker compose down`: останавливает запущенные контейнеры, удаляет контейнеры, тома и сети.
     preconditions:
       - test -f compose.yaml
     cmds:
-      - docker-compose down --remove-orphans --volumes
+      - "{{.COMPOSE_CMD}} down --remove-orphans --volumes"
 
   postgres:
     desc: Запустить контейнер PostgreSQL
@@ -239,8 +313,8 @@ tasks:
       - test -f compose.yaml
       - test -f .env
     cmds:
-      - docker-compose up -d postgres
-      - docker-compose ps
+      - "{{.COMPOSE_CMD}} up -d postgres"
+      - "{{.COMPOSE_CMD}} ps"
 
   minio-alias:
     desc: Создать алиас для сервера MinIO
@@ -250,9 +324,9 @@ tasks:
       - test -f compose.yaml
       - test -f .env
     cmds:
-      - defer: docker-compose down
-      - docker-compose up -d minio
-      - docker-compose ps
+      - defer: "{{.COMPOSE_CMD}} down"
+      - "{{.COMPOSE_CMD}} up -d minio"
+      - "{{.COMPOSE_CMD}} ps"
       - mc alias set ${MINIO_ALIAS} ${MINIO_SERVER_URL} ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD}
       - mc admin info ${MINIO_ALIAS}
 
@@ -294,10 +368,10 @@ tasks:
     env:
       POSTGRES_HOST: localhost
     cmds:
-      - defer: docker-compose down
-      - docker-compose up -d postgres
-      - docker-compose ps
-      - poetry run python personal_website/manage.py makemigrations --dry-run --check
+      - defer: "{{.COMPOSE_CMD}} down"
+      - "{{.COMPOSE_CMD}} up -d postgres"
+      - "{{.COMPOSE_CMD}} ps"
+      - poetry run python backend/manage.py makemigrations --dry-run --check
 
   clean-cache:
     desc: Удалить файлы кэша
@@ -312,7 +386,7 @@ tasks:
       Эквивалент команды docker stop для всех запущенных в данный момент контейнеров (docker ps -a).
     cmds:
       - docker ps -a
-      - docker stop $(docker ps -a -q)
+      - docker stop $(docker ps -a -q) 2>/dev/null || true
       - docker ps -a
 
   remove-containers:
@@ -321,5 +395,30 @@ tasks:
       Эквивалент команды docker rm для всех запущенных в данный момент контейнеров (docker ps -a).
     cmds:
       - docker ps -a
-      - docker rm $(docker ps -a -q)
+      - docker stop $(docker ps -a -q) 2>/dev/null || true
+      - docker rm $(docker ps -a -q) 2>/dev/null || true
       - docker ps -a
+
+  prune-volumes:
+    desc: Удалить все тома Docker
+    summary: |
+      Удаляет все тома Docker, включая именованные.
+      Перед удалением останавливает все контейнеры.
+      Полезно для полной очистки данных контейнеров.
+    cmds:
+      - docker volume ls
+      - task: stop-containers
+      - docker volume rm -f $(docker volume ls -q) 2>/dev/null || true
+      - docker volume ls
+
+  pre-commit:
+    desc: Выполнить pre-commit хуки
+    summary: |
+      Запускает pre-commit хуки для проверки кода перед коммитом.
+      Автоматически применяет форматирование и проверяет код.
+      Проверяет все файлы проекта.
+    preconditions:
+      - test -f .pre-commit-config.yaml
+      - test -f pyproject.toml
+    cmds:
+      - pre-commit run --all-files

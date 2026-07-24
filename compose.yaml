@@ -7,7 +7,7 @@ services:
     platform: "linux/amd64"
     build:
       context: .
-      dockerfile: ./personal_website/Dockerfile
+      dockerfile: ./Dockerfile
       tags:
         - mikhpo/personal-website:latest
         - ghcr.io/mikhpo/personal-website:latest

@@ -159,7 +159,7 @@ jobs:
         run: npm install
 
       - name: Run ESLint
-        run: npx eslint . --ext .js,.jsx,.ts,.tsx
+        run: npm run eslint
 
   # Проверка Markdown файлов при помощи markdownlint.
   markdownlint_check:
@@ -186,6 +186,38 @@ jobs:
 
       - name: Run markdownlint
         run: npx markdownlint-cli *.md docs/*.md
+
+  # Выполнение тестов JavaScript при помощи Jest.
+  jest_check:
+    name: Jest tests
+    runs-on: ubuntu-latest
+    needs: cache-npm
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Restore npm cache
+        uses: actions/cache@v4
+        with:
+          key: npm-${{ hashFiles('**/package-lock.json') }}
+          path: node_modules
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install Node.js dependencies
+        run: npm install
+
+      - name: Run Jest tests
+        run: npm test
+
+      - name: Upload Jest coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: jest-coverage-report
+          path: frontend/coverage/
 
   # Выполнение тестов Python при помощи Pytest.
   test_python_with_pytest:
@@ -255,6 +287,9 @@ jobs:
           npm install
           npm ls
 
+      - name: Build React frontend
+        run: npm run build
+
       - name: Check Django migrations
         run: poetry run python personal_website/manage.py makemigrations --dry-run --check
 
@@ -293,7 +328,7 @@ jobs:
       - name: Build Docker image
         run: |
           set -e
-          docker build -t ${{ env.TEST_IMAGE_NAME }} -f personal_website/Dockerfile .
+          docker build -t ${{ env.TEST_IMAGE_NAME }} -f Dockerfile .
 
       - name: Push Docker image to GitHub Container Registry
         run: |

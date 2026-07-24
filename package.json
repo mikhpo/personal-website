@@ -1,23 +1,64 @@
 {
-  "name": "javascript",
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "personal-website",
   "version": "1.0.0",
-  "description": "JavaScript dependencies for my personal website",
+  "description": "Frontend dependencies for my personal website",
+  "keywords": [
+    "personal-website",
+    "react",
+    "bootstrap",
+    "webpack"
+  ],
   "main": "index.js",
   "scripts": {
-    "test": "node --test 'personal_website/tests/**/*.js'",
-    "eslint": "eslint personal_website/tests --ext .js,.jsx,.ts,.tsx",
-    "markdownlint": "markdownlint *.md docs/*.md"
+    "dev": "webpack --config frontend/webpack.config.js --mode development --watch",
+    "build": "webpack --config frontend/webpack.config.js --mode production",
+    "test": "jest --config frontend/jest.config.js",
+    "test:watch": "jest --config frontend/jest.config.js --watch",
+    "eslint": "eslint . --max-warnings 0",
+    "markdownlint": "markdownlint *.md docs/*.md --ignore-path .gitignore"
   },
   "author": "Mikhail Polyakov",
   "license": "ISC",
   "dependencies": {
-    "bootstrap": "^5.3.2",
-    "bootstrap-icons": "^1.11.1"
+    "@babel/core": "^7.26.9",
+    "@babel/preset-env": "^7.26.9",
+    "@babel/preset-react": "^7.26.3",
+    "@babel/preset-typescript": "^7.26.0",
+    "@tinymce/tinymce-react": "^6.3.0",
+    "ajv": "^8.17.1",
+    "babel-loader": "^10.1.1",
+    "bootstrap": "^5.3.8",
+    "classnames": "^2.5.1",
+    "clean-webpack-plugin": "^4.0.0",
+    "css-loader": "^7.1.4",
+    "prop-types": "^15.8.1",
+    "react": "^19.2.7",
+    "react-bootstrap": "^2.10.10",
+    "react-dom": "^19.2.7",
+    "style-loader": "^4.0.0",
+    "tinymce": "^8.7.0",
+    "uuid": "^14.0.1",
+    "webpack": "^5.108.4",
+    "webpack-bundle-tracker": "^3.2.4",
+    "webpack-cli": "^7.2.1"
   },
   "devDependencies": {
-    "eslint": "^8.56.0",
+    "@eslint/js": "^9.39.5",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
+    "copy-webpack-plugin": "^14.0.0",
+    "eslint": "^10.7.0",
     "eslint-config-google": "^0.14.0",
-    "eslint-config-prettier": "^9.1.0",
-    "markdownlint-cli": "^0.37.0"
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-react-refresh": "^0.5.3",
+    "eslint-plugin-react-x": "^5.14.7",
+    "identity-obj-proxy": "^3.0.0",
+    "jest": "^30.4.2",
+    "jest-environment-jsdom": "^30.4.1",
+    "markdownlint-cli": "^0.49.0",
+    "webpack-dev-server": "^6.0.0"
   }
 }

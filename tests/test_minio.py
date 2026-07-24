@@ -4,7 +4,6 @@ import os
 import re
 import unittest
 from http import HTTPStatus
-from typing import Optional
 
 import requests
 from minio import Minio
@@ -44,7 +43,7 @@ class TestMinio(unittest.TestCase):
         check = self.check_bucket(client)
         self.assertTrue(check)
 
-    def check_bucket(self, client: Minio) -> Optional[bool]:
+    def check_bucket(self, client: Minio) -> bool | None:
         """Проверяет подключение получением доступа к бакету или созданием бакета."""
         try:
             bucket_name = "python-test-bucket"

@@ -1,0 +1,36 @@
+{% extends "gallery/gallery_home.html" %}
+{% load static %}
+{% load react_tags %}
+{% block gallery %}
+<div class="container-fluid">
+    {% if tag_not_found %}
+        <div class="alert alert-warning" role="alert">
+            <h4>Тэг не найден</h4>
+            <p>Тэг с названием "{{ tag_slug }}" не существует.</p>
+            {% if tags %}
+                <p>Доступные тэги:</p>
+                <ul>
+                    {% for tag in tags %}
+                        <li><a href="{{ tag.get_absolute_url }}">{{ tag.name }}</a></li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>Пока нет доступных тэгов.</p>
+            {% endif %}
+        </div>
+    {% else %}
+        <h4>Тэг: {{ tag.name }}</h4>
+        {% if tag.description %}
+            <p>{{ tag.description }}</p>
+        {% endif %}
+
+        <h5>Альбомы с этим тэгом:</h5>
+        {% react_component "Gallery/AlbumList" apiUrl="/api/gallery/albums/?tags__pk={{ tag.pk }}" %}
+
+        <h5>Фотографии с этим тэгом:</h5>
+        {% react_component "Gallery/PhotoList" apiUrl="/api/gallery/photos/?tags__pk={{ tag.pk }}" %}
+    {% endif %}
+</div>
+<br>
+<br>
+{% endblock gallery %}

@@ -2,7 +2,6 @@
 
 import os
 import unittest
-from typing import Optional
 
 import psycopg
 from dotenv import load_dotenv
@@ -28,7 +27,7 @@ class TestPostgres(unittest.TestCase):
         connifo = f"dbname={dbname} user={user} host={host} port={port} password={password} connect_timeout=1"
         return psycopg.connect(connifo)
 
-    def postgres_connected(self) -> Optional[bool]:
+    def postgres_connected(self) -> bool | None:
         """Подключиться к базе данных PostgreSQL и вернуть булево значение в зависимости от успешности подключения."""
         try:
             conn = self.connect_postgres()

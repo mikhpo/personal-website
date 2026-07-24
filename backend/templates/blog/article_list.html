@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% load react_tags %}
+<!-- Шаблон корневой страницы блога, наследует от базового шаблона. -->
+{% block content %}
+    <div class="container-fluid">{% react_component "Blog/ArticleList" apiUrl="/api/blog/articles/" %}</div>
+{% endblock content %}

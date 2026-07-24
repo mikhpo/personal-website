@@ -1,0 +1,8 @@
+{% extends "gallery/gallery_home.html" %}
+{% load static %}
+{% load react_tags %}
+{% block gallery %}
+<div class="container-fluid">
+    {% react_component "Gallery/AlbumList" apiUrl="/api/gallery/albums/" %}
+</div>
+{% endblock gallery %}

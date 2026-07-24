@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+{% load static %}
+{% load webpack_loader %}
+{% load react_props %}
+<!-- Основной шаблон сайта, от которого наследуют все другие шаблоны. -->
+<html lang="ru">
+  <meta charset="utf-8">
+  <meta name="description" content="Mikhail Polyakov personal website">
+  <meta name="keywords" content="Python, Django">
+  <meta name="author" content="Mikhail Polyakov">
+  <meta name="viewport"
+        content="user-scalable=no, width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <head>
+    {% block head %}
+      <title>
+        {% block title %}
+          {% include "title.html" %}
+        {% endblock title %}
+      </title>
+      <link rel="stylesheet"
+            href="{% static "bootstrap/dist/css/bootstrap.min.css" %}">
+      <link rel="stylesheet" href="{% static "css/base.css" %}">
+      <link rel="stylesheet" href="{% static "css/navbar.css" %}">
+      <link rel="stylesheet" href="{% static "css/cards.css" %}">
+      <link rel="stylesheet" href="{% static "css/forms.css" %}">
+      {% block css %}
+      {% endblock css %}
+      {% block navbar %}
+        <div id="navbar-root" data-props="{% react_props navbar_data %}"></div>
+      {% endblock navbar %}
+      {% block extra_header %}
+      {% endblock extra_header %}
+    {% endblock head %}
+  </head>
+  <body>
+    {% block body %}
+      {% block messages %}
+        <div id="alerts-root" data-props="{% react_props alerts_data %}"></div>
+      {% endblock messages %}
+      {% block content %}
+      {% endblock content %}
+      <script src="{% static "bootstrap/dist/js/bootstrap.bundle.min.js" %}"></script>
+      {% block js %}
+      {% endblock js %}
+      <!-- Подключение React бандла -->
+      <!-- 'main' - имя точки входа, определенное в webpack.config.js -->
+      <!-- 'js' - тип ресурса, который мы хотим подключить (в данном случае JavaScript) -->
+      {% render_bundle 'main' 'js' %}
+      <script>
+        document.addEventListener('DOMContentLoaded', function() {
+          // Монтирование компонентов для navbar и alerts
+          const staticComponents = [
+            { elementId: 'navbar-root', componentName: 'Navbar/Navbar' },
+            { elementId: 'alerts-root', componentName: 'Alert/AlertList' }
+          ];
+
+          staticComponents.forEach(function(component) {
+            const element = document.getElementById(component.elementId);
+
+            if (element && element.dataset.props) {
+              try {
+                const props = JSON.parse(element.dataset.props);
+                if (typeof window.mountReactComponent === 'function') {
+                  window.mountReactComponent(component.componentName, component.elementId, props);
+                }
+              } catch (error) {
+                console.error(`Failed to mount component "${component.componentName}" to "${component.elementId}":`, error);
+              }
+            }
+          });
+
+          // Автоматическое монтирование всех React компонентов с data-component-name атрибутом
+          const reactComponents = document.querySelectorAll('.react-component[data-component-name]');
+          reactComponents.forEach(function(element) {
+            try {
+              const componentName = element.getAttribute('data-component-name');
+              const propsJson = element.getAttribute('data-component-props');
+              const props = propsJson ? JSON.parse(propsJson) : {};
+
+              if (typeof window.mountReactComponent === 'function') {
+                window.mountReactComponent(componentName, element.id, props);
+              }
+            } catch (error) {
+              console.error(`Failed to mount React component:`, error);
+            }
+          });
+        });
+      </script>
+      <!-- Offcanvas панель с тегами -->
+      {% include "gallery/tag_list.html" %}
+    {% endblock body %}
+  </body>
+</html>

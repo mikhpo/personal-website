@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% load static %}
+{% load react_tags %}
+<!--
+    Главная страница сайта. Взаимосвязана с блогом.
+    Отображает категории и серии статей из блога,
+    сгруппированные в виде карточек.
+    Рендерится через React компонент HomePage.
+-->
+{% block content %}
+    {% react_component "Main/HomePage" %}
+{% endblock content %}

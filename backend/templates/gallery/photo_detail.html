@@ -1,0 +1,11 @@
+{% extends "gallery/gallery_home.html" %}
+{% load static %}
+{% load react_tags %}
+{% block title %}
+    {{ photo.album.name }} - {{ photo.name }}
+{% endblock title %}
+{% block gallery %}
+<div class="container">
+    {% react_component "Gallery/PhotoDetail" photoId=photo.id previousPhotoId=previous_photo_id nextPhotoId=next_photo_id %}
+</div>
+{% endblock gallery %}

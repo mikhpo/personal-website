@@ -1,0 +1,16 @@
+{% extends "gallery/gallery_home.html" %}
+{% load static %}
+{% load react_tags %}
+{% block title %}
+    {{ album.name }}
+{% endblock title %}
+{% block gallery %}
+<div class="container-fluid">
+    <h4>
+        <p align="center">{{ album.name }}</p>
+    </h4>
+    <p>
+        {% react_component "Gallery/PhotoList" apiUrl=album_api_url %}
+    </p>
+</div>
+{% endblock gallery %}

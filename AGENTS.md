@@ -7,25 +7,46 @@
 ## Команды установки
 
 - Установить зависимости: `poetry install`
-- Применить миграции: `poetry run python personal_website/manage.py migrate`
-- Запустить сервер разработки: `poetry run python personal_website/manage.py runserver`
+- Применить миграции: `poetry run python backend/manage.py migrate`
+- Собрать статические файлы: `poetry run python backend/manage.py collectstatic --no-input`
+- Запустить сервер разработки: `poetry run python backend/manage.py runserver`
 - Запустить тесты: `poetry run pytest`
 
 ## Docker Compose
 
 - Используется для запуска приложения и его зависимостей
-- Запустить приложение и все зависимости: `docker-compose up -d`
-- Запустить только зависимости (базу данных и объектное хранилище): `docker-compose up -d postgres minio`
-- Остановить всё приложение и зависимости: `docker-compose down`
+- Запустить приложение и все зависимости: `docker compose up -d` (использовать или V2 `docker compose`, или V1 `docker-compose`)
+- Запустить только зависимости (базу данных и объектное хранилище): `docker compose up -d postgres minio`
+- Остановить всё приложение и зависимости: `docker compose down`
 
 ## Структура проекта
 
-Основные приложения Django:
+Проект использует монорепозитарную архитектуру с разделением на backend и frontend:
 
-- accounts: управление пользователями
-- blog: система статей и комментариев
-- gallery: фотогалерея
-- main: главная страница и основные компоненты
+### Backend (Django)
+
+- `personal_website/` - настройки проекта
+- `accounts/` - управление пользователями
+- `blog/` - блог (статьи, категории, серии, темы, комментарии)
+- `gallery/` - галерея (альбомы, фотографии, теги)
+- `main/` - главная страница
+- `api/` - REST API (JWT аутентификация, эндпоинты)
+- `templates/` - Django шаблоны для React интеграции
+
+### Frontend (React)
+
+- `src/components/` - React компоненты
+  - `Alert/` - алерты и уведомления
+  - `Blog/` - компоненты блога
+  - `Gallery/` - компоненты галереи
+  - `Main/` - компоненты главной страницы
+  - `Navbar/` - навигация
+  - `Card/` - базовый компонент карточки
+  - `Pagination/` - пагинация
+  - `Spinner/` - индикатор загрузки
+- `src/hooks/` - кастомные React хуки
+- `src/services/` - API сервисы
+- `dist/` - production бандл
 
 Рекомендуемые паттерны:
 
@@ -55,6 +76,24 @@
 - Есть система комментариев
 - Поддержка TinyMCE редактора для статей
 
+## REST API
+
+### Стек технологий
+
+- Django REST Framework для REST API
+- djangorestframework-simplejwt для JWT аутентификации
+- drf-spectacular для генерации OpenAPI 3.0 схемы
+- django-filter для фильтрации наборов данных
+- django-cors-headers для CORS поддержки
+
+### API документация
+
+- Swagger UI: `/api/docs/swagger/`
+- ReDoc: `/api/docs/redoc/`
+- OpenAPI схема: `/api/schema/`
+
+Документация работает полностью в offline режиме за счет drf-spectacular-sidecar.
+
 ## Работа с данными
 
 - Использовать select_related и prefetch_related для сложных запросов
@@ -83,7 +122,7 @@
 ### Настройка S3 хранилища
 
 - Проект поддерживает использование S3-совместимых хранилищ для хранения медиа файлов
-- Для включения S3 хранилища необходимо установить переменную окружения `STORAGE_TYPE=s3` и запустить MinIO через Docker Compose: `docker-compose up -d minio`
+- Для включения S3 хранилища необходимо установить переменную окружения `STORAGE_TYPE=s3` и запустить MinIO через Docker Compose: `docker compose up -d minio`
 
 ## Стиль кода
 
@@ -107,6 +146,7 @@
 - Использовать фабрики (factory_boy или model_bakery) для генерации тестовых данных
 - Используется pytest с pytest-django
 - Есть фикстуры для создания тестовых данных
+- Названия тестовых классов должны следовать формату TestClassName, а не ClassNameTest
 
 ## Workflow разработки
 
@@ -124,6 +164,31 @@
   - Поддержка русскоязычной документации
   - Написание тестов для нового функционала
 
+### Статический анализ кода
+
+- Проверить код с помощью Ruff командой `poetry run ruff check . --fix`
+- Проверить типы с помощью MyPy командой `poetry run mypy .`
+- Не использовать # type: ignore для подавления ошибок
+- Не игнорировать сообщения об ошибках
+- Не коммитить код с ошибками
+- Использовать явное преобразование типов, например: `dict(obj)`
+
+### Обновление файла CHANGELOG.md
+
+- Анализировать структуру CHANGELOG.md, изучив формат дат, стиль записей и порядок разделов
+- Получить diff с основной веткой командой `git diff main > tmp/changelog.diff`
+- Обновить CHANGELOG.md, добавив подзаголовок с текущей датой в формате YYYY-MM-DD
+- Описать изменения в текущем стиле CHANGELOG.md
+- Удалить временный diff файл командой `rm tmp/changelog.diff`
+- Проверять при помощи markdownlint-cli командой `npx markdownlint CHANGELOG.md`
+
+### Создание описания для Pull Request
+
+- Получить diff текущей ветки по сравнению с основной веткой во временный файл командой: `git diff main > tmp/changes.diff`
+- На основе анализа `tmp/changes.diff` создать файл `pr_description.md` в формате Markdown с описанием изменений
+- Проверить созданный файл при помощи markdownlint-cli и исправить найденные замечания
+- Удалить временный файл `tmp/changes.diff`
+
 ## Специфические инструменты проекта
 
 ### Taskfile
@@ -137,6 +202,7 @@
 - Автоматические проверки перед каждым коммитом
 - Включает форматирование, линтинг, проверку типов
 - Можно запустить вручную через `pre-commit run --all-files`
+- Для обновления хуков использовать команду `pre-commit autoupdate`
 
 ## Линтинг и проверки кода
 
@@ -145,6 +211,31 @@
 - Проверять JavaScript код с помощью ESLint: `npm run lint` или `npx eslint .`
 - Проверять Markdown файлы с помощью markdownlint: `npx markdownlint-cli *.md docs/*.md`
 - Выполнять все проверки перед коммитом через pre-commit хуки
+
+## Frontend стек
+
+### Технологии
+
+- React 19.2.7 - UI библиотека
+- Bootstrap 5.3.8 - стили
+- Webpack 5 - сборка
+- Babel - транспиляция JSX и ES6+
+- Jest - тестирование компонентов
+- django-webpack-loader - интеграция бандлов с Django
+
+### Frontend компоненты
+
+- `components/` - React компоненты (Navbar, Card, Gallery, Blog, Alert, Pagination, Spinner)
+- `hooks/` - кастомные хуки (useApiData, usePagination, usePhotoData, usePhotoNavigation, useToggle)
+- `services/` - API сервисы (api.js, blogService.js, galleryService.js)
+
+### Команды фронтенда
+
+- Установить зависимости: `npm install`
+- Запустить сборку в режиме наблюдения: `npm run dev`
+- Production сборка: `npm run build`
+- Запустить тесты: `npm test` или `npm run test:watch` для режима наблюдения
+- Проверка кода ESLint: `npm run eslint`
 
 ## Безопасность
 

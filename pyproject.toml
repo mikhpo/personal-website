@@ -9,49 +9,63 @@ dynamic = ["requires-python", "dependencies"]
 package-mode = false
 
 [tool.poetry.dependencies]
-python = "^3.11"
-Django = "^5.1.5"
-django-tinymce = "^4.1.0"
+python = "^3.12"
+Django = "^6.0.2"
+django-tinymce = "^5.0.0"
 django-cleanup = "^9.0.0"
-django-imagekit = "^5.0.0"
-django-admin-sortable2 = "^2.2.4"
-django-extensions = "^3.2.3"
-django-crispy-forms = "^2.3"
-crispy-bootstrap5 = "^2024.10"
-whitenoise = "^6.8.2"
-gunicorn = "^23.0.0"
-python-dotenv = "^1.0.1"
-pytils = "^0.4.1"
-pillow = "^11.1.0"
+django-imagekit = "^6.0.0"
+django-admin-sortable2 = "^2.3.1"
+django-extensions = "^4.1"
+django-crispy-forms = "^2.5"
+crispy-bootstrap5 = "^2025.6"
+whitenoise = "^6.11.0"
+gunicorn = "^25.1.0"
+python-dotenv = "^1.2.1"
+pytils = "^0.4.4"
+pillow = "^12.1.1"
 imgkit = "^1.2.3"
-psycopg = { extras = ["binary"], version = "^3.2.4" }
-faker = "^35.2.0"
-faker-file = "^0.17.14"
-model-bakery = "^1.20.1"
-requests = "^2.32.3"
-minio = "^7.2.15"
-factory-boy = "^3.3.1"
-pydantic = "^2.10.6"
+psycopg = { extras = ["binary"], version = "^3.3.2" }
+faker = "^40.4.0"
+faker-file = "^0.18.4"
+model-bakery = "^1.23.3"
+requests = "^2.32.5"
+minio = "^7.2.20"
+factory-boy = "^3.3.3"
+pydantic = "^2.12.5"
 django-storages = "^1.14.6"
-boto3 = "^1.42.15"
-s3path = "^0.6.4"
+boto3 = "^1.42.49"
+s3path = "^0.6.5"
+django-webpack-loader = "^3.2.3"
+djangorestframework = "^3.16.1"
+django-cors-headers = "^4.9.0"
+djangorestframework-simplejwt = "^5.5.1"
+django-filter = "^25.2"
+drf-spectacular = "^0.29.0"
+pyyaml = "^6.0.3"
+uritemplate = "^4.2.0"
+inflection = "^0.5.1"
+jsonschema = "^4.26.0"
+drf-spectacular-sidecar = "^2026.1.1"
 
 [tool.poetry.group.dev.dependencies]
-coverage = "^7.6.10"
-black = "^25.1.0"
-isort = "^6.0.0"
+coverage = "^7.13.4"
+black = "^26.1.0"
+isort = "^7.0.0"
 djlint = "^1.36.4"
-pytest = "^8.3.4"
-pytest-subtests = "^0.14.1"
-pytest-django = "^4.9.0"
-pytest-cov = "^6.0.0"
-pyclean = "^3.1.0"
-pre-commit = "^4.1.0"
-ruff = "^0.9.4"
-pyparsing = "^3.2.1"
-pydot = "^3.0.4"
-django-stubs = { extras = ["compatible-mypy"], version = "^5.1.2" }
-types-requests = "^2.32.0.20241016"
+pytest = "^9.0.2"
+pytest-subtests = "^0.15.0"
+pytest-django = "^4.11.1"
+pytest-cov = "^7.0.0"
+pyclean = "^3.5.0"
+pre-commit = "^4.5.1"
+ruff = "^0.15.1"
+pyparsing = "^3.3.2"
+pydot = "^4.0.1"
+django-stubs = { extras = ["compatible-mypy"], version = "^5.2.9" }
+types-requests = "^2.32.4.20260107"
+pytest-playwright = "^0.7.2"
+djangorestframework-stubs = "^3.16.8"
+types-django-filter = "^25.2.0.20260213"
 
 [tool.black]
 line-length = 120
@@ -59,12 +73,12 @@ line-length = 120
 [tool.isort]
 line_length = 120
 profile = "black"
-src_paths = ["personal_website"]
+src_paths = ["backend", "tests"]
 
 [tool.ruff]
 line-length = 120
 unsafe-fixes = true
-src = ["personal_website"]
+src = ["backend", "tests"]
 
 [tool.ruff.lint]
 select = ["ALL"]
@@ -112,11 +126,14 @@ docstring-code-format = true
 ignore = "H006,H013"
 
 [tool.pytest.ini_options]
-pythonpath = "personal_website"
+markers = [
+    "integration: метка для интеграционных тестов, требующих внешние сервисы",
+]
+pythonpath = "backend"
 python_files = ["tests.py", "test_*.py", "*_tests.py"]
 DJANGO_SETTINGS_MODULE = "personal_website.settings"
-testpaths = "personal_website"
-addopts = "--cov=personal_website --cov-report term-missing:skip-covered --cov-report html"
+testpaths = ["backend"]
+addopts = "--cov=backend --cov-report term-missing:skip-covered --cov-report html -m 'not integration'"
 
 [tool.coverage.run]
 branch = true

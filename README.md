@@ -19,8 +19,11 @@
 Проект использует следующие технологии:
 
 * [Django](https://www.djangoproject.com/) (бэкенд)
-* [Bootstrap](https://getbootstrap.com/) (фронтенд)
-* [PostgreSQL](https://www.postgresql.org/) (база данных)
+* [Django REST Framework](https://www.django-rest-framework.org/) (REST API)
+* [React](https://react.dev/) 19 (фронтенд)
+* [Webpack](https://webpack.js.org/) 5 (сборка фронтенда)
+* [Bootstrap](https://getbootstrap.com/) 5 (стили)
+* [PostgreSQL](https://www.postgresql.org/) 15 (база данных)
 * [MinIO](https://min.io/) (объектное хранилище, S3-совместимое)
 
 Проект адаптрован для развертывания на Linux. Для развертывания на Linux используются следующие технологии:
@@ -29,11 +32,11 @@
 * [Nginx](https://nginx.org/) (прокси-сервер)
 * [Docker](https://www.docker.com/) (контейнеризация)
 
-![container](./docs/diagrams/out/container/container.svg)
+![container](./docs/diagrams/out/container/container.png)
 
 ## Структура проекта
 
-Проект использует стандартную структуру каталогов, сформированную командой `django-admin startproject personal_website`:
+Проект использует монорепозиторийную структуру с разделением на бэкенд и фронтенд:
 
     personal-website/           # корневая директория репозитория
     ├── .git/
@@ -45,38 +48,85 @@
     ├── tools/                  # вспомогательные скрипты для разработки
     ├── tests/                  # пакет интеграционных тестов
     ├── nginx/                  # файлы для сборки Nginx в контейнере
-    └── personal_website/       # базовая директория проекта Django
-        ├── manage.py
-        ├── Dockerfile          # параметры сборки контейнера приложения
-        ├── entrypoint.sh       # скрипт для запуска приложения в контейнере
-        ├── scripts/            # скрипты для рантайма
-        ├── config/             # шаблоны конфигурационных файлов для рантайма
-        ├── personal_website/   # директория с настройками проекта
-        │   ├── __init__.py
-        │   ├── settings.py
-        │   ├── urls.py
-        │   ├── asgi.py
-        │   ├── storages.py     # настройки файловых хранилищ (локальная файловая система, S3)
-        │   └── wsgi.py
-        ├── app1/               # приложение Django
-        │   └── tests/          # пакет тестов приложения Django
-        └── app2/               # приложение Django
-            └── tests/          # пакет тестов приложения Django
+    ├── backend/                # Django бэкенд
+    │   ├── manage.py
+    │   ├── Dockerfile          # параметры сборки контейнера приложения
+    │   ├── entrypoint.sh       # скрипт для запуска приложения в контейнере
+    │   ├── scripts/            # скрипты для рантайма
+    │   ├── config/             # шаблоны конфигурационных файлов для рантайма
+    │   ├── personal_website/   # директория с настройками проекта
+    │   │   ├── __init__.py
+    │   │   ├── settings.py
+    │   │   ├── urls.py
+    │   │   ├── asgi.py
+    │   │   ├── storages.py     # настройки файловых хранилищ (локальная файловая система, S3)
+    │   │   └── wsgi.py
+    │   ├── accounts/           # приложение Django (управление пользователями)
+    │   ├── blog/               # приложение Django (блог)
+    │   ├── gallery/            # приложение Django (галерея)
+    │   ├── main/               # приложение Django (главная страница)
+    │   ├── api/                # приложение Django (REST API)
+    │   ├── staticfiles/        # статические файлы Django
+    │   ├── templates/          # шаблоны Django
+    │   └── tests/              # пакет тестов бэкенда
+    └── frontend/               # React фронтенд
+        ├── src/                # исходный код React компонентов
+        │   ├── components/     # React компоненты
+        │   ├── index.js        # точка входа
+        │   └── ...
+        ├── webpack.config.js   # конфигурация Webpack
+        ├── jest.config.js      # конфигурация Jest
+        ├── eslint.config.mjs   # конфигурация ESLint
+        ├── .babelrc            # конфигурация Babel
+        └── package.json       # зависимости фронтенда (симлинк на корневой)
 
 ## Административные команды
 
 Для запуска веб-сервера Django используется команда:
 
-    python personal_website/manage.py runserver
+    python backend/manage.py runserver
 
 После внесения изменений в модели необходимо произвести миграцию таблиц базы данных. Django имеет встроенный инструмент управления миграциями. Для проведения миграций используются команды:
 
-    python personal_website/manage.py makemigrations
-    python personal_website/manage.py migrate
+    python backend/manage.py makemigrations
+    python backend/manage.py migrate
 
 В данном проекте созданы пользовательские административные команды, которые используются для выполнения обособленных скриптов. Вызываются аналогичным образом:
 
-    python personal_website/manage.py <имя команды>
+    python backend/manage.py <имя команды>
+
+## Режим разработки
+
+Для локальной разработки необходимо запускать фронтенд и бэкенд отдельно в режиме наблюдения за изменениями файлов.
+
+### Запуск с использованием Taskfile (рекомендуется)
+
+* Запустить сервер разработки с PostgreSQL: `task runserver`
+* Запустить в режиме hot-reload: `task watch`
+* Полный цикл тестирования: `task test`
+* Статический анализ: `task check`
+
+### Ручной запуск режима разработки
+
+* Запустить базу данных PostgreSQL через Docker Compose: `docker compose up -d postgres`
+* Применить миграции базы данных: `poetry run python backend/manage.py migrate`
+* Собрать статические файлы: `poetry run python backend/manage.py collectstatic --noinput`
+* Запустить сборку фронтенда в режиме наблюдения (в первом терминале): `npm run dev`
+* Запустить сервер разработки Django (во втором терминале): `poetry run python backend/manage.py runserver`
+* Открыть сайт в браузере: <http://localhost:8000> (админ-панель: <http://localhost:8000/admin/>)
+
+### Frontend разработка
+
+* Сборка в режиме наблюдения: `npm run dev`
+* Запуск Jest тестов: `npm test`
+* Запуск тестов в режиме наблюдения: `npm run test:watch`
+* Production сборка: `npm run build`
+* Линтинг JavaScript: `npm run eslint`
+
+### Остановка режима разработки
+
+* Нажать `Ctrl+C` в обоих терминалах для остановки процессов
+* Остановить контейнеры Docker: `docker compose down` (или `docker-compose down` для V1)
 
 ## Настройка файлового хранилища
 
@@ -158,184 +208,224 @@
 
 Для фотографий реализован автоматический парсинг метаданных в формате EXIF.
 
+## REST API
+
+Проект предоставляет REST API для взаимодействия с фронтендом и сторонними приложениями.
+
+### Технологии API
+
+* [Django REST Framework](https://www.django-rest-framework.org/) — фреймворк для создания REST API
+* [djangorestframework-simplejwt](https://django-rest-framework-simplejwt.readthedocs.io/) — JWT аутентификация
+* [drf-spectacular](https://drf-spectacular.readthedocs.io/) — генерация OpenAPI 3.0 схемы
+* [django-filter](https://django-filter.readthedocs.io/) — фильтрация наборов данных
+
+Документация работает в offline режиме за счет drf-spectacular-sidecar.
+
+## Frontend
+
+Фронтенд построен на React с использованием Webpack для сборки и интеграции с Django.
+
+### Технологии фронтенда
+
+* [React](https://react.dev/) 19 — UI библиотека
+* [Bootstrap](https://getbootstrap.com/) 5 — стили
+* [Webpack](https://webpack.js.org/) 5 — сборка
+* [Babel](https://babeljs.io/) — транспиляция JSX и ES6+
+* [Jest](https://jestjs.io/) — тестирование компонентов
+* [django-webpack-loader](https://github.com/django-webpack/django-webpack-loader) — интеграция бандлов с Django
+
+### Структура фронтенда
+
+    frontend/
+    ├── src/
+    │   ├── components/     # React компоненты
+    │   │   ├── Alert/      # Алерты и уведомления
+    │   │   ├── Blog/       # Компоненты блога
+    │   │   ├── Gallery/    # Компоненты галереи
+    │   │   ├── Main/       # Компоненты главной страницы
+    │   │   ├── Navbar/     # Навигация
+    │   │   ├── Card/       # Базовый компонент карточки
+    │   │   ├── Pagination/ # Пагинация
+    │   │   └── Spinner/    # Индикатор загрузки
+    │   ├── hooks/          # Кастомные React хуки
+    │   ├── services/       # API сервисы
+    │   ├── utils/          # Утилиты
+    │   └── index.js        # Точка входа
+    ├── dist/               # Production бандл
+    └── webpack.config.js   # Конфигурация Webpack
+
+### Команды фронтенда
+
+| Команда              | Описание                   |
+| -------------------- | -------------------------- |
+| `npm run dev`        | Сборка в режиме наблюдения |
+| `npm run build`      | Production сборка          |
+| `npm test`           | Запуск Jest тестов         |
+| `npm run test:watch` | Тесты в режиме наблюдения  |
+| `npm run eslint`     | Проверка кода ESLint       |
+
+### Интеграция с Django
+
+React компоненты рендерятся в Django шаблонах через `django-webpack-loader`:
+
+    {% load webpack_loader %}
+    <script src="{% webpack_static 'frontend/dist/js/main.js' %}"></script>
+    <div id="react-mount-point"></div>
+
 ## CI/CD
 
-Проект использует как GitHub Actions, так и SourceCraft CI/CD для автоматизации процессов тестирования, сборки и деплоя.
+Проект использует GitHub Actions для автоматизации процессов тестирования, сборки и деплоя.
 
 ### GitHub Actions Workflows
 
-1. **test.yml** - запускается при каждом pull request
-2. **release.yml** - запускается при закрытии pull request в ветку main
-3. **deploy.yml** - запускается после успешного релиза
+1. **test.yml** — запускается при каждом pull request
+2. **release.yml** — запускается при закрытии pull request в ветку main
+3. **deploy.yml** — запускается после успешного релиза
 
-### SourceCraft CI Workflows
+Подробности конфигурации см. в файлах `.github/workflows/*.yml`.
 
-1. **lint-workflow** - статический анализ и линтинг, запускается при pull request
-2. **test-workflow** - тестирование, запускается при pull request
-3. **build-workflow** - сборка и тестирование образа приложения, запускается при pull request
-4. **release-workflow** - релиз Docker-образа, запускается при пуше в основную ветку
-5. **deploy-workflow** - деплой приложения на VPS, запускается вручную
+### Требуемые GitHub Secrets
 
-Подробности конфигурации см. в файлах `.github/workflows/*.yml` и `.sourcecraft/ci.yaml`.
-
-## Описание GitHub Actions
-
-GitHub Actions обеспечивают:
-
-* Автоматизированное тестирование и проверку качества кода при каждом Pull Request.
-* Сборку и тестирование Docker-образа.
-* Публикацию стабильного образа в GHCR и Docker Hub после успешного слияния в `main` или вручную.
+| Секрет                | Описание                         |
+| --------------------- | -------------------------------- |
+| `SECRET_KEY`          | Секретный ключ Django            |
+| `EMAIL_HOST_USER`     | Email для отправки уведомлений   |
+| `EMAIL_HOST_PASSWORD` | Пароль email сервиса             |
+| `DOMAIN_NAME`         | Доменное имя сайта               |
+| `DOCKER_USERNAME`     | Имя пользователя Docker Hub      |
+| `DOCKER_PASSWORD`     | Токен доступа Docker Hub         |
+| `GHCR_DELETE_TOKEN`   | Токен для удаления тегов из GHCR |
+| `SERVER_HOST`         | IP-адрес или домен VPS сервера   |
+| `SERVER_USER`         | Имя пользователя на VPS          |
+| `DEPLOY_SSH_KEY`      | SSH-ключ для деплоя              |
 
 ### 1. `test.yml` — Тестирование кода и контейнера
 
-Этот workflow выполняет проверку качества кода, запуск тестов и сборку Docker-образа. Если все проверки успешны, образ помечается как протестированный и публикуется в GitHub Container Registry (GHCR).
+Workflow выполняет проверку качества кода, запуск тестов и сборку Docker-образа.
 
-Workflow использует кэширование зависимостей для ускорения выполнения. Задачи `cache-poetry` и `cache-npm` создают кэш Python и JavaScript зависимостей соответственно. Кэш сохраняется с ключом, основанным на хэше lock-файлов (`poetry.lock` и `package-lock.json`).
+**Задачи (jobs):**
 
-Несмотря на использование кэширования, шаги `poetry install` и `npm install` остаются в зависимых задачах, потому что:
+| Задача                    | Описание                                                      |
+| ------------------------- | ------------------------------------------------------------- |
+| `cache-poetry`            | Кэширование Python зависимостей Poetry                        |
+| `cache-npm`               | Кэширование JavaScript зависимостей npm                       |
+| `ruff_check`              | Проверка кода с помощью Ruff                                  |
+| `mypy_check`              | Статический анализ типов Mypy                                 |
+| `eslint_check`            | Статический анализ JavaScript кода ESLint                     |
+| `markdownlint_check`      | Проверка Markdown файлов                                      |
+| `jest_check`              | Тестирование React компонентов с Jest                         |
+| `test_python_with_pytest` | Запуск тестов Python с помощью Pytest                         |
+| `build_docker_image`      | Сборка Docker-образа и публикация в GHCR с тегом `test`       |
+| `test_docker_container`   | Запуск тестов внутри контейнера, перетегирование как `tested` |
 
-1. Кэш может отсутствовать при первом запуске или после изменений в зависимостях
-2. При наличии кэша установка выполняется быстро, проверяя наличие зависимостей (1-2 секунды)
-3. Это обеспечивает надежную работу workflow независимо от состояния кэша
+**Условия запуска:** при открытии, переоткрытии Pull Request или добавлении новых коммитов.
 
-Workflow состоит из следующих задач (jobs):
+### 2. `release.yml` — Публикация образа в реестры
 
-| Задача                    | Описание                                                                   | Зависимости                 |
-| ------------------------- | -------------------------------------------------------------------------- | --------------------------- |
-| `cache-poetry`            | Кэширование Python зависимостей Poetry                                     | —                           |
-| `cache-npm`               | Кэширование JavaScript зависимостей npm                                    | —                           |
-| `ruff_check`              | Проверка кода с помощью Ruff (линтер и форматтер)                          | `cache-poetry`              |
-| `mypy_check`              | Статический анализ типов с помощью Mypy                                    | `cache-poetry`              |
-| `eslint_check`            | Статический анализ JavaScript кода с помощью ESLint                        | `cache-npm`                 |
-| `markdownlint_check`      | Проверка Markdown файлов с помощью markdownlint                            | `cache-npm`                 |
-| `test_python_with_pytest` | Запуск тестов Python с помощью Pytest                                      | `cache-poetry`, `cache-npm` |
-| `build_docker_image`      | Сборка Docker-образа и публикация в GHCR с тегом `test`                    | `test_python_with_pytest`   |
-| `test_docker_container`   | Запуск тестов внутри контейнера, перетегирование и публикация как `tested` | `build_docker_image`        |
+Перетегирует протестированный Docker-образ (`tested`) как `latest` и публикует в GHCR и Docker Hub.
 
-Условия запуска:
+**Задачи (jobs):**
 
-* Выполняется при открытии, закрытии, переоткрытии Pull Request, а также при добавлении новых коммитов в PR.
+| Задача                 | Описание                                                     |
+| ---------------------- | ------------------------------------------------------------ |
+| `retag_and_push_image` | Логин в реестры, перетегирование образа, публикация, очистка |
 
-### 2. `release.yml` — Публикация образа в несколько реестров
+**Условия запуска:** после слияния Pull Request в `main` или вручную.
 
-* Перетегирует протестированный Docker-образ (`tested`) как `latest`.
-* Публикует образ в:
-  * GitHub Container Registry (GHCR)
-  * Docker Hub
-* Удаляет старый тег `tested` из GHCR.
+### 3. `deploy.yml` — Деплой на VPS сервер
 
-Workflow состоит из одной задачи:
+Подключается к VPS серверу по SSH и выполняет скрипт обновления.
 
-| Задача                 | Описание                                                                             |
-| ---------------------- | ------------------------------------------------------------------------------------ |
-| `retag_and_push_image` | Логин в GHCR и Docker Hub, перетегирование образа, публикация, удаление старого тега |
-
-Условия запуска:
-
-* Выполняется после закрытия Pull Request, если он был слит в ветку `main`.
-* Может быть запущен вручную через `workflow_dispatch`.
-
-### 3. `deploy.yml` — Деплой приложения на VPS сервер
-
-Workflow для автоматического деплоя приложения на VPS сервер после успешного релиза.
-
-Функциональность:
-
-* Подключается к VPS серверу по SSH
-* Выполняет скрипт обновления приложения на сервере
-
-Workflow состоит из одной задачи:
+**Задачи (jobs):**
 
 | Задача   | Описание                               |
 | -------- | -------------------------------------- |
 | `deploy` | Деплой приложения на VPS сервер по SSH |
 
-Условия запуска:
+**Условия запуска:** после успешного завершения workflow "Release image".
 
-* Выполняется после успешного завершения workflow "Release image"
+## SourceCraft CI/CD
 
-## Описание SourceCraft CI/CD
+Проект также использует SourceCraft CI/CD для альтернативной автоматизации процессов тестирования, сборки и деплоя.
 
-SourceCraft обеспечивает:
+### Workflows
 
-* Автоматизированное тестирование и проверку качества кода при каждом pull request.
-* Сборку и тестирование Docker-образа.
-* Публикацию стабильного образа в Docker Hub и Yandex Cloud Container Registry после успешного слияния в `main`.
-* Деплой приложения на VPS сервер после успешного релиза.
+1. **lint-workflow** — статический анализ и линтинг, запускается при pull request
+2. **test-workflow** — тестирование, запускается при pull request
+3. **build-workflow** — сборка и тестирование образа приложения, запускается при pull request
+4. **release-workflow** — релиз Docker-образа, запускается при пуше в основную ветку
+5. **deploy-workflow** — деплой приложения на VPS, запускается вручную
+
+Подробности конфигурации см. в файле `.sourcecraft/ci.yaml`.
 
 ### 1. `lint-workflow` — Статический анализ и линтинг
 
-Этот workflow выполняет проверку качества кода с помощью Ruff и Mypy для Python кода, а также ESLint и markdownlint для JavaScript и Markdown файлов.
+Workflow выполняет проверку качества кода с помощью Ruff и Mypy для Python кода, а также ESLint и markdownlint для JavaScript и Markdown файлов.
 
-Workflow состоит из следующих задач (tasks):
+**Задачи (tasks):**
 
 | Задача         | Описание                                                 |
 | -------------- | -------------------------------------------------------- |
 | `python-check` | Проверка Python кода с помощью Ruff и Mypy               |
 | `node-check`   | Проверка JavaScript кода с помощью ESLint и markdownlint |
 
-Условия запуска: при создании pull request в ветку `main` или `master`.
+**Условия запуска:** при создании pull request в ветку `main` или `master`.
 
 ### 2. `test-workflow` — Тестирование
 
-Этот workflow выполняет тестирование Python и JavaScript кода в изолированном окружении.
+Workflow выполняет тестирование Python и JavaScript кода в изолированном окружении с предварительной сборкой React фронтенда.
 
-Workflow состоит из следующих задач:
+**Задачи (tasks):**
 
-| Задача        | Описание                                  |
-| ------------- | ----------------------------------------- |
-| `python-test` | Тестирование Python кода с помощью Pytest |
-| `node-test`   | Тестирование JavaScript кода              |
+| Задача        | Описание                                                               |
+| ------------- | ---------------------------------------------------------------------- |
+| `python-test` | Тестирование Python кода с помощью Pytest (со сборкой React фронтенда) |
+| `node-test`   | Тестирование JavaScript кода                                           |
 
-Условия запуска: при создании pull request в ветку `main` или `master`.
+**Условия запуска:** при создании pull request в ветку `main` или `master`.
 
 ### 3. `build-workflow` — Сборка и тестирование образа приложения
 
-Этот workflow выполняет сборку Docker-образа приложения, тестирование внутри контейнера и публикацию протестированного образа в реестры.
+Workflow выполняет сборку Docker-образа приложения, тестирование внутри контейнера и публикацию протестированного образа в реестры.
 
-Workflow использует переменные окружения для настройки параметров сборки и публикации. Важные переменные:
+**Переменные окружения:**
 
 * `SECRET_KEY` - секретный ключ Django приложения
 * `DOCKER_USERNAME` и `DOCKER_PASSWORD` - учетные данные для Docker Hub
 * `YC_OAUTH_TOKEN` и `YC_CONTAINER_REGISTRY_ID` - учетные данные для Yandex Cloud
 
-Workflow состоит из следующих задач:
+**Задачи (tasks):**
 
 | Задача                   | Описание                                                              |
 | ------------------------ | --------------------------------------------------------------------- |
 | `build-test-docker`      | Сборка Docker-образа и публикация в Docker Hub и Yandex Cloud         |
 | `run-tests-in-container` | Запуск тестов внутри контейнера и публикация протестированного образа |
 
-Условия запуска: при создании pull request в ветку `main` или `master`.
+**Условия запуска:** при создании pull request в ветку `main` или `master`.
 
 ### 4. `release-workflow` — Релиз Docker-образа
 
-Этот workflow перетегирует протестированный Docker-образ как `latest` и публикует его в Docker Hub и Yandex Cloud Container Registry.
+Workflow перетегирует протестированный Docker-образ как `latest` и публикует его в Docker Hub и Yandex Cloud Container Registry.
 
-Workflow состоит из следующих задач:
+**Задачи (tasks):**
 
 | Задача           | Описание                                                               |
 | ---------------- | ---------------------------------------------------------------------- |
 | `release-docker` | Перетегирование образа как `latest` и публикация в реестры контейнеров |
 
-Условия запуска: при пуше в основную ветку (`main` или `master`).
+**Условия запуска:** при пуше в основную ветку (`main` или `master`).
 
 ### 5. `deploy-workflow` — Деплой приложения на VPS сервер
 
 Workflow для автоматического деплоя приложения на VPS сервер.
 
-Функциональность:
-
-* Подключается к VPS серверу по SSH
-* Выполняет скрипт обновления приложения на сервере
-
-Workflow состоит из следующих задач:
+**Задачи (tasks):**
 
 | Задача               | Описание                               |
 | -------------------- | -------------------------------------- |
 | `deploy-application` | Деплой приложения на VPS сервер по SSH |
 
-Условия запуска: вручную.
+**Условия запуска:** вручную.
 
 ## Дополнительная информация
 

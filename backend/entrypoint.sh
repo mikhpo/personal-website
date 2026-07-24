@@ -1,0 +1,100 @@
+#!/bin/bash
+#
+# Выполнение миграций, установка зависимостей и запуск
+# сервера в режиме разработки или воркеров Gunicorn.
+
+# Остановиться в случае ошибки.
+set -e
+
+# Значения по умолчанию для адреса хоста и номера порта.
+readonly DJANGO_HOST="0.0.0.0"
+readonly DJANGO_PORT="8000"
+
+#######################################
+# Установить алиас для сервера MinIO.
+# Параметры алиаса зависят из переменных окружения.
+#######################################
+function set_minio_alias() {
+    mc=$(which mc)
+    $mc alias set \
+    "${MINIO_ALIAS}" \
+    "${MINIO_SERVER_URL}" \
+    "${MINIO_ACCESS_KEY}" \
+    "${MINIO_SECRET_KEY}"
+    $mc admin info "${MINIO_ALIAS}"
+}
+
+#######################################
+# Преобразование значения строки в логическое значение true/false.
+# Значение аргумента преобразуется в нижний регистр, далее проверяется
+# соответствие преобразованного значения регулярному выражению,
+# содержащему одно из изначений, означающих истину.
+#######################################
+function str_to_bool() {
+    local PATTERN="^(true|1|yes|y|ok)$"
+    lower_string="$(echo "$1" | tr '[:upper:]' '[:lower:]')"
+    if [[ $lower_string =~ $PATTERN ]]; then
+        echo true
+    else
+        echo false
+    fi
+}
+
+#######################################
+# Опрделение количество воркеров Gunicorn.
+# Количество воркеров определяется по формуле: (2 * количество логических ядер CPU) + 1.
+# Количество логических ядер CPU определяется разными способами в зависимости от оболочки:
+#   - для оболочки bash: командой npoc
+#   - для оболочки zsh: командой sysctl hw.logicalcpu
+# Переменные окружения: SHELL - используемая оболочка.
+# Возвращает: количество воркеров (целое число).
+#######################################
+function calculate_worker_count() {
+    if [[ "$SHELL" == *"bash"* ]]; then
+        num_cores=$(nproc --all)
+    elif [[ "$SHELL" == *"zsh"* ]]; then
+        num_cores=$(sysctl -n hw.logicalcpu)
+    fi
+    num_workers=$((2 * num_cores + 1))
+    echo $num_workers
+}
+
+#######################################
+# Основное тело скрипта.
+# Адреса каталогов и файлов проекта определяются по адресу скрипта.
+# Способ запуска контейнера определяется по переменной окружения DEBUG.
+# Переменные окружения считываются из .env файла.
+#######################################
+function main() {
+    website_dir="$(dirname "$(readlink -f "$0")")"
+    root_dir="$(dirname "$website_dir")"
+    dotenv="$root_dir/.env"
+    manage="$website_dir/manage.py"
+    python="$root_dir/.venv/bin/python"
+    gunicorn="$root_dir/.venv/bin/gunicorn"
+
+    # Выполнить миграции и собрать статические файлы.
+    $python "$manage" migrate
+    $python "$manage" collectstatic --noinput
+
+    # Загрузить переменные окружения из .env файла.
+    eval export "$(cat "$dotenv")"
+
+    # Установить алиас для сервера MinIO.
+    set_minio_alias
+
+    # В зависимости от значения переменной окружения DEBUG определить способ запуска.
+    debug_bool=$(str_to_bool "$DEBUG")
+    if $debug_bool; then
+        $python "$manage" runserver "$DJANGO_HOST":"$DJANGO_PORT"
+    else
+        num_workers=$(calculate_worker_count)
+        $gunicorn \
+            --bind="$DJANGO_HOST":"$DJANGO_PORT" \
+            --workers="$num_workers" \
+            --pythonpath="$website_dir" \
+            "backend.personal_website.wsgi:application"
+    fi
+}
+
+main "$@"
