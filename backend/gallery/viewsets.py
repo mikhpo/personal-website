@@ -33,7 +33,7 @@ class AlbumViewSet(viewsets.ReadOnlyModelViewSet):
     filterset_fields: ClassVar[list] = ["tags__slug"]
     search_fields: ClassVar[list] = ["name", "description"]
     ordering_fields: ClassVar[list] = ["created_at", "name", "order"]
-    ordering: ClassVar[list] = ["-created_at", "-order"]
+    ordering: ClassVar[list] = ["order", "-created_at"]
 
     def get_serializer_class(self) -> type:
         """Возвращает сериализатор в зависимости от action."""
@@ -47,7 +47,7 @@ class AlbumViewSet(viewsets.ReadOnlyModelViewSet):
         # Загружать фотографии только для детального просмотра
         if self.action == "retrieve":
             queryset = queryset.prefetch_related(
-                Prefetch("photos", queryset=Photo.chronological.all()),
+                Prefetch("photos", queryset=Photo.objects.order_by("taken_at")),
             )
         if hasattr(self.request.user, "is_staff") and self.request.user.is_staff:
             return queryset
