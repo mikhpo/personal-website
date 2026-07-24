@@ -39,6 +39,25 @@ jest.mock("@components/Alert/AlertList", () => ({
   ),
 }));
 
+jest.mock("@hooks/usePagination", () => ({
+  __esModule: true,
+  default: () => ({
+    currentPage: 1,
+    totalPages: 1,
+    hasNext: false,
+    hasPrevious: false,
+    nextPage: jest.fn(),
+    previousPage: jest.fn(),
+    goToPage: jest.fn(),
+    setTotalPages: jest.fn(),
+  }),
+}));
+
+jest.mock("@components/Pagination/Pagination", () => ({
+  __esModule: true,
+  default: () => null,
+}));
+
 describe("AlbumList", () => {
   // Тестовые данные альбомов
   const mockAlbums = [
@@ -192,7 +211,7 @@ describe("AlbumList", () => {
 
     // Ждем завершения загрузки
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith(customApiUrl);
+      expect(global.fetch).toHaveBeenCalledWith("http://localhost/custom/api/albums/?page=1&page_size=20");
     });
   });
 
@@ -210,7 +229,7 @@ describe("AlbumList", () => {
 
     // Ждем завершения загрузки
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith("/api/gallery/albums/");
+      expect(global.fetch).toHaveBeenCalledWith("http://localhost/api/gallery/albums/?page=1&page_size=20");
     });
   });
 

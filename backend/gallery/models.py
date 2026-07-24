@@ -16,7 +16,7 @@ from PIL import Image as pImage
 from PIL.ExifTags import TAGS
 from PIL.TiffImagePlugin import IFDRational
 
-from gallery.managers import PublicAlbumManager, PublicPhotoManager
+from gallery.managers import ChronologicalPhotoManager, PublicAlbumManager, PublicPhotoManager
 from gallery.utils import compute_datetime_taken, move_photo_image, photo_image_upload_path
 from personal_website.storages import StorageType, select_storage
 from personal_website.utils import get_unique_slug
@@ -102,7 +102,7 @@ class Album(models.Model):
     class Meta:  # noqa: D106
         verbose_name = "Альбом"
         verbose_name_plural = "Альбомы"
-        ordering = ("-order",)
+        ordering = ("-created_at",)
 
     def __str__(self) -> str:
         """Строкое представление альбома является названием альбома."""
@@ -194,6 +194,7 @@ class Photo(models.Model):
 
     objects = models.Manager()
     published = PublicPhotoManager()
+    chronological = ChronologicalPhotoManager()
 
     class Meta:  # noqa: D106
         ordering = ("-taken_at",)

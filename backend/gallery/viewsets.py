@@ -2,6 +2,7 @@
 
 from typing import TYPE_CHECKING, ClassVar
 
+from django.db.models import Prefetch
 from django_filters.rest_framework import DjangoFilterBackend
 from PIL import Image, UnidentifiedImageError
 from rest_framework import filters, status, viewsets
@@ -32,7 +33,7 @@ class AlbumViewSet(viewsets.ReadOnlyModelViewSet):
     filterset_fields: ClassVar[list] = ["tags__slug"]
     search_fields: ClassVar[list] = ["name", "description"]
     ordering_fields: ClassVar[list] = ["created_at", "name", "order"]
-    ordering: ClassVar[list] = ["order", "-created_at"]
+    ordering: ClassVar[list] = ["-created_at", "-order"]
 
     def get_serializer_class(self) -> type:
         """Возвращает сериализатор в зависимости от action."""
@@ -45,7 +46,9 @@ class AlbumViewSet(viewsets.ReadOnlyModelViewSet):
         queryset = Album.objects.select_related("cover").prefetch_related("tags")
         # Загружать фотографии только для детального просмотра
         if self.action == "retrieve":
-            queryset = queryset.prefetch_related("photos")
+            queryset = queryset.prefetch_related(
+                Prefetch("photos", queryset=Photo.chronological.all()),
+            )
         if hasattr(self.request.user, "is_staff") and self.request.user.is_staff:
             return queryset
         return queryset.filter(public=True)
