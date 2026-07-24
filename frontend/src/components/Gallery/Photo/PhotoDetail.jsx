@@ -54,7 +54,7 @@ const PhotoDetail = ({ photoId, previousPhotoId, nextPhotoId, apiUrl = '/api/gal
             className="card-img"
             src={photo.image_url}
             alt={photo.name}
-            style={{ maxHeight: 'calc(100vh - 120px)', width: 'auto', height: 'auto', maxWidth: '100%' }}
+            style={{ maxWidth: '100%', maxHeight: 'calc(100vh - 120px)', objectFit: 'contain' }}
           />
         )}
         <div className="card-footer" align="center">
