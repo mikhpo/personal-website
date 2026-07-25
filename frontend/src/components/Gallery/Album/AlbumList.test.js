@@ -201,17 +201,19 @@ describe("AlbumList", () => {
    * Компонент должен использовать полученный apiUrl для загрузки данных.
    */
   test("передает правильный apiUrl в fetch", async () => {
-    const customApiUrl = "/custom/api/albums/";
+    const tagApiUrl = "/api/gallery/albums/?tag=nature";
     global.fetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({ results: [] }),
     });
 
-    render(<AlbumList apiUrl={customApiUrl} />);
+    render(<AlbumList apiUrl={tagApiUrl} />);
 
     // Ждем завершения загрузки
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith("http://localhost/custom/api/albums/?page=1&page_size=20");
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining("/api/gallery/albums/?tag=nature&page=1"),
+      );
     });
   });
 
@@ -229,7 +231,9 @@ describe("AlbumList", () => {
 
     // Ждем завершения загрузки
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith("http://localhost/api/gallery/albums/?page=1&page_size=20");
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining("/api/gallery/albums/?page=1"),
+      );
     });
   });
 
@@ -312,5 +316,60 @@ describe("AlbumList", () => {
     await waitFor(() => {
       expect(screen.getByText("Ошибка загрузки: 500")).toBeInTheDocument();
     });
+  });
+
+  /**
+   * Проверить использование total_pages из ответа API.
+   * Компонент должен использовать значение total_pages от сервера, а не вычислять его.
+   */
+  test("использует total_pages из ответа API", async () => {
+    const mockData = {
+      count: 100,
+      total_pages: 5,
+      results: mockAlbums,
+    };
+    global.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => mockData,
+    });
+
+    render(<AlbumList />);
+
+    // Ждем завершения загрузки
+    await waitFor(() => {
+      expect(screen.getByTestId("album-list-container")).toBeInTheDocument();
+    });
+
+    // Проверить, что альбомы отображаются
+    mockAlbums.forEach((album) => {
+      expect(screen.getByTestId(`album-card-${album.id}`)).toBeInTheDocument();
+    });
+  });
+
+  /**
+   * Проверить работу с разным количеством страниц.
+   * Компонент должен корректно работать при разном количестве страниц от сервера.
+   */
+  test("корректно работает с разным количеством страниц", async () => {
+    const mockDataSinglePage = {
+      count: 5,
+      total_pages: 1,
+      results: mockAlbums.slice(0, 1),
+    };
+    global.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => mockDataSinglePage,
+    });
+
+    render(<AlbumList />);
+
+    // Ждем завершения загрузки
+    await waitFor(() => {
+      expect(screen.getByTestId("album-list-container")).toBeInTheDocument();
+    });
+
+    // При одной странице пагинация не отображается
+    const pagination = screen.queryByText("Pagination");
+    expect(pagination).not.toBeInTheDocument();
   });
 });

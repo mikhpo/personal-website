@@ -62,7 +62,6 @@ const AlbumList = ({ apiUrl = "/api/gallery/albums/" }) => {
     async (page = 1) => {
       const url = new URL(apiUrl, window.location.origin);
       url.searchParams.append("page", page);
-      url.searchParams.append("page_size", "20");
 
       const response = await fetch(url.toString());
 
@@ -95,9 +94,8 @@ const AlbumList = ({ apiUrl = "/api/gallery/albums/" }) => {
         const albumsList = data.results || data;
         setAlbums(Array.isArray(albumsList) ? albumsList : []);
 
-        if (data.count) {
-          const pageSize = data.results ? data.results.length : albumsList.length;
-          setTotalPages(Math.ceil(data.count / (pageSize || 20)));
+        if (data.total_pages) {
+          setTotalPages(data.total_pages);
         }
 
         setLoading(false);
