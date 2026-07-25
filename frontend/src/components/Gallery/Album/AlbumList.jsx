@@ -117,10 +117,6 @@ const AlbumList = ({ apiUrl = "/api/gallery/albums/" }) => {
     loadAlbums(currentPage);
   }, [currentPage, loadAlbums]);
 
-  const handleRetry = () => {
-    loadAlbums(currentPage);
-  };
-
   const handlePageChange = (page) => {
     goToPage(page);
   };
@@ -130,7 +126,7 @@ const AlbumList = ({ apiUrl = "/api/gallery/albums/" }) => {
   }
 
   if (error) {
-    return <LoadingError message={error} onRetry={handleRetry} />;
+    return <LoadingError message={error} onRetry={() => loadAlbums(currentPage)} />;
   }
 
   if (albums.length === 0) {

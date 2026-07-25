@@ -32,54 +32,32 @@ const usePhotoData = (photoPk, apiUrl = '/api/gallery/photos/') => {
     return response.json();
   }, [photoPk, apiUrl]);
 
-  useEffect(() => {
+  const loadPhoto = useCallback(async () => {
     if (!photoPk) {
-      // При отсутствии photoPk не выполняем запрос, состояние уже корректное
-      return;
-    }
-
-    const loadPhoto = async () => {
-      setLoading(true);
-      setError(null);
-
-      try {
-        const photoData = await fetchPhotoRequest();
-        setPhoto(photoData);
-        setLoading(false);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : String(err));
-        setLoading(false);
-      }
-    };
-
-    loadPhoto();
-  }, [photoPk, fetchPhotoRequest]);
-
-  const safeRefetch = () => {
-    if (!photoPk) {
-      // При отсутствии photoPk только сбрасываем состояние
       setPhoto(null);
       setLoading(true);
       setError(null);
       return;
     }
 
-    const reloadPhoto = async () => {
-      setLoading(true);
-      setError(null);
+    setLoading(true);
+    setError(null);
 
-      try {
-        const photoData = await fetchPhotoRequest();
-        setPhoto(photoData);
-        setLoading(false);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : String(err));
-        setLoading(false);
-      }
-    };
+    try {
+      const photoData = await fetchPhotoRequest();
+      setPhoto(photoData);
+      setLoading(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+      setLoading(false);
+    }
+  }, [photoPk, fetchPhotoRequest]);
 
-    reloadPhoto();
-  };
+  useEffect(() => {
+    loadPhoto();
+  }, [loadPhoto]);
+
+  const safeRefetch = loadPhoto;
 
   return {
     photo,
