@@ -455,10 +455,10 @@ class TestTagDetailView(TestCase):
 
     def test_tag_detail_url(self) -> None:
         """Тестирование ссылки на детальный просмотр тега."""
-        tag_pk = self.tag.pk
+        tag_slug = self.tag.slug
 
         with self.subTest("Проверить обычную ссылку на детальный просмотр тэга"):
-            url = f"{TAG_DETAIL_URL}/{tag_pk}/"
+            url = f"{TAG_DETAIL_URL}/{tag_slug}/"
             resolver_match = resolve(url)
             response = self.client.get(url)
             view_func = resolver_match.func.view_class
@@ -466,7 +466,7 @@ class TestTagDetailView(TestCase):
             self.assertEqual(response.status_code, HTTPStatus.OK)
 
         with self.subTest("Проверить имя ссылки на детальный просмотр тэга"):
-            reverse_url = reverse(TAG_DETAIL_URL_NAME, kwargs={"pk": tag_pk})
+            reverse_url = reverse(TAG_DETAIL_URL_NAME, kwargs={"slug": tag_slug})
             reverse_resolver_match = resolve(reverse_url)
             reverse_response = self.client.get(reverse_url)
             reverse_view_func = reverse_resolver_match.func.view_class
@@ -481,8 +481,8 @@ class TestTagDetailView(TestCase):
 
     def test_tag_detail_view_context(self) -> None:
         """Проверить доступность представления для детального просмотра тега."""
-        tag_pk = self.tag.pk
-        url = f"{TAG_DETAIL_URL}/{tag_pk}/"
+        tag_slug = self.tag.slug
+        url = f"{TAG_DETAIL_URL}/{tag_slug}/"
         response = self.client.get(url)
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
