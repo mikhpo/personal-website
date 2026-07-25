@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from "react";
 import PropTypes from "prop-types";
 import { Container, Row, Col } from "react-bootstrap";
-import { Button } from "react-bootstrap";
 import Spinner from "@components/Spinner/Spinner";
 import AlertList from "@components/Alert/AlertList";
+import LoadingError from "@components/Alert/LoadingError";
 import AlbumCard from "@components/Gallery/Album/AlbumCard";
 import usePagination from "@hooks/usePagination";
 import Pagination from "@components/Pagination/Pagination";
@@ -50,50 +50,77 @@ const AlbumList = ({ apiUrl = "/api/gallery/albums/" }) => {
     setTotalPages,
   } = usePagination({ initialPage: 1 });
 
-  const fetchAlbums = useCallback(
-    (page = 1) => {
-      // eslint-disable-next-line react-x/set-state-in-effect
+  /**
+   * Выполняет HTTP-запрос к API для получения списка альбомов.
+   *
+   * Использование useCallback с зависимостью [apiUrl] гарантирует, что функция
+   * создаётся один раз и не пересоздаётся при каждом рендере, пока apiUrl не изменится.
+   * Это позволяет безопасно использовать её в зависимостях других хуков без риска
+   * бесконечного цикла перерисовки.
+   */
+  const fetchAlbumsRequest = useCallback(
+    async (page = 1) => {
+      const url = new URL(apiUrl, window.location.origin);
+      url.searchParams.append("page", page);
+      url.searchParams.append("page_size", "20");
+
+      const response = await fetch(url.toString());
+
+      if (!response.ok) {
+        throw new Error(`Ошибка загрузки: ${response.status}`);
+      }
+
+      return response.json();
+    },
+    [apiUrl],
+  );
+
+  /**
+   * Загружает альбомы для указанной страницы и обновляет состояние компонента.
+   *
+   * Функция обёрнута в useCallback для стабилизации её ссылки. Это критически важно
+   * для корректной работы useEffect: поскольку loadAlbums указана в массиве зависимостей,
+   * её стабильность предотвращает бесконечный цикл перерисовки. Функция пересоздаётся
+   * только при изменении fetchAlbumsRequest или setTotalPages.
+   *
+   * @param {number} page - Номер страницы для загрузки
+   */
+  const loadAlbums = useCallback(
+    async (page) => {
       setLoading(true);
-      // eslint-disable-next-line react-x/set-state-in-effect
       setError(null);
 
-    const url = new URL(apiUrl, window.location.origin);
-    url.searchParams.append("page", page);
-    url.searchParams.append("page_size", "20");
-
-    fetch(url.toString())
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(`Ошибка загрузки: ${response.status}`);
-        }
-        return response.json();
-      })
-      .then((data) => {
+      try {
+        const data = await fetchAlbumsRequest(page);
         const albumsList = data.results || data;
         setAlbums(Array.isArray(albumsList) ? albumsList : []);
+
         if (data.count) {
           const pageSize = data.results ? data.results.length : albumsList.length;
           setTotalPages(Math.ceil(data.count / (pageSize || 20)));
         }
 
         setLoading(false);
-      })
-      .catch((err) => {
-        // eslint-disable-next-line react-x/set-state-in-effect
-        setError(err.message);
-        // eslint-disable-next-line react-x/set-state-in-effect
+      } catch (err) {
+        setError(err instanceof Error ? err.message : String(err));
         setLoading(false);
-      });
+      }
     },
-    [apiUrl, setTotalPages],
+    [fetchAlbumsRequest, setTotalPages],
   );
 
+  /**
+   * Загружает альбомы при изменении текущей страницы.
+   *
+   * Зависимость loadAlbums стабильна благодаря useCallback, поэтому эффект
+   * выполняется только при реальном изменении currentPage, а не при каждом рендере.
+   */
   useEffect(() => {
-    fetchAlbums(currentPage);
-  }, [currentPage, fetchAlbums]);
+    loadAlbums(currentPage);
+  }, [currentPage, loadAlbums]);
 
   const handleRetry = () => {
-    fetchAlbums(currentPage);
+    loadAlbums(currentPage);
   };
 
   const handlePageChange = (page) => {
@@ -105,26 +132,7 @@ const AlbumList = ({ apiUrl = "/api/gallery/albums/" }) => {
   }
 
   if (error) {
-    return (
-      <AlertList
-        messages={[
-          {
-            message: error,
-            level: "error",
-            actions: (
-              <Button
-                variant="outline-primary"
-                size="sm"
-                onClick={handleRetry}
-                data-testid="retry-button"
-              >
-                Повторить
-              </Button>
-            ),
-          },
-        ]}
-      />
-    );
+    return <LoadingError message={error} onRetry={handleRetry} />;
   }
 
   if (albums.length === 0) {

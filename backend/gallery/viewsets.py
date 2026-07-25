@@ -46,9 +46,7 @@ class AlbumViewSet(viewsets.ReadOnlyModelViewSet):
         queryset = Album.objects.select_related("cover").prefetch_related("tags")
         # Загружать фотографии только для детального просмотра
         if self.action == "retrieve":
-            queryset = queryset.prefetch_related(
-                Prefetch("photos", queryset=Photo.objects.order_by("taken_at")),
-            )
+            queryset = queryset.prefetch_related(Prefetch("photos", queryset=Photo.objects.order_by("taken_at")))
         if hasattr(self.request.user, "is_staff") and self.request.user.is_staff:
             return queryset
         return queryset.filter(public=True)
