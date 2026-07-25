@@ -8,4 +8,4 @@ class PublicPhotoManager(PublicManager):
 
 
 class PublicAlbumManager(PublicManager):
-    """Менеджер для работы с публичными альбомов."""
+    """Менеджер для работы с публичными альбомами."""
