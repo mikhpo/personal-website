@@ -137,7 +137,7 @@ def generate_article_content() -> str:
     medium_threshold = 0.8  # 80% для среднего контента (30% + 50%)
 
     if content_length < short_threshold:
-        word_count = fake.random_int(80, 120)
+        word_count = fake.random_int(100, 120)
     elif content_length < medium_threshold:
         word_count = fake.random_int(250, 350)
     else:
