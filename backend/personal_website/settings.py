@@ -426,7 +426,7 @@ WEBPACK_LOADER = {
 
 # Настройки REST Framework
 REST_FRAMEWORK = {
-    "DEFAULT_PAGINATION_CLASS": "api.pagination.StandardResultsSetPagination",
+    "DEFAULT_PAGINATION_CLASS": "api.pagination.BasePagination",
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework_simplejwt.authentication.JWTAuthentication",
         "rest_framework.authentication.SessionAuthentication",  # Для Swagger интерфейса

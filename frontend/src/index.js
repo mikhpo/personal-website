@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client';
 // Импорт Alert компонентов
 import Alert from '@components/Alert/AlertDetail';
 import AlertList from '@components/Alert/AlertList';
+import LoadingError from '@components/Alert/LoadingError';
 
 // Импорт Blog компонентов
 import ArticleCard from '@components/Blog/Article/ArticleCard';
@@ -44,6 +45,7 @@ const componentRegistry = {
   // Компоненты алертов
   'Alert/Alert': Alert,
   'Alert/AlertList': AlertList,
+  'Alert/LoadingError': LoadingError,
 
   // Компоненты блога
   'Blog/ArticleCard': ArticleCard,

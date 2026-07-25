@@ -102,7 +102,7 @@ class Album(models.Model):
     class Meta:  # noqa: D106
         verbose_name = "Альбом"
         verbose_name_plural = "Альбомы"
-        ordering = ("-order",)
+        ordering = ("order", "-created_at")
 
     def __str__(self) -> str:
         """Строкое представление альбома является названием альбома."""

@@ -18,75 +18,46 @@ const usePhotoData = (photoPk, apiUrl = '/api/gallery/photos/') => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetchPhoto = useCallback(() => {
+  const fetchPhotoRequest = useCallback(async () => {
     if (!photoPk) {
-      const updateInitialState = () => {
-        // eslint-disable-next-line react-x/set-state-in-effect
-        setPhoto(null);
-        // eslint-disable-next-line react-x/set-state-in-effect
-        setLoading(true);
-        // eslint-disable-next-line react-x/set-state-in-effect
-        setError(null);
-      };
-      updateInitialState();
-      return;
+      throw new Error('Не указан идентификатор фотографии');
     }
 
-    const updateLoadingState = () => {
-      // eslint-disable-next-line react-x/set-state-in-effect
-      setLoading(true);
-      // eslint-disable-next-line react-x/set-state-in-effect
-      setError(null);
-    };
-    updateLoadingState();
+    const response = await fetch(`${apiUrl}${photoPk}/`);
 
-    fetch(`${apiUrl}${photoPk}/`)
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`Ошибка загрузки фото: ${response.status}`);
-        }
-        return response.json();
-      })
-      .then(photoData => {
-        setPhoto(photoData);
-        setLoading(false);
-      })
-      .catch(err => {
-        // eslint-disable-next-line react-x/set-state-in-effect
-        setError(err.message);
-        // eslint-disable-next-line react-x/set-state-in-effect
-        setLoading(false);
-      });
+    if (!response.ok) {
+      throw new Error(`Ошибка загрузки фото: ${response.status}`);
+    }
+
+    return response.json();
   }, [photoPk, apiUrl]);
 
-  useEffect(() => {
+  const loadPhoto = useCallback(async () => {
     if (!photoPk) {
-      const updateInitialState = () => {
-        // eslint-disable-next-line react-x/set-state-in-effect
-        setPhoto(null);
-        // eslint-disable-next-line react-x/set-state-in-effect
-        setLoading(true);
-        // eslint-disable-next-line react-x/set-state-in-effect
-        setError(null);
-      };
-      updateInitialState();
-      return;
-    }
-
-    fetchPhoto();
-  }, [photoPk, fetchPhoto]);
-
-  // Возвращаем безопасную функцию refetch, которая проверяет photoPk перед вызовом
-  const safeRefetch = () => {
-    if (!photoPk) {
-      // Для пустого photoPk просто обновляем состояние
       setPhoto(null);
       setLoading(true);
       setError(null);
       return;
     }
-    fetchPhoto();
-  };
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const photoData = await fetchPhotoRequest();
+      setPhoto(photoData);
+      setLoading(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+      setLoading(false);
+    }
+  }, [photoPk, fetchPhotoRequest]);
+
+  useEffect(() => {
+    loadPhoto();
+  }, [loadPhoto]);
+
+  const safeRefetch = loadPhoto;
 
   return {
     photo,
