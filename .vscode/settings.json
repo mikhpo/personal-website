@@ -42,5 +42,7 @@
   "[html][django-html]": {
     "editor.formatOnSave": true,
     "editor.defaultFormatter": "monosans.djlint"
-  }
+  },
+  "python-envs.defaultEnvManager": "ms-python.python:poetry",
+  "python-envs.defaultPackageManager": "ms-python.python:poetry"
 }

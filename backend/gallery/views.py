@@ -132,7 +132,6 @@ class TagDetailView(DetailView):
     model = Tag
     template_name = "gallery/tag_detail.html"
     context_object_name = "tag"
-    pk_url_kwarg = "pk"
 
     def get_context_data(self, **kwargs) -> dict[str, Any]:
         """Добавить все тэги в контекст ответа."""

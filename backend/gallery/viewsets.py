@@ -33,7 +33,7 @@ class AlbumViewSet(viewsets.ReadOnlyModelViewSet):
     filterset_fields: ClassVar[list] = ["tags__slug"]
     search_fields: ClassVar[list] = ["name", "description"]
     ordering_fields: ClassVar[list] = ["created_at", "name", "order"]
-    ordering: ClassVar[list] = ["order", "-created_at"]
+    ordering: ClassVar[list] = ["-order", "-created_at"]
 
     def get_serializer_class(self) -> type:
         """Возвращает сериализатор в зависимости от action."""
@@ -78,7 +78,7 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     permission_classes: ClassVar[list] = [IsAuthenticatedOrReadOnly]
-    lookup_field = "pk"
+    lookup_field = "slug"
     filter_backends: ClassVar[list] = [filters.SearchFilter, filters.OrderingFilter]
     search_fields: ClassVar[list] = ["name"]
     ordering_fields: ClassVar[list] = ["name"]

@@ -52,8 +52,8 @@ class Tag(models.Model):
         super().save(*args, **kwargs)
 
     def get_absolute_url(self) -> str:
-        """Абсолютная ссылка на тэг определяется по первичному ключу тэга."""
-        return reverse("gallery:tag-detail", kwargs={"pk": self.pk})
+        """Абсолютная ссылка на тэг определяется по слагу тэга."""
+        return reverse("gallery:tag-detail", kwargs={"slug": self.slug})
 
 
 class Album(models.Model):
@@ -102,7 +102,7 @@ class Album(models.Model):
     class Meta:  # noqa: D106
         verbose_name = "Альбом"
         verbose_name_plural = "Альбомы"
-        ordering = ("order", "-created_at")
+        ordering = ("-order", "-created_at")
 
     def __str__(self) -> str:
         """Строкое представление альбома является названием альбома."""

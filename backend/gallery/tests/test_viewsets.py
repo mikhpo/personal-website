@@ -39,7 +39,7 @@ class TestTagViewSet(APITestCase):
 
     def test_retrieve_tag(self) -> None:
         """Детальный просмотр тега."""
-        url = f"/api/gallery/tags/{self.tag1.pk}/"
+        url = f"/api/gallery/tags/{self.tag1.slug}/"
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["name"], self.tag1.name)
