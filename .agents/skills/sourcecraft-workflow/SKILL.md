@@ -54,6 +54,8 @@ EOF
 
 Параметры: `--base` (целевая ветка, по умолчанию main), `--head` (исходная ветка, по умолчанию текущая), `--draft`, `--reviewer`, `--web`.
 
+Опции автоудаления исходной ветки при создании PR в CLI нет — ветка удаляется при merge флагом `--delete-branch` (см. «Смержить PR»).
+
 ### Проверить статус CI
 
 ```bash
@@ -66,7 +68,7 @@ src pr get <N>      # статус PR (open/merged/closed)
 ### Смержить PR
 
 ```bash
-src pr merge <N> --squash
+src pr merge <N> --delete-branch
 ```
 
 Важно: флаг `--wait` в неинтерактивном (headless) режиме падает с ошибкой `could not open a new TTY: open /dev/tty: device not configured`. При этом сам merge успевает выполниться. Использовать merge без `--wait`, а статус проверить отдельно: `src pr get <N>` (должен показать `STATUS: merged`).
@@ -144,7 +146,7 @@ done
 3. Внести изменения, тесты, CHANGELOG; закоммитить и запушить ветку
 4. Создать PR со ссылкой на `#N`: `src pr create ...`
 5. Дождаться CI: poll `src pr checks <N>` до `success`
-6. Смержить: `src pr merge <N> --squash`; убедиться через `src pr get <N>` → `merged`
+6. Смержить: `src pr merge <N> --delete-branch`; убедиться через `src pr get <N>` → `merged`
 7. Закрыть задачу: `src issue edit <N> --status closed`
 8. Дождаться `release-workflow` (auto на push в main): poll `src run list` до success нового run
 9. Запустить деплой: `src run trigger deploy-workflow --ref main`; дождаться success через poll `src run get <N>`
