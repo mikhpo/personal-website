@@ -153,4 +153,3 @@ done
 8. Закрыть задачу: `src issue edit <N> --status closed`
 9. Дождаться `release-workflow` (auto на push в main): poll `src run list` до success нового run
 10. Запустить деплой: `src run trigger deploy-workflow --ref main`; дождаться success через poll `src run get <N>`
-11. Проверить результат на целевой среде (доступ, логи, состояние сервисов — см. скилл production-diagnostics)
