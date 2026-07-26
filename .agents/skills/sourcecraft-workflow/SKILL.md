@@ -54,7 +54,7 @@ EOF
 
 Параметры: `--base` (целевая ветка, по умолчанию main), `--head` (исходная ветка, по умолчанию текущая), `--draft`, `--reviewer`, `--web`.
 
-Опции автоудаления исходной ветки при создании PR в CLI нет — ветка удаляется при merge флагом `--delete-branch` (см. «Смержить PR»).
+Опции автоудаления исходной ветки при создании PR в CLI нет — особенности удаления ветки см. в разделе «Смержить PR».
 
 ### Проверить статус CI
 
@@ -68,12 +68,14 @@ src pr get <N>      # статус PR (open/merged/closed)
 ### Смержить PR
 
 ```bash
-src pr merge <N> --delete-branch
+src pr merge <N>
 ```
 
 Важно: флаг `--wait` в неинтерактивном (headless) режиме падает с ошибкой `could not open a new TTY: open /dev/tty: device not configured`. При этом сам merge успевает выполниться. Использовать merge без `--wait`, а статус проверить отдельно: `src pr get <N>` (должен показать `STATUS: merged`).
 
-Стратегии слияния: `--squash` (даёт единый коммит вида `... (!N)`), `--rebase`, по умолчанию merge commit. Флаг `--delete-branch` удаляет исходную ветку после merge.
+Важно: в headless-режиме флаг `--delete-branch` исходную ветку не удаляет (пост-шаг удаления не выполняется). Слитые ветки удалять вручную: `git push origin --delete <ветка>`.
+
+Стратегии слияния: `--squash` (даёт единый коммит вида `... (!N)`), `--rebase`, по умолчанию merge commit.
 
 ## Workflows (CI/CD)
 
@@ -146,8 +148,9 @@ done
 3. Внести изменения, тесты, CHANGELOG; закоммитить и запушить ветку
 4. Создать PR со ссылкой на `#N`: `src pr create ...`
 5. Дождаться CI: poll `src pr checks <N>` до `success`
-6. Смержить: `src pr merge <N> --delete-branch`; убедиться через `src pr get <N>` → `merged`
-7. Закрыть задачу: `src issue edit <N> --status closed`
-8. Дождаться `release-workflow` (auto на push в main): poll `src run list` до success нового run
-9. Запустить деплой: `src run trigger deploy-workflow --ref main`; дождаться success через poll `src run get <N>`
-10. Проверить результат на целевой среде (доступ, логи, состояние сервисов — см. скилл production-diagnostics)
+6. Смержить: `src pr merge <N>`; убедиться через `src pr get <N>` → `merged`
+7. Удалить слитую ветку: `git push origin --delete <ветка>`
+8. Закрыть задачу: `src issue edit <N> --status closed`
+9. Дождаться `release-workflow` (auto на push в main): poll `src run list` до success нового run
+10. Запустить деплой: `src run trigger deploy-workflow --ref main`; дождаться success через poll `src run get <N>`
+11. Проверить результат на целевой среде (доступ, логи, состояние сервисов — см. скилл production-diagnostics)
