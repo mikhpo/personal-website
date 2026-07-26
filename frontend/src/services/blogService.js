@@ -9,6 +9,7 @@
  */
 
 import api from './api';
+import { buildApiUrl } from '../utils/apiUrl';
 
 /**
  * Базовый URL для API блога.
@@ -42,9 +43,7 @@ export const blogService = {
    * const data = await blogService.getArticles({ categories__slug: 'react' });
    */
   async getArticles(params = {}) {
-    const queryString = new URLSearchParams(params).toString();
-    const url = queryString ? `${BASE_URL}/articles/?${queryString}` : `${BASE_URL}/articles/`;
-    return api.get(url);
+    return api.get(buildApiUrl(`${BASE_URL}/articles/`, params));
   },
 
   /**

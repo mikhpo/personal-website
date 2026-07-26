@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from 'react-bootstrap';
 import PropTypes from 'prop-types';
 import ArticleCard from '@components/Blog/Article/ArticleCard';
@@ -16,18 +16,20 @@ import { blogService } from '@services';
  *
  * @component
  * @param {Object} props - Пропсы компонента
- * @param {string} [props.apiUrl="/api/blog/articles/"] - URL API для загрузки статей
+ * @param {string} [props.categorySlug] - Слаг категории для фильтрации (categories__slug)
+ * @param {string} [props.seriesSlug] - Слаг серии для фильтрации (series__slug)
+ * @param {string} [props.topicSlug] - Слаг темы для фильтрации (topics__slug)
  * @return {JSX.Element} Компонент списка статей
  *
  * @example
- * // Использование с URL по умолчанию
+ * // Список всех статей
  * <ArticleList />
  *
  * @example
- * // Использование с пользовательским URL
- * <ArticleList apiUrl="/api/blog/articles/?categories__slug=react" />
+ * // Статьи категории
+ * <ArticleList categorySlug="react" />
  */
-const ArticleList = ({ apiUrl = '/api/blog/articles/' }) => {
+const ArticleList = ({ categorySlug, seriesSlug, topicSlug }) => {
   /**
    * Состояние статей
    * @type {[Array, function]}
@@ -71,7 +73,32 @@ const ArticleList = ({ apiUrl = '/api/blog/articles/' }) => {
   const [hasPrevious, setHasPrevious] = useState(false);
 
   /**
-   * Эффект для загрузки статей при монтировании компонента или изменении страницы/apiUrl
+   * Счётчик повторных попыток загрузки
+   * @type {[number, function]}
+   */
+  const [retryCount, setRetryCount] = useState(0);
+
+  /**
+   * Запрашивает статьи с фильтрами по слагам и указанной страницей.
+   *
+   * Слаги передаются как данные; пустые значения пропускаются при сборке URL
+   * (blogService.getArticles использует buildApiUrl).
+   *
+   * @function fetchArticles
+   * @param {number} page - Номер страницы для запроса
+   * @return {Promise<Object>} Ответ API со списком статей
+   */
+  const fetchArticles = useCallback((page) => {
+    return blogService.getArticles({
+      categories__slug: categorySlug,
+      series__slug: seriesSlug,
+      topics__slug: topicSlug,
+      page,
+    });
+  }, [categorySlug, seriesSlug, topicSlug]);
+
+  /**
+   * Эффект для загрузки статей при монтировании, изменении фильтра/страницы или повторной попытке
    */
   useEffect(() => {
     /**
@@ -85,17 +112,7 @@ const ArticleList = ({ apiUrl = '/api/blog/articles/' }) => {
       setError(null);
 
       try {
-        // Парсим URL для извлечения параметров запроса
-        const url = new URL(apiUrl, window.location.origin);
-        const params = {};
-        for (const [key, value] of url.searchParams.entries()) {
-          params[key] = value;
-        }
-        if (currentPage > 1) {
-          params.page = currentPage;
-        }
-
-        const data = await blogService.getArticles(params);
+        const data = await fetchArticles(currentPage);
         const articlesList = data.results || data;
         setArticles(Array.isArray(articlesList) ? articlesList : []);
         if (data.count !== undefined) {
@@ -112,43 +129,18 @@ const ArticleList = ({ apiUrl = '/api/blog/articles/' }) => {
     };
 
     loadArticles();
-  }, [apiUrl, currentPage]);
+  }, [fetchArticles, currentPage, retryCount]);
 
   /**
-   * Обработчик повторной попытки загрузки данных
+   * Обработчик повторной попытки загрузки данных.
+   *
+   * Сбрасывает страницу на первую и инициирует повторный запрос через эффект.
    * @function handleRetry
    * @return {void}
    */
   const handleRetry = () => {
-    /**
-     * Асинхронная функция для повторной загрузки статей из API
-     * @async
-     * @function retryLoadArticles
-     * @return {Promise<void>}
-     */
-    const retryLoadArticles = async () => {
-      setLoading(true);
-      setError(null);
-
-      try {
-        // Парсим URL для извлечения параметров запроса
-        const url = new URL(apiUrl, window.location.origin);
-        const params = {};
-        for (const [key, value] of url.searchParams.entries()) {
-          params[key] = value;
-        }
-
-        const data = await blogService.getArticles(params);
-        const articlesList = data.results || data;
-        setArticles(Array.isArray(articlesList) ? articlesList : []);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    retryLoadArticles();
+    setCurrentPage(1);
+    setRetryCount((count) => count + 1);
   };
 
   // Отображение индикатора загрузки
@@ -205,7 +197,9 @@ const ArticleList = ({ apiUrl = '/api/blog/articles/' }) => {
 };
 
 ArticleList.propTypes = {
-  apiUrl: PropTypes.string,
+  categorySlug: PropTypes.string,
+  seriesSlug: PropTypes.string,
+  topicSlug: PropTypes.string,
 };
 
 export default ArticleList;

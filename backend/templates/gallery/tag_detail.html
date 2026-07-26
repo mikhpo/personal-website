@@ -25,10 +25,10 @@
         {% endif %}
 
         <h5>Альбомы с этим тэгом:</h5>
-        {% react_component "Gallery/AlbumList" apiUrl="/api/gallery/albums/?tags__slug={{ tag.slug }}" %}
+        {% react_component "Gallery/AlbumList" tagSlug=tag.slug %}
 
         <h5>Фотографии с этим тэгом:</h5>
-        {% react_component "Gallery/PhotoList" apiUrl="/api/gallery/photos/?tags__slug={{ tag.slug }}" %}
+        {% react_component "Gallery/PhotoList" tagSlug=tag.slug %}
     {% endif %}
 </div>
 <br>

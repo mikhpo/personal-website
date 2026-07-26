@@ -48,6 +48,22 @@ describe('PhotoList', () => {
   });
 
   /**
+   * Проверяет передачу слага тега в URL фильтрации
+   */
+  test('передаёт слаг тега в URL фильтрации', async () => {
+    global.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ results: mockPhotos }),
+    });
+    render(<PhotoList tagSlug="example-tag" />);
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('tags__slug=example-tag'),
+      );
+    });
+  });
+
+  /**
    * Проверяет отображение индикатора загрузки
    */
   test('отображает индикатор загрузки', () => {

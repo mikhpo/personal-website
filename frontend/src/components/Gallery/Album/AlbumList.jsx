@@ -7,6 +7,7 @@ import LoadingError from "@components/Alert/LoadingError";
 import AlbumCard from "@components/Gallery/Album/AlbumCard";
 import usePagination from "@hooks/usePagination";
 import Pagination from "@components/Pagination/Pagination";
+import { buildApiUrl } from "@utils/apiUrl";
 
 /**
  * Компонент списка альбомов с пагинацией.
@@ -15,7 +16,8 @@ import Pagination from "@components/Pagination/Pagination";
  * загрузка, ошибка, пустое состояние, успешное отображение списка.
  *
  * @param {Object} props - Пропсы компонента
- * @param {string} [props.apiUrl="/api/gallery/albums/"] - URL для получения списка альбомов
+ * @param {string} [props.apiUrl="/api/gallery/albums/"] - Базовый URL endpoint альбомов
+ * @param {string} [props.tagSlug] - Слаг тега для фильтрации (tags__slug); URL фильтра строится во фронтенде
  * @return {JSX.Element} Компонент списка альбомов
  *
  * @example
@@ -34,7 +36,7 @@ import Pagination from "@components/Pagination/Pagination";
  * 4. Предоставляет возможность повторной загрузки при ошибке
  * 5. Поддерживает пагинацию с навигацией по страницам
  */
-const AlbumList = ({ apiUrl = "/api/gallery/albums/" }) => {
+const AlbumList = ({ apiUrl = "/api/gallery/albums/", tagSlug }) => {
   const [albums, setAlbums] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -60,10 +62,9 @@ const AlbumList = ({ apiUrl = "/api/gallery/albums/" }) => {
    */
   const fetchAlbumsRequest = useCallback(
     async (page = 1) => {
-      const url = new URL(apiUrl, window.location.origin);
-      url.searchParams.append("page", page);
+      const url = buildApiUrl(apiUrl, { tags__slug: tagSlug, page });
 
-      const response = await fetch(url.toString());
+      const response = await fetch(url);
 
       if (!response.ok) {
         throw new Error(`Ошибка загрузки: ${response.status}`);
@@ -71,7 +72,7 @@ const AlbumList = ({ apiUrl = "/api/gallery/albums/" }) => {
 
       return response.json();
     },
-    [apiUrl],
+    [apiUrl, tagSlug],
   );
 
   /**
@@ -164,6 +165,7 @@ const AlbumList = ({ apiUrl = "/api/gallery/albums/" }) => {
 
 AlbumList.propTypes = {
   apiUrl: PropTypes.string,
+  tagSlug: PropTypes.string,
 };
 
 export default AlbumList;

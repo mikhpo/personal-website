@@ -238,6 +238,25 @@ describe("AlbumList", () => {
   });
 
   /**
+   * Проверить передачу слага тега в URL фильтрации.
+   * При передаче tagSlug фронтенд должен собрать URL с параметром tags__slug.
+   */
+  test("передаёт слаг тега в URL фильтрации", async () => {
+    global.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ results: [] }),
+    });
+
+    render(<AlbumList tagSlug="example-tag" />);
+
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining("tags__slug=example-tag"),
+      );
+    });
+  });
+
+  /**
    * Проверить правильную структуру сетки.
    * Компонент должен использовать правильные CSS классы для сетки Bootstrap.
    */

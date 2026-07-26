@@ -260,7 +260,7 @@ describe('ArticleList', () => {
       .mockResolvedValueOnce(responseWithPrevious)
       .mockResolvedValueOnce(mockApiResponse);
 
-    render(<ArticleList apiUrl="/api/blog/articles/?page=2" />);
+    render(<ArticleList />);
 
     await waitFor(() => {
       expect(screen.getByTestId('pagination')).toBeInTheDocument();
@@ -274,18 +274,21 @@ describe('ArticleList', () => {
   });
 
   /**
-   * Проверяет использование пользовательского URL для загрузки.
-   * Компонент должен поддерживать настройку API endpoint.
+   * Проверяет передачу слагов фильтрации в параметры запроса.
+   * Слаги category/series/topic должны попадать в параметры blogService.getArticles.
    */
-  test('использует пользовательский URL для загрузки', async () => {
-    const customUrl = '/api/blog/articles/?categories__slug=react';
+  test('передаёт слаги фильтрации в параметры запроса', async () => {
     blogService.getArticles.mockResolvedValue(mockApiResponse);
 
-    render(<ArticleList apiUrl={customUrl} />);
+    render(<ArticleList categorySlug="react" seriesSlug="django" topicSlug="frontend" />);
 
     await waitFor(() => {
       expect(blogService.getArticles).toHaveBeenCalledWith(
-        expect.objectContaining({ categories__slug: 'react' })
+        expect.objectContaining({
+          categories__slug: 'react',
+          series__slug: 'django',
+          topics__slug: 'frontend',
+        }),
       );
     });
   });

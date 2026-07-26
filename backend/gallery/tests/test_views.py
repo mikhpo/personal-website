@@ -486,6 +486,16 @@ class TestTagDetailView(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
+    def test_tag_detail_passes_slug_to_list_components(self) -> None:
+        """Слаг тега передаётся AlbumList и PhotoList как проп tagSlug."""
+        tag_slug = self.tag.slug
+        url = f"{TAG_DETAIL_URL}/{tag_slug}/"
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+
+        # Слаг тега передаётся обоим list-компонентам (AlbumList, PhotoList) как проп tagSlug
+        self.assertContains(response, f'"tagSlug": "{tag_slug}"', count=2)
+
 
 class TestUploadFormView(TestCase):
     """Тесты формы для пакетной загрузки фотографий в альбом."""

@@ -79,7 +79,6 @@ class TestBlogIndexPage(TestCase):
     def test_article_list_content_filter(self) -> None:
         """Тест на фильтрацию контента на главной странице блога."""
         response = self.client.get(ARTICLE_LIST_URL)
-        # React компонент сам загружает статьи через API, шаблон не передаёт статьи в контексте
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_article_list_title(self) -> None:
@@ -215,9 +214,13 @@ class TestCategoryPage(TestCase):
         """Тестирование наличия в шаблоне категории React компонента для списка статей."""
         url = reverse(CATEGORY_URL_NAME, args=(self.test_category.slug,))
         response = self.client.get(url)
+
         # Проверяем наличие React компонента Blog/ArticleList
         self.assertContains(response, 'data-component-name="Blog/ArticleList"')
-        self.assertContains(response, "categories__slug")
+
+        # Слаг категории передаётся ArticleList как проп categorySlug
+        self.assertContains(response, f'"categorySlug": "{self.test_category.slug}"')
+
         # Проверяем наличие заголовка категории
         self.assertContains(response, self.test_category.name)
 
@@ -237,7 +240,6 @@ class TestCategoryPage(TestCase):
         url = reverse(CATEGORY_URL_NAME, args=(self.test_category.slug,))
         response = self.client.get(url)
         self.assertEqual(response.status_code, HTTPStatus.OK)
-        # React компонент сам решает, как отображать статьи
 
 
 class TestTopicPage(TestCase):
@@ -281,9 +283,13 @@ class TestTopicPage(TestCase):
         """Тестирование наличия в шаблоне темы React компонента для списка статей."""
         url = reverse(TOPIC_URL_NAME, args=(self.test_topic.slug,))
         response = self.client.get(url)
+
         # Проверяем наличие React компонента Blog/ArticleList
         self.assertContains(response, 'data-component-name="Blog/ArticleList"')
-        self.assertContains(response, "topics__slug")
+
+        # Слаг темы передаётся ArticleList как проп topicSlug
+        self.assertContains(response, f'"topicSlug": "{self.test_topic.slug}"')
+
         # Проверяем наличие заголовка темы
         self.assertContains(response, self.test_topic.name)
 
@@ -303,7 +309,6 @@ class TestTopicPage(TestCase):
         url = reverse(TOPIC_URL_NAME, args=(self.test_topic.slug,))
         response = self.client.get(url)
         self.assertEqual(response.status_code, HTTPStatus.OK)
-        # React компонент сам решает, как отображать статьи
 
 
 class TestSeriesPage(TestCase):
@@ -347,9 +352,13 @@ class TestSeriesPage(TestCase):
         """Тестирование наличия в шаблоне серии React компонента для списка статей."""
         url = reverse(SERIES_URL_NAME, args=(self.test_series.slug,))
         response = self.client.get(url)
+
         # Проверяем наличие React компонента Blog/ArticleList
         self.assertContains(response, 'data-component-name="Blog/ArticleList"')
-        self.assertContains(response, "series__slug")
+
+        # Слаг серии передаётся ArticleList как проп seriesSlug
+        self.assertContains(response, f'"seriesSlug": "{self.test_series.slug}"')
+
         # Проверяем наличие заголовка серии
         self.assertContains(response, self.test_series.name)
 

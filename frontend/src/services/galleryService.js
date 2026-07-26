@@ -8,6 +8,7 @@
  */
 
 import api from './api';
+import { buildApiUrl } from '../utils/apiUrl';
 
 /**
  * Базовый URL для API галереи.
@@ -32,9 +33,7 @@ export const galleryService = {
    * const albums = await galleryService.getAlbums();
    */
   async getAlbums(params = {}) {
-    const queryString = new URLSearchParams(params).toString();
-    const url = queryString ? `${BASE_URL}/albums/?${queryString}` : `${BASE_URL}/albums/`;
-    return api.get(url);
+    return api.get(buildApiUrl(`${BASE_URL}/albums/`, params));
   },
 
   /**
@@ -69,9 +68,7 @@ export const galleryService = {
    * const photos = await galleryService.getPhotos({ album: 1 });
    */
   async getPhotos(params = {}) {
-    const queryString = new URLSearchParams(params).toString();
-    const url = queryString ? `${BASE_URL}/photos/?${queryString}` : `${BASE_URL}/photos/`;
-    return api.get(url);
+    return api.get(buildApiUrl(`${BASE_URL}/photos/`, params));
   },
 
   /**

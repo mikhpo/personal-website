@@ -8,6 +8,6 @@
     <div class="container">
         <h2>{{ category.name }}</h2>
         {% if category.description %}<p>{{ category.description }}</p>{% endif %}
-        {% react_component "Blog/ArticleList" apiUrl="/api/blog/articles/?categories__slug={{ category.slug }}" %}
+        {% react_component "Blog/ArticleList" categorySlug=category.slug %}
     </div>
 {% endblock content %}

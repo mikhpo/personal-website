@@ -6,6 +6,7 @@ import SpinnerComponent from '@components/Spinner/Spinner';
 import AlertList from '@components/Alert/AlertList';
 import { Button } from 'react-bootstrap';
 import Pagination from '@components/Pagination/Pagination';
+import { buildApiUrl } from '@utils/apiUrl';
 
 /**
  * Компонент списка фотографий галереи.
@@ -17,7 +18,8 @@ import Pagination from '@components/Pagination/Pagination';
  *
  * @component
  * @param {Object} props - Пропсы компонента
- * @param {string} [props.apiUrl="/api/gallery/photos/"] - URL API для загрузки фотографий
+ * @param {string} [props.apiUrl="/api/gallery/photos/"] - Базовый URL API; на странице альбома переопределяется endpoint альбома
+ * @param {string} [props.tagSlug] - Слаг тега для фильтрации (tags__slug); URL фильтра строится во фронтенде
  * @return {JSX.Element} Компонент списка фотографий
  *
  * @example
@@ -28,7 +30,7 @@ import Pagination from '@components/Pagination/Pagination';
  * // Использование с пользовательским URL
  * <PhotoList apiUrl="/api/gallery/album/1/photos/" />
  */
-const PhotoList = ({ apiUrl = '/api/gallery/photos/' }) => {
+const PhotoList = ({ apiUrl = '/api/gallery/photos/', tagSlug }) => {
   /**
    * Состояние фотографий
    * @type {[Array, function]}
@@ -90,7 +92,7 @@ const PhotoList = ({ apiUrl = '/api/gallery/photos/' }) => {
       setError(null);
 
       try {
-        const data = await fetchUrl(apiUrl);
+        const data = await fetchUrl(buildApiUrl(apiUrl, { tags__slug: tagSlug }));
         const photosList = data.photos || data.results || data;
         setPhotos(Array.isArray(photosList) ? photosList : []);
 
@@ -111,7 +113,7 @@ const PhotoList = ({ apiUrl = '/api/gallery/photos/' }) => {
     };
 
     loadPhotos();
-  }, [apiUrl]);
+  }, [apiUrl, tagSlug]);
 
   /**
    * Обработчик изменения страницы пагинации
@@ -130,10 +132,9 @@ const PhotoList = ({ apiUrl = '/api/gallery/photos/' }) => {
 
     try {
       // Построить URL с параметром страницы
-      const url = new URL(apiUrl, window.location.origin);
-      url.searchParams.set('page', page);
+      const url = buildApiUrl(apiUrl, { tags__slug: tagSlug, page });
 
-      const data = await fetchUrl(url.toString());
+      const data = await fetchUrl(url);
       const photosList = data.results || data;
       setPhotos(Array.isArray(photosList) ? photosList : []);
 
@@ -247,7 +248,7 @@ const PhotoList = ({ apiUrl = '/api/gallery/photos/' }) => {
       setError(null);
 
       try {
-        const data = await fetchUrl(apiUrl);
+        const data = await fetchUrl(buildApiUrl(apiUrl, { tags__slug: tagSlug }));
         const photosList = data.photos || data.results || data;
         setPhotos(Array.isArray(photosList) ? photosList : []);
 
@@ -327,6 +328,7 @@ const PhotoList = ({ apiUrl = '/api/gallery/photos/' }) => {
 
 PhotoList.propTypes = {
   apiUrl: PropTypes.string,
+  tagSlug: PropTypes.string,
 };
 
 export default PhotoList;

@@ -65,6 +65,38 @@ src pr get <N>      # статус PR (open/merged/closed)
 
 `src pr checks` показывает итоговый `STATUS:` (success / in_progress / failed) и статусы отдельных workflows (lint/test/build).
 
+### Обработка комментариев ревью (опционально)
+
+Опциональный этап между успешным CI и merge. Применяется по запросу пользователя перед закрытием PR, когда ревьюер оставил замечания, которые нужно разобрать.
+
+Получить список комментариев:
+
+```bash
+src pr list-comments <N>            # табличный вывод
+src pr list-comments <N> --json     # id, parent_id, body, author.slug
+```
+
+Каждый комментарий содержит `id` (используется как `--parent-id` для ответа в той же ветке) и `parent_id` (пустой у комментариев верхнего уровня).
+
+Порядок разбора:
+
+1. По списку комментариев отделить замечания ревьюера от собственных.
+2. Оценить обоснованность каждого замечания ревьюера.
+3. По обоснованным замечаниям — внести правки, прогнать тесты и линтеры, закоммитить и запушить; дождаться CI (см. «Дождаться CI для PR»).
+4. Ответить на каждое замечание ревьюера оценкой обоснованности и выполненными действиями.
+
+Ответ в ветку комментария (threaded reply):
+
+```bash
+src pr add-comment <N> --parent-id <comment_id> --body "$(cat <<'EOF'
+Оценка замечания и выполненные действия.
+Ссылка на коммит с исправлением.
+EOF
+)"
+```
+
+Замечания, не требующие правок, тоже закрываются ответом с обоснованием, почему изменение не нужно.
+
 ### Смержить PR
 
 ```bash
@@ -148,8 +180,9 @@ done
 3. Внести изменения, тесты, CHANGELOG; закоммитить и запушить ветку
 4. Создать PR со ссылкой на `#N`: `src pr create ...`
 5. Дождаться CI: poll `src pr checks <N>` до `success`
-6. Смержить: `src pr merge <N>`; убедиться через `src pr get <N>` → `merged`
-7. Удалить слитую ветку: `git push origin --delete <ветка>`
-8. Закрыть задачу: `src issue edit <N> --status closed`
-9. Дождаться `release-workflow` (auto на push в main): poll `src run list` до success нового run
-10. Запустить деплой: `src run trigger deploy-workflow --ref main`; дождаться success через poll `src run get <N>`
+6. (Опционально) Разобрать комментарии ревью: см. «Обработка комментариев ревью (опционально)»
+7. Смержить: `src pr merge <N>`; убедиться через `src pr get <N>` → `merged`
+8. Удалить слитую ветку: `git push origin --delete <ветка>`
+9. Закрыть задачу: `src issue edit <N> --status closed`
+10. Дождаться `release-workflow` (auto на push в main): poll `src run list` до success нового run
+11. Запустить деплой: `src run trigger deploy-workflow --ref main`; дождаться success через poll `src run get <N>`
