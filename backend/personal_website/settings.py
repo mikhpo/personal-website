@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     "django_extensions",
     "webpack_loader",
     "rest_framework",
+    "django_filters",
     "corsheaders",
     "drf_spectacular",
     "drf_spectacular_sidecar",

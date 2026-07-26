@@ -264,6 +264,18 @@ class TestAlbumViewSet(APITestCase):
         response = self.client.get(url, {"ordering": "order,-created_at"})
         self.assertEqual(response.status_code, 200)
 
+    def test_list_albums_browsable_html(self) -> None:
+        """Browsable API (HTML) списка альбомов отдаёт 200.
+
+        Регрессия: BrowsableAPIRenderer строит filter-форму для filterset_fields
+        через шаблон django_filters/rest_framework/crispy_form.html. Без django_filters
+        в INSTALLED_APPS шаблон не обнаруживается и возникает TemplateDoesNotExist (500).
+        """
+        url = "/api/gallery/albums/"
+        response = self.client.get(url, HTTP_ACCEPT="text/html")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("text/html", response["Content-Type"])
+
     def test_album_viewset_returns_nested_photos(self) -> None:
         """API-эндпоинт для альбома возвращает вложенные фотографии."""
         url = f"/api/gallery/albums/{self.album1.pk}/"
