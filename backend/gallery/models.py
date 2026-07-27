@@ -1,6 +1,7 @@
 """Модели галереи."""
 
 import io
+import logging
 from datetime import datetime
 from pathlib import Path
 from typing import Self
@@ -27,6 +28,7 @@ resize_quality: int = settings.GALLERY_RESIZE_QUALITY
 
 current_timezone = get_current_timezone()
 storage: StorageType = select_storage()
+logger = logging.getLogger(__name__)
 
 
 class Tag(models.Model):
@@ -263,17 +265,21 @@ class Photo(models.Model):
         """Получить данные EXIF при помощи библиотеки PIL."""
         exif_data = {}
         if self.image and self.image.name and self.image.storage.exists(self.image.name):
-            # Используем storage.read_bytes() для совместимости с S3
-            # Это избегает threading deadlock в gunicorn sync worker'е
-            img_bytes = self.image.storage.read_bytes(self.image.name)
-            with pImage.open(io.BytesIO(img_bytes)) as img:
-                if hasattr(img, "_getexif"):
-                    info = img._getexif()  # noqa: SLF001
-                    if not info:
-                        return {}
-                    for tag, value in info.items():
-                        decoded = TAGS.get(tag, tag)
-                        exif_data[decoded] = value
+            try:
+                # Используем storage.read_bytes() для совместимости с S3
+                # Это избегает threading deadlock в gunicorn sync worker'е
+                img_bytes = self.image.storage.read_bytes(self.image.name)
+                with pImage.open(io.BytesIO(img_bytes)) as img:
+                    if hasattr(img, "_getexif"):
+                        info = img._getexif()  # noqa: SLF001
+                        if not info:
+                            return {}
+                        for tag, value in info.items():
+                            decoded = TAGS.get(tag, tag)
+                            exif_data[decoded] = value
+            except (FileNotFoundError, PermissionError, OSError):
+                # Логируем ошибку и возвращаем пустой словарь
+                logger.exception("Ошибка чтения файла %s", self.image.name)
         return exif_data
 
     @cached_property
