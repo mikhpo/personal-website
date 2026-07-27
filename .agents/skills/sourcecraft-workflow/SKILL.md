@@ -132,6 +132,52 @@ src run trigger deploy-workflow --ref main
 
 Параметры: `--ref` (ветка), `--commit`, `--tag`. В выводе содержится `SLUG` созданного run.
 
+### Получить логи выполнения куба
+
+`src` не умеет отдавать логи кубов напрямую — только сводные статусы (`src run get`, `src pr checks`). Чтобы увидеть вывод конкретного куба при падении CI, нужно дёрнуть REST API SourceCraft напрямую.
+
+Схема endpoint-а логов куба:
+
+```text
+GET /repos/{org}/{repo}/cicd/logs/{run}/{workflow}/{task}/{cube}
+```
+
+Полный список endpoint-ов CI: `GET https://api.sourcecraft.tech/docs` (Redoc, спецификация `./sourcecraft.swagger.json`).
+
+Для многократного использования в репозитории есть готовая обёртка `tools/src-cube-logs.sh`, которая сама получает токен из keychain macOS (сервис `sourcecraft-cli`) и определяет `org/repo` по git remote:
+
+```bash
+tools/src-cube-logs.sh <run> <workflow> <task> <cube>
+```
+
+Пример:
+
+```bash
+tools/src-cube-logs.sh 144 test-workflow python-test pytest
+# => Установка Node.js для сборки фронтенда
+#    curl: (22) The requested URL returned error: 403
+#    ...
+```
+
+Токен хранится в keychain macOS под сервисом `sourcecraft-cli` (base64-обёрнутый PAT). Если `tools/src-cube-logs.sh` недоступен (другая ОС или нет keyring), можно собрать запрос вручную:
+
+```bash
+TOKEN=$(/usr/bin/security find-generic-password -s "sourcecraft-cli" -w \
+        | sed 's/^go-keyring-base64://' | base64 -d)
+REPO=$(git remote get-url origin \
+        | sed -E 's#.*sourcecraft\.dev[:/]([^/]+)/([^/.]+).*#\1/\2#')
+/usr/bin/curl -sL -H "Authorization: Bearer $TOKEN" \
+  "https://api.sourcecraft.tech/repos/${REPO}/cicd/logs/<RUN>/<WF>/<TASK>/<CUBE>" \
+  | python3 -c "import sys, json; print(json.load(sys.stdin)['logs'], end='')"
+```
+
+Порядок действий при падении CI:
+
+1. `src pr checks <PR>` → определить упавший workflow (например `test-workflow`).
+2. `src run get <RUN>` → убедиться, что нужный run известен (в выводе `src pr checks` он указан в строке workflow).
+3. По имени workflow/task/cube из `.sourcecraft/ci.yaml` взять slug-и и вызвать `tools/src-cube-logs.sh <RUN> <WF> <TASK> <CUBE>`.
+4. Если ответ пустой, а в `src run get` куб помечен failed — куб упал рано, логи короткие.
+
 ## Мониторинг завершения (polling)
 
 В headless-режиме нет автодожидания, статус опрашивается циклом. Bash-команды выполняются с увеличенным `timeout` (например 420000–600000 мс).
