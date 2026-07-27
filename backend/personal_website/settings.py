@@ -181,9 +181,20 @@ STORAGES = {
             "file_overwrite": True,
             "default_acl": "public-read",
             "querystring_auth": False,
+            # Оптимизация S3 для production
+            "client_config": {
+                "max_pool_connections": 50,
+                "connect_timeout": 10,
+                "read_timeout": 60,
+                "retries": {"total_max_attempts": 10, "mode": "standard"},
+                "tcp_keepalive": True,
+            },
         },
     },
 }
+
+# Настройки ImageKit для работы с S3
+IMAGEKIT_SPEC_CACHEFILE_STRATEGY = "imagekit.cachefiles.strategies.Optimistic"
 
 # Адрес, на который будет перенаправлен пользователь после авторизации.
 LOGIN_REDIRECT_URL = "/"
