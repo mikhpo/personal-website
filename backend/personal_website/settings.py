@@ -5,6 +5,7 @@ import sys
 from datetime import timedelta
 from pathlib import Path
 
+from botocore.config import Config  # type: ignore[import-untyped]
 from dotenv import load_dotenv
 
 from personal_website.utils import NoColorLogFormatter, str_to_bool
@@ -182,13 +183,13 @@ STORAGES = {
             "default_acl": "public-read",
             "querystring_auth": False,
             # Оптимизация S3 для production
-            "client_config": {
-                "max_pool_connections": 50,
-                "connect_timeout": 10,
-                "read_timeout": 60,
-                "retries": {"total_max_attempts": 10, "mode": "standard"},
-                "tcp_keepalive": True,
-            },
+            "client_config": Config(
+                max_pool_connections=50,
+                connect_timeout=10,
+                read_timeout=60,
+                retries={"total_max_attempts": 10, "mode": "standard"},
+                tcp_keepalive=True,
+            ),
         },
     },
 }
