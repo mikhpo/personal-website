@@ -262,10 +262,10 @@ class Photo(models.Model):
     def exif(self) -> dict:
         """Получить данные EXIF при помощи библиотеки PIL."""
         exif_data = {}
-        if storage.exists(self.image.name):
-            # Читаем файл в байты, чтобы избежать проблем с закрытием файла
-            with self.image.open() as f:
-                img_bytes = f.read()
+        if self.image and self.image.name and self.image.storage.exists(self.image.name):
+            # Используем storage.read_bytes() для совместимости с S3
+            # Это избегает threading deadlock в gunicorn sync worker'е
+            img_bytes = self.image.storage.read_bytes(self.image.name)
             with pImage.open(io.BytesIO(img_bytes)) as img:
                 if hasattr(img, "_getexif"):
                     info = img._getexif()  # noqa: SLF001
