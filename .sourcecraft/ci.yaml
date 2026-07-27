@@ -68,10 +68,13 @@ workflows:
           - name: "pytest"
             image: docker.io/library/python:3.13-bookworm
             script:
-              - echo "Установка Node.js для сборки фронтенда"
-              - curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
-              - apt-get install -y nodejs
-              - echo "Обновление системы и установка необходимых пакетов"
+              - echo "Установка Node.js 22 из официального архива nodejs.org"
+              - NODE_VERSION=22.11.0
+              - ARCH=$(dpkg --print-architecture)
+              - curl -fsSL "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-${ARCH}.tar.xz" -o /tmp/node.tar.xz
+              - tar -xf /tmp/node.tar.xz -C /usr/local --strip-components=1
+              - node --version
+              - echo "Установка системных пакетов: wkhtmltopdf, locales"
               - apt-get update
               - apt-get install -y wkhtmltopdf locales
               - echo "Настройка локали ru_RU.UTF-8"
