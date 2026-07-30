@@ -355,6 +355,15 @@ tasks:
     cmds:
       - bash ./tools/graph-models.sh
 
+  render-diagrams:
+    desc: Экспортировать архитектурные C4-диаграммы из PlantUML исходников
+    summary: |
+      Выполняет рендер файлов .puml из каталога docs/diagrams/src в формат SVG.
+      Результат помещается в docs/diagrams/out/<имя>/<имя>.svg.
+      Для работы требуется установленная утилита PlantUML (brew install plantuml).
+    cmds:
+      - bash ./tools/render-diagrams.sh
+
   check-migrations:
     desc: Проверить проект на отсутствующие миграции
     summary: |

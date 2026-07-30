@@ -32,7 +32,7 @@
 * [Nginx](https://nginx.org/) (прокси-сервер)
 * [Docker](https://www.docker.com/) (контейнеризация)
 
-![container](./docs/diagrams/out/container/container.png)
+![container](./docs/diagrams/out/container/container.svg)
 
 ## Структура проекта
 

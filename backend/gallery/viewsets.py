@@ -10,6 +10,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAdminUser, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 
+from api.pagination import GalleryPhotoPagination
 from api.permissions import IsPublicOrAuthor
 from gallery.models import Album, Photo, Tag
 from gallery.serializers import (
@@ -57,6 +58,7 @@ class PhotoViewSet(viewsets.ReadOnlyModelViewSet):
 
     serializer_class = PhotoSerializer
     permission_classes: ClassVar[list] = [IsPublicOrAuthor]
+    pagination_class = GalleryPhotoPagination
     lookup_field = "pk"
     filter_backends: ClassVar[list] = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields: ClassVar[list] = ["tags__slug"]
