@@ -246,8 +246,7 @@ done
 4. Создать PR со ссылкой на `#N`: `src pr create ...`
 5. Дождаться CI: poll `src pr checks <N>` до `success`
 6. (Опционально) Разобрать комментарии ревью: см. «Обработка комментариев ревью (опционально)»
-7. Сообщить статус CI и остановиться. Merge (шаг 7.1) — только после явного подтверждения пользователя:
-   7.1. Смержить: `src pr merge <N>`; убедиться через `src pr get <N>` → `merged`
+7. Смержить (только после явного подтверждения пользователя): `src pr merge <N>`; убедиться через `src pr get <N>` → `merged`
 8. Удалить слитую ветку: `git push origin --delete <ветка>`
 9. Закрыть задачу: `src issue edit <N> --status closed`
 10. Дождаться `release-workflow` (auto на push в main): poll `src run list` до success нового run
