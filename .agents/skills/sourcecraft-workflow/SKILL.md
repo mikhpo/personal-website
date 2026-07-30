@@ -184,12 +184,20 @@ REPO=$(git remote get-url origin \
 
 ### Дождаться CI для PR
 
+Вывод `src pr checks` содержит строку `STATUS:` (верхний уровень — `success` или `failure`),
+а также строки по каждому workflow (`success` / `failed`). Извлекать статус нужно из первой
+строки `STATUS:`, беря последнее слово через `awk`, и сравнивать через `case` — это надёжнее
+grep-паттернов с `\s`, которые не срабатывают на macOS (BSD grep) и при наличии ANSI-кодов.
+
 ```bash
 for i in $(seq 1 22); do
   out=$(src pr checks <N> 2>&1)
-  echo "[$i] $(echo "$out" | grep -oE 'STATUS:\s+[a-zA-Z_]+' | head -1)"
-  echo "$out" | grep -qE 'STATUS:\s+success' && { echo SUCCESS; break; }
-  echo "$out" | grep -qE 'STATUS:\s+failed'  && { echo FAILED; break; }
+  st=$(echo "$out" | grep 'STATUS:' | head -1 | awk '{print $NF}')
+  echo "[$i] status=$st"
+  case "$st" in
+    success) echo "SUCCESS"; break ;;
+    failure|failed) echo "FAILED"; break ;;
+  esac
   sleep 27
 done
 ```
@@ -199,9 +207,12 @@ done
 ```bash
 for i in $(seq 1 24); do
   out=$(src run get <N> 2>&1)
-  echo "[$i] $(echo "$out" | grep -oE 'STATUS:\s+[a-zA-Z_]+' | head -1)"
-  echo "$out" | grep -qE 'STATUS:\s+success' && { echo SUCCESS; break; }
-  echo "$out" | grep -qE 'STATUS:\s+failed'  && { echo FAILED; break; }
+  st=$(echo "$out" | grep 'STATUS:' | head -1 | awk '{print $NF}')
+  echo "[$i] status=$st"
+  case "$st" in
+    success) echo "SUCCESS"; break ;;
+    failure|failed) echo "FAILED"; break ;;
+  esac
   sleep 20
 done
 ```
@@ -209,12 +220,18 @@ done
 ### Дождаться нового auto-run (например release-workflow после merge)
 
 ```bash
+OLD_SLUG=<slug_последнего_run>
 for i in $(seq 1 18); do
   rel=$(src run list 2>&1 | grep "release-workflow" | head -1)
   slug=$(echo "$rel" | awk '{print $1}')
-  st=$(echo "$rel" | grep -oE 'success|processing|created|failed' | head -1)
+  st=$(echo "$rel" | awk '{print $NF}')
   echo "[$i] release-workflow run=$slug status=$st"
-  [ "${slug:-0}" -gt <старый_slug> ] 2>/dev/null && { [ "$st" = success ] && { echo SUCCESS; break; }; [ "$st" = failed ] && { echo FAILED; break; }; }
+  [ "${slug:-0}" -gt "$OLD_SLUG" ] 2>/dev/null && {
+    case "$st" in
+      success) echo "SUCCESS"; break ;;
+      failure|failed) echo "FAILED"; break ;;
+    esac
+  }
   sleep 20
 done
 ```
