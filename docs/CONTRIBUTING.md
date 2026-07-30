@@ -304,6 +304,24 @@ Certbot используется для получения и обновлени
 
     bash tools/graph-models.sh
 
+## Рендер архитектурных диаграмм
+
+Архитектурные C4-диаграммы (уровень контекста и контейнеров) описываются на языке [PlantUML](https://plantuml.com/) в файлах `.puml` каталога `docs/diagrams/src/`. Результат рендера в формате SVG помещается в `docs/diagrams/out/<имя>/<имя>.svg`.
+
+Для рендера используется утилита PlantUML, которой требуются среда выполнения Java (JRE) и пакет [Graphviz](https://www.graphviz.org/). Пример установки зависимостей для macOS:
+
+    brew install plantuml
+
+Формула `plantuml` автоматически установит OpenJDK и задействует уже установленный Graphviz.
+
+Для рендера всех диаграмм предназначен скрипт [render-diagrams.sh](../tools/render-diagrams.sh):
+
+    bash tools/render-diagrams.sh
+
+Тот же результат можно получить командой Taskfile:
+
+    task render-diagrams
+
 Конечно! Ниже приведено описание двух GitHub Actions (`release.yml` и `test.yml`) в формате Markdown, без эмотиконов и с акцентом на структуру, назначение и условия выполнения. Также добавлен PlantUML-код диаграммы для визуализации.
 
 ## Решение проблем
