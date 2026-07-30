@@ -65,7 +65,7 @@ def populate_exif(apps: object, schema_editor: object) -> None:
     """
     Photo = apps.get_model("gallery", "Photo")  # type: ignore[attr-defined]
     total = 0
-    for photo in Photo.objects.filter(exif__isnull=True).iterator():
+    for photo in Photo.objects.filter(exif={}).iterator():
         exif_data = extract_exif(photo.image)
         if exif_data:
             photo.exif = exif_data
