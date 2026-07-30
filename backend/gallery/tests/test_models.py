@@ -3,6 +3,7 @@
 import datetime
 from http import HTTPStatus
 from typing import TYPE_CHECKING
+from unittest.mock import patch
 
 from django.test import TestCase
 from faker import Faker
@@ -329,3 +330,105 @@ class GalleryModelsTests(TestCase):
             self.assertNotEqual(old_relative_path, photo.image.name)
             self.assertEqual(photo.image.name, upload_path)
             self.assertTrue(new_path_exists)
+
+    def test_photo_exif_field_populated(self) -> None:
+        """Поле exif заполняется при сохранении фотографии."""
+        photo = Photo.objects.first()
+        self.assertIsInstance(photo, Photo)
+        if photo:
+            self.assertIsInstance(photo.exif, dict)
+            self.assertTrue(photo.exif, "Поле exif должно быть заполнено после save()")
+            self.assertIn("Make", photo.exif)
+            self.assertIn("Model", photo.exif)
+
+    def test_photo_exif_persisted_in_db(self) -> None:
+        """Поле exif сохраняется в БД и доступно после перезагрузки объекта."""
+        photo = Photo.objects.first()
+        self.assertIsInstance(photo, Photo)
+        if photo:
+            photo.refresh_from_db()
+            self.assertTrue(photo.exif)
+            self.assertIn("Make", photo.exif)
+
+    def test_photo_exif_reads_without_storage_access(self) -> None:
+        """Производные свойства читаются из поля exif без обращения к хранилищу."""
+        photo = Photo.objects.first()
+        self.assertIsInstance(photo, Photo)
+        if photo:
+            photo.refresh_from_db()
+            # При наличии exif в БД обращение к read_bytes не выполняется.
+            with patch.object(
+                photo.image.storage,
+                "read_bytes",
+                side_effect=AssertionError("read_bytes не должен вызываться"),
+            ):
+                _ = photo.camera
+                _ = photo.lens_model
+                _ = photo.aperture
+                _ = photo.exposure
+                _ = photo.iso
+                _ = photo.focal_length
+
+    def test_photo_exif_not_recomputed_when_image_unchanged(self) -> None:
+        """При повторном сохранении без изменения изображения поле exif не пересчитывается."""
+        photo = Photo.objects.first()
+        self.assertIsInstance(photo, Photo)
+        if photo:
+            original_exif = dict(photo.exif)
+            photo.name = "Изменённое название"
+            photo.save()
+            photo.refresh_from_db()
+            self.assertEqual(photo.exif, original_exif)
+
+    def test_photo_exif_derived_from_json_values(self) -> None:
+        """Производные свойства корректно вычисляются из JSON-значений поля exif."""
+        photo = Photo.objects.first()
+        self.assertIsInstance(photo, Photo)
+        if photo:
+            test_cases = [
+                ("ExposureTime", 1 / 250, lambda p: p.exposure, "1/250"),
+                ("ExposureTime", 60.0, lambda p: p.exposure, "60"),
+                ("FNumber", 4.0, lambda p: p.aperture, "F/4"),
+                ("FNumber", 2.8, lambda p: p.aperture, "F/2.8"),
+                ("ISOSpeedRatings", 400, lambda p: p.iso, 400),
+                ("FocalLength", 50, lambda p: p.focal_length, 50),
+            ]
+            for key, value, getter, expected in test_cases:
+                with self.subTest(key=key, value=value):
+                    photo.exif = {key: value}
+                    # Сбросить кэшированные свойства.
+                    for prop in ("exposure", "aperture", "iso", "focal_length"):
+                        photo.__dict__.pop(prop, None)
+                    self.assertEqual(getter(photo), expected)
+
+    def test_photo_exif_none_handled_gracefully(self) -> None:
+        """Производные свойства возвращают значения по умолчанию при пустом exif."""
+        photo = Photo.objects.first()
+        self.assertIsInstance(photo, Photo)
+        if photo:
+            photo.exif = None
+            # Сбросить все кэшированные свойства.
+            for prop in (
+                "camera_manufacturer",
+                "camera_model",
+                "camera",
+                "lens_model",
+                "aperture",
+                "exposure",
+                "iso",
+                "focal_length",
+            ):
+                photo.__dict__.pop(prop, None)
+
+            with self.subTest(prop="camera"):
+                self.assertEqual(photo.camera, "")
+            with self.subTest(prop="lens_model"):
+                self.assertEqual(photo.lens_model, "")
+            with self.subTest(prop="aperture"):
+                self.assertIsNone(photo.aperture)
+            with self.subTest(prop="exposure"):
+                self.assertEqual(photo.exposure, "")
+            with self.subTest(prop="iso"):
+                self.assertIsNone(photo.iso)
+            with self.subTest(prop="focal_length"):
+                self.assertIsNone(photo.focal_length)
