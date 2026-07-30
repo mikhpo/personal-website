@@ -31,7 +31,10 @@ def exif_value_to_json(value: object) -> object:
         JSON-совместимое значение (int, float, str, list) или None для пропуска.
     """
     if isinstance(value, IFDRational):
-        return float(value)
+        try:
+            return float(value)
+        except ZeroDivisionError:
+            return None
     if isinstance(value, bytes):
         return None
     if isinstance(value, tuple):
