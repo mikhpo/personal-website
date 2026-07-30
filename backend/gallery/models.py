@@ -3,6 +3,7 @@
 import io
 import logging
 from datetime import datetime
+from fractions import Fraction
 from pathlib import Path
 from typing import Self
 
@@ -18,7 +19,7 @@ from PIL.ExifTags import TAGS
 from PIL.TiffImagePlugin import IFDRational
 
 from gallery.managers import PublicAlbumManager, PublicPhotoManager
-from gallery.utils import compute_datetime_taken, move_photo_image, photo_image_upload_path
+from gallery.utils import compute_datetime_taken, exif_value_to_json, move_photo_image, photo_image_upload_path
 from personal_website.storages import StorageType, select_storage
 from personal_website.utils import get_unique_slug
 
@@ -181,6 +182,14 @@ class Photo(models.Model):
         related_name="tag_photos",
         help_text="Тэги фотографии",
     )
+    exif = models.JSONField(
+        verbose_name="EXIF данные",
+        null=True,
+        blank=True,
+        default=dict,
+        editable=False,
+        help_text="EXIF данные изображения",
+    )
     image_thumbnail = ImageSpecField(
         source="image",
         processors=[ResizeToFit(height=thumbnail_size, width=thumbnail_size)],
@@ -209,14 +218,21 @@ class Photo(models.Model):
     def save(self, *args, **kwargs) -> None:
         """Операции, выполняемые при каждом сохранении модели.
 
+        - Сохраняет EXIF данные в поле exif при изменении изображения.
         - Вычисляет taken_at если изображение изменилось или для нового экземпляра.
         - Если был изменен альбом фотографии, то изменяется адрес хранения фотографии.
         - Если у фотографии не указано название, то получить его из имени файла.
         - Если у фотографии не указан слаг, то определить его из названия.
         """
-        # Вычислить taken_at до сохранения для валидации null=False
-        if self.should_update_taken_at():
-            self.taken_at = compute_datetime_taken(self)
+        # При частичном сохранении (update_fields) EXIF не пересчитывается.
+        update_fields = kwargs.get("update_fields")
+        needs_exif_update = update_fields is None and self.should_update_taken_at()
+
+        # taken_at имеет ограничение null=False, поэтому при первом сохранении
+        # нужно временное значение. Точное значение вычисляется после super().save(),
+        # когда файл уже находится в хранилище.
+        if needs_exif_update:
+            self.taken_at = now()
 
         if self.pk:
             previous = Photo.objects.get(pk=self.pk)
@@ -227,6 +243,12 @@ class Photo(models.Model):
         if not self.slug:
             self.slug = get_unique_slug(self, self.name)
         super().save(*args, **kwargs)
+
+        # После super().save() файл находится в хранилище — можно извлечь EXIF.
+        if needs_exif_update:
+            self.exif = self._extract_exif_from_image()
+            self.taken_at = compute_datetime_taken(self)
+            super().save(update_fields=["exif", "taken_at"])
 
     def get_absolute_url(self) -> str:
         """Абсолютная ссылка на фотографию определяется первичным ключом фотографии."""
@@ -260,38 +282,43 @@ class Photo(models.Model):
         else:
             return False
 
-    @cached_property
-    def exif(self) -> dict:
-        """Получить данные EXIF при помощи библиотеки PIL."""
-        exif_data = {}
+    def _extract_exif_from_image(self) -> dict:
+        """Извлечь данные EXIF из файла изображения в JSON-совместимый словарь.
+
+        Метод читает файл изображения через хранилище и извлекает EXIF данные
+        с помощью PIL. Значения преобразуются к JSON-совместимым типам для
+        сохранения в поле exif.
+
+        Returns:
+            Словарь EXIF данных с человекочитаемыми ключами тегов.
+        """
+        exif_data: dict = {}
         if self.image and self.image.name and self.image.storage.exists(self.image.name):
             try:
-                # Используем storage.read_bytes() для совместимости с S3
-                # Это избегает threading deadlock в gunicorn sync worker'е
                 img_bytes = self.image.storage.read_bytes(self.image.name)
                 with pImage.open(io.BytesIO(img_bytes)) as img:
                     if hasattr(img, "_getexif"):
                         info = img._getexif()  # noqa: SLF001
-                        if not info:
-                            return {}
-                        for tag, value in info.items():
-                            decoded = TAGS.get(tag, tag)
-                            exif_data[decoded] = value
+                        if info:
+                            for tag, value in info.items():
+                                decoded = TAGS.get(tag, tag)
+                                json_value = exif_value_to_json(value)
+                                if json_value is not None:
+                                    exif_data[decoded] = json_value
             except (FileNotFoundError, PermissionError, OSError):
-                # Логируем ошибку и возвращаем пустой словарь
                 logger.exception("Ошибка чтения файла %s", self.image.name)
         return exif_data
 
     @cached_property
     def camera_manufacturer(self) -> str:
         """Производитель камеры."""
-        return self.exif.get("Make", "")
+        return (self.exif or {}).get("Make", "")
 
     @cached_property
     def camera_model(self) -> str:
         """Модель камеры."""
         manufacturer = self.camera_manufacturer
-        model: str = self.exif.get("Model", "")
+        model: str = (self.exif or {}).get("Model", "")
         if manufacturer in model:
             model = model.replace(manufacturer, "")
             return model.strip()
@@ -307,12 +334,12 @@ class Photo(models.Model):
     @cached_property
     def lens_model(self) -> str:
         """Модель объектива."""
-        return self.exif.get("LensModel", "")
+        return (self.exif or {}).get("LensModel", "")
 
     @cached_property
     def aperture(self) -> str | None:
         """Диафрагменное число."""
-        if f_number := self.exif.get("FNumber", None):
+        if f_number := (self.exif or {}).get("FNumber", None):
             aperture = float(f_number)
             formatted_aperture = int(aperture) if aperture.is_integer() else round(aperture, 2)
             return f"F/{formatted_aperture}"
@@ -322,37 +349,45 @@ class Photo(models.Model):
     def exposure(self) -> str:
         """Возвращает значение выдержки из метаданных EXIF.
 
-        Если в EXIF присутствует ключ "ExposureTime", метод интерпретирует его значение:
-        - Если значение представляет собой объект IFDRational, значение преобразуется в строку
-          вида "numerator/denominator".
-        - Если значение число, меньшее или равное 1, метод преобразует его в строку такого же формата.
-        - Для всех остальных случаев возвращается строковое представление числа.
+        Значение выдержки может быть получено либо напрямую из PIL (IFDRational),
+        либо из JSONField (float). В обоих случаях выполняется форматирование
+        в строку вида "numerator/denominator".
 
-        Возвращает строку с выдержкой или пустую строку, если ключ отсутствует.
+        - Для IFDRational используются numerator и denominator напрямую.
+        - Для float-значений <= 1 применяется Fraction с ограничением знаменателя
+          для получения человекочитаемой дроби (например, 0.004 -> 1/250).
+        - Для значений > 1 возвращается целочисленное представление.
+
+        Returns:
+            Строка с выдержкой или пустая строка, если ключ отсутствует.
         """
-        if "ExposureTime" in self.exif:
-            exposure_time: float | IFDRational = self.exif["ExposureTime"]
+        exif = self.exif or {}
+        if "ExposureTime" in exif:
+            exposure_time: float | IFDRational = exif["ExposureTime"]
             if isinstance(exposure_time, IFDRational):
                 numenator = exposure_time.numerator
                 denominator = exposure_time.denominator
-            elif exposure_time <= 1:
-                numenator, denominator = exposure_time.as_integer_ratio()
-            else:
+            elif isinstance(exposure_time, (int, float)):
+                if exposure_time <= 1:
+                    frac = Fraction(exposure_time).limit_denominator(10000)
+                    return f"{frac.numerator}/{frac.denominator}"
                 return str(int(exposure_time))
+            else:
+                return str(exposure_time)
             return f"{numenator}/{denominator}"
         return ""
 
     @cached_property
     def iso(self) -> int | None:
         """Светочувствительность."""
-        if iso := self.exif.get("ISOSpeedRatings", None):
+        if iso := (self.exif or {}).get("ISOSpeedRatings", None):
             return int(iso)
         return None
 
     @cached_property
     def focal_length(self) -> int | None:
         """Фокусное расстояние."""
-        if focal_length := self.exif.get("FocalLength", None):
+        if focal_length := (self.exif or {}).get("FocalLength", None):
             return int(focal_length)
         return None
 
@@ -381,7 +416,7 @@ class Photo(models.Model):
 
         # Если в EXIF отсутствует дата и время съемки,
         # то вернуть дату и время последнего изменения.
-        original_exif = self.exif.get("DateTimeOriginal")
+        original_exif = (self.exif or {}).get("DateTimeOriginal")
         if not original_exif:
             return date_time
 

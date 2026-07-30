@@ -59,6 +59,14 @@ class TestPhotoFactory(TestCase):
         self.assertIsNotNone(photo.album)
         self.assertIsInstance(photo.album, Album)
 
+    def test_photo_factory_populates_exif(self) -> None:
+        """Фабрика заполняет поле exif EXIF-данными сгенерированного изображения."""
+        photo = PhotoFactory.create()
+        self.assertIsInstance(photo.exif, dict)
+        self.assertTrue(photo.exif, "Поле exif не должно быть пустым после сохранения фабрикой")
+        self.assertIn("Make", photo.exif)
+        self.assertIn("Model", photo.exif)
+
     def test_photo_factory_image_has_exif(self) -> None:
         """Сгенерированное изображение содержит EXIF данные."""
         photo = PhotoFactory.create()

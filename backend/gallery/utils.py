@@ -8,6 +8,7 @@ from django.utils.timezone import is_aware, make_naive, now
 from faker import Faker
 from PIL import Image, UnidentifiedImageError
 from PIL.ExifTags import TAGS, Base
+from PIL.TiffImagePlugin import IFDRational
 
 from gallery.apps import GalleryConfig
 from gallery.schemas import ExifData
@@ -15,6 +16,29 @@ from personal_website.storages import StorageType, select_storage
 
 fake = Faker(locale="ru_RU")
 storage: StorageType = select_storage()
+
+
+def exif_value_to_json(value: object) -> object:
+    """Преобразовать значение EXIF в JSON-совместимый тип.
+
+    Объекты PIL (IFDRational и др.) не сериализуются в JSON напрямую,
+    поэтому выполняется преобразование к примитивным типам.
+
+    Args:
+        value: Исходное значение EXIF из PIL.
+
+    Returns:
+        JSON-совместимое значение (int, float, str, list) или None для пропуска.
+    """
+    if isinstance(value, IFDRational):
+        return float(value)
+    if isinstance(value, bytes):
+        return None
+    if isinstance(value, tuple):
+        return [exif_value_to_json(v) for v in value]
+    if isinstance(value, (int, float, str)):
+        return value
+    return str(value)
 
 
 def photo_image_upload_path(instance: Model, filename: str) -> str:
@@ -145,7 +169,7 @@ def compute_datetime_taken(photo: Model) -> datetime:
     date_time = make_naive(modified_time) if is_aware(modified_time) else modified_time
 
     # Получить EXIF данные фотографии.
-    photo_exif = photo.exif
+    photo_exif = photo.exif or {}
 
     # Если в EXIF отсутствует дата и время съемки,
     # то вернуть дату и время последнего изменения.

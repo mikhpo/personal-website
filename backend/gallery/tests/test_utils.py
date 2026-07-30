@@ -8,6 +8,7 @@ from django.test import SimpleTestCase, TestCase
 from faker import Faker
 from faker_file.providers.jpeg_file import JpegFileProvider  # type: ignore[import-untyped]
 from faker_file.providers.txt_file import TxtFileProvider  # type: ignore[import-untyped]
+from PIL.TiffImagePlugin import IFDRational
 
 from gallery.apps import GalleryConfig
 from gallery.factories import AlbumFactory, ExifDataFactory, PhotoFactory
@@ -15,6 +16,7 @@ from gallery.models import Photo
 from gallery.schemas import ExifData
 from gallery.utils import (
     compute_datetime_taken,
+    exif_value_to_json,
     is_image,
     move_photo_image,
     photo_image_upload_full_path,
@@ -253,3 +255,38 @@ class TestComputeDateTimeTaken(SimpleTestCase):
         self.assertIsInstance(result, datetime)
         self.assertIsNone(result.tzinfo)
         mock_make_naive.assert_called_once()
+
+
+class TestExifValueToJson(SimpleTestCase):
+    """Тесты функции преобразования значений EXIF в JSON-совместимые типы."""
+
+    def test_primitive_values_unchanged(self) -> None:
+        """Примитивные типы передаются без изменений."""
+        cases = [
+            (400, 400, int),
+            (2.8, 2.8, float),
+            ("Canon", "Canon", str),
+        ]
+        for value, expected, expected_type in cases:
+            with self.subTest(value=value):
+                result = exif_value_to_json(value)
+                self.assertEqual(result, expected)
+                self.assertIsInstance(result, expected_type)
+
+    def test_ifd_rational_to_float(self) -> None:
+        """IFDRational преобразуется в float."""
+        for numerator, denominator in [(1, 250), (1, 125), (1, 60)]:
+            with self.subTest(ratio=f"{numerator}/{denominator}"):
+                result = exif_value_to_json(IFDRational(numerator, denominator))
+                self.assertIsInstance(result, float)
+                self.assertAlmostEqual(result, numerator / denominator, places=6)
+
+    def test_bytes_returns_none(self) -> None:
+        """Байтовые значения возвращают None (пропуск при сериализации)."""
+        self.assertIsNone(exif_value_to_json(b"\x00\x01"))
+
+    def test_tuple_converted_to_list(self) -> None:
+        """Кортеж преобразуется в список."""
+        result = exif_value_to_json((1, 2, 3))
+        self.assertEqual(result, [1, 2, 3])
+        self.assertIsInstance(result, list)
