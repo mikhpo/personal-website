@@ -17,7 +17,10 @@ def _exif_value_to_json(value: object) -> object:
     Копия функции gallery.utils.exif_value_to_json для самодостаточности миграции.
     """
     if isinstance(value, IFDRational):
-        return float(value)
+        try:
+            return float(value)
+        except ZeroDivisionError:
+            return None
     if isinstance(value, bytes):
         return None
     if isinstance(value, tuple):

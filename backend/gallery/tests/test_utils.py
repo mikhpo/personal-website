@@ -281,6 +281,11 @@ class TestExifValueToJson(SimpleTestCase):
                 self.assertIsInstance(result, float)
                 self.assertAlmostEqual(result, numerator / denominator, places=6)
 
+    def test_ifd_rational_zero_denominator_returns_none(self) -> None:
+        """IFDRational с нулевым знаменателем возвращает None вместо исключения."""
+        result = exif_value_to_json(IFDRational(100, 0))
+        self.assertIsNone(result)
+
     def test_bytes_returns_none(self) -> None:
         """Байтовые значения возвращают None (пропуск при сериализации)."""
         self.assertIsNone(exif_value_to_json(b"\x00\x01"))
