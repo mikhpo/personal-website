@@ -23,11 +23,11 @@ RUN npm ci && \
 RUN npm run build
 
 # Этап 2: Приложение Python
-FROM python:3.12-bookworm
+FROM python:3.14-trixie
 
 # Обновление и установка общих системных пакетов.
 # Версия утилит PostgreSQL должна совпадать с версией кластера.
-ENV POSTGRES_VERSION=18
+ENV POSTGRES_VERSION=17
 
 # Аргументы для условной установки SSL сертификата
 ARG POSTGRES_SSL_CERT_DOWNLOAD
@@ -54,8 +54,7 @@ RUN apt-get update && \
     locales \
     ca-certificates \
     postgresql-client-${POSTGRES_VERSION} \
-    rsync \
-    wkhtmltopdf && \
+    rsync && \
     rm -rf /var/lib/apt/lists/*
 
 # Установить Poetry через pip.
