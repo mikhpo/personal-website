@@ -5,7 +5,7 @@ from typing import Any
 
 import pytest
 from faker import Faker
-from faker_file.providers.jpeg_file import JpegFileProvider  # type: ignore[import-untyped]
+from faker_file.providers.jpeg_file import GraphicJpegFileProvider  # type: ignore[import-untyped]
 
 from gallery.factories import ExifDataFactory
 from gallery.utils import write_exif
@@ -31,7 +31,7 @@ def manage_test_images() -> Generator[str, Any, None]:
     for i in range(3):
         file_name = f"Tuscany {i}.jpg"
         file_path = f"{relative_path}/{file_name}"
-        jpeg_file = JpegFileProvider(fake).jpeg_file(raw=True)
+        jpeg_file = GraphicJpegFileProvider(fake).graphic_jpeg_file(raw=True)
         storage.save(file_path, jpeg_file)
         exif_data = ExifDataFactory.build()
         write_exif(file_path, exif_data)
@@ -40,7 +40,7 @@ def manage_test_images() -> Generator[str, Any, None]:
     for i in range(2):
         file_name = f"Langtang {i}.jpg"
         file_path = f"{relative_path}/{file_name}"
-        jpeg_file = JpegFileProvider(fake).jpeg_file(raw=True)
+        jpeg_file = GraphicJpegFileProvider(fake).graphic_jpeg_file(raw=True)
         storage.save(file_path, jpeg_file)
         exif_data = ExifDataFactory.build()
         write_exif(file_path, exif_data)
