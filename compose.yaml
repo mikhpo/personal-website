@@ -52,7 +52,7 @@ services:
 
   # Кластер PostgreSQL для веб-сайта. База данных создается автоматически.
   postgres:
-    image: postgres:15
+    image: postgres:17
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
