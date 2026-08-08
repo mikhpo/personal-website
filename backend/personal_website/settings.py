@@ -236,6 +236,10 @@ else:
             "PASSWORD": os.getenv("POSTGRES_PASSWORD"),
             "HOST": os.getenv("POSTGRES_HOST"),
             "PORT": os.getenv("POSTGRES_PORT"),
+            "OPTIONS": {
+                "sslmode": os.getenv("POSTGRES_SSL_MODE", "prefer"),
+                "sslrootcert": os.getenv("POSTGRES_SSL_ROOT_CERT_PATH"),
+            },
         },
     }
 

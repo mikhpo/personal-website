@@ -12,7 +12,7 @@ System_Boundary(project, "Персональный сайт") {
     Container(backend, "Бэкенд", "Django + DRF", "REST API, бизнес-логика, админка, рендеринг шаблонов")
     Container(frontend, "Фронтенд", "React + Webpack", "React компоненты, интеграция с Django шаблонами, сборка через Webpack")
     Container(scripts, "Скрипты", "Bash", "Запускаются вручную и по расписанию из crontab")
-    ContainerDb(db, "База данных", "PostgreSQL", "Хранит информацию о пользователях, статьях, фотографиях и т.д.")
+    System_Ext(db, "База данных", "Managed PostgreSQL", "Хранение данных (облачный провайдер)")
 }
 System_Ext(s3, "Объектное хранилище", "S3/MinIO")
 System_Ext(smtp, "SMTP-сервер", "Внешний сервис электронной почты")
