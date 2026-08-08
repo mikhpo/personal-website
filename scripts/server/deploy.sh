@@ -14,7 +14,7 @@ cd "$project_root" || exit
 
 # Определение параметров установки.
 readonly WEBSITE_NAME="personal-website"
-readonly POSTGRES_VERSION=15
+readonly POSTGRES_VERSION=17
 readonly NODE_VERSION=20
 
 #######################################
@@ -59,7 +59,6 @@ function install_packages() {
         python3 \
         python3-pip \
         pipx \
-        wkhtmltopdf \
         nginx
 }
 
