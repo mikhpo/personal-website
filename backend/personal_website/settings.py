@@ -228,6 +228,12 @@ if SOURCECRAFT_CI:
         },
     }
 else:
+    # Формирование OPTIONS для подключения к PostgreSQL
+    db_options = {"sslmode": os.getenv("POSTGRES_SSL_MODE", "prefer")}
+    ssl_root_cert = os.getenv("POSTGRES_SSL_ROOT_CERT_PATH")
+    if ssl_root_cert:
+        db_options["sslrootcert"] = ssl_root_cert
+
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
@@ -236,10 +242,7 @@ else:
             "PASSWORD": os.getenv("POSTGRES_PASSWORD"),
             "HOST": os.getenv("POSTGRES_HOST"),
             "PORT": os.getenv("POSTGRES_PORT"),
-            "OPTIONS": {
-                "sslmode": os.getenv("POSTGRES_SSL_MODE", "prefer"),
-                "sslrootcert": os.getenv("POSTGRES_SSL_ROOT_CERT_PATH"),
-            },
+            "OPTIONS": db_options,
         },
     }
 
