@@ -1233,21 +1233,6 @@ files = [
 all = ["flake8 (>=7.1.1)", "mypy (>=1.11.2)", "pytest (>=8.3.2)", "ruff (>=0.6.2)"]
 
 [[package]]
-name = "imgkit"
-version = "1.2.3"
-description = "Wkhtmltopdf python wrapper to convert html to image using the webkit rendering engine and qt"
-optional = false
-python-versions = "*"
-groups = ["main"]
-files = [
-    {file = "imgkit-1.2.3-py3-none-any.whl", hash = "sha256:cba8e3f67da6e0a5c87345a8b41605337851f9b9b75719500fa6810ecff84791"},
-    {file = "imgkit-1.2.3.tar.gz", hash = "sha256:c9ade93d0281277c898b983c959f11f0cc1cb4a5fed144560dfa4d273fb50cd8"},
-]
-
-[package.dependencies]
-six = "*"
-
-[[package]]
 name = "inflection"
 version = "0.5.1"
 description = "A port of Ruby on Rails inflector to Python"
@@ -3226,4 +3211,4 @@ dev = ["pytest", "setuptools"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.12"
-content-hash = "7f9a782d08611a2b01ca94024f8f55dc6ccc2e2c1322cb7512bce95a81dad08f"
+content-hash = "dd00273bc907743710cadce93262e97687b1de091fdf9f659a4d392ee7560059"
