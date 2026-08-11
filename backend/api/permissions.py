@@ -13,21 +13,23 @@ if TYPE_CHECKING:
 
 class IsPublicOrAuthor(permissions.BasePermission):
     """
-    Permission класс для объектов с полем public.
+    Permission класс для моделей с полем public (gallery: Album, Photo;
+    blog: Article, Category, Topic, Series).
 
-    Правило публичности объектов проекта (gallery: Album, Photo; blog: Article,
-    Category, Topic, Series): в list/индексе/sitemap показываются только объекты
-    с public=True, но детальный просмотр (retrieve/detail) любого объекта по
-    прямой ссылке доступен всем пользователям (share-by-link). Этот permission
-    разрешает все безопасные методы; фильтрация публичных объектов в списках
-    выполняется на уровне get_queryset() соответствующего view.
+    Чтение: безопасные методы разрешены всем. Видимость конкретного объекта
+    в списках (list/индекс/sitemap) регулируется на уровне get_queryset()
+    соответствующего view — публичными считаются объекты с public=True,
+    но детальный просмотр (retrieve/detail) любого объекта по прямой ссылке
+    доступен всем пользователям (share-by-link).
 
-    Запись (создание/изменение/удаление) доступна только администраторам (staff).
-    Комментарии к статьям регулируются отдельным permission (см. CommentViewSet).
+    Запись (создание/изменение/удаление) любых объектов — независимо от
+    значения public — доступна только администраторам (staff).
 
-    Модель должна иметь поля:
+    Комментарии к статьям регулируются отдельным permission (см. CommentViewSet
+    и IsAuthorOrReadOnly).
+
+    Модель должна иметь поле:
     - public: BooleanField
-    - author: ForeignKey к User (опционально)
     """
 
     def has_permission(self, request: Request, view: View) -> bool:  # noqa: ARG002
