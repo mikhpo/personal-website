@@ -73,7 +73,7 @@ class TestCategoryViewSet(APITestCase):
         self.assertEqual(response.data["count"], 2)  # Только публичные
 
     def test_retrieve_private_category_accessible_by_link(self) -> None:
-        """Приватная категория доступна по прямой ссылке (share-by-link)."""
+        """Приватная категория доступна по прямой ссылке."""
         url = f"/api/blog/categories/{self.category3.pk}/"
         # Аноним
         response = self.client.get(url)
@@ -137,7 +137,7 @@ class TestTopicViewSet(APITestCase):
         self.assertEqual(response.data["count"], 2)
 
     def test_retrieve_private_topic_accessible_by_link(self) -> None:
-        """Приватная тема доступна по прямой ссылке (share-by-link)."""
+        """Приватная тема доступна по прямой ссылке."""
         url = f"/api/blog/topics/{self.topic3.pk}/"
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
@@ -194,7 +194,7 @@ class TestSeriesViewSet(APITestCase):
         self.assertEqual(response.data["count"], 2)
 
     def test_retrieve_private_series_accessible_by_link(self) -> None:
-        """Приватная серия доступна по прямой ссылке (share-by-link)."""
+        """Приватная серия доступна по прямой ссылке."""
         url = f"/api/blog/series/{self.series3.pk}/"
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
@@ -320,7 +320,7 @@ class TestArticleViewSet(APITestCase):
         self.assertEqual(response.data["count"], 2)  # Только публичные статьи
 
     def test_retrieve_private_article_accessible_by_link(self) -> None:
-        """Приватная статья доступна по прямой ссылке (share-by-link).
+        """Приватная статья доступна по прямой ссылке.
 
         В list показываем только public=True, но retrieve любого объекта
         по прямой ссылке доступен всем пользователям.

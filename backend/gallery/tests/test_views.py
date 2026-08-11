@@ -277,7 +277,7 @@ class TestPhotoDetailView(TestCase):
             self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_photo_detail_accessible_by_link_when_private(self) -> None:
-        """Скрытая фотография доступна по прямой ссылке (share-by-link).
+        """Скрытая фотография доступна по прямой ссылке.
 
         В списках показываем только public=True, но детальный просмотр любого
         объекта по прямой ссылке доступен всем пользователям.
@@ -311,6 +311,7 @@ class TestPhotoDetailView(TestCase):
         """
         # Отдельный альбом, чтобы исключить влияние фото из setUpTestData.
         album = AlbumFactory()
+
         # Три публичные фотографии с разными taken_at и одна скрытая между ними.
         # taken_at устанавливаем через update(), т.к. Photo.save() перезаписывает
         # его из EXIF при создании.
@@ -487,7 +488,7 @@ class TestAlbumDetailView(TestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_album_detail_accessible_by_link_when_private(self) -> None:
-        """Скрытый альбом доступен по прямой ссылке (share-by-link)."""
+        """Скрытый альбом доступен по прямой ссылке."""
         private_album = AlbumFactory(public=False)
         url = f"{ALBUM_DETAIL_URL}/{private_album.pk}/"
         response = self.client.get(url)

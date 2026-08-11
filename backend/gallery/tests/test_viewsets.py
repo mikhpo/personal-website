@@ -137,7 +137,7 @@ class TestPhotoViewSet(APITestCase):
         self.assertEqual(len(response.data["tags"]), 2)
 
     def test_retrieve_private_photo_accessible_by_link(self) -> None:
-        """Приватная фотография доступна по прямой ссылке (share-by-link).
+        """Приватная фотография доступна по прямой ссылке.
 
         В list показываем только public=True, но retrieve любого объекта
         по прямой ссылке доступен всем пользователям.
@@ -309,7 +309,7 @@ class TestAlbumViewSet(APITestCase):
             self.assertTrue(photo["public"])
 
     def test_retrieve_private_album_accessible_by_link(self) -> None:
-        """Детальный просмотр приватного альбома доступен по прямой ссылке (share-by-link)."""
+        """Детальный просмотр приватного альбома доступен по прямой ссылке."""
         url = f"/api/gallery/albums/{self.album2.pk}/"
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)

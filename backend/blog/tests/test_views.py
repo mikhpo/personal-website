@@ -173,7 +173,7 @@ class TestArticleDetailPage(TestCase):
         self.assertContains(response, "loginUrl")
 
     def test_private_article_accessible_by_link(self) -> None:
-        """Приватная статья доступна по прямой ссылке (share-by-link)."""
+        """Приватная статья доступна по прямой ссылке."""
         private_article = ArticleFactory(title="Private article", slug="private-article", public=False)
         url = reverse(ARTICLE_DETAIL_URL_NAME, args=(private_article.slug,))
         response = self.client.get(url)
@@ -263,7 +263,7 @@ class TestCategoryPage(TestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_private_category_accessible_by_link(self) -> None:
-        """Приватная категория доступна по прямой ссылке (share-by-link)."""
+        """Приватная категория доступна по прямой ссылке."""
         private_category = CategoryFactory(name="Private category", slug="private-category", public=False)
         url = reverse(CATEGORY_URL_NAME, args=(private_category.slug,))
         response = self.client.get(url)
@@ -347,7 +347,7 @@ class TestTopicPage(TestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_private_topic_accessible_by_link(self) -> None:
-        """Приватная тема доступна по прямой ссылке (share-by-link)."""
+        """Приватная тема доступна по прямой ссылке."""
         private_topic = TopicFactory(name="Private topic", slug="private-topic", public=False)
         url = reverse(TOPIC_URL_NAME, args=(private_topic.slug,))
         response = self.client.get(url)
@@ -431,7 +431,7 @@ class TestSeriesPage(TestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_private_series_accessible_by_link(self) -> None:
-        """Приватная серия доступна по прямой ссылке (share-by-link)."""
+        """Приватная серия доступна по прямой ссылке."""
         private_series = SeriesFactory(name="Private series", slug="private-series", public=False)
         url = reverse(SERIES_URL_NAME, args=(private_series.slug,))
         response = self.client.get(url)
