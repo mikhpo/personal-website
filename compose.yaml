@@ -1,5 +1,4 @@
 services:
-
   # Веб-сайт на Django. Запускается либо через Gunicorn, либо через команду runserver.
   # Способ запуска и параметры запуска определяются скриптом entrypoint.sh.
   website:
@@ -93,8 +92,8 @@ services:
       - nginx-certs:/etc/letsencrypt/live/${DOMAIN_NAME}:rw
     depends_on:
       website:
-          condition: service_healthy
-          restart: true
+        condition: service_healthy
+        restart: true
     restart: always
     develop:
       watch:
