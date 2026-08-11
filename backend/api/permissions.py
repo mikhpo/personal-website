@@ -3,7 +3,6 @@
 from typing import TYPE_CHECKING
 
 from django.contrib.auth.base_user import AbstractBaseUser
-from django.contrib.auth.models import AnonymousUser
 from rest_framework import permissions
 from rest_framework.request import Request
 from rest_framework.views import View
@@ -23,8 +22,8 @@ class IsPublicOrAuthor(permissions.BasePermission):
     разрешает все безопасные методы; фильтрация публичных объектов в списках
     выполняется на уровне get_queryset() соответствующего view.
 
-    Write-path остаётся без изменений: модификация/удаление — только для staff
-    или автора; создание — для аутентифицированных.
+    Запись (создание/изменение/удаление) доступна только администраторам (staff).
+    Комментарии к статьям регулируются отдельным permission (см. CommentViewSet).
 
     Модель должна иметь поля:
     - public: BooleanField
@@ -46,8 +45,9 @@ class IsPublicOrAuthor(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
 
-        # Для операций создания/модификации требуется аутентификация
-        return bool(request.user and request.user.is_authenticated)
+        # Запись (создание/изменение/удаление) — только для администраторов
+        user = request.user
+        return bool(isinstance(user, AbstractBaseUser) and user.is_staff)
 
     def has_object_permission(self, request: Request, view: View, obj: "Model") -> bool:  # noqa: ARG002
         """
@@ -67,37 +67,9 @@ class IsPublicOrAuthor(permissions.BasePermission):
             return True
 
         # Для чтения разрешаем доступ к любому объекту: видимость публичных
-        # в списках регулируется на уровне get_queryset() view.
-        if request.method in permissions.SAFE_METHODS:
-            return True
-
-        # Для модификации и удаления требуется авторство или админ права
-        # Если у объекта есть автор, проверяем авторство
-        if hasattr(obj, "author"):
-            return self._is_author(user, obj)
-        # Если у объекта нет автора, то модификация разрешена только админам
-        return False
-
-    def _is_author(self, user: AbstractBaseUser | AnonymousUser | None, obj: "Model") -> bool:
-        """
-        Проверка, является ли пользователь автором объекта.
-
-        Args:
-            user: Пользователь (аутентифицированный, анонимный или None)
-            obj: Объект модели
-
-        Returns:
-            True если пользователь является автором, False иначе
-        """
-        # Защита от None и неаутентифицированных пользователей
-        if user is None or not user.is_authenticated:
-            return False
-
-        # Проверяем наличие поля author
-        if hasattr(obj, "author"):
-            return obj.author == user
-
-        return False
+        # в списках регулируется на уровне get_queryset() view. Запись для
+        # не-staff запрещена (см. has_permission).
+        return request.method in permissions.SAFE_METHODS
 
 
 class IsStaffOrReadOnly(permissions.BasePermission):
@@ -128,11 +100,13 @@ class IsStaffOrReadOnly(permissions.BasePermission):
 
 class IsAuthorOrReadOnly(permissions.BasePermission):
     """
-    Permission класс для объектов с автором.
+    Permission класс для объектов с автором (используется для комментариев).
 
     Разрешает:
     - Чтение всем
-    - Модификацию и удаление только автору объекта
+    - Создание любому аутентифицированному (регулируется has_permission
+      и IsAuthenticatedOrReadOnly в CommentViewSet)
+    - Модификацию и удаление автору объекта или администратору (staff)
     """
 
     def has_permission(self, request: Request, view: View) -> bool:  # noqa: ARG002
@@ -159,7 +133,7 @@ class IsAuthorOrReadOnly(permissions.BasePermission):
 
         Args:
             request: HTTP запрос
-            view: View, обрабатывающий запрос
+            view: View, обрабатывающая запрос
             obj: Объект модели
 
         Returns:
@@ -169,10 +143,14 @@ class IsAuthorOrReadOnly(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
 
+        # Администраторы могут модифицировать и удалять любые объекты
+        user = request.user
+        if isinstance(user, AbstractBaseUser) and user.is_staff:
+            return True
+
         # Для модификации и удаления проверяем авторство
-        # Добавляем проверку на None для request.user, чтобы избежать ошибок сравнения
         if hasattr(obj, "author"):
-            return request.user is not None and obj.author == request.user
+            return user is not None and obj.author == user
 
         # Если у объекта нет автора, запрещаем доступ
         return False
