@@ -2,6 +2,10 @@
 
 ## 2026-08-11
 
+- SSL-сертификат для Managed PostgreSQL доставляется в контейнер при запуске, а не при сборке образа
+- Добавлен скрипт scripts/pgcert.sh для загрузки SSL-сертификата PostgreSQL (вызывается из deploy.sh и update.sh)
+- Из Dockerfile и compose.yaml удалены build-args; в compose.yaml добавлен bind-mount сертификата через POSTGRES_SSL_ROOT_CERT_PATH (контейнер) и опциональную POSTGRES_SSL_CERT_HOST_PATH (хост)
+- Раздел по настройке базы данных перенесён из CONTRIBUTING.md в README.md
 - Унифицирована логика публичности объектов с полем public (Album, Photo, Article, Category, Topic, Series): списки и sitemap показывают только public=True, детальный просмотр любого объекта по прямой ссылке доступен всем
 - Исправлена ошибка 404 при доступе к скрытым фотографиям по прямой ссылке, приходящей со страниц альбомов
 - Удалены staff-ветки в get_queryset просмотровых views и viewsets: staff и не-staff видят основной сайт одинаково, для администрирования служит отдельный интерфейс /admin/

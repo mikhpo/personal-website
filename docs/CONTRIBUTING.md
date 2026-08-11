@@ -151,69 +151,7 @@ Poetry сконфигурирован таким образом, чтобы ви
 
 ### PostgreSQL
 
-#### Использование PostgreSQL в контейнере
-
-При создании контейнера с кластером базы данных [PostgreSQL](https://www.postgresql.org/) на основе [официального образа postgres](https://hub.docker.com/_/postgres) база данных создается автоматически в соответствии со значениями переменных окружения `POSTGRES_USER`, `POSTGRES_PASSWORD` и `POSTGRES_DB`, указанными в файле [compose.yaml](../compose.yaml). Для подключения к базе данных необходимо использовать имя хоста `postgres`, если сервис, из которого производится переключение, также запускается при помощи Docker Compose, и имя хоста `localhost` в случаях, если сервис запускается на том же хосте, но не через Docker Compose.
-
-#### Ручное создание базы данных PostgreSQL
-
-Переключиться на учетную запись postgres:
-
-    sudo -i -u postgres
-
-Войти в интерпретатор PostgreSQL:
-
-    psql
-
-Создать пользователя:
-
-    CREATE USER user WITH PASSWORD 'password';
-
-Создать базу данных:
-
-    CREATE DATABASE name OWNER user ENCODING 'UTF8';
-
-Выйти из интерпретатора PostgreSQL:
-
-    \q
-
-Переключиться на стандартного пользователя:
-
-    \exit
-
-#### Развертывание базы данных
-
-Проект поддерживает различные варианты развертывания PostgreSQL:
-
-**Локальная разработка:**
-
-* Docker контейнер с PostgreSQL (см. выше)
-* Подключение через `localhost:5432`
-
-**Продакшен среда:**
-
-* Управляемый PostgreSQL (Managed Service) от любого облачного провайдера
-* Локальный PostgreSQL на сервере (через systemd)
-
-**Переменные окружения для подключения:**
-
-* `POSTGRES_HOST` — хост БД (localhost, FQDN кластера)
-* `POSTGRES_PORT` — порт (5432 локальный, 6432 для managed)
-* `POSTGRES_USER` — имя пользователя
-* `POSTGRES_PASSWORD` — пароль
-* `POSTGRES_DB` — имя базы данных
-* `POSTGRES_SSL_MODE` — режим SSL (prefer, require, verify-full)
-* `POSTGRES_SSL_ROOT_CERT_PATH` — путь к SSL сертификату
-
-**SSL подключение:**
-
-* Для публичного доступа к managed сервисам требуется SSL
-* SSL сертификат устанавливается через build args (POSTGRES_SSL_CERT_DOWNLOAD, POSTGRES_SSL_CERT_URL)
-* Скрипты `pgbackup.sh` и `pgrestore.sh` универсальны и работают с любым провайдером
-
-**Миграция между провайдерами:**
-
-При смене облачного провайдера достаточно обновить переменные окружения в `.env` файле.
+Настройка базы данных PostgreSQL (контейнер, ручное создание, переменные окружения, SSL для Managed PostgreSQL) описана в разделе [«Настройка базы данных»](./README.md#настройка-базы-данных) файла README.md.
 
 ### Nginx и Certbot
 

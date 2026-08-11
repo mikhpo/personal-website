@@ -220,6 +220,16 @@ function add_cronjobs() {
 }
 
 #######################################
+# Скачать SSL-сертификат CA для Managed PostgreSQL.
+# Идемпотентно: пропуск, если сертификат уже на месте и не передан --force.
+# Скрипт pgcert.sh самостоятельно читает .env и решает, нужна ли загрузка.
+#######################################
+function fetch_postgres_cert() {
+    echo "Загрузка SSL-сертификата PostgreSQL (при необходимости)..."
+    bash "$project_root/scripts/pgcert.sh"
+}
+
+#######################################
 # Установить зависимости проекта и собрать фронтенд.
 #######################################
 function install_project_dependencies() {
@@ -253,6 +263,7 @@ function main() {
     install_poetry
     install_node
     install_minio
+    fetch_postgres_cert
     install_project_dependencies
     setup_gunicorn
     setup_nginx

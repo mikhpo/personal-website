@@ -29,6 +29,9 @@ git fetch origin
 git checkout main
 git pull
 
+# Скачать SSL-сертификат PostgreSQL, если требуется (идемпотентно).
+bash "$project_root/scripts/pgcert.sh"
+
 # Обновить зависимости.
 npm install
 npm run build
