@@ -17,8 +17,9 @@ class IsPublicOrAuthor(permissions.BasePermission):
     Permission класс для объектов с полем public.
 
     Разрешает:
-    - Чтение публичных объектов (public=True) всем пользователям
-    - Чтение приватных объектов только администраторам или авторам
+    - Чтение любых объектов всем пользователям (доступ регулируется на уровне queryset view:
+      list показывает только public=True, retrieve открывает любой объект по прямой ссылке
+      в рамках единой инварианты share-by-link)
     - Модификацию и удаление только администраторам или авторам
     - Создание объектов только аутентифицированным пользователям
 
@@ -33,7 +34,7 @@ class IsPublicOrAuthor(permissions.BasePermission):
 
         Args:
             request: HTTP запрос
-            view: View, обрабатывающий запрос
+            view: View, обрабатывающая запрос
 
         Returns:
             True если доступ разрешен, False иначе
@@ -51,7 +52,7 @@ class IsPublicOrAuthor(permissions.BasePermission):
 
         Args:
             request: HTTP запрос
-            view: View, обрабатывающий запрос
+            view: View, обрабатывающая запрос
             obj: Объект модели
 
         Returns:
@@ -62,13 +63,10 @@ class IsPublicOrAuthor(permissions.BasePermission):
         if isinstance(user, AbstractBaseUser) and user.is_staff:
             return True
 
-        # Для чтения
+        # Для чтения разрешаем доступ к любому объекту: видимость регулируется
+        # на уровне get_queryset() view (list — только public, retrieve — любой).
         if request.method in permissions.SAFE_METHODS:
-            # Публичные объекты доступны всем
-            if obj.public:
-                return True
-            # Приватные объекты доступны только авторам
-            return self._is_author(user, obj)
+            return True
 
         # Для модификации и удаления требуется авторство или админ права
         # Если у объекта есть автор, проверяем авторство

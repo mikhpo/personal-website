@@ -32,11 +32,16 @@ class CategoryViewSet(viewsets.ModelViewSet):
     ordering: ClassVar[list] = ["name"]
 
     def get_queryset(self) -> "QuerySet[Category]":
-        """Возвращать все категории для staff пользователей, только публичные для остальных."""
+        """Возвращать только публичные категории в list, все категории в retrieve.
+
+        Единая инварианта проекта: списки показывают только public=True,
+        детальный просмотр по прямой ссылке доступен для любого объекта
+        (share-by-link).
+        """
         queryset = Category.objects.all()
-        if hasattr(self.request.user, "is_staff") and self.request.user.is_staff:
-            return queryset
-        return queryset.filter(public=True)
+        if self.action == "list":
+            return queryset.filter(public=True)
+        return queryset
 
 
 class TopicViewSet(viewsets.ModelViewSet):
@@ -51,11 +56,16 @@ class TopicViewSet(viewsets.ModelViewSet):
     ordering: ClassVar[list] = ["name"]
 
     def get_queryset(self) -> "QuerySet[Topic]":
-        """Возвращать все темы для staff пользователей, только публичные для остальных."""
+        """Возвращать только публичные темы в list, все темы в retrieve.
+
+        Единая инварианта проекта: списки показывают только public=True,
+        детальный просмотр по прямой ссылке доступен для любого объекта
+        (share-by-link).
+        """
         queryset = Topic.objects.all()
-        if hasattr(self.request.user, "is_staff") and self.request.user.is_staff:
-            return queryset
-        return queryset.filter(public=True)
+        if self.action == "list":
+            return queryset.filter(public=True)
+        return queryset
 
 
 class SeriesViewSet(viewsets.ModelViewSet):
@@ -70,11 +80,16 @@ class SeriesViewSet(viewsets.ModelViewSet):
     ordering: ClassVar[list] = ["name"]
 
     def get_queryset(self) -> "QuerySet[Series]":
-        """Возвращать все серии для staff пользователей, только публичные для остальных."""
+        """Возвращать только публичные серии в list, все серии в retrieve.
+
+        Единая инварианта проекта: списки показывают только public=True,
+        детальный просмотр по прямой ссылке доступен для любого объекта
+        (share-by-link).
+        """
         queryset = Series.objects.all()
-        if hasattr(self.request.user, "is_staff") and self.request.user.is_staff:
-            return queryset
-        return queryset.filter(public=True)
+        if self.action == "list":
+            return queryset.filter(public=True)
+        return queryset
 
 
 class ArticleViewSet(viewsets.ModelViewSet):
@@ -90,7 +105,11 @@ class ArticleViewSet(viewsets.ModelViewSet):
     ordering: ClassVar[list] = ["-published_at"]
 
     def get_queryset(self) -> "QuerySet[Article]":
-        """Возвращать все статьи для staff пользователей, только публичные для остальных.
+        """Возвращать только публичные статьи в list, все статьи в retrieve.
+
+        Единая инварианта проекта: списки показывают только public=True,
+        детальный просмотр по прямой ссылке доступен для любого объекта
+        (share-by-link).
 
         Использует select_related и prefetch_related для оптимизации запросов к базе данных
         и предотвращения множественных запросов при сериализации вложенных объектов.
@@ -101,9 +120,9 @@ class ArticleViewSet(viewsets.ModelViewSet):
             "series",
             "comments__author",
         )
-        if hasattr(self.request.user, "is_staff") and self.request.user.is_staff:
-            return queryset
-        return queryset.filter(public=True)
+        if self.action == "list":
+            return queryset.filter(public=True)
+        return queryset
 
 
 class CommentViewSet(viewsets.ModelViewSet):

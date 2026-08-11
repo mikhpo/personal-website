@@ -4,6 +4,9 @@
 {% block title %}
     {{ category.name }}
 {% endblock title %}
+{% block meta %}
+    {% if not category.public %}<meta name="robots" content="noindex">{% endif %}
+{% endblock meta %}
 {% block content %}
     <div class="container">
         <h2>{{ category.name }}</h2>

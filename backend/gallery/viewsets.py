@@ -43,14 +43,23 @@ class AlbumViewSet(viewsets.ReadOnlyModelViewSet):
         return AlbumListSerializer
 
     def get_queryset(self) -> "QuerySet[Album]":
-        """Возвращать все альбомы для staff пользователей, только публичные для остальных."""
+        """Возвращать только публичные альбомы в list, все альбомы в retrieve.
+
+        Единая инварианта проекта: списки показывают только public=True,
+        детальный просмотр по прямой ссылке доступен для любого объекта
+        (share-by-link). Вложенные фотографии альбома в retrieve также
+        фильтруются по public=True.
+        """
         queryset = Album.objects.select_related("cover").prefetch_related("tags")
-        # Загружать фотографии только для детального просмотра
+        # Для детального просмотра prefetch'им фотографии альбома
+        # только публичные (вложенные элементы списка не раскрывают скрытое).
         if self.action == "retrieve":
-            queryset = queryset.prefetch_related(Prefetch("photos", queryset=Photo.objects.order_by("taken_at")))
-        if hasattr(self.request.user, "is_staff") and self.request.user.is_staff:
-            return queryset
-        return queryset.filter(public=True)
+            queryset = queryset.prefetch_related(
+                Prefetch("photos", queryset=Photo.published.order_by("taken_at")),
+            )
+        if self.action == "list":
+            return queryset.filter(public=True)
+        return queryset
 
 
 class PhotoViewSet(viewsets.ReadOnlyModelViewSet):
@@ -67,11 +76,16 @@ class PhotoViewSet(viewsets.ReadOnlyModelViewSet):
     ordering: ClassVar[list] = ["-taken_at"]
 
     def get_queryset(self) -> "QuerySet[Photo]":
-        """Возвращать все фотографии для staff пользователей, только публичные для остальных."""
+        """Возвращать только публичные фотографии в list, все фотографии в retrieve.
+
+        Единая инварианта проекта: списки показывают только public=True,
+        детальный просмотр по прямой ссылке доступен для любого объекта
+        (share-by-link).
+        """
         queryset = Photo.objects.select_related("album").prefetch_related("tags")
-        if hasattr(self.request.user, "is_staff") and self.request.user.is_staff:
-            return queryset
-        return queryset.filter(public=True)
+        if self.action == "list":
+            return queryset.filter(public=True)
+        return queryset
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):

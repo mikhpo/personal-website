@@ -276,6 +276,63 @@ class TestPhotoDetailView(TestCase):
             response = self.client.get(url)
             self.assertEqual(response.status_code, HTTPStatus.OK)
 
+    def test_photo_detail_accessible_by_link_when_private(self) -> None:
+        """Скрытая фотография доступна по прямой ссылке (share-by-link).
+
+        Единая инварианта: в списках показываем только public=True, но детальный
+        просмотр любого объекта по прямой ссылке доступен всем пользователям.
+        """
+        private_photo = PhotoFactory(album=self.album, public=False)
+        url = f"{PHOTO_DETAIL_URL}/{private_photo.pk}/"
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(response.context["photo"], private_photo)
+
+    def test_photo_detail_noindex_for_private_photo(self) -> None:
+        """HTML детальной страницы скрытой фотографии содержит meta robots noindex."""
+        private_photo = PhotoFactory(album=self.album, public=False)
+        url = f"{PHOTO_DETAIL_URL}/{private_photo.pk}/"
+        response = self.client.get(url)
+        self.assertContains(response, '<meta name="robots" content="noindex">')
+
+    def test_photo_detail_no_noindex_for_public_photo(self) -> None:
+        """HTML детальной страницы публичной фотографии не содержит noindex."""
+        first_photo = Photo.objects.first()
+        if first_photo is not None:
+            url = f"{PHOTO_DETAIL_URL}/{first_photo.pk}/"
+            response = self.client.get(url)
+            self.assertNotContains(response, "noindex")
+
+    def test_photo_detail_prev_next_skips_unpublished(self) -> None:
+        """Prev/next навигация на странице фото фильтрует скрытые фотографии.
+
+        Скрытые фотографии не должны предлагаться в качестве соседей даже
+        при прямом заходе по share-ссылке на скрытую фотографию.
+        """
+        # Отдельный альбом, чтобы исключить влияние фото из setUpTestData.
+        album = AlbumFactory()
+        # Три публичные фотографии с разными taken_at и одна скрытая между ними.
+        # taken_at устанавливаем через update(), т.к. Photo.save() перезаписывает
+        # его из EXIF при создании.
+        public_a = PhotoFactory(album=album, public=True)
+        Photo.objects.filter(pk=public_a.pk).update(taken_at=datetime(2022, 1, 1, tzinfo=timezone.utc))
+        private_b = PhotoFactory(album=album, public=False)
+        Photo.objects.filter(pk=private_b.pk).update(taken_at=datetime(2022, 1, 2, tzinfo=timezone.utc))
+        public_c = PhotoFactory(album=album, public=True)
+        Photo.objects.filter(pk=public_c.pk).update(taken_at=datetime(2022, 1, 3, tzinfo=timezone.utc))
+
+        # Для первой публичной следующая - третья (через скрытую)
+        url = f"{PHOTO_DETAIL_URL}/{public_a.pk}/"
+        response = self.client.get(url)
+        self.assertEqual(response.context.get("next_photo_id"), public_c.pk)
+        self.assertNotEqual(response.context.get("next_photo_id"), private_b.pk)
+
+        # Для скрытой фотографии соседи - обе публичные
+        url = f"{PHOTO_DETAIL_URL}/{private_b.pk}/"
+        response = self.client.get(url)
+        self.assertEqual(response.context.get("previous_photo_id"), public_a.pk)
+        self.assertEqual(response.context.get("next_photo_id"), public_c.pk)
+
 
 class TestAlbumListView(TestCase):
     """Тесты представления списка альбомов."""
@@ -428,6 +485,27 @@ class TestAlbumDetailView(TestCase):
         url = f"{ALBUM_DETAIL_URL}/{album_pk}/"
         response = self.client.get(url)
         self.assertEqual(response.status_code, HTTPStatus.OK)
+
+    def test_album_detail_accessible_by_link_when_private(self) -> None:
+        """Скрытый альбом доступен по прямой ссылке (share-by-link)."""
+        private_album = AlbumFactory(public=False)
+        url = f"{ALBUM_DETAIL_URL}/{private_album.pk}/"
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(response.context["album"], private_album)
+
+    def test_album_detail_noindex_for_private_album(self) -> None:
+        """HTML детальной страницы скрытого альбома содержит meta robots noindex."""
+        private_album = AlbumFactory(public=False)
+        url = f"{ALBUM_DETAIL_URL}/{private_album.pk}/"
+        response = self.client.get(url)
+        self.assertContains(response, '<meta name="robots" content="noindex">')
+
+    def test_album_detail_no_noindex_for_public_album(self) -> None:
+        """HTML детальной страницы публичного альбома не содержит noindex."""
+        url = f"{ALBUM_DETAIL_URL}/{self.album.pk}/"
+        response = self.client.get(url)
+        self.assertNotContains(response, "noindex")
 
     def test_album_shows_its_photos(self) -> None:
         """Тест: страница альбома показывает фотографии из этого альбома."""
