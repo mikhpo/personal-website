@@ -153,6 +153,88 @@
 
 В проекте уже настроен MinIO через Docker Compose для локальной разработки с S3.
 
+## Настройка базы данных
+
+Проект поддерживает различные варианты развертывания PostgreSQL:
+
+* Docker контейнер с PostgreSQL (локальная разработка)
+* Управляемый PostgreSQL (Managed Service) от облачного провайдера
+* Локальный PostgreSQL на сервере (через systemd)
+
+### PostgreSQL в контейнере
+
+При создании контейнера с кластером базы данных [PostgreSQL](https://www.postgresql.org/) на основе [официального образа postgres](https://hub.docker.com/_/postgres) база данных создается автоматически в соответствии со значениями переменных окружения `POSTGRES_USER`, `POSTGRES_PASSWORD` и `POSTGRES_DB`, указанными в файле [compose.yaml](./compose.yaml). Для подключения к базе данных необходимо использовать имя хоста `postgres`, если сервис, из которого производится подключение, также запускается при помощи Docker Compose, и имя хоста `localhost` в случаях, если сервис запускается на том же хосте, но не через Docker Compose.
+
+### Ручное создание базы данных PostgreSQL
+
+Переключиться на учетную запись postgres:
+
+    sudo -i -u postgres
+
+Войти в интерпретатор PostgreSQL:
+
+    psql
+
+Создать пользователя:
+
+    CREATE USER user WITH PASSWORD 'password';
+
+Создать базу данных:
+
+    CREATE DATABASE name OWNER user ENCODING 'UTF8';
+
+Выйти из интерпретатора PostgreSQL:
+
+    \q
+
+Переключиться на стандартного пользователя:
+
+    \exit
+
+### Переменные окружения для подключения
+
+* `POSTGRES_HOST` — хост БД (localhost, FQDN кластера)
+* `POSTGRES_PORT` — порт (5432 локальный, 6432 для managed)
+* `POSTGRES_USER` — имя пользователя
+* `POSTGRES_PASSWORD` — пароль
+* `POSTGRES_DB` — имя базы данных
+* `POSTGRES_SSL_MODE` — режим SSL (prefer, require, verify-full)
+* `POSTGRES_SSL_ROOT_CERT_PATH` — путь к SSL сертификату CA
+
+### SSL для Managed PostgreSQL
+
+Для публичного доступа к managed-сервисам (например, Yandex Cloud Managed Service for PostgreSQL) требуется SSL-подключение с проверкой сертификата CA. Проект использует runtime-модель доставки сертификата: один и тот же Docker-образ проходит цепочку test → release без «запекания» сертификата на этапе сборки, а сам сертификат доставляется при запуске.
+
+Сертификат помещается по каноническому пути `POSTGRES_SSL_ROOT_CERT_PATH` (по умолчанию `~/.postgresql/root.crt` — дефолтный путь поиска libpq, см. документацию PostgreSQL, раздел 32.19.1). При таком расположении libpq находит сертификат автоматически, и явно указывать `sslrootcert` не нужно.
+
+Переменные окружения:
+
+* `POSTGRES_SSL_MODE` — режим SSL (читает Django). Рекомендуется `verify-full` для managed-сервисов.
+* `POSTGRES_SSL_ROOT_CERT_PATH` — канонический путь к файлу сертификата CA, который читает Django (как `sslrootcert`). Используется во всех сценариях: bare-metal, Docker-контейнер, Kubernetes pod. Дефолт `~/.postgresql/root.crt` (конвенция libpq). Если переменная не задана, `sslrootcert` опускается и libpq сам ищет сертификат в `~/.postgresql/root.crt`.
+* `POSTGRES_SSL_CERT_HOST_PATH` — путь к сертификату на хосте, куда пишет `pgcert.sh` и откуда `compose.yaml` монтирует. Нужен только в Docker, когда пути хоста и контейнера различаются. Если не задан — `pgcert.sh` и compose откатываются на `POSTGRES_SSL_ROOT_CERT_PATH`.
+* `POSTGRES_SSL_CERT_URL` — URL для скачивания сертификата (читает скрипт [scripts/pgcert.sh](./scripts/pgcert.sh)). Непустое значение — триггер загрузки; пустое — сертификат не скачивается (для провайдеров без статического URL сертификат помещается вручную).
+
+`pgcert.sh` пишет сертификат по пути `POSTGRES_SSL_CERT_HOST_PATH`, а если та не задана — по `POSTGRES_SSL_ROOT_CERT_PATH`. Загрузка выполняется идемпотентно; вызывается из [scripts/server/deploy.sh](./scripts/server/deploy.sh) и [scripts/server/update.sh](./scripts/server/update.sh). Принудительное обновление (например, при ротации CA провайдером):
+
+    bash scripts/pgcert.sh --force
+
+Доставка сертификата в разных средах:
+
+* Bare-metal: задаётся только `POSTGRES_SSL_ROOT_CERT_PATH`; `pgcert.sh` пишет туда же, Django/gunicorn читает через libpq (общая файловая система).
+* Docker Compose, пути совпадают: достаточно `POSTGRES_SSL_ROOT_CERT_PATH` — compose монтирует сертификат в контейнер по тому же пути (см. [compose.yaml](./compose.yaml)).
+* Docker Compose, пути различаются: `POSTGRES_SSL_CERT_HOST_PATH` (хост) + `POSTGRES_SSL_ROOT_CERT_PATH` (контейнер) — compose связывает их монтированием.
+* Docker без Compose:
+
+      docker run -v ~/.postgresql/root.crt:/root/.postgresql/root.crt:ro \
+                 -e POSTGRES_SSL_MODE=verify-full \
+                 ghcr.io/mikhpo/personal-website:latest
+
+* Kubernetes: сертификат помещается в Secret и монтируется в pod по пути `POSTGRES_SSL_ROOT_CERT_PATH`.
+
+### Миграция между провайдерами
+
+При смене облачного провайдера достаточно обновить переменные окружения в `.env` файле и при необходимости обновить сертификат флагом `--force`. Скрипты [scripts/pgbackup.sh](./scripts/pgbackup.sh) и [scripts/pgrestore.sh](./scripts/pgrestore.sh) универсальны и работают с любым провайдером.
+
 ## Приложения проекта
 
 Проект содержит следующие приложения:
