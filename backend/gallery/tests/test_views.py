@@ -279,8 +279,8 @@ class TestPhotoDetailView(TestCase):
     def test_photo_detail_accessible_by_link_when_private(self) -> None:
         """Скрытая фотография доступна по прямой ссылке (share-by-link).
 
-        Единая инварианта: в списках показываем только public=True, но детальный
-        просмотр любого объекта по прямой ссылке доступен всем пользователям.
+        В списках показываем только public=True, но детальный просмотр любого
+        объекта по прямой ссылке доступен всем пользователям.
         """
         private_photo = PhotoFactory(album=self.album, public=False)
         url = f"{PHOTO_DETAIL_URL}/{private_photo.pk}/"

@@ -102,11 +102,10 @@ class TestIsPublicOrAuthor(APITestCase):
         self.assertTrue(self.permission.has_object_permission(request, view, obj))
 
     def test_has_object_permission_safe_methods_private_object_any_user(self) -> None:
-        """Тест разрешения чтения приватного объекта для любого пользователя.
+        """Чтение приватного объекта разрешено любому пользователю.
 
-        Согласно единой инварианте (share-by-link), безопасные методы (GET/HEAD/OPTIONS)
-        разрешены всегда: видимость регулируется на уровне get_queryset() view
-        (list — только public, retrieve — любой объект по прямой ссылке).
+        Безопасные методы (GET/HEAD/OPTIONS) разрешены всегда; видимость
+        публичных объектов в списках регулируется на уровне get_queryset() view.
         """
         request = MockRequest(user=self.other_user, method="GET")
         view = MockView()

@@ -32,12 +32,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
     ordering: ClassVar[list] = ["name"]
 
     def get_queryset(self) -> "QuerySet[Category]":
-        """Возвращать только публичные категории в list, все категории в retrieve.
-
-        Единая инварианта проекта: списки показывают только public=True,
-        детальный просмотр по прямой ссылке доступен для любого объекта
-        (share-by-link).
-        """
+        """В list отдаёт только public=True, в retrieve — любую категорию."""
         queryset = Category.objects.all()
         if self.action == "list":
             return queryset.filter(public=True)
@@ -56,12 +51,7 @@ class TopicViewSet(viewsets.ModelViewSet):
     ordering: ClassVar[list] = ["name"]
 
     def get_queryset(self) -> "QuerySet[Topic]":
-        """Возвращать только публичные темы в list, все темы в retrieve.
-
-        Единая инварианта проекта: списки показывают только public=True,
-        детальный просмотр по прямой ссылке доступен для любого объекта
-        (share-by-link).
-        """
+        """В list отдаёт только public=True, в retrieve — любую тему."""
         queryset = Topic.objects.all()
         if self.action == "list":
             return queryset.filter(public=True)
@@ -80,12 +70,7 @@ class SeriesViewSet(viewsets.ModelViewSet):
     ordering: ClassVar[list] = ["name"]
 
     def get_queryset(self) -> "QuerySet[Series]":
-        """Возвращать только публичные серии в list, все серии в retrieve.
-
-        Единая инварианта проекта: списки показывают только public=True,
-        детальный просмотр по прямой ссылке доступен для любого объекта
-        (share-by-link).
-        """
+        """В list отдаёт только public=True, в retrieve — любую серию."""
         queryset = Series.objects.all()
         if self.action == "list":
             return queryset.filter(public=True)
@@ -105,14 +90,10 @@ class ArticleViewSet(viewsets.ModelViewSet):
     ordering: ClassVar[list] = ["-published_at"]
 
     def get_queryset(self) -> "QuerySet[Article]":
-        """Возвращать только публичные статьи в list, все статьи в retrieve.
+        """В list отдаёт только public=True, в retrieve — любую статью.
 
-        Единая инварианта проекта: списки показывают только public=True,
-        детальный просмотр по прямой ссылке доступен для любого объекта
-        (share-by-link).
-
-        Использует select_related и prefetch_related для оптимизации запросов к базе данных
-        и предотвращения множественных запросов при сериализации вложенных объектов.
+        select_related/prefetch_related оптимизируют сериализацию вложенных
+        объектов (автор, категории, темы, серии, комментарии).
         """
         queryset = Article.objects.select_related("author").prefetch_related(
             "categories",

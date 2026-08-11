@@ -61,10 +61,9 @@ class TestCategoryViewSet(APITestCase):
         self.assertEqual(response.data["count"], 2)  # Только публичные
 
     def test_list_categories_staff_same_as_anonymous(self) -> None:
-        """Staff видит тот же список категорий, что аноним.
+        """Список категорий для staff совпадает с анонимным (только public).
 
-        Единая инварианта: staff и не-staff видят основной сайт одинаково.
-        Административный доступ к скрытым объектам - через /admin/.
+        Административный доступ к скрытым объектам — через /admin/.
         """
         staff_user = User.objects.create_user(username="staffuser", password="testpass123", is_staff=True)
         self.client.force_authenticate(user=staff_user)
@@ -129,10 +128,7 @@ class TestTopicViewSet(APITestCase):
         self.assertEqual(response.data["count"], 2)
 
     def test_list_topics_staff_same_as_anonymous(self) -> None:
-        """Staff видит тот же список тем, что аноним.
-
-        Единая инварианта: staff и не-staff видят основной сайт одинаково.
-        """
+        """Список тем для staff совпадает с анонимным (только public)."""
         staff_user = User.objects.create_user(username="staffuser", password="testpass123", is_staff=True)
         self.client.force_authenticate(user=staff_user)
         url = "/api/blog/topics/"
@@ -189,10 +185,7 @@ class TestSeriesViewSet(APITestCase):
         self.assertEqual(response.data["count"], 2)
 
     def test_list_series_staff_same_as_anonymous(self) -> None:
-        """Staff видит тот же список серий, что аноним.
-
-        Единая инварианта: staff и не-staff видят основной сайт одинаково.
-        """
+        """Список серий для staff совпадает с анонимным (только public)."""
         staff_user = User.objects.create_user(username="staffuser", password="testpass123", is_staff=True)
         self.client.force_authenticate(user=staff_user)
         url = "/api/blog/series/"
@@ -316,9 +309,9 @@ class TestArticleViewSet(APITestCase):
         self.assertEqual(response.data["count"], 2)
 
     def test_list_articles_staff_same_as_anonymous(self) -> None:
-        """Staff видит тот же список статей, что аноним.
+        """Список статей для staff совпадает с анонимным (только public).
 
-        Единая инварианта: staff и не-staff видят основной сайт одинаково.
+        Административный доступ к скрытым объектам — через /admin/.
         """
         self.client.force_authenticate(user=self.staff_user)
         url = "/api/blog/articles/"
@@ -329,8 +322,8 @@ class TestArticleViewSet(APITestCase):
     def test_retrieve_private_article_accessible_by_link(self) -> None:
         """Приватная статья доступна по прямой ссылке (share-by-link).
 
-        Единая инварианта: в list показываем только public=True, но retrieve
-        любого объекта по прямой ссылке доступен всем пользователям.
+        В list показываем только public=True, но retrieve любого объекта
+        по прямой ссылке доступен всем пользователям.
         """
         url = f"/api/blog/articles/{self.article3.pk}/"
         # Аноним

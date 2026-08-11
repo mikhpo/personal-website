@@ -16,12 +16,15 @@ class IsPublicOrAuthor(permissions.BasePermission):
     """
     Permission класс для объектов с полем public.
 
-    Разрешает:
-    - Чтение любых объектов всем пользователям (доступ регулируется на уровне queryset view:
-      list показывает только public=True, retrieve открывает любой объект по прямой ссылке
-      в рамках единой инварианты share-by-link)
-    - Модификацию и удаление только администраторам или авторам
-    - Создание объектов только аутентифицированным пользователям
+    Правило публичности объектов проекта (gallery: Album, Photo; blog: Article,
+    Category, Topic, Series): в list/индексе/sitemap показываются только объекты
+    с public=True, но детальный просмотр (retrieve/detail) любого объекта по
+    прямой ссылке доступен всем пользователям (share-by-link). Этот permission
+    разрешает все безопасные методы; фильтрация публичных объектов в списках
+    выполняется на уровне get_queryset() соответствующего view.
+
+    Write-path остаётся без изменений: модификация/удаление — только для staff
+    или автора; создание — для аутентифицированных.
 
     Модель должна иметь поля:
     - public: BooleanField
@@ -63,8 +66,8 @@ class IsPublicOrAuthor(permissions.BasePermission):
         if isinstance(user, AbstractBaseUser) and user.is_staff:
             return True
 
-        # Для чтения разрешаем доступ к любому объекту: видимость регулируется
-        # на уровне get_queryset() view (list — только public, retrieve — любой).
+        # Для чтения разрешаем доступ к любому объекту: видимость публичных
+        # в списках регулируется на уровне get_queryset() view.
         if request.method in permissions.SAFE_METHODS:
             return True
 

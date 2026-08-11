@@ -114,10 +114,9 @@ class TestPhotoViewSet(APITestCase):
         self.assertEqual(response.data["count"], 1)  # Только публичная фотография
 
     def test_list_photos_staff_same_as_anonymous(self) -> None:
-        """Получение списка фотографий staff пользователем - только публичные.
+        """Список фотографий для staff совпадает с анонимным (только public).
 
-        Единая инварианта: staff и не-staff видят основной сайт одинаково.
-        Административный доступ к скрытым объектам - через /admin/.
+        Административный доступ к скрытым объектам — через /admin/.
         """
         self.client.force_authenticate(user=self.staff_user)
         url = "/api/gallery/photos/"
@@ -138,10 +137,10 @@ class TestPhotoViewSet(APITestCase):
         self.assertEqual(len(response.data["tags"]), 2)
 
     def test_retrieve_private_photo_accessible_by_link(self) -> None:
-        """Детальный просмотр приватной фотографии доступен по прямой ссылке (share-by-link).
+        """Приватная фотография доступна по прямой ссылке (share-by-link).
 
-        Единая инварианта: в list показываем только public=True, но retrieve
-        любого объекта по прямой ссылке доступен всем пользователям.
+        В list показываем только public=True, но retrieve любого объекта
+        по прямой ссылке доступен всем пользователям.
         """
         url = f"/api/gallery/photos/{self.photo2.pk}/"
         # Аноним
@@ -228,10 +227,9 @@ class TestAlbumViewSet(APITestCase):
         self.assertEqual(response.data["count"], 1)  # Только публичный альбом
 
     def test_list_albums_staff_same_as_anonymous(self) -> None:
-        """Получение списка альбомов staff пользователем - только публичные.
+        """Список альбомов для staff совпадает с анонимным (только public).
 
-        Единая инварианта: staff и не-staff видят основной сайт одинаково.
-        Административный доступ к скрытым объектам - через /admin/.
+        Административный доступ к скрытым объектам — через /admin/.
         """
         self.client.force_authenticate(user=self.staff_user)
         url = "/api/gallery/albums/"
@@ -295,9 +293,9 @@ class TestAlbumViewSet(APITestCase):
     def test_retrieve_public_album_excludes_unpublished_photos(self) -> None:
         """Вложенные фотографии публичного альбома не содержат скрытые.
 
-        Единая инварианта: в list-представлениях (включая вложенные) показываем
-        только public=True. По прямой ссылке скрытой фотографии можно пройти
-        в её детальный просмотр, но в листинге альбома она не появляется.
+        В list-представлениях (включая вложенные) показываем только public=True.
+        По прямой ссылке скрытой фотографии можно пройти в её детальный просмотр,
+        но в листинге альбома она не появляется.
         """
         # Добавляем в публичный альбом одну скрытую фотографию
         PhotoFactory(album=self.album1, public=False)

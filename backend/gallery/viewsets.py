@@ -43,16 +43,12 @@ class AlbumViewSet(viewsets.ReadOnlyModelViewSet):
         return AlbumListSerializer
 
     def get_queryset(self) -> "QuerySet[Album]":
-        """Возвращать только публичные альбомы в list, все альбомы в retrieve.
+        """QuerySet альбомов с prefetch обложки, тегов и фотографий.
 
-        Единая инварианта проекта: списки показывают только public=True,
-        детальный просмотр по прямой ссылке доступен для любого объекта
-        (share-by-link). Вложенные фотографии альбома в retrieve также
-        фильтруются по public=True.
+        В list отдаёт только public=True; retrieve возвращает любой альбом.
+        Вложенные фотографии альбома в retrieve тоже фильтруются по public=True.
         """
         queryset = Album.objects.select_related("cover").prefetch_related("tags")
-        # Для детального просмотра prefetch'им фотографии альбома
-        # только публичные (вложенные элементы списка не раскрывают скрытое).
         if self.action == "retrieve":
             queryset = queryset.prefetch_related(
                 Prefetch("photos", queryset=Photo.published.order_by("taken_at")),
@@ -76,12 +72,7 @@ class PhotoViewSet(viewsets.ReadOnlyModelViewSet):
     ordering: ClassVar[list] = ["-taken_at"]
 
     def get_queryset(self) -> "QuerySet[Photo]":
-        """Возвращать только публичные фотографии в list, все фотографии в retrieve.
-
-        Единая инварианта проекта: списки показывают только public=True,
-        детальный просмотр по прямой ссылке доступен для любого объекта
-        (share-by-link).
-        """
+        """В list отдаёт только public=True, в retrieve — любую фотографию."""
         queryset = Photo.objects.select_related("album").prefetch_related("tags")
         if self.action == "list":
             return queryset.filter(public=True)

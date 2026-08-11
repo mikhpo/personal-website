@@ -21,10 +21,10 @@ class ArticleDetailView(DetailView):
     model = Article
 
     def get_queryset(self) -> "QuerySet[Article]":
-        """Возвращать все статьи.
+        """Возвращает все статьи.
 
-        Согласно единой инварианте (share-by-link), детальный просмотр объекта
-        доступен всем пользователям; видимость в списках регулируется отдельно.
+        Фильтрация по public выполняется в списке (см. ArticleViewSet);
+        детальный просмотр доступен всем.
         """
         return Article.objects.all()
 

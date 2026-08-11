@@ -59,10 +59,10 @@ class AlbumDetailView(DetailView):
     pk_url_kwarg = "pk"
 
     def get_queryset(self) -> "QuerySet[Album]":
-        """Возвращать все альбомы.
+        """Возвращает все альбомы.
 
-        Согласно единой инварианте (share-by-link), детальный просмотр объекта
-        доступен всем пользователям; видимость в списках регулируется отдельно.
+        Фильтрация по public выполняется в списках (см. AlbumViewSet);
+        детальный просмотр доступен всем.
         """
         return Album.objects.all()
 
@@ -100,10 +100,10 @@ class PhotoDetailView(DetailView):
     pk_url_kwarg = "pk"
 
     def get_queryset(self) -> "QuerySet[Photo]":
-        """Возвращать все фотографии.
+        """Возвращает все фотографии.
 
-        Согласно единой инварианте (share-by-link), детальный просмотр объекта
-        доступен всем пользователям; видимость в списках регулируется отдельно.
+        Фильтрация по public выполняется в списках (см. PhotoViewSet);
+        детальный просмотр доступен всем.
         """
         return Photo.objects.all()
 
@@ -113,9 +113,8 @@ class PhotoDetailView(DetailView):
         photo: Photo = self.object
         album: Album = photo.album
 
-        # Навигация prev/next строится только по публичным фотографиям альбома:
-        # скрытые фотографии не должны предлагаться соседями даже при прямом
-        # заходе по share-ссылке.
+        # Навигация prev/next только по публичным фотографиям альбома:
+        # скрытые не предлагаются соседями ни при прямом заходе, ни из списков.
         all_photos_qs: QuerySet[Photo] = album.photos.filter(public=True).order_by("taken_at")
 
         previous_photo = all_photos_qs.filter(taken_at__lt=photo.taken_at).order_by("-taken_at").first()
