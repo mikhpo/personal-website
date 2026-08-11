@@ -114,10 +114,7 @@ class TestPhotoViewSet(APITestCase):
         self.assertEqual(response.data["count"], 1)  # Только публичная фотография
 
     def test_list_photos_staff_same_as_anonymous(self) -> None:
-        """Список фотографий для staff совпадает с анонимным (только public).
-
-        Административный доступ к скрытым объектам — через /admin/.
-        """
+        """Список фотографий для staff совпадает с анонимным (только public)."""
         self.client.force_authenticate(user=self.staff_user)
         url = "/api/gallery/photos/"
         response = self.client.get(url)
@@ -227,10 +224,7 @@ class TestAlbumViewSet(APITestCase):
         self.assertEqual(response.data["count"], 1)  # Только публичный альбом
 
     def test_list_albums_staff_same_as_anonymous(self) -> None:
-        """Список альбомов для staff совпадает с анонимным (только public).
-
-        Административный доступ к скрытым объектам — через /admin/.
-        """
+        """Список альбомов для staff совпадает с анонимным (только public)."""
         self.client.force_authenticate(user=self.staff_user)
         url = "/api/gallery/albums/"
         response = self.client.get(url)

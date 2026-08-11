@@ -61,10 +61,7 @@ class TestCategoryViewSet(APITestCase):
         self.assertEqual(response.data["count"], 2)  # Только публичные
 
     def test_list_categories_staff_same_as_anonymous(self) -> None:
-        """Список категорий для staff совпадает с анонимным (только public).
-
-        Административный доступ к скрытым объектам — через /admin/.
-        """
+        """Список категорий для staff совпадает с анонимным (только public)."""
         staff_user = User.objects.create_user(username="staffuser", password="testpass123", is_staff=True)
         self.client.force_authenticate(user=staff_user)
         url = "/api/blog/categories/"
@@ -309,10 +306,7 @@ class TestArticleViewSet(APITestCase):
         self.assertEqual(response.data["count"], 2)
 
     def test_list_articles_staff_same_as_anonymous(self) -> None:
-        """Список статей для staff совпадает с анонимным (только public).
-
-        Административный доступ к скрытым объектам — через /admin/.
-        """
+        """Список статей для staff совпадает с анонимным (только public)."""
         self.client.force_authenticate(user=self.staff_user)
         url = "/api/blog/articles/"
         response = self.client.get(url)

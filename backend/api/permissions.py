@@ -13,8 +13,7 @@ if TYPE_CHECKING:
 
 class IsPublicOrAuthor(permissions.BasePermission):
     """
-    Permission класс для моделей с полем public (gallery: Album, Photo;
-    blog: Article, Category, Topic, Series).
+    Permission класс для моделей с полем public.
 
     Чтение: безопасные методы разрешены всем. Видимость конкретного объекта
     в списках (list/индекс/sitemap) регулируется на уровне get_queryset()
@@ -24,9 +23,6 @@ class IsPublicOrAuthor(permissions.BasePermission):
 
     Запись (создание/изменение/удаление) любых объектов — независимо от
     значения public — доступна только администраторам (staff).
-
-    Комментарии к статьям регулируются отдельным permission (см. CommentViewSet
-    и IsAuthorOrReadOnly).
 
     Модель должна иметь поле:
     - public: BooleanField
@@ -38,7 +34,7 @@ class IsPublicOrAuthor(permissions.BasePermission):
 
         Args:
             request: HTTP запрос
-            view: View, обрабатывающая запрос
+            view: View, обрабатывающий запрос
 
         Returns:
             True если доступ разрешен, False иначе
@@ -57,7 +53,7 @@ class IsPublicOrAuthor(permissions.BasePermission):
 
         Args:
             request: HTTP запрос
-            view: View, обрабатывающая запрос
+            view: View, обрабатывающий запрос
             obj: Объект модели
 
         Returns:
@@ -106,8 +102,7 @@ class IsAuthorOrReadOnly(permissions.BasePermission):
 
     Разрешает:
     - Чтение всем
-    - Создание любому аутентифицированному (регулируется has_permission
-      и IsAuthenticatedOrReadOnly в CommentViewSet)
+    - Создание любому аутентифицированному
     - Модификацию и удаление автору объекта или администратору (staff)
     """
 
@@ -135,7 +130,7 @@ class IsAuthorOrReadOnly(permissions.BasePermission):
 
         Args:
             request: HTTP запрос
-            view: View, обрабатывающая запрос
+            view: View, обрабатывающий запрос
             obj: Объект модели
 
         Returns:
