@@ -28,6 +28,7 @@ services:
       - ${BACKUP_ROOT:-./backups/}:/srv/website/backups:rw
       - ${LOGS_ROOT:-./logs/}:/srv/website/logs:rw
       - ${TEMP_ROOT:-./temp/}:/srv/website/temp:rw
+      - ./htmlcov/:/srv/website/htmlcov:rw
       # SSL-сертификат PostgreSQL.
       # Source: путь на хосте (POSTGRES_SSL_CERT_HOST_PATH, либо POSTGRES_SSL_ROOT_CERT_PATH).
       # Target: путь в контейнере, который читает Django (POSTGRES_SSL_ROOT_CERT_PATH).
@@ -35,7 +36,6 @@ services:
         source: ${POSTGRES_SSL_CERT_HOST_PATH:-${POSTGRES_SSL_ROOT_CERT_PATH:-/root/.postgresql/root.crt}}
         target: ${POSTGRES_SSL_ROOT_CERT_PATH:-/root/.postgresql/root.crt}
         read_only: true
-      - ./htmlcov/:/srv/website/htmlcov:rw
     depends_on:
       postgres:
         condition: service_healthy
