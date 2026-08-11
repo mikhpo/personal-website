@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from faker import Faker
-from faker_file.providers.jpeg_file import JpegFileProvider  # type: ignore[import-untyped]
+from faker_file.providers.jpeg_file import GraphicJpegFileProvider  # type: ignore[import-untyped]
 
 from blog.apps import BlogConfig
 from blog.factories import ArticleFactory, CategoryFactory, CommentFactory, SeriesFactory, TopicFactory
@@ -30,7 +30,7 @@ class TestBlogAdmin(TestCase):
         cls.category: Category = CategoryFactory(image=None)
         cls.article: Article = ArticleFactory(author=cls.superuser)
         cls.comment: Comment = CommentFactory(article=cls.article, author=cls.superuser)
-        cls.jpeg_raw = JpegFileProvider(FAKER).jpeg_file(raw=True)
+        cls.jpeg_raw = GraphicJpegFileProvider(FAKER).graphic_jpeg_file(raw=True)
 
     def setUp(self) -> None:
         """Авторизоваться как пользователь с правами персонала."""

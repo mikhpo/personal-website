@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 
 from django.test import SimpleTestCase, TestCase
 from faker import Faker
-from faker_file.providers.jpeg_file import JpegFileProvider  # type: ignore[import-untyped]
+from faker_file.providers.jpeg_file import GraphicJpegFileProvider  # type: ignore[import-untyped]
 from faker_file.providers.txt_file import TxtFileProvider  # type: ignore[import-untyped]
 from PIL.TiffImagePlugin import IFDRational
 
@@ -99,7 +99,7 @@ class TestIsImage(SimpleTestCase):
 
     def test_true_image(self) -> None:
         """Изображение распознается как изображение."""
-        jpeg_file = JpegFileProvider(FAKER).jpeg_file(storage=FS_STORAGE, raw=False)
+        jpeg_file = GraphicJpegFileProvider(FAKER).graphic_jpeg_file(storage=FS_STORAGE, raw=False)
         jpeg_file_path = FS_STORAGE.abspath(jpeg_file)
         self.assertTrue(storage.exists(jpeg_file_path))
         result = is_image(jpeg_file_path)
@@ -122,7 +122,7 @@ class TestExifUtils(SimpleTestCase):
         """Подготовка тестового изображения."""
         file_name = FAKER.file_name(extension="jpeg")
         cls.file_path = f"gallery/photos/{file_name}"
-        jpeg_file = JpegFileProvider(FAKER).jpeg_file(raw=True)
+        jpeg_file = GraphicJpegFileProvider(FAKER).graphic_jpeg_file(raw=True)
         storage.save(name=cls.file_path, content=jpeg_file)
         return super().setUpClass()
 

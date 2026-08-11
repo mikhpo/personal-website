@@ -8,6 +8,9 @@ services:
     build:
       context: .
       dockerfile: ./Dockerfile
+      args:
+        POSTGRES_SSL_CERT_DOWNLOAD: ${POSTGRES_SSL_CERT_DOWNLOAD:-}
+        POSTGRES_SSL_CERT_URL: ${POSTGRES_SSL_CERT_URL:-}
       tags:
         - mikhpo/personal-website:latest
         - ghcr.io/mikhpo/personal-website:latest
@@ -49,7 +52,7 @@ services:
 
   # Кластер PostgreSQL для веб-сайта. База данных создается автоматически.
   postgres:
-    image: postgres:15
+    image: postgres:17
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
