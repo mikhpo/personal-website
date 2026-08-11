@@ -172,6 +172,27 @@ class TestArticleDetailPage(TestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertContains(response, "loginUrl")
 
+    def test_private_article_accessible_by_link(self) -> None:
+        """Приватная статья доступна по прямой ссылке."""
+        private_article = ArticleFactory(title="Private article", slug="private-article", public=False)
+        url = reverse(ARTICLE_DETAIL_URL_NAME, args=(private_article.slug,))
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(response.context["article"], private_article)
+
+    def test_private_article_page_has_noindex(self) -> None:
+        """HTML страницы приватной статьи содержит meta robots noindex."""
+        private_article = ArticleFactory(title="Private noindex", slug="private-noindex", public=False)
+        url = reverse(ARTICLE_DETAIL_URL_NAME, args=(private_article.slug,))
+        response = self.client.get(url)
+        self.assertContains(response, '<meta name="robots" content="noindex">')
+
+    def test_public_article_page_has_no_noindex(self) -> None:
+        """HTML страницы публичной статьи не содержит noindex."""
+        url = reverse(ARTICLE_DETAIL_URL_NAME, args=(self.article.slug,))
+        response = self.client.get(url)
+        self.assertNotContains(response, "noindex")
+
 
 class TestCategoryPage(TestCase):
     """Тесты страницы просмотра статей по определенной категории."""
@@ -240,6 +261,21 @@ class TestCategoryPage(TestCase):
         url = reverse(CATEGORY_URL_NAME, args=(self.test_category.slug,))
         response = self.client.get(url)
         self.assertEqual(response.status_code, HTTPStatus.OK)
+
+    def test_private_category_accessible_by_link(self) -> None:
+        """Приватная категория доступна по прямой ссылке."""
+        private_category = CategoryFactory(name="Private category", slug="private-category", public=False)
+        url = reverse(CATEGORY_URL_NAME, args=(private_category.slug,))
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(response.context["category"], private_category)
+
+    def test_private_category_page_has_noindex(self) -> None:
+        """HTML страницы приватной категории содержит meta robots noindex."""
+        private_category = CategoryFactory(name="Private cat noindex", slug="private-cat-noindex", public=False)
+        url = reverse(CATEGORY_URL_NAME, args=(private_category.slug,))
+        response = self.client.get(url)
+        self.assertContains(response, '<meta name="robots" content="noindex">')
 
 
 class TestTopicPage(TestCase):
@@ -310,6 +346,21 @@ class TestTopicPage(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
+    def test_private_topic_accessible_by_link(self) -> None:
+        """Приватная тема доступна по прямой ссылке."""
+        private_topic = TopicFactory(name="Private topic", slug="private-topic", public=False)
+        url = reverse(TOPIC_URL_NAME, args=(private_topic.slug,))
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(response.context["topic"], private_topic)
+
+    def test_private_topic_page_has_noindex(self) -> None:
+        """HTML страницы приватной темы содержит meta robots noindex."""
+        private_topic = TopicFactory(name="Private topic noindex", slug="private-topic-noindex", public=False)
+        url = reverse(TOPIC_URL_NAME, args=(private_topic.slug,))
+        response = self.client.get(url)
+        self.assertContains(response, '<meta name="robots" content="noindex">')
+
 
 class TestSeriesPage(TestCase):
     """Тесты страницы просмотра статей из определенной серии."""
@@ -378,3 +429,18 @@ class TestSeriesPage(TestCase):
         url = reverse(SERIES_URL_NAME, args=(self.test_series.slug,))
         response = self.client.get(url)
         self.assertEqual(response.status_code, HTTPStatus.OK)
+
+    def test_private_series_accessible_by_link(self) -> None:
+        """Приватная серия доступна по прямой ссылке."""
+        private_series = SeriesFactory(name="Private series", slug="private-series", public=False)
+        url = reverse(SERIES_URL_NAME, args=(private_series.slug,))
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(response.context["series"], private_series)
+
+    def test_private_series_page_has_noindex(self) -> None:
+        """HTML страницы приватной серии содержит meta robots noindex."""
+        private_series = SeriesFactory(name="Private series noindex", slug="private-series-noindex", public=False)
+        url = reverse(SERIES_URL_NAME, args=(private_series.slug,))
+        response = self.client.get(url)
+        self.assertContains(response, '<meta name="robots" content="noindex">')

@@ -4,6 +4,9 @@
 {% block title %}
     {{ album.name }}
 {% endblock title %}
+{% block meta %}
+    {% if not album.public %}<meta name="robots" content="noindex">{% endif %}
+{% endblock meta %}
 {% block gallery %}
 <div class="container-fluid">
     <h4>

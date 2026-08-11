@@ -4,6 +4,9 @@
 {% block title %}
     {{ series.name }}
 {% endblock title %}
+{% block meta %}
+    {% if not series.public %}<meta name="robots" content="noindex">{% endif %}
+{% endblock meta %}
 {% block content %}
     <div class="container">
         <h2>{{ series.name }}</h2>

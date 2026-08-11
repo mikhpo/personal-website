@@ -4,6 +4,9 @@
 {% block title %}
     {{ photo.album.name }} - {{ photo.name }}
 {% endblock title %}
+{% block meta %}
+    {% if not photo.public %}<meta name="robots" content="noindex">{% endif %}
+{% endblock meta %}
 {% block gallery %}
 <div class="container">
     {% react_component "Gallery/PhotoDetail" photoId=photo.id previousPhotoId=previous_photo_id nextPhotoId=next_photo_id %}

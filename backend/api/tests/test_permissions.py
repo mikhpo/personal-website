@@ -76,16 +76,30 @@ class TestIsPublicOrAuthor(APITestCase):
         self.assertTrue(self.permission.has_permission(request, view))
 
     def test_has_permission_unauthenticated_user_create(self) -> None:
-        """Тест запрета доступа для неаутентифицированного пользователя при создании."""
+        """Тест запрета создания для неаутентифицированного пользователя."""
         request = MockRequest(user=None, method="POST")
         view = MockView()
         self.assertFalse(self.permission.has_permission(request, view))
 
-    def test_has_permission_authenticated_user_create(self) -> None:
-        """Тест разрешения доступа для аутентифицированного пользователя при создании."""
-        request = MockRequest(user=self.user, method="POST")
-        view = MockView()
-        self.assertTrue(self.permission.has_permission(request, view))
+    def test_has_permission_authenticated_non_staff_write(self) -> None:
+        """Тест запрета write-методов для аутентифицированного не-staff.
+
+        Запись (создание/изменение/удаление) объектов доступна только
+        администраторам; Комментарии регулируются отдельным permission.
+        """
+        for method in ["POST", "PUT", "PATCH", "DELETE"]:
+            with self.subTest(method=method):
+                request = MockRequest(user=self.user, method=method)
+                view = MockView()
+                self.assertFalse(self.permission.has_permission(request, view))
+
+    def test_has_permission_staff_write(self) -> None:
+        """Тест разрешения write-методов для staff пользователя."""
+        for method in ["POST", "PUT", "PATCH", "DELETE"]:
+            with self.subTest(method=method):
+                request = MockRequest(user=self.staff_user, method=method)
+                view = MockView()
+                self.assertTrue(self.permission.has_permission(request, view))
 
     def test_has_object_permission_safe_methods_public_object(self) -> None:
         """Тест разрешения доступа для безопасных методов публичного объекта."""
@@ -101,55 +115,30 @@ class TestIsPublicOrAuthor(APITestCase):
         obj = MockModel(public=False, author=self.user)
         self.assertTrue(self.permission.has_object_permission(request, view, obj))
 
-    def test_has_object_permission_safe_methods_private_object_non_owner(self) -> None:
-        """Тест запрета доступа к приватному объекту для не-владельца при безопасных методах."""
-        request = MockRequest(user=self.other_user, method="GET")
-        view = MockView()
-        obj = MockModel(public=False, author=self.user)
-        self.assertFalse(self.permission.has_object_permission(request, view, obj))
+    def test_has_object_permission_safe_methods_private_object_any_user(self) -> None:
+        """Чтение приватного объекта разрешено любому пользователю.
 
-    def test_has_object_permission_modify_owner(self) -> None:
-        """Тест разрешения модификации объекта владельцем."""
-        request = MockRequest(user=self.user, method="PUT")
+        Безопасные методы (GET/HEAD/OPTIONS) разрешены всегда; видимость
+        публичных объектов в списках регулируется на уровне get_queryset() view.
+        """
+        request = MockRequest(user=self.other_user, method="GET")
         view = MockView()
         obj = MockModel(public=False, author=self.user)
         self.assertTrue(self.permission.has_object_permission(request, view, obj))
 
     def test_has_object_permission_modify_non_owner(self) -> None:
-        """Тест запрета модификации объекта не-владельцем."""
+        """Тест запрета модификации объекта не-staff пользователем."""
         request = MockRequest(user=self.other_user, method="PUT")
         view = MockView()
         obj = MockModel(public=False, author=self.user)
         self.assertFalse(self.permission.has_object_permission(request, view, obj))
 
-    def test_has_object_permission_modify_without_author(self) -> None:
-        """Тест запрета модификации объекта без автора."""
-        request = MockRequest(user=self.other_user, method="PUT")
+    def test_has_object_permission_modify_staff(self) -> None:
+        """Тест разрешения модификации объекта staff пользователем."""
+        request = MockRequest(user=self.staff_user, method="PUT")
         view = MockView()
-        obj = MockModel(public=False)  # Нет автора
-        self.assertFalse(self.permission.has_object_permission(request, view, obj))
-
-    def test_is_author_with_authenticated_user_and_matching_author(self) -> None:
-        """Тест метода _is_author с аутентифицированным пользователем и совпадающим автором."""
-        obj = MockModel(author=self.user)
-        self.assertTrue(self.permission._is_author(self.user, obj))  # noqa: SLF001
-
-    def test_is_author_with_authenticated_user_and_non_matching_author(self) -> None:
-        """Тест метода _is_author с аутентифицированным пользователем и не совпадающим автором."""
-        obj = MockModel(author=self.user)
-        self.assertFalse(self.permission._is_author(self.other_user, obj))  # noqa: SLF001
-
-    def test_is_author_with_unauthenticated_user(self) -> None:
-        """Тест метода _is_author с анонимным (неаутентифицированным) пользователем."""
-        obj = MockModel(author=self.user)
-        is_author = self.permission._is_author(AnonymousUser(), obj)  # noqa: SLF001
-        self.assertFalse(is_author)
-
-    def test_is_author_with_none_user(self) -> None:
-        """Тест метода _is_author с None пользователем (не должен вызывать ошибку)."""
-        obj = MockModel(author=self.user)
-        is_author = self.permission._is_author(None, obj)  # noqa: SLF001
-        self.assertFalse(is_author)
+        obj = MockModel(public=False, author=self.user)
+        self.assertTrue(self.permission.has_object_permission(request, view, obj))
 
 
 class TestIsStaffOrReadOnly(APITestCase):
@@ -200,6 +189,11 @@ class TestIsAuthorOrReadOnly(APITestCase):
         cls.permission = IsAuthorOrReadOnly()
         cls.user = User.objects.create_user(username="testuser", password="testpass123")
         cls.other_user = User.objects.create_user(username="otheruser", password="testpass123")
+        cls.staff_user = User.objects.create_user(
+            username="staffuser",
+            password="testpass123",
+            is_staff=True,
+        )
 
     def test_has_object_permission_safe_methods_author(self) -> None:
         """Тест разрешения доступа для безопасных методов автору объекта."""
@@ -229,6 +223,16 @@ class TestIsAuthorOrReadOnly(APITestCase):
         obj = MockModel(author=self.user)
         self.assertFalse(self.permission.has_object_permission(request, view, obj))
 
+    def test_has_object_permission_update_staff_non_author(self) -> None:
+        """Тест разрешения модификации чужого объекта для staff.
+
+        Администратор может модифицировать любые комментарии, включая чужие.
+        """
+        request = MockRequest(user=self.staff_user, method="PUT")
+        view = MockView()
+        obj = MockModel(author=self.user)
+        self.assertTrue(self.permission.has_object_permission(request, view, obj))
+
     def test_has_object_permission_delete_author(self) -> None:
         """Тест разрешения доступа для метода DELETE автору объекта."""
         request = MockRequest(user=self.user, method="DELETE")
@@ -242,6 +246,13 @@ class TestIsAuthorOrReadOnly(APITestCase):
         view = MockView()
         obj = MockModel(author=self.user)
         self.assertFalse(self.permission.has_object_permission(request, view, obj))
+
+    def test_has_object_permission_delete_staff_non_author(self) -> None:
+        """Тест разрешения удаления чужого объекта для staff."""
+        request = MockRequest(user=self.staff_user, method="DELETE")
+        view = MockView()
+        obj = MockModel(author=self.user)
+        self.assertTrue(self.permission.has_object_permission(request, view, obj))
 
     def test_has_object_permission_modify_none_user(self) -> None:
         """Тест запрета доступа для метода PUT с None пользователем (не должен вызывать ошибку)."""

@@ -10,8 +10,9 @@
   <meta name="author" content="Mikhail Polyakov">
   <meta name="viewport"
         content="user-scalable=no, width=device-width, initial-scale=1.0, maximum-scale=1.0">
-  <head>
+    <head>
     {% block head %}
+      {% block meta %}{% endblock meta %}
       <title>
         {% block title %}
           {% include "title.html" %}

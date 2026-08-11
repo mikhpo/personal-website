@@ -1,12 +1,16 @@
 """Представления блога."""
 
 import logging
+from typing import TYPE_CHECKING
 
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.views.generic.detail import DetailView
 
 from blog.models import Article, Category, Series, Topic
+
+if TYPE_CHECKING:
+    from django.db.models.query import QuerySet
 
 logger = logging.getLogger(__name__)
 
@@ -15,6 +19,14 @@ class ArticleDetailView(DetailView):
     """Представление одной статьи — рендерит React компонент ArticleDetail."""
 
     model = Article
+
+    def get_queryset(self) -> "QuerySet[Article]":
+        """Возвращает все статьи.
+
+        Фильтрация по public выполняется в списке (см. ArticleViewSet);
+        детальный просмотр доступен всем.
+        """
+        return Article.objects.all()
 
     def get_context_data(self, **kwargs) -> dict:
         """В контекст добавляется статья и URL для входа."""

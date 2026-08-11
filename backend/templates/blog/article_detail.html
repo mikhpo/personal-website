@@ -4,6 +4,9 @@
 {% block title %}
     {{ article.title }}
 {% endblock title %}
+{% block meta %}
+    {% if not article.public %}<meta name="robots" content="noindex">{% endif %}
+{% endblock meta %}
 {% block extra_header %}
     {{ comment_form.media }}
 {% endblock extra_header %}

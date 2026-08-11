@@ -59,10 +59,12 @@ class AlbumDetailView(DetailView):
     pk_url_kwarg = "pk"
 
     def get_queryset(self) -> "QuerySet[Album]":
-        """Возвращать только публичные альбомы для обычных пользователей."""
-        if hasattr(self.request.user, "is_staff") and self.request.user.is_staff:
-            return Album.objects.all()
-        return Album.published.all()
+        """Возвращает все альбомы.
+
+        Фильтрация по public выполняется в списках (см. AlbumViewSet);
+        детальный просмотр доступен всем.
+        """
+        return Album.objects.all()
 
     def get_context_data(self, **kwargs) -> dict[str, Any]:
         """Добавить URL API альбома в контекст."""
@@ -98,10 +100,12 @@ class PhotoDetailView(DetailView):
     pk_url_kwarg = "pk"
 
     def get_queryset(self) -> "QuerySet[Photo]":
-        """Возвращать только публичные фотографии для обычных пользователей."""
-        if hasattr(self.request.user, "is_staff") and self.request.user.is_staff:
-            return Photo.objects.all()
-        return Photo.published.all()
+        """Возвращает все фотографии.
+
+        Фильтрация по public выполняется в списках (см. PhotoViewSet);
+        детальный просмотр доступен всем.
+        """
+        return Photo.objects.all()
 
     def get_context_data(self, **kwargs) -> dict[str, Any]:
         """Добавить ID предыдущей и следующей фотографий в контекст."""
@@ -109,16 +113,14 @@ class PhotoDetailView(DetailView):
         photo: Photo = self.object
         album: Album = photo.album
 
-        # Получаем все фотографии альбома, отсортированные по дате съемки
-        # Используем Django ORM для получения предыдущей и следующей фотографий
-        all_photos_qs: QuerySet[Photo] = album.photos.order_by("taken_at")
+        # Навигация prev/next только по публичным фотографиям альбома:
+        # скрытые не предлагаются соседями ни при прямом заходе, ни из списков.
+        all_photos_qs: QuerySet[Photo] = album.photos.filter(public=True).order_by("taken_at")
 
-        # Получаем фотографии с taken_at меньше текущего, сортируем по убыванию, берем первую (предыдущую)
         previous_photo = all_photos_qs.filter(taken_at__lt=photo.taken_at).order_by("-taken_at").first()
         if previous_photo:
             context["previous_photo_id"] = previous_photo.pk
 
-        # Получаем фотографии с taken_at больше текущего, сортируем по возрастанию, берем первую (следующую)
         next_photo = all_photos_qs.filter(taken_at__gt=photo.taken_at).order_by("taken_at").first()
         if next_photo:
             context["next_photo_id"] = next_photo.pk

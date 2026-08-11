@@ -27,6 +27,9 @@ todos
 tasks
 plans
 issues
+pr[-_]description.md
+mr[-_]description.md
+issue[-_]description.md
 /tmp/
 frontend/webpack-stats.json
 frontend/dist/

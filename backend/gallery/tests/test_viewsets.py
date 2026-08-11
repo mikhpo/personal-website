@@ -113,13 +113,13 @@ class TestPhotoViewSet(APITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["count"], 1)  # Только публичная фотография
 
-    def test_list_photos_staff(self) -> None:
-        """Получение списка фотографий staff пользователем - все фотографии."""
+    def test_list_photos_staff_same_as_anonymous(self) -> None:
+        """Список фотографий для staff совпадает с анонимным (только public)."""
         self.client.force_authenticate(user=self.staff_user)
         url = "/api/gallery/photos/"
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data["count"], 2)  # Все фотографии
+        self.assertEqual(response.data["count"], 1)  # Только публичная фотография
 
     def test_retrieve_public_photo(self) -> None:
         """Детальный просмотр публичной фотографии."""
@@ -133,23 +133,23 @@ class TestPhotoViewSet(APITestCase):
         self.assertIn("image_url", response.data)
         self.assertEqual(len(response.data["tags"]), 2)
 
-    def test_retrieve_private_photo_unauthenticated(self) -> None:
-        """Детальный просмотр приватной фотографии неаутентифицированным пользователем - 404."""
-        url = f"/api/gallery/photos/{self.photo2.pk}/"
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, 404)
+    def test_retrieve_private_photo_accessible_by_link(self) -> None:
+        """Приватная фотография доступна по прямой ссылке.
 
-    def test_retrieve_private_photo_authenticated(self) -> None:
-        """Детальный просмотр приватной фотографии обычным пользователем - 404."""
+        В list показываем только public=True, но retrieve любого объекта
+        по прямой ссылке доступен всем пользователям.
+        """
+        url = f"/api/gallery/photos/{self.photo2.pk}/"
+        # Аноним
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["name"], "Ночной город")
+        # Аутентифицированный не-staff
         self.client.force_authenticate(user=self.user)
-        url = f"/api/gallery/photos/{self.photo2.pk}/"
         response = self.client.get(url)
-        self.assertEqual(response.status_code, 404)
-
-    def test_retrieve_private_photo_staff(self) -> None:
-        """Детальный просмотр приватной фотографии staff пользователем - успех."""
+        self.assertEqual(response.status_code, 200)
+        # Staff видит тот же набор, что и аноним
         self.client.force_authenticate(user=self.staff_user)
-        url = f"/api/gallery/photos/{self.photo2.pk}/"
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["name"], "Ночной город")
@@ -223,13 +223,13 @@ class TestAlbumViewSet(APITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["count"], 1)  # Только публичный альбом
 
-    def test_list_albums_staff(self) -> None:
-        """Получение списка альбомов staff пользователем - все альбомы."""
+    def test_list_albums_staff_same_as_anonymous(self) -> None:
+        """Список альбомов для staff совпадает с анонимным (только public)."""
         self.client.force_authenticate(user=self.staff_user)
         url = "/api/gallery/albums/"
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data["count"], 2)  # Все альбомы
+        self.assertEqual(response.data["count"], 1)  # Только публичный альбом
 
     def test_retrieve_album(self) -> None:
         """Детальный просмотр альбома содержит фотографии."""
@@ -283,6 +283,33 @@ class TestAlbumViewSet(APITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn("photos", response.data)
         self.assertEqual(len(response.data["photos"]), 2)
+
+    def test_retrieve_public_album_excludes_unpublished_photos(self) -> None:
+        """Вложенные фотографии публичного альбома не содержат скрытые.
+
+        В list-представлениях (включая вложенные) показываем только public=True.
+        По прямой ссылке скрытой фотографии можно пройти в её детальный просмотр,
+        но в листинге альбома она не появляется.
+        """
+        # Добавляем в публичный альбом одну скрытую фотографию
+        PhotoFactory(album=self.album1, public=False)
+        url = f"/api/gallery/albums/{self.album1.pk}/"
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        photos = response.data["photos"]
+        # Только 2 исходные публичные фотографии альбома, скрытая не попала
+        self.assertEqual(len(photos), 2)
+        for photo in photos:
+            self.assertTrue(photo["public"])
+
+    def test_retrieve_private_album_accessible_by_link(self) -> None:
+        """Детальный просмотр приватного альбома доступен по прямой ссылке."""
+        url = f"/api/gallery/albums/{self.album2.pk}/"
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["name"], "Личные фото")
+        # Вложенные фото тоже фильтруются по public
+        self.assertIsInstance(response.data["photos"], list)
 
 
 class TestUploadViewSet(APITestCase):
