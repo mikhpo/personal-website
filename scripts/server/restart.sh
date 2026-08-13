@@ -1,7 +1,8 @@
 #!/bin/bash
 #
 # Скрипт для перезапуска компонентов сервера.
-# Перезапускает Gunicorn, Nginx и PostgreSQL.
+# Перезапускает Gunicorn и Nginx.
+# База данных здесь не перезапускается (управляется отдельно от сервера приложения).
 # Актуально для развертывания вне контейнеров.
 
 mode="simple"
@@ -11,19 +12,11 @@ mode="simple"
 #######################################
 function help() {
     echo
-    echo "Скрипт для пезапуска сервисов сервера: Gunicorn, Nginx и PostgreSQL."
+    echo "Скрипт для перезапуска сервисов сервера: Gunicorn и Nginx."
     echo "Опции:"
     echo "-h    Показать подсказки по скрипту"
     echo "-f    Режим полного перезапуска сервисов"
     echo
-}
-
-#######################################
-# Перезапуск кластера PostgreSQL.
-#######################################
-function restart_postgresql() {
-    echo "Перезапуск PostgreSQL"
-    sudo systemctl restart postgresql
 }
 
 #######################################
@@ -88,7 +81,6 @@ function get_options() {
 #######################################
 function main() {
     get_options
-    restart_postgresql
     restart_gunicorn
     restart_nginx
 }

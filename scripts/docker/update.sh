@@ -28,8 +28,7 @@ readonly COMPOSE_CMD
 project_root="$(dirname "$(dirname "$(dirname "$(readlink -f "$0")")")")"
 cd "$project_root" || exit
 
-# Создать резервную копию базы данных и загруженных файлов.
-bash "$project_root"/scripts/pgbackup.sh
+# Создать резервную копию загруженных файлов.
 bash "$project_root"/scripts/s3backup.sh
 
 # Вытянуть изменения основной ветки
