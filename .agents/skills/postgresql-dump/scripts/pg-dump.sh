@@ -4,8 +4,7 @@
 # Без выгрузки во внешнее хранилище. Неинтерактивный.
 #
 # Параметры подключения — флагами или переменными окружения libpq
-# (PGHOST, PGPORT, PGUSER, PGDATABASE, PGPASSWORD). Версия pg_dump должна быть
-# не ниже версии сервера (см. SKILL.md).
+# (PGHOST, PGPORT, PGUSER, PGDATABASE, PGPASSWORD).
 #
 # Коды возврата:
 #   0  успех
