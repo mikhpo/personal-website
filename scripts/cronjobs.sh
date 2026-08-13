@@ -11,7 +11,7 @@ readonly NEWLINE=$'\n'
 
 # Определение путей файлов.
 bash=$(which bash)
-project_root="$(dirname "$(readlink -fm "$0")")"
+project_root="$(dirname "$(dirname "$(readlink -fm "$0")")")"
 scripts="$project_root/scripts"
 default_logs_dir="$project_root/logs"
 
