@@ -1,5 +1,11 @@
 # История изменений
 
+## 2026-08-13
+
+- Удалены скрипты scripts/pgbackup.sh и scripts/pgrestore.sh; резервное копирование и восстановление БД выполняются стандартными утилитами pg_dump и pg_restore, процедуры описаны в новом разделе README и двух скиллах (postgresql-dump, postgresql-restore)
+- Из scripts/server/restart.sh убран перезапуск локального PostgreSQL: база данных управляется облачным провайдером и не требует перезапуска на сервере приложения
+- Из scripts/cronjobs.sh и scripts/docker/update.sh удалены вызовы pgbackup.sh
+
 ## 2026-08-11
 
 - SSL-сертификат для Managed PostgreSQL доставляется в контейнер при запуске, а не при сборке образа
