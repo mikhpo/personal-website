@@ -141,10 +141,11 @@ STATIC_URL = os.getenv("STATIC_URL", default="/static/")
 # Используется только вне S3-режима (WhiteNoise).
 STATIC_ROOT = os.getenv("STATIC_ROOT", default=BASE_DIR / "static")
 
-# NPM-зависимости в корневом каталоге проекта.
+# Каталоги исходных статических файлов.
+# bootstrap/dist и tinymce копируются сборкой фронтенда в backend/staticfiles,
+# поэтому каталог node_modules целиком здесь не нужен.
 STATICFILES_DIRS = [
     BASE_DIR / "staticfiles",  # backend/staticfiles - исходные статические файлы
-    PROJECT_DIR / "node_modules",
     PROJECT_DIR / "frontend/dist",  # Корень/frontend/dist
 ]
 

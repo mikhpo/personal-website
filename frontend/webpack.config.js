@@ -94,16 +94,23 @@ module.exports = {
       path: __dirname,
       filename: 'webpack-stats.json',
     }),
-    // TinyMCE в отличие от обычных npm-пакетов не может быть полностью включён в бандл:
-    // во время работы редактор динамически загружает плагины, темы и скины через отдельные
-    // HTTP-запросы по статическим URL (например, /static/tinymce/themes/silver/theme.min.js).
-    // Webpack не знает об этих файлах, поэтому копируем всю папку node_modules/tinymce
-    // в dist/tinymce/ — откуда Django раздаёт их по URL /static/tinymce/.
+    // TinyMCE и Bootstrap в отличие от обычных npm-пакетов не могут быть полностью включены
+    // в бандл: редактор динамически загружает плагины, темы и скины через отдельные
+    // HTTP-запросы по статическим URL (например, /static/tinymce/themes/silver/theme.min.js),
+    // а стили и скрипты Bootstrap подключаются в шаблонах как отдельные файлы.
+    // Webpack не знает об этих файлах, поэтому копируем их в backend/staticfiles/ —
+    // откуда Django раздаёт их по тем же URL /static/tinymce/ и /static/bootstrap/dist/.
+    // Такой копией вместо каталога node_modules в STATICFILES_DIRS объём статики
+    // сокращается с десятков тысяч файлов до нескольких сотен.
     new CopyWebpackPlugin({
       patterns: [
         {
           from: path.resolve(__dirname, '../node_modules/tinymce'),
-          to: path.resolve(__dirname, 'dist/tinymce'),
+          to: path.resolve(__dirname, '../backend/staticfiles/tinymce'),
+        },
+        {
+          from: path.resolve(__dirname, '../node_modules/bootstrap/dist'),
+          to: path.resolve(__dirname, '../backend/staticfiles/bootstrap/dist'),
         },
       ],
     }),
