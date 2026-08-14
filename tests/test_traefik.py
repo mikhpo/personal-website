@@ -35,6 +35,10 @@ class TestTraefik(unittest.TestCase):
         страницы прокси-сервера, файлы Bootstrap включены в шаблон.
         """
         root_url = f"{self.url}/"
+        # verify=False - осознанное решение для интеграционного теста:
+        # в dev-среде без certresolver Traefik обслуживает HTTPS встроенным
+        # self-signed сертификатом. Для продакшена с сертификатами Let's Encrypt
+        # проверка должна быть включена (см. докстринг класса).
         response = requests.get(root_url, timeout=10, verify=False)
         status = response.status_code
         text = response.text

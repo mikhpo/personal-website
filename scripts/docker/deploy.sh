@@ -114,8 +114,8 @@ function compose_up() {
 #######################################
 function main() {
     load_dotenv
-    load_postgres_cert
     pull_repository
+    load_postgres_cert
     create_docker_directories
     compose_down
     compose_pull
