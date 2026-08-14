@@ -1,11 +1,12 @@
 """Определение параметров хранения загружаемых файлов."""
 
+import re
 import shutil
 import uuid
 from collections.abc import Callable
 from io import BytesIO
 from pathlib import Path
-from typing import IO, Any
+from typing import IO, Any, TypeAlias
 
 from botocore.exceptions import ClientError  # type: ignore[import-untyped]
 from django.conf import settings
@@ -16,6 +17,7 @@ from django.utils.text import slugify
 from faker_file.storages.filesystem import FileSystemStorage as FakerFileSystemStorage  # type: ignore[import-untyped]
 from s3path import S3Path
 from storages.backends.s3boto3 import S3Boto3Storage  # type: ignore[import-untyped]
+from whitenoise.storage import CompressedStaticFilesStorage  # type: ignore[import-untyped]
 
 
 class BaseStorageMixin:
@@ -937,6 +939,35 @@ class CustomS3Storage(BaseStorageMixin, S3Boto3Storage):
         return Path(path_str).is_absolute() or path_str.startswith("s3://")
 
 
+class CustomS3StaticStorage(CustomS3Storage):
+    """S3 хранилище для сбора статических файлов проекта.
+
+    Файлы размещаются в отдельном префиксе "static" того же бакета,
+    что и медиафайлы. Отличается от медиа-хранилища политикой кэширования:
+    сборкам с хешем содержимого в имени (webpack-бандлы) назначается
+    бессрочное кэширование, остальным файлам - умеренный срок.
+    """
+
+    # Шаблон поиска хеша содержимого в имени файла (webpack [contenthash]).
+    hashed_name_pattern = re.compile(r"[.-][0-9a-f]{16,}\.[a-z]")
+
+    def get_object_parameters(self, name: str) -> dict[str, Any]:
+        """
+        Возвращает параметры объекта S3 при загрузке статического файла.
+
+        Args:
+            name (str): Имя файла.
+
+        Returns:
+            dict[str, Any]: Параметры объекта S3 с заголовком кэширования.
+        """
+        if self.hashed_name_pattern.search(name):
+            cache_control = "public, max-age=31536000, immutable"
+        else:
+            cache_control = "public, max-age=3600"
+        return {"CacheControl": cache_control}
+
+
 class FakerFileStorageAdapter(FakerFileSystemStorage):
     """Адаптер для использования Django хранилища с faker_file."""
 
@@ -1059,6 +1090,8 @@ class FakerFileStorageAdapter(FakerFileSystemStorage):
 
 StorageType = CustomFileSystemStorage | CustomS3Storage
 
+StaticStorageType: TypeAlias = CompressedStaticFilesStorage | CustomS3StaticStorage
+
 
 def select_storage() -> StorageType:
     """Возвращает файловое хранилище по умолчанию."""
@@ -1076,3 +1109,15 @@ def select_storage() -> StorageType:
     # Иначе использовать обычное файловое хранилище
     fs_storage: CustomFileSystemStorage = storages["filesystem"]  # type: ignore[assignment]
     return fs_storage
+
+
+def select_static_storage() -> StaticStorageType:
+    """Возвращает хранилище для сбора статических файлов."""
+    # В S3-режиме статические файлы собираются в объектное хранилище.
+    if settings.STORAGE_TYPE == "s3":
+        s3_static_storage: CustomS3StaticStorage = storages["s3_static"]  # type: ignore[assignment]
+        return s3_static_storage
+
+    # Локально и в тестах статические файлы собираются через WhiteNoise.
+    static_storage: CompressedStaticFilesStorage = storages["static"]  # type: ignore[assignment]
+    return static_storage

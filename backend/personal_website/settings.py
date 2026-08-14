@@ -25,6 +25,12 @@ TEST = any((("test" in sys.argv), ("pytest" in sys.modules)))
 # Режим запуска сервера.
 DEBUG = str_to_bool(os.getenv("DEBUG", default="False"))
 
+# Тип хранилища: filesystem (по умолчанию) или s3.
+STORAGE_TYPE = os.getenv("STORAGE_TYPE", default="filesystem")
+
+# Признак раздачи статических файлов из объектного хранилища.
+S3_STATIC = STORAGE_TYPE == "s3"
+
 # Ключ проекта Django (генерируется автоматически).
 SECRET_KEY = os.getenv("SECRET_KEY")
 
@@ -88,8 +94,9 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-# При запуске тестов нужно отключить WhiteNoise, так как при запуске тестов режим дебага отключен.
-if TEST:
+# WhiteNoise отключается в тестах и в S3-режиме,
+# поскольку в обоих случаях статические файлы им не раздаются.
+if TEST or S3_STATIC:
     MIDDLEWARE.remove(WHITENOISE_MIDDLEWARE)
 
 # Относительный путь до urls.py основного модуля Django.
@@ -127,9 +134,11 @@ USE_I18N = True
 USE_TZ = True
 
 # Веб-адрес, по которому будут доступны статические файлы.
-STATIC_URL = "/static/"
+# Локально - относительный путь, в S3-режиме - адрес бакета или CDN с префиксом static/.
+STATIC_URL = os.getenv("STATIC_URL", default="/static/")
 
 # Абсолютный путь до папки, в которой собраны статические файлы.
+# Используется только вне S3-режима (WhiteNoise).
 STATIC_ROOT = os.getenv("STATIC_ROOT", default=BASE_DIR / "static")
 
 # NPM-зависимости в корневом каталоге проекта.
@@ -139,8 +148,9 @@ STATICFILES_DIRS = [
     PROJECT_DIR / "frontend/dist",  # Корень/frontend/dist
 ]
 
-# На проде статические файлы раздаются через WhiteNoise.
-WHITENOISE_ROOT = STATIC_ROOT
+# Статические файлы раздаются через WhiteNoise только вне S3-режима.
+if not S3_STATIC:
+    WHITENOISE_ROOT = STATIC_ROOT
 
 # Относительный url до медиа-файлов.
 MEDIA_URL = "/media/"
@@ -151,12 +161,39 @@ MEDIA_ROOT = os.getenv("STORAGE_ROOT", default=PROJECT_DIR / "storage")
 # Адрес временной папки для тестирования.
 TEMP_ROOT = os.getenv("TEMP_ROOT", default=PROJECT_DIR / "temp")
 
-# Тип хранилища: filesystem (по умолчанию) или s3.
-STORAGE_TYPE = os.getenv("STORAGE_TYPE", default="filesystem")
+# Общая конфигурация клиента S3 для продуктивных хранилищ (медиа и статика).
+s3_client_config = Config(
+    max_pool_connections=50,
+    connect_timeout=10,
+    read_timeout=60,
+    retries={"total_max_attempts": 10, "mode": "standard"},
+    tcp_keepalive=True,
+)
 
 STORAGES = {
     "default": {"BACKEND": "personal_website.storages.select_storage"},
-    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedStaticFilesStorage"},
+    # Хранилище статических файлов выбирается по типу хранилища:
+    # S3 в продуктиве, WhiteNoise локально и в тестах.
+    "staticfiles": {"BACKEND": "personal_website.storages.select_static_storage"},
+    "static": {
+        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+    },
+    "s3_static": {
+        "BACKEND": "personal_website.storages.CustomS3StaticStorage",
+        "OPTIONS": {
+            "bucket_name": os.getenv("AWS_STORAGE_BUCKET_NAME"),
+            "access_key": os.getenv("AWS_ACCESS_KEY_ID"),
+            "secret_key": os.getenv("AWS_SECRET_ACCESS_KEY"),
+            "region_name": os.getenv("AWS_S3_REGION_NAME", "us-east-1"),
+            "endpoint_url": os.getenv("AWS_S3_ENDPOINT_URL"),
+            "location": "static",
+            "file_overwrite": True,
+            "default_acl": "public-read",
+            "querystring_auth": False,
+            # Оптимизация S3 для production
+            "client_config": s3_client_config,
+        },
+    },
     "test": {
         "BACKEND": "personal_website.storages.CustomFileSystemStorage",
         "OPTIONS": {
@@ -183,13 +220,7 @@ STORAGES = {
             "default_acl": "public-read",
             "querystring_auth": False,
             # Оптимизация S3 для production
-            "client_config": Config(
-                max_pool_connections=50,
-                connect_timeout=10,
-                read_timeout=60,
-                retries={"total_max_attempts": 10, "mode": "standard"},
-                tcp_keepalive=True,
-            ),
+            "client_config": s3_client_config,
         },
     },
 }
