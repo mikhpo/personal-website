@@ -2,7 +2,7 @@
 
 ## 2026-08-14
 
-- Сервисы postgres и minio в compose.yaml переведены на профиль dev: без активного профиля (продакшен) поднимаются только website и nginx, для локальной разработки используется переменная COMPOSE_PROFILES=dev или флаг --profile dev
+- Сервисы postgres и minio в compose.yaml переведены на профиль dev: без активного профиля поднимаются только website и nginx (режим для окружений с внешним PostgreSQL и внешним объектным хранилищем), профиль активируется переменной COMPOSE_PROFILES=dev или флагом --profile dev
 - Зависимости depends_on сервиса website от postgres и minio заменены ожиданием готовности сервисов в entrypoint.sh (функция wait_for_port с ограничением числа попыток)
 - В .env.example добавлена переменная COMPOSE_PROFILES для активации dev-профиля
 - Задачи Taskfile up-detached, watch и restart обновлены под профиль dev и флаг --wait

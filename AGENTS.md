@@ -15,12 +15,12 @@
 ## Docker Compose
 
 - Используется для запуска приложения и его зависимостей
-- Сервисы postgres и minio относятся к профилю dev (только локальная разработка); в продакшене — внешние Managed PostgreSQL и S3
-- Запустить приложение и все зависимости (разработка): `docker compose --profile dev up -d` (или `docker compose up -d` при `COMPOSE_PROFILES=dev` в `.env`)
-- Запустить приложение без dev-сервисов (продакшен): `docker compose up -d` (использовать или V2 `docker compose`, или V1 `docker-compose`)
+- Сервисы postgres и minio относятся к профилю dev и запускаются только вместе с ним
+- Запустить приложение и все зависимости: `docker compose --profile dev up -d` (или `docker compose up -d` при `COMPOSE_PROFILES=dev` в `.env`)
+- Запустить приложение без сервисов postgres и minio: `docker compose up -d` (использовать или V2 `docker compose`, или V1 `docker-compose`; режим для окружений, где база данных и объектное хранилище предоставляются вне Docker Compose)
 - Запустить только зависимости (базу данных и объектное хранилище): `docker compose up -d postgres minio` (явное имя сервиса активирует профиль автоматически)
 - Остановить всё приложение и зависимости: `docker compose down`
-- На продакшене переменную `COMPOSE_PROFILES` не задавать; диагностические команды адресовать только сервисам website и nginx (`up -d postgres` на проде поднял бы dev-сервис)
+- В окружениях, где postgres и minio не используются, переменную `COMPOSE_PROFILES` не задавать; диагностические команды адресовать только сервисам website и nginx (`up -d postgres` поднял бы dev-сервис)
 
 ## Структура проекта
 
