@@ -35,13 +35,9 @@ services:
         source: ${POSTGRES_SSL_CERT_HOST_PATH:-${POSTGRES_SSL_ROOT_CERT_PATH:-/root/.postgresql/root.crt}}
         target: ${POSTGRES_SSL_ROOT_CERT_PATH:-/root/.postgresql/root.crt}
         read_only: true
-    depends_on:
-      postgres:
-        condition: service_healthy
-        restart: true
-      minio:
-        condition: service_healthy
-        restart: true
+    # Порядок запуска относительно PostgreSQL и MinIO не задаётся через depends_on:
+    # эти сервисы относятся к профилю dev и могут отсутствовать в текущем окружении,
+    # поэтому готовность ожидается скриптом entrypoint.sh (функция wait_for_port).
     restart: always
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000"]
@@ -54,7 +50,11 @@ services:
           path: .
 
   # Кластер PostgreSQL для веб-сайта. База данных создается автоматически.
+  # Сервис предназначен для окружений, где база данных не предоставляется
+  # внешним сервисом. Поднимается при активном профиле dev
+  # (флаг --profile dev или переменная COMPOSE_PROFILES).
   postgres:
+    profiles: ["dev"]
     image: postgres:17
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
@@ -100,8 +100,12 @@ services:
         - action: rebuild
           path: ./nginx
 
-  # S3-совместимое объектное хранилище Minio.
+  # S3-совместимое объектное хранилище Minio. Предназначено для окружений,
+  # где объектное хранилище не предоставляется внешним сервисом.
+  # Поднимается при активном профиле dev (флаг --profile dev или
+  # переменная COMPOSE_PROFILES).
   minio:
+    profiles: ["dev"]
     image: minio/minio
     command: minio server /data --console-address ":9001"
     environment:

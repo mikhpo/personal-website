@@ -5,6 +5,9 @@ dotenv: ['.env']
 vars:
   COMPOSE_CMD:
     sh: docker compose version >/dev/null 2>&1 && echo "docker compose" || echo "docker-compose"
+  # Флаг --wait поддерживается Docker Compose V2; для V1 подставляется пустое значение.
+  COMPOSE_WAIT:
+    sh: docker compose version >/dev/null 2>&1 && echo "--wait" || echo ""
 
 tasks:
   commit:
@@ -261,11 +264,13 @@ tasks:
     desc: Запустить контейнеры в фоновом режиме
     summary: |
       Запускает контейнеры Docker сервисов, определенных в файле Compose, в фоновом режиме (detached).
+      Флаг --wait блокирует выполнение до прохождения healthcheck всех сервисов
+      (применяется при использовании Docker Compose V2).
     preconditions:
       - test -f compose.yaml
       - test -f .env
     cmds:
-      - "{{.COMPOSE_CMD}} up -d website postgres minio"
+      - "{{.COMPOSE_CMD}} up -d {{.COMPOSE_WAIT}} website postgres minio"
       - "{{.COMPOSE_CMD}} ps"
 
   restart:
@@ -273,17 +278,21 @@ tasks:
     summary: |
       Пересоздает и перезапускает контейнеры Docker сервисов, определенных в файле Compose,
       в фоновом режиме (detached). Полезно в случае изменений переменных окружения.
+      Флаг --wait блокирует выполнение до прохождения healthcheck всех сервисов
+      (применяется при использовании Docker Compose V2).
     preconditions:
       - test -f compose.yaml
       - test -f .env
     cmds:
-      - "{{.COMPOSE_CMD}} up --detach --force-recreate"
+      - "{{.COMPOSE_CMD}} --profile dev up --detach --force-recreate {{.COMPOSE_WAIT}}"
       - "{{.COMPOSE_CMD}} ps"
 
   watch:
     desc: Запустить контейнеры в фоновом режиме и отслеживать изменения кода
     summary: |
       Запускает контейнеры Docker в фоновом режиме и пересоздает контейнеры в случае изменений при помощи Compose Watch.
+      Профиль dev подключает сервисы postgres и minio, флаг --wait дожидается прохождения healthcheck
+      (применяется при использовании Docker Compose V2).
     preconditions:
       - test -f compose.yaml
       - test -f .env
@@ -292,7 +301,7 @@ tasks:
       MINIO_SERVER_URL: http://minio:9000
       MINIO_BROWSER_REDIRECT_URL: http://minio:9001
     cmds:
-      - "{{.COMPOSE_CMD}} up -d"
+      - "{{.COMPOSE_CMD}} --profile dev up -d {{.COMPOSE_WAIT}}"
       - "{{.COMPOSE_CMD}} ps"
       - "{{.COMPOSE_CMD}} watch"
 
