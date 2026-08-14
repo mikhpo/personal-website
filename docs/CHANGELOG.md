@@ -9,6 +9,9 @@
 - WhiteNoise (middleware и WHITENOISE_ROOT) отключается в S3-режиме
 - Из конфигураций nginx (bare-metal и Docker) удалены файловые локации /static/, /media/, /favicon.ico, /robots.txt: nginx выполняет только проксирование, статические и медиафайлы обслуживает объектное хранилище
 - Интеграционные тесты nginx обновлены под редиректы favicon и robots.txt
+- Каталог node_modules исключён из STATICFILES_DIRS: tinymce и bootstrap/dist копируются сборкой фронтенда в backend/staticfiles, объём выгрузки статики сокращается с десятков тысяч файлов до нескольких сотен
+- Из продакшен-выгрузки статики исключены source-map'ы (*.map) и документация (*.md)
+- Таймаут удалённой команды деплоя увеличен до 30 минут в конфигурациях SourceCraft и GitHub
 
 ## 2026-08-13
 

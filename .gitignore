@@ -33,3 +33,5 @@ issue[-_]description.md
 /tmp/
 frontend/webpack-stats.json
 frontend/dist/
+backend/staticfiles/tinymce/
+backend/staticfiles/bootstrap/

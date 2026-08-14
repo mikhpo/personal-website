@@ -45,8 +45,8 @@ npm install
 npm run build
 poetry install
 
-# Собрать статические файлы.
-$python "$manage" collectstatic --noinput
+# Собрать статические файлы (source-map'ы и документация в выгрузку не нужны).
+$python "$manage" collectstatic --noinput --ignore "*.map" --ignore "*.md"
 
 # Выполнить миграции базы данных.
 $python "$manage" migrate

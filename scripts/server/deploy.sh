@@ -244,7 +244,7 @@ function install_project_dependencies() {
     poetry install
 
     echo "Сборка статических файлов Django..."
-    $python "$manage" collectstatic --noinput
+    $python "$manage" collectstatic --noinput --ignore "*.map" --ignore "*.md"
 
     echo "Выполнение миграций базы данных..."
     $python "$manage" migrate
