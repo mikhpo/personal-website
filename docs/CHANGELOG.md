@@ -2,6 +2,11 @@
 
 ## 2026-08-14
 
+- Сервисы postgres и minio в compose.yaml переведены на профиль dev: без активного профиля (продакшен) поднимаются только website и nginx, для локальной разработки используется переменная COMPOSE_PROFILES=dev или флаг --profile dev
+- Зависимости depends_on сервиса website от postgres и minio заменены ожиданием готовности сервисов в entrypoint.sh (функция wait_for_port с ограничением числа попыток)
+- В .env.example добавлена переменная COMPOSE_PROFILES для активации dev-профиля
+- Задачи Taskfile up-detached, watch и restart обновлены под профиль dev и флаг --wait
+- Документация (README, CONTRIBUTING, AGENTS) дополнена описанием профилей Docker Compose
 - Раздача статических файлов переведена на объектное хранилище: в S3-режиме collectstatic собирает файлы в префикс static/ того же бакета (хранилище выбирается селектором select_static_storage), локально и в тестах продолжает работать WhiteNoise
 - Заголовки кэширования статических файлов в S3: сборкам с хешем содержимого в имени назначается бессрочное immutable-кэширование, остальным файлам — умеренный срок
 - STATIC_URL и webpack publicPath вынесены в переменные окружения (STATIC_URL, WEBPACK_PUBLIC_PATH); update.sh загружает .env до сборки фронтенда

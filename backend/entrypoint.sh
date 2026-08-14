@@ -25,6 +25,34 @@ function set_minio_alias() {
 }
 
 #######################################
+# Дождаться открытия TCP-порта на хосте.
+# Проверка выполняется средствами bash (/dev/tcp) без внешних зависимостей
+# от клиентов баз данных. Используется для ожидания готовности сервисов
+# до запуска миграций, поскольку depends_on в compose.yaml не задан
+# для внешних продакшн-сервисов. Каждая попытка соединения ограничена
+# утилитой timeout, чтобы хосты с фильтрацией пакетов не блокировали цикл.
+# Аргументы:
+#   1. host — имя хоста или IP-адрес.
+#   2. port — номер порта.
+#   3. attempts — максимальное количество попыток (по умолчанию 30).
+# Возвращает: 0 при успехе, 1 при исчерпании попыток.
+#######################################
+function wait_for_port() {
+    local host="$1"
+    local port="$2"
+    local attempts="${3:-30}"
+    for ((i = 1; i <= attempts; i++)); do
+        if timeout 3 bash -c "(echo > /dev/tcp/${host}/${port})" 2>/dev/null; then
+            echo "Хост $host:$port доступен (попытка $i)."
+            return 0
+        fi
+        sleep 1
+    done
+    echo "Таймаут ожидания $host:$port (${attempts} попыток)." >&2
+    return 1
+}
+
+#######################################
 # Преобразование значения строки в логическое значение true/false.
 # Значение аргумента преобразуется в нижний регистр, далее проверяется
 # соответствие преобразованного значения регулярному выражению,
@@ -72,6 +100,22 @@ function main() {
     manage="$website_dir/manage.py"
     python="$root_dir/.venv/bin/python"
     gunicorn="$root_dir/.venv/bin/gunicorn"
+
+    # Дождаться готовности кластера PostgreSQL и объектного хранилища MinIO.
+    # В продакшене это внешние доступные сервисы, поэтому ожидание завершается
+    # сразу. В разработке без depends_on контейнеры стартуют параллельно.
+    wait_for_port "${POSTGRES_HOST}" "${POSTGRES_PORT}"
+
+    # Извлечь хост и порт MinIO из значения переменной MINIO_SERVER_URL.
+    minio_url="${MINIO_SERVER_URL#*://}"
+    minio_host="${minio_url%%[:/]*}"
+    if [[ "$minio_url" == *:* ]]; then
+        minio_port="${minio_url#*:}"
+        minio_port="${minio_port%%/*}"
+    else
+        minio_port="443"
+    fi
+    wait_for_port "$minio_host" "$minio_port"
 
     # Выполнить миграции и собрать статические файлы.
     $python "$manage" migrate
