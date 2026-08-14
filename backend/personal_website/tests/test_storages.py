@@ -10,12 +10,15 @@ from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.files.storage import FileSystemStorage
 from django.test import SimpleTestCase, override_settings
+from whitenoise.storage import CompressedStaticFilesStorage  # type: ignore[import-untyped]
 
 from personal_website.storages import (
     CustomFileSystemStorage,
+    CustomS3StaticStorage,
     CustomS3Storage,
     FakerFileStorageAdapter,
     StorageType,
+    select_static_storage,
     select_storage,
 )
 
@@ -386,3 +389,53 @@ class TestSelectStorage(SimpleTestCase):
         storage: StorageType = select_storage()
         self.assertIsInstance(storage, FileSystemStorage)
         self.assertNotEqual(Path(storage.location).name, "temp")
+
+
+class TestSelectStaticStorage(SimpleTestCase):
+    """Тесты механизма выбора хранилища статических файлов."""
+
+    @override_settings(TEST=True, STORAGE_TYPE="s3")
+    def test_select_static_storage_returns_s3_storage_in_s3_mode(self) -> None:
+        """В S3-режиме select_static_storage возвращает S3 хранилище статики."""
+        storage = select_static_storage()
+        self.assertIsInstance(storage, CustomS3StaticStorage)
+
+    @override_settings(TEST=True, STORAGE_TYPE="filesystem")
+    def test_select_static_storage_returns_whitenoise_by_default(self) -> None:
+        """Вне S3-режима select_static_storage возвращает хранилище WhiteNoise."""
+        storage = select_static_storage()
+        self.assertIsInstance(storage, CompressedStaticFilesStorage)
+
+
+class TestCustomS3StaticStorage(SimpleTestCase):
+    """Тесты S3 хранилища статических файлов."""
+
+    def setUp(self) -> None:
+        """Создать экземпляр хранилища для тестов."""
+        self.storage = CustomS3StaticStorage(
+            bucket_name="test-bucket",
+            access_key="test-access",
+            secret_key="test-secret",
+            endpoint_url="https://storage.example.net",
+            location="static",
+        )
+
+    def test_get_object_parameters_for_hashed_bundle(self) -> None:
+        """Сборкам с хешем содержимого в имени назначается бессрочное кэширование."""
+        hashed_names = [
+            "main-1b645389243f4a1c.js",
+            "theme-1b645389243f4a1c.min.js",
+            "253-0bd3302d9ac25c92e4ee.js.LICENSE.txt",
+            "static/css/main.0bd3302d9ac25c92e4ee.css",
+        ]
+        for name in hashed_names:
+            with self.subTest(name=name):
+                params = self.storage.get_object_parameters(name)
+                self.assertEqual(params["CacheControl"], "public, max-age=31536000, immutable")
+
+    def test_get_object_parameters_for_unhashed_file(self) -> None:
+        """Файлам без хеша в имени назначается умеренный срок кэширования."""
+        for name in ("favicon.ico", "css/base.css", "tinymce/themes/silver/theme.min.js", "main.min.js"):
+            with self.subTest(name=name):
+                params = self.storage.get_object_parameters(name)
+                self.assertEqual(params["CacheControl"], "public, max-age=3600")

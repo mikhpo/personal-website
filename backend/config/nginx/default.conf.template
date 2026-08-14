@@ -3,22 +3,8 @@ server {
 
     server_name ${DOMAIN_NAME};
 
-    location /media/ {
-        alias ${STORAGE_ROOT};
-    }
-
-    location /static/ {
-        alias ${STATIC_ROOT};
-    }
-
-    location /favicon.ico {
-	    alias ${STATIC_ROOT}/favicon.ico;
-	}
-
-    location /robots.txt {
-	    alias ${STATIC_ROOT}/robots.txt;
-	}
-
+    # Статические и медиафайлы обслуживаются объектным хранилищем,
+    # nginx выполняет только проксирование запросов к приложению.
     location / {
         include proxy_params;
         proxy_pass http://unix:/run/gunicorn.sock;

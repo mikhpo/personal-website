@@ -30,7 +30,11 @@ module.exports = {
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: '[name]-[contenthash].js',
-    publicPath: '/static/',
+    // publicPath определяет URL-префикс бандлов (включая lazy-chunks) в webpack-stats.json.
+    // Значение берется из переменной окружения WEBPACK_PUBLIC_PATH и должно совпадать
+    // со STATIC_URL той среды, для которой выполняется сборка (локально '/static/',
+    // в S3-режиме — адрес бакета или CDN с префиксом static/).
+    publicPath: process.env.WEBPACK_PUBLIC_PATH || '/static/',
   },
 
   /**

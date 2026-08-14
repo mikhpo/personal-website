@@ -170,8 +170,6 @@ function setup_nginx() {
     # Заполнить шаблон конфигурационного файла переменными окружения.
     export NGINX_PORT=$NGINX_PORT
     export DOMAIN_NAME=$DOMAIN_NAME
-    export STORAGE_ROOT=$STORAGE_ROOT
-    export STATIC_ROOT=$STATIC_ROOT
     export DJANGO_PORT=$DJANGO_PORT
     envsubst < "$config_dir/$NGINX_CONF_TEMPLATE" > $available_conf
 

@@ -32,6 +32,14 @@ git pull
 # Скачать SSL-сертификат PostgreSQL, если требуется (идемпотентно).
 bash "$project_root/scripts/pgcert.sh"
 
+# Загрузить переменные окружения из .env до сборки фронтенда:
+# WEBPACK_PUBLIC_PATH определяет адрес бандлов в webpack-stats.json.
+if [ -f "$project_root/.env" ]; then
+    set -a
+    . "$project_root/.env"
+    set +a
+fi
+
 # Обновить зависимости.
 npm install
 npm run build

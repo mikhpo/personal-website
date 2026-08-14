@@ -10,6 +10,7 @@ from django.views.generic import RedirectView
 
 from blog.sitemaps import ArticleSitemap, CategorySitemap, SeriesSitemap, TopicSitemap
 from gallery.sitemaps import AlbumSitemap, PhotoSitemap, TagSitemap
+from personal_website.views import StaticRedirectView
 
 sitemaps = {
     "articles": ArticleSitemap,
@@ -23,6 +24,16 @@ sitemaps = {
 
 urlpatterns = [
     path("", RedirectView.as_view(url="main/", permanent=True)),
+    path(
+        "favicon.ico",
+        StaticRedirectView.as_view(static_path="favicon.ico"),
+        name="favicon",
+    ),
+    path(
+        "robots.txt",
+        StaticRedirectView.as_view(static_path="robots.txt"),
+        name="robots",
+    ),
     path("tinymce/", include("tinymce.urls")),
     path("admin/", admin.site.urls, name="admin"),
     path("accounts/", include("django.contrib.auth.urls")),
