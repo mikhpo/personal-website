@@ -422,12 +422,20 @@ class TestCustomS3StaticStorage(SimpleTestCase):
 
     def test_get_object_parameters_for_hashed_bundle(self) -> None:
         """Сборкам с хешем содержимого в имени назначается бессрочное кэширование."""
-        params = self.storage.get_object_parameters("main-1b645389243f4a1c.js")
-        self.assertEqual(params["CacheControl"], "public, max-age=31536000, immutable")
+        hashed_names = [
+            "main-1b645389243f4a1c.js",
+            "theme-1b645389243f4a1c.min.js",
+            "253-0bd3302d9ac25c92e4ee.js.LICENSE.txt",
+            "static/css/main.0bd3302d9ac25c92e4ee.css",
+        ]
+        for name in hashed_names:
+            with self.subTest(name=name):
+                params = self.storage.get_object_parameters(name)
+                self.assertEqual(params["CacheControl"], "public, max-age=31536000, immutable")
 
     def test_get_object_parameters_for_unhashed_file(self) -> None:
         """Файлам без хеша в имени назначается умеренный срок кэширования."""
-        for name in ("favicon.ico", "css/base.css", "tinymce/themes/silver/theme.min.js"):
+        for name in ("favicon.ico", "css/base.css", "tinymce/themes/silver/theme.min.js", "main.min.js"):
             with self.subTest(name=name):
                 params = self.storage.get_object_parameters(name)
                 self.assertEqual(params["CacheControl"], "public, max-age=3600")

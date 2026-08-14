@@ -161,14 +161,25 @@ MEDIA_ROOT = os.getenv("STORAGE_ROOT", default=PROJECT_DIR / "storage")
 # Адрес временной папки для тестирования.
 TEMP_ROOT = os.getenv("TEMP_ROOT", default=PROJECT_DIR / "temp")
 
-# Общая конфигурация клиента S3 для продуктивных хранилищ (медиа и статика).
-s3_client_config = Config(
-    max_pool_connections=50,
-    connect_timeout=10,
-    read_timeout=60,
-    retries={"total_max_attempts": 10, "mode": "standard"},
-    tcp_keepalive=True,
-)
+# Общие параметры S3 для продуктивных хранилищ (медиа и статика).
+s3_storage_options = {
+    "bucket_name": os.getenv("AWS_STORAGE_BUCKET_NAME"),
+    "access_key": os.getenv("AWS_ACCESS_KEY_ID"),
+    "secret_key": os.getenv("AWS_SECRET_ACCESS_KEY"),
+    "region_name": os.getenv("AWS_S3_REGION_NAME", "us-east-1"),
+    "endpoint_url": os.getenv("AWS_S3_ENDPOINT_URL"),
+    "file_overwrite": True,
+    "default_acl": "public-read",
+    "querystring_auth": False,
+    # Оптимизация S3 для production
+    "client_config": Config(
+        max_pool_connections=50,
+        connect_timeout=10,
+        read_timeout=60,
+        retries={"total_max_attempts": 10, "mode": "standard"},
+        tcp_keepalive=True,
+    ),
+}
 
 STORAGES = {
     "default": {"BACKEND": "personal_website.storages.select_storage"},
@@ -180,19 +191,7 @@ STORAGES = {
     },
     "s3_static": {
         "BACKEND": "personal_website.storages.CustomS3StaticStorage",
-        "OPTIONS": {
-            "bucket_name": os.getenv("AWS_STORAGE_BUCKET_NAME"),
-            "access_key": os.getenv("AWS_ACCESS_KEY_ID"),
-            "secret_key": os.getenv("AWS_SECRET_ACCESS_KEY"),
-            "region_name": os.getenv("AWS_S3_REGION_NAME", "us-east-1"),
-            "endpoint_url": os.getenv("AWS_S3_ENDPOINT_URL"),
-            "location": "static",
-            "file_overwrite": True,
-            "default_acl": "public-read",
-            "querystring_auth": False,
-            # Оптимизация S3 для production
-            "client_config": s3_client_config,
-        },
+        "OPTIONS": {**s3_storage_options, "location": "static"},
     },
     "test": {
         "BACKEND": "personal_website.storages.CustomFileSystemStorage",
@@ -210,18 +209,7 @@ STORAGES = {
     },
     "s3": {
         "BACKEND": "personal_website.storages.CustomS3Storage",
-        "OPTIONS": {
-            "bucket_name": os.getenv("AWS_STORAGE_BUCKET_NAME"),
-            "access_key": os.getenv("AWS_ACCESS_KEY_ID"),
-            "secret_key": os.getenv("AWS_SECRET_ACCESS_KEY"),
-            "region_name": os.getenv("AWS_S3_REGION_NAME", "us-east-1"),
-            "endpoint_url": os.getenv("AWS_S3_ENDPOINT_URL"),
-            "file_overwrite": True,
-            "default_acl": "public-read",
-            "querystring_auth": False,
-            # Оптимизация S3 для production
-            "client_config": s3_client_config,
-        },
+        "OPTIONS": s3_storage_options,
     },
 }
 
