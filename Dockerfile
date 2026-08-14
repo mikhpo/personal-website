@@ -32,7 +32,6 @@ ENV POSTGRES_VERSION=17
 RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install -y \
-    cron \
     curl \
     gnupg \
     locales \
@@ -66,9 +65,6 @@ COPY . .
 # Копирование собранного React бандла
 COPY --from=node-builder /app/frontend/dist $WORK_DIR/frontend/dist
 COPY --from=node-builder /app/frontend/webpack-stats.json $WORK_DIR/frontend/webpack-stats.json
-
-# Установить расписание запуска скриптов в cron.
-RUN bash scripts/cronjobs.sh
 
 # Выполнить скрипт, запускающий сервер.
 ENV PYTHONPATH=.

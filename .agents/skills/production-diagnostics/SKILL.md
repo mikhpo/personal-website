@@ -12,74 +12,66 @@ description: Диагностика продакшен-сервера — пар
 Источники информации о среде деплоя (хост, способ подключения, путь проекта, конфигурация):
 
 - Окружения SourceCraft: `src envs` — список доступных сред; переключение флагом `--env <name>`, текущее видно в `src auth status`.
-- Скрипты деплоя в репозитории: `scripts/server/` (deploy.sh, update.sh, restart.sh) — содержат путь проекта на сервере (WORK_DIR) и последовательность деплоя (git pull + migrate + collectstatic + restart сервиса).
-- Конфиги сервиса в репозитории: `backend/config/gunicorn/`, `backend/config/nginx/` — как запущено приложение (systemd-юнит, сокет, прокси).
-- CI-конфиг деплоя (конфигурация SourceCraft CI или `.github/workflows/deploy.yml`) — шаги деплоя и используемые секреты сервера (хост, пользователь, ключ).
+- Скрипты деплоя в репозитории: `scripts/docker/` (setup.sh, deploy.sh, update.sh) — путь проекта на сервере и последовательность деплоя (git pull + docker compose pull + up).
+- Конфигурация стекa: `compose.yaml` — сервисы (website, traefik), тома, переменные окружения.
+- CI-конфиг деплоя (`.sourcecraft/ci.yaml`, workflow `deploy-workflow`; зеркально `.github/workflows/deploy.yml`) — шаги деплоя и используемые секреты сервера (хост, пользователь, ключ).
 - `~/.ssh/config` — алиас подключения к серверу.
 - `.env` на сервере — актуальные переменные среды (DOMAIN_NAME, STORAGE_TYPE, DEBUG, параметры БД и хранилища).
-- Публичный адрес сайта (домен/URL) для проверки в браузере: переменная `DOMAIN_NAME` в `.env` на сервере и/или `server_name` в шаблоне `backend/config/nginx/`.
+- Публичный адрес сайта (домен/URL) для проверки в браузере: переменная `DOMAIN_NAME` в `.env` на сервере.
 
 ## Доступ и расположение
 
 - Подключение по алиасу из `~/.ssh/config`: `ssh <алиас>`.
-- Путь проекта на сервере и venv берутся из `scripts/server/update.sh` (WORK_DIR). Для этого проекта: проект `/root/personal-website`, venv `/root/personal-website/.venv`, приложение запускается из `backend/` (`personal_website.wsgi:application`).
-- Запуск bare-metal через systemd (не Docker): `gunicorn.service` + `gunicorn.socket` (unix-сокет `/run/gunicorn.sock`), проксируется `nginx`, БД — системный `postgresql`.
+- Путь проекта на сервере: `/root/personal-website`. Приложение выполняется в контейнерах Docker Compose (сервис `website`), проксирование и TLS — контейнер `traefik`.
+- Порт приложения 8000 не публикуется наружу: весь внешний трафик проходит через Traefik (порты 80/443).
 
 ## Логи
 
 ### Источники логов
 
-- Gunicorn (access + stderr воркеров): `journalctl -u gunicorn.service` (также `journalctl -u gunicorn.socket`).
-- Лог приложения (Django): файловый handler (`django.request`, `django.server`). Путь определяется переменной `LOGS_ROOT` в `.env` (`LOG_DIR = LOGS_ROOT/<project>`).
-- Nginx: `/var/log/nginx/error.log`, `/var/log/nginx/access.log`.
+Применяется комбинированная стратегия: stdout/stderr контейнеров собирает Docker (driver json-file, ротация 10 МБ x 3 файла), детальные логи приложения пишутся в файлы через volume.
 
-### Как узнать точный путь Django-лога
-
-Путь зависит от `LOGS_ROOT`, который может быть переопределён в `.env` (не совпадает с путём по умолчанию из кода). Уточнить in-process, не читая `.env` целиком:
-
-```bash
-ssh <алиас> 'cd /root/personal-website/backend && /root/personal-website/.venv/bin/python manage.py shell' << 'PYEOF'
-from django.conf import settings
-import logging
-print("LOG_DIR =", settings.LOG_DIR)
-rq = logging.getLogger("django.request")
-print("django.request handlers:", [(type(h).__name__, getattr(h, "baseFilename", None)) for h in rq.handlers])
-PYEOF
-```
-
-Либо поиском по файловой системе: `find / -name "*.log" 2>/dev/null`.
+- Приложение и Gunicorn (access + ошибки воркеров, старт, краши): `docker compose logs website` или `docker logs <контейнер>`.
+- Traefik (маршрутизация, ACME, сертификаты): `docker compose logs traefik`.
+- Лог приложения (Django, файловый handler с ежедневной ротацией): каталог `logs/` проекта на хосте (volume `${LOGS_ROOT:-./logs/}` -> `/srv/website/logs` внутри контейнера).
+- Резервное копирование: `logs/s3backup.log` на хосте (задача cron хоста).
 
 ### Поиск ошибок в логах
 
 ```bash
-# Gunicorn: строки с ошибками/traceback
-journalctl -u gunicorn.service --since "2 hours ago" --no-pager | grep -iE "error|traceback|exception"
+# docker logs: строки с ошибками/traceback
+docker compose logs website --since 2h | grep -iE "error|traceback|exception"
 
-# Django-лог: traceback и 500
-grep -nE "Traceback|Internal Server Error|Error|Exception" /<путь>/<лог>.log | tail -40
+# Traefik: проблемы маршрутизации и сертификатов
+docker compose logs traefik --since 2h | grep -iE "error|acme|certificate"
+
+# Django-лог на хосте: traceback и 500
+grep -nE "Traceback|Internal Server Error|Error|Exception" logs/<project>.log | tail -40
 
 # Полный блок последнего traceback
-tail -n 4000 /<путь>/<лог>.log | grep -A 35 "Traceback (most recent call last)" | tail -70
+tail -n 4000 logs/<project>.log | grep -A 35 "Traceback (most recent call last)" | tail -70
 ```
 
 ## Состояние сервисов
 
 ```bash
-# Активность сервисов
-systemctl is-active gunicorn.service gunicorn.socket nginx postgresql
+cd /root/personal-website
 
-# Подробный статус
-systemctl status gunicorn.service gunicorn.socket nginx postgresql --no-pager
+# Список контейнеров и их статус
+docker compose ps
 
-# Последние строки журнала gunicorn
-journalctl -u gunicorn.service -n 200 --no-pager
+# Статус отдельного сервиса
+docker inspect --format '{{.Name}} {{.State.Status}} (health: {{.State.Health.Status}})' $(docker compose ps -q website)
+
+# Перезапуск отдельного сервиса (только по явному разрешению)
+# docker compose restart website
 ```
 
 ## Проверка эндпоинтов (read-only)
 
 ### Через публичный домен
 
-Основной способ — запрос по публичному домену сайта (домен брать из `DOMAIN_NAME` / `server_name`, см. раздел «Параметры целевой среды»). Это именно то, что видит пользователь:
+Основной способ — запрос по публичному домену сайта (домен брать из `DOMAIN_NAME`, см. раздел «Параметры целевой среды»). Это именно то, что видит пользователь:
 
 ```bash
 # внешний запрос
@@ -101,12 +93,12 @@ DRF выбирает рендерер по заголовку `Accept`:
 
 Если 500 возникает только для одного из форматов — проблема в соответствующем рендерере/шаблоне, а не в queryset/сериализации.
 
-### Изоляция слоя Django (в обход nginx)
+### Изоляция слоя Django (в обход Traefik)
 
-Применяется, когда нужно отделить проблемы Django от слоя nginx (http→https redirect, default server, кэш, TLS). Запрос напрямую в gunicorn-сокет попадает в Django, минуя nginx:
+Применяется, когда нужно отделить проблемы Django от слоя Traefik (редирект http->https, сертификаты, маршрутизация). Публичный порт приложения не публикуется, поэтому запрос выполняется внутри контейнера:
 
 ```bash
-ssh <алиас> 'curl -sS -o /dev/null -w "%{http_code}\n" --unix-socket /run/gunicorn.sock -H "Accept: application/json" "http://localhost/api/<endpoint>/"'
+docker compose exec website curl -sS -o /dev/null -w "%{http_code}\n" -H "Accept: application/json" "http://localhost:8000/api/<endpoint>/"
 ```
 
 ### In-process traceback через Django test client
@@ -114,7 +106,7 @@ ssh <алиас> 'curl -sS -o /dev/null -w "%{http_code}\n" --unix-socket /run/g
 Когда лог не пишет полный traceback (например, при `DEBUG=False`), получить точную причину in-process (GET-запрос, без записи в БД):
 
 ```bash
-ssh <алиас> 'cd /root/personal-website/backend && /root/personal-website/.venv/bin/python manage.py shell' << 'PYEOF'
+docker compose exec website bash -c 'cd /srv/website/backend && poetry run python manage.py shell' << 'PYEOF'
 from django.test import Client
 import traceback
 c = Client()
@@ -131,6 +123,6 @@ PYEOF
 
 ## Ограничения (read-only)
 
-- Для диагностики использовать только чтение: `tail`, `grep`, `journalctl`, `systemctl status`/`is-active`, `curl` GET, `manage.py shell` с GET-запросами.
-- Не читать `.env` без явной необходимости — там секреты; переменные окружения узнавать через `manage.py shell` (`settings.*`).
+- Для диагностики использовать только чтение: `docker compose logs/ps`, `docker inspect`, `tail`, `grep`, `curl` GET, `manage.py shell` с GET-запросами.
+- Не читать `.env` без явной необходимости — там секреты; переменные окружения узнавать через `manage.py shell` (`settings.*`) или `docker compose exec website env | grep -v -iE 'key|password|secret'`.
 - Не перезапускать сервисы и не менять конфиги без отдельного разрешения.

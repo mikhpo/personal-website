@@ -8,7 +8,7 @@ set -e
 
 # Значения по умолчанию для адреса хоста и номера порта.
 readonly DJANGO_HOST="0.0.0.0"
-readonly DJANGO_PORT="8000"
+readonly DJANGO_PORT="${DJANGO_PORT:-8000}"
 
 #######################################
 # Установить алиас для сервера MinIO.
@@ -147,9 +147,13 @@ function main() {
         $python "$manage" runserver "$DJANGO_HOST":"$DJANGO_PORT"
     else
         num_workers=$(calculate_worker_count)
+        # Журналы доступа и ошибок пишутся в stdout/stderr контейнера
+        # и собираются Docker logging driver'ом (json-file с ротацией).
         $gunicorn \
             --bind="$DJANGO_HOST":"$DJANGO_PORT" \
             --workers="$num_workers" \
+            --access-logfile=- \
+            --error-logfile=- \
             --pythonpath="$website_dir" \
             "backend.personal_website.wsgi:application"
     fi

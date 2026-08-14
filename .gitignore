@@ -20,6 +20,8 @@ CACHE
 /backups/
 /temp/
 nginx/conf.d
+# Состояние ACME-клиента Traefik: содержит приватные ключи сертификатов.
+/traefik/
 .ruff_cache
 TODO.md
 todo
