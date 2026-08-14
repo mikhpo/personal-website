@@ -53,6 +53,25 @@ function wait_for_port() {
 }
 
 #######################################
+# Разобрать URL сервиса на имя хоста и номер порта.
+# Из значения вида протокол://хост[:порт][/путь] извлекаются имя хоста
+# и номер порта. Если порт не указан, возвращается порт 443.
+# Аргументы:
+#   1. url — адрес сервиса.
+# Возвращает: строка "хост порт" для чтения через read.
+#######################################
+function parse_service_url() {
+    local url="${1#*://}"
+    local host="${url%%[:/]*}"
+    local port="443"
+    if [[ "$url" == *:* ]]; then
+        port="${url#*:}"
+        port="${port%%/*}"
+    fi
+    echo "$host $port"
+}
+
+#######################################
 # Преобразование значения строки в логическое значение true/false.
 # Значение аргумента преобразуется в нижний регистр, далее проверяется
 # соответствие преобразованного значения регулярному выражению,
@@ -107,14 +126,7 @@ function main() {
     wait_for_port "${POSTGRES_HOST}" "${POSTGRES_PORT}"
 
     # Извлечь хост и порт MinIO из значения переменной MINIO_SERVER_URL.
-    minio_url="${MINIO_SERVER_URL#*://}"
-    minio_host="${minio_url%%[:/]*}"
-    if [[ "$minio_url" == *:* ]]; then
-        minio_port="${minio_url#*:}"
-        minio_port="${minio_port%%/*}"
-    else
-        minio_port="443"
-    fi
+    read -r minio_host minio_port <<< "$(parse_service_url "${MINIO_SERVER_URL}")"
     wait_for_port "$minio_host" "$minio_port"
 
     # Выполнить миграции и собрать статические файлы.
