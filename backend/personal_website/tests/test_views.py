@@ -10,7 +10,7 @@ from personal_website.views import StaticRedirectView
 S3_STATIC_URL = "https://storage.yandexcloud.net/personal-website-storage/static/"
 
 
-class TestStaticRedirectViews(SimpleTestCase):
+class TestStaticRedirectView(SimpleTestCase):
     """Тесты постоянных редиректов на статические файлы."""
 
     def test_favicon_returns_permanent_redirect(self) -> None:
