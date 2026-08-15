@@ -250,9 +250,11 @@ Certbot используется для получения и обновлени
 1. Клонировать исходный код на целевой хост: `git clone git@github.com:<project-name>/personal-website.git`
 1. Сменить рабочую директорию на `/srv/personal-website`
 1. Заполнить файл .env с конфигурационными параметрами: `nano .env`
-1. Запустить скрипт для развертывания:
-    * `bash scripts/docker/deploy.sh` для развертывания в контейнере
-    * `bash scripts/server/deploy.sh` для развертывание в ОС хоста
+1. Запустить скрипт первичной настройки:
+    * `bash scripts/docker/setup.sh` для развертывания в контейнере
+    * `bash scripts/server/setup.sh` для развертывания в ОС хоста
+
+Последующие обновления развертываются скриптами `scripts/docker/deploy.sh` и `scripts/server/deploy.sh` соответственно (подробнее — в разделе [«Развертывание на сервере (Docker)»](./README.md#развертывание-на-сервере-docker) файла README.md).
 
 ### Добавление SSH-ключей хоста в GitHub
 
