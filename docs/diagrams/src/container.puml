@@ -7,7 +7,7 @@ title Архитектура проекта
 Person(user, "Пользователь")
 Person(admin, "Администратор")
 System_Boundary(project, "Персональный сайт") {
-    Container(traefik, "Обратный прокси-сервер", "Traefik", "Терминирование TLS, получение и обновление сертификатов Let's Encrypt (ACME, TLS-ALPN-01), маршрутизация по Docker-лейблам")
+    Container(traefik, "Обратный прокси-сервер", "Traefik", "Проксирует запросы в приложение, обслуживает HTTPS с автоматическими сертификатами Let's Encrypt")
     Container(gunicorn, "WSGI-сервер", "Gunicorn", "Запускает Django приложение, обрабатывает HTTP-запросы")
     Container(backend, "Бэкенд", "Django + DRF", "REST API, бизнес-логика, админка, рендеринг шаблонов")
     Container(frontend, "Фронтенд", "React + Webpack", "React компоненты, интеграция с Django шаблонами, сборка через Webpack")
@@ -17,12 +17,11 @@ System_Boundary(server, "Сервер VPS (Docker)") {
     Container(engine, "Docker Engine", "Docker", "Запуск и изоляция контейнеров, управление сетями и томами")
     Container(compose, "Docker Compose", "Compose", "Декларативное описание и оркестрация сервисов проекта")
 }
-System_Ext(registry_hub, "Docker Registry", "Docker Hub")
-System_Ext(registry_yc, "Docker Registry", "Yandex Cloud Container Registry")
-System_Ext(db, "База данных", "PostgreSQL", "Managed-кластер вне Docker")
-System_Ext(s3, "Объектное хранилище", "S3/MinIO", "Yandex Object Storage: медиа, статика, бэкапы")
+System_Ext(registry_hub, "Реестр образов", "Docker Hub")
+System_Ext(db, "База данных", "PostgreSQL")
+System_Ext(s3, "Объектное хранилище", "S3/MinIO")
 System_Ext(smtp, "SMTP-сервер", "Внешний сервис электронной почты")
-System_Ext(le, "Let's Encrypt", "ACME-сервер", "Выпуск и обновление TLS-сертификатов")
+System_Ext(le, "Let's Encrypt", "ACME-сервер")
 
 Rel(admin, engine, "Управляет развертыванием", "SSH")
 Rel(user, traefik, "Читает и комментирует", "HTTPS")
