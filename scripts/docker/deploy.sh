@@ -50,15 +50,6 @@ function load_dotenv() {
 }
 
 #######################################
-# Скачать SSL-сертификат PostgreSQL (идемпотентно).
-# Сертификат монтируется в контейнер website read-only,
-# поэтому должен присутствовать на хосте до запуска контейнеров.
-#######################################
-function load_postgres_cert() {
-    bash "$project_root/scripts/pgcert.sh"
-}
-
-#######################################
 # Обновить файлы проекта из основной ветки репозитория.
 # Необходимо для получения актуальных версий compose.yaml и скриптов.
 #######################################
@@ -115,7 +106,6 @@ function compose_up() {
 function main() {
     load_dotenv
     pull_repository
-    load_postgres_cert
     create_docker_directories
     compose_down
     compose_pull
