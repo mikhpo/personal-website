@@ -393,14 +393,6 @@ LOGGING = {
             "class": "logging.StreamHandler",
             "formatter": "simple",
         },
-        # Запись ошибок в stdout независимо от значения DEBUG:
-        # в продакшене ошибки приложения попадают в docker logs
-        # (logging driver json-file с ротацией).
-        "console_prod": {
-            "level": "ERROR",
-            "class": "logging.StreamHandler",
-            "formatter": "simple",
-        },
         "mail_admins": {
             "level": "ERROR",
             "filters": ["require_debug_false"],
@@ -423,7 +415,7 @@ LOGGING = {
     },
     "loggers": {
         "django": {
-            "handlers": ["console", "console_prod", "mail_admins"],
+            "handlers": ["console", "mail_admins"],
             "level": "INFO",
         },
         "django.server": {
@@ -432,12 +424,12 @@ LOGGING = {
             "propagate": False,
         },
         "django.request": {
-            "handlers": ["console_prod", PROJECT_NAME],
+            "handlers": [PROJECT_NAME],
             "level": "INFO",
             "propagate": False,
         },
         PROJECT_NAME: {
-            "handlers": ["console", "console_prod", PROJECT_NAME],
+            "handlers": ["console", PROJECT_NAME],
             "level": "INFO",
             "propagate": False,
         },
