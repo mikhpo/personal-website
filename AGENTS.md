@@ -22,38 +22,6 @@
 - Остановить всё приложение и зависимости: `docker compose down`
 - В окружениях, где postgres и minio не используются, переменную `COMPOSE_PROFILES` не задавать; диагностические команды адресовать только сервисам website и traefik (`up -d postgres` поднял бы dev-сервис)
 
-## Docker развертывание (рекомендуется)
-
-Основной способ развертывания на сервере — Docker Compose с сервисами website (образ из реестра) и traefik (проксирование и TLS). Альтернативный bare-metal способ через `scripts/server/` сохраняется для совместимости.
-
-### Команды управления
-
-- Продакшн: `docker compose up -d`
-- Разработка: `docker compose --profile dev up -d`
-- Статус: `docker compose ps`
-- Логи: `docker compose logs -f website` (или `traefik`)
-- Обновление: `bash scripts/docker/deploy.sh` (используется CI/CD; git pull + пересоздание контейнеров из свежих образов)
-- Первичная настройка сервера: `bash scripts/docker/setup.sh` (пакеты, Docker, ufw, cron бэкапов)
-
-### Переменные окружения
-
-- `DOCKER_ENV=True` — маркер Docker-окружения
-- `STORAGE_TYPE=s3` — для продакшена (статика и медиа в объектном хранилище)
-- `ACME_EMAIL` — email аккаунта ACME для сертификатов Let's Encrypt
-- `TRAEFIK_CERT_RESOLVER` — `le` в продакшене (выпуск сертификатов), пустая строка в разработке (self-signed, обращений к Let's Encrypt нет)
-- `DJANGO_PORT` — порт приложения внутри контейнера (по умолчанию 8000)
-- Порт приложения наружу не публикуется: весь трафик проходит через traefik (80/443)
-
-### Логирование
-
-Комбинированная стратегия: stdout/stderr контейнеров собирает Docker (json-file, ротация 10 МБ x 3 файла через якорь `x-logging` в compose.yaml), детальные логи приложения пишутся в volume `${LOGS_ROOT:-./logs/}`.
-
-### Сертификаты Let's Encrypt
-
-- Состояние ACME-клиента Traefik хранится в `traefik/letsencrypt/acme.json` на хосте (bind-mount): `docker compose down -v` его не удаляет
-- Перенос между Docker-серверами: скопировать `acme.json` до первого запуска Traefik на новом сервере
-- Файл содержит приватные ключи — включать в защищённое резервное копирование
-
 ## Структура проекта
 
 Проект использует монорепозитарную архитектуру с разделением на backend и frontend:

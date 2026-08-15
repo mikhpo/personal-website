@@ -52,7 +52,7 @@ class TestTraefik(unittest.TestCase):
         Входная точка web отвечает постоянным редиректом
         на одноименный маршрут входной точки websecure.
         """
-        http_port = os.getenv("NGINX_PORT", default="80")
+        http_port = os.getenv("TRAEFIK_HTTP_PORT", default="80")
         http_url = f"http://localhost:{http_port}/"
         response = requests.get(http_url, allow_redirects=False, timeout=10)
         status = response.status_code

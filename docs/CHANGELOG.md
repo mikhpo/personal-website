@@ -13,7 +13,7 @@
 - Скрипты bare-metal-развертывания переименованы в соответствие с Docker-скриптами: scripts/server/deploy.sh (первичная настройка) → setup.sh, scripts/server/update.sh (деплой обновлений) → deploy.sh
 - deploy-workflow SourceCraft и зеркальный GitHub workflow переключены на scripts/docker/deploy.sh
 - Из Dockerfile убраны неиспользуемые пакет cron и вызов scripts/cronjobs.sh: задачи cron выполняются на хосте через setup.sh
-- Порт приложения вынесен в переменную окружения DJANGO_PORT (используется Traefik и entrypoint.sh)
+- Порт приложения вынесен в переменную окружения DJANGO_PORT (используется Traefik и entrypoint.sh); переменная NGINX_PORT переименована в TRAEFIK_HTTP_PORT (compose.yaml, tests, .env.example)
 - Интеграционные тесты прокси адаптированы под Traefik (tests/test_traefik.py): HTTPS с self-signed сертификатом, проверка редиректа HTTP на HTTPS
 - Документация (README, AGENTS) дополнена разделами о Docker-развертывании, сертификатах Let's Encrypt и проверке Traefik в среде разработки; скилл production-diagnostics переписан под Docker-окружение
 - C4-диаграмма контейнеров дополнена компонентами Traefik, Docker Engine, Docker Compose и реестрами образов
