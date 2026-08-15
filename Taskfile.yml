@@ -171,7 +171,7 @@ tasks:
       MINIO_BROWSER_REDIRECT_URL: http://127.0.0.1:9001
     cmds:
       - defer: "{{.COMPOSE_CMD}} down"
-      - "{{.COMPOSE_CMD}} up -d postgres nginx minio"
+      - "{{.COMPOSE_CMD}} up -d postgres traefik minio"
       - "{{.COMPOSE_CMD}} ps"
       - poetry run pytest ./tests {{.CLI_ARGS}}
 

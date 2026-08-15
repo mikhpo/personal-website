@@ -1,0 +1,200 @@
+#!/bin/bash
+#
+# Скрипт для первоначальной настройки сервера под Docker-развертывание.
+# Выполняется один раз на новом сервере: устанавливает системные пакеты,
+# Docker, файрвол и запускает контейнеры. Повторный запуск безопасен.
+
+# Выйти в случае ошибки.
+set -e
+
+#######################################
+# Определить доступную команду Docker Compose.
+# Приоритет отдается плагину V2 (`docker compose`),
+# в случае его отсутствия используется V1 (`docker-compose`).
+# Возвращает строку с командой через stdout.
+#######################################
+function detect_compose_cmd() {
+    if docker compose version >/dev/null 2>&1; then
+        echo "docker compose"
+    elif command -v docker-compose >/dev/null 2>&1; then
+        echo "docker-compose"
+    else
+        echo "Ошибка: Docker Compose не найден. Установите плагин docker-compose-plugin или Docker Compose V1." >&2
+        exit 1
+    fi
+}
+
+project_root="$(dirname "$(dirname "$(dirname "$(readlink -f "$0")")")")"
+readonly dotenv="$project_root/.env"
+cd "$project_root" || exit
+
+#######################################
+# Запросить подтверждение готовности
+# файла с переменными окружения.
+#######################################
+function confirm_dotenv() {
+    read -p "Файл .env уже заполнен? [y/n] " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        exit
+    fi
+}
+
+#######################################
+# Загрузить переменные окружения из .env файла
+# или выйти, если файл не существует.
+#######################################
+function load_dotenv() {
+    if [ -f "$dotenv" ]; then
+        set -a
+        # shellcheck disable=SC1090
+        . "$dotenv"
+        set +a
+        echo "Переменные окружения загружены из файла $dotenv"
+    else
+        echo "Файл с переменными окружения $dotenv не существует"
+        exit 1
+    fi
+}
+
+#######################################
+# Установить системные пакеты.
+# mc (MinIO Client) требуется для резервного копирования
+# файлового хранилища по расписанию cron на хосте.
+#######################################
+function install_packages() {
+    sudo apt-get update
+    sudo apt-get upgrade -y
+    sudo apt-get install -y \
+        cron \
+        curl \
+        git \
+        gnupg \
+        ca-certificates \
+        ufw
+
+    # Установить MinIO Client, если еще не установлен.
+    if ! command -v mc >/dev/null 2>&1; then
+        local arch
+        arch="$(dpkg --print-architecture)"
+        curl -fsSL "https://dl.min.io/client/mc/release/linux-${arch}/mc" \
+            -o /tmp/mc
+        sudo install -m 0755 /tmp/mc /usr/local/bin/mc
+        rm -f /tmp/mc
+    fi
+}
+
+#######################################
+# Выполнить настройку ufw (Uncomplicated Firewall).
+# Разрешить трафик через следующие порты:
+# - SSH
+# - HTTP
+# - HTTPS
+#######################################
+function enable_ufw() {
+    sudo ufw enable
+    sudo ufw allow 22
+    sudo ufw allow 80
+    sudo ufw allow 443
+    sudo ufw status
+}
+
+#######################################
+# Установить Docker в соответствии с рекомендуемым порядком действий
+# на странице документации: https://docs.docker.com/engine/install/debian/
+#######################################
+function install_docker() {
+    # Добавить официальный GPG-ключ Docker.
+    sudo install -m 0755 -d /etc/apt/keyrings
+    curl -fsSL https://download.docker.com/linux/debian/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+    sudo chmod a+r /etc/apt/keyrings/docker.gpg
+
+    # Добавить репозиторий Docker в источники Apt.
+    echo \
+        "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian \
+        $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | sudo tee /etc/apt/sources.list.d/docker.list >/dev/null
+    sudo apt-get update
+
+    # Установить пакеты Docker.
+    sudo apt-get install -y \
+        docker-ce \
+        docker-ce-cli \
+        containerd.io \
+        docker-buildx-plugin \
+        docker-compose-plugin
+
+    # Установить авто-запуск службы Docker.
+    sudo systemctl enable docker.service
+    sudo systemctl enable containerd.service
+}
+
+#######################################
+# Авторизоваться в Docker с использованием
+# логина и пароля из переменных окружения.
+# Адрес хоста может быть пустым - в таком
+# случае будет подключение к Docker Hub.
+#######################################
+function login_docker() {
+    docker login \
+        --username="$DOCKER_USERNAME" \
+        --password="$DOCKER_PASSWORD" \
+        "$DOCKER_REGISTRY"
+}
+
+#######################################
+# Скачать SSL-сертификат PostgreSQL (идемпотентно).
+#######################################
+function load_postgres_cert() {
+    bash "$project_root/scripts/pgcert.sh"
+}
+
+#######################################
+# Создать каталоги хоста для bind-mounts Docker Compose.
+#######################################
+function create_docker_directories() {
+    echo "Создание директорий для Docker volumes..."
+    mkdir -p "$project_root/storage"
+    mkdir -p "$project_root/static"
+    mkdir -p "$project_root/backups"
+    mkdir -p "$project_root/logs"
+    mkdir -p "$project_root/temp"
+    mkdir -p "$project_root/traefik/letsencrypt"
+    mkdir -p "${HOME}/.postgresql"
+}
+
+#######################################
+# Установить задачи cron на хосте для резервного копирования.
+#######################################
+function add_cronjobs() {
+    bash "$project_root/scripts/cronjobs.sh"
+}
+
+#######################################
+# Запустить контейнеры при помощи Docker Compose,
+# вытянув образ основного контейнера из репозитория.
+#######################################
+function compose_up() {
+    COMPOSE_CMD="$(detect_compose_cmd)"
+    readonly COMPOSE_CMD
+    $COMPOSE_CMD pull
+    $COMPOSE_CMD up -d
+    $COMPOSE_CMD ps
+}
+
+#######################################
+# Последовательный вызов основных функций скрипта.
+#######################################
+function main() {
+    confirm_dotenv
+    load_dotenv
+    install_packages
+    enable_ufw
+    install_docker
+    login_docker
+    load_postgres_cert
+    create_docker_directories
+    add_cronjobs
+    compose_up
+}
+
+main

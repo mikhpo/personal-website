@@ -20,6 +20,7 @@ CACHE
 /backups/
 /temp/
 nginx/conf.d
+/traefik/
 .ruff_cache
 TODO.md
 todo

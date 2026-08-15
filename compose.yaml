@@ -1,5 +1,15 @@
+# Общая конфигурация логирования для всех сервисов.
+# Docker собирает stdout/stderr контейнеров в driver json-file
+# с ротацией по размеру: не более 3 файлов по 10 МБ на контейнер.
+# Детальные логи приложения дополнительно пишутся в volume (см. сервис website).
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
-  # Веб-сайт на Django. Запускается либо через Gunicorn, либо через команду runserver.
+  # Веб-сайт на Django. Запускается либо через Gunicorn, либо через команду runserver.
   # Способ запуска и параметры запуска определяются скриптом entrypoint.sh.
   website:
     image: ${DOCKER_REGISTRY:-docker.io}/mikhpo/personal-website:latest
@@ -19,8 +29,8 @@ services:
       - LOGS_ROOT=/srv/website/logs
       - TEMP_ROOT=/srv/website/temp
     env_file: .env
-    ports:
-      - 8000:8000
+    # Порты не публикуются: трафик терминирует Traefik во внутренней сети Compose.
+    # Публикация порта приложения наружу не нужна и обходит правила файрвола хоста.
     volumes:
       - ${STORAGE_ROOT:-./storage/}:/srv/website/storage:rw
       - ${STATIC_ROOT:-./static/}:/srv/website/static:rw
@@ -35,10 +45,24 @@ services:
         source: ${POSTGRES_SSL_CERT_HOST_PATH:-${POSTGRES_SSL_ROOT_CERT_PATH:-/root/.postgresql/root.crt}}
         target: ${POSTGRES_SSL_ROOT_CERT_PATH:-/root/.postgresql/root.crt}
         read_only: true
+    labels:
+      - "traefik.enable=true"
+      # Маршрутизация по доменам основного и www-хоста.
+      - "traefik.http.routers.website.rule=Host(`${DOMAIN_NAME}`) || Host(`www.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.website.entrypoints=websecure"
+      # TLS включается всегда; в dev-режиме используется встроенный
+      # self-signed сертификат Traefik.
+      - "traefik.http.routers.website.tls=true"
+      # Certresolver подключается только непустым значением переменной
+      # TRAEFIK_CERT_RESOLVER (прод: le). Пустое значение в dev-среде
+      # оставляет ACME-клиент пассивным - выпуск сертификатов не выполняется.
+      - "traefik.http.routers.website.tls.certresolver=${TRAEFIK_CERT_RESOLVER:-}"
+      - "traefik.http.services.website.loadbalancer.server.port=${DJANGO_PORT:-8000}"
     # Порядок запуска относительно PostgreSQL и MinIO не задаётся через depends_on:
     # эти сервисы относятся к профилю dev и могут отсутствовать в текущем окружении,
     # поэтому готовность ожидается скриптом entrypoint.sh (функция wait_for_port).
     restart: always
+    logging: *default-logging
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000"]
       interval: 5s
@@ -48,6 +72,41 @@ services:
       watch:
         - action: rebuild
           path: .
+
+  # Обратный прокси-сервер Traefik. Обслуживает HTTPS: сертификаты
+  # Let's Encrypt получаются и обновляются автоматически.
+  # Приложение обнаруживается по Docker-лейблам.
+  traefik:
+    image: traefik:v3.7
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      - "--certificatesresolvers.le.acme.tlschallenge=true"
+      - "--certificatesresolvers.le.acme.email=${ACME_EMAIL}"
+      - "--certificatesresolvers.le.acme.storage=/letsencrypt/acme.json"
+      # Встроенный health-endpoint для команды `traefik healthcheck --ping`
+      # (порт 8080 наружу не публикуется).
+      - "--ping=true"
+    ports:
+      - ${TRAEFIK_HTTP_PORT:-80}:80
+      - 443:443
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      # Состояние ACME-клиента (аккаунт, сертификаты) хранится на хосте:
+      # bind-mount не удаляется командой docker compose down -v
+      # и переносится между серверами целиком.
+      - ./traefik/letsencrypt:/letsencrypt
+    restart: always
+    logging: *default-logging
+    healthcheck:
+      test: ["CMD", "traefik", "healthcheck", "--ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
 
   # Кластер PostgreSQL для веб-сайта. База данных создается автоматически.
   # Сервис предназначен для окружений, где база данных не предоставляется
@@ -66,39 +125,12 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data:rw
     restart: always
+    logging: *default-logging
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 5
-
-  # Прокси-сервер Nginx. Образ включает Certbot для получения и обновления сертификатов.
-  # При создании контейнера производится автоматическое создание конфигурационного файла
-  # из каталога с шаблонами и заполнение переменными окружения утилитой envsubst.
-  nginx:
-    build: ./nginx
-    environment:
-      - STORAGE_ROOT=/srv/website/storage
-      - STATIC_ROOT=/srv/website/static
-    env_file: .env
-    ports:
-      - ${NGINX_PORT:-80}:${NGINX_PORT:-80}
-      - 443:443
-    volumes:
-      - ./nginx/templates:/etc/nginx/templates:ro
-      - ./nginx/conf.d:/etc/nginx/conf.d:rw
-      - ${STORAGE_ROOT:-./storage/}:/srv/website/storage:ro
-      - ${STATIC_ROOT:-./static/}:/srv/website/static:ro
-      - nginx-certs:/etc/letsencrypt/live/${DOMAIN_NAME}:rw
-    depends_on:
-      website:
-        condition: service_healthy
-        restart: true
-    restart: always
-    develop:
-      watch:
-        - action: rebuild
-          path: ./nginx
 
   # S3-совместимое объектное хранилище Minio. Предназначено для окружений,
   # где объектное хранилище не предоставляется внешним сервисом.
@@ -118,6 +150,7 @@ services:
     volumes:
       - minio-data:/data:rw
     restart: always
+    logging: *default-logging
     healthcheck:
       test: ["CMD", "mc", "ready", "local"]
       interval: 5s
@@ -126,5 +159,4 @@ services:
 
 volumes:
   postgres-data:
-  nginx-certs:
   minio-data:

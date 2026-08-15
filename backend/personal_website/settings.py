@@ -424,7 +424,7 @@ LOGGING = {
             "propagate": False,
         },
         "django.request": {
-            "handlers": [PROJECT_NAME],
+            "handlers": ["console", PROJECT_NAME],
             "level": "INFO",
             "propagate": False,
         },

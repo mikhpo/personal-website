@@ -27,4 +27,4 @@ jobs:
           command_timeout: 30m
           script: |
             cd /root/personal-website
-            bash scripts/server/update.sh
+            bash scripts/docker/deploy.sh

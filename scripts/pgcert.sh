@@ -4,7 +4,7 @@
 # Сертификат скачивается один раз при первичной установке либо при обновлении
 # (флаг --force). Путь загрузки определяется приоритетом (см. ниже):
 #   POSTGRES_SSL_CERT_HOST_PATH -> POSTGRES_SSL_ROOT_CERT_PATH -> ~/.postgresql/root.crt.
-# Скрипт вызывается из scripts/server/deploy.sh и scripts/server/update.sh,
+# Скрипт вызывается из scripts/server/setup.sh и scripts/docker/setup.sh,
 # но также пригоден к самостоятельному запуску.
 
 # Выйти в случае ошибки.

@@ -1,9 +1,31 @@
 #!/bin/bash
 #
-# Скрипт для первоначального развертывания через Docker.
+# Скрипт для развертывания обновления через Docker.
+# Выполняется на сервере (в том числе из CI/CD): обновляет файлы проекта,
+# подготавливает каталоги и пересоздает контейнеры из свежих образов.
 
 # Выйти в случае ошибки.
 set -e
+
+#######################################
+# Определить доступную команду Docker Compose.
+# Приоритет отдается плагину V2 (`docker compose`),
+# в случае его отсутствия используется V1 (`docker-compose`).
+# Возвращает строку с командой через stdout.
+#######################################
+function detect_compose_cmd() {
+    if docker compose version >/dev/null 2>&1; then
+        echo "docker compose"
+    elif command -v docker-compose >/dev/null 2>&1; then
+        echo "docker-compose"
+    else
+        echo "Ошибка: Docker Compose не найден. Установите плагин docker-compose-plugin или Docker Compose V1." >&2
+        exit 1
+    fi
+}
+
+COMPOSE_CMD="$(detect_compose_cmd)"
+readonly COMPOSE_CMD
 
 # Определение рабочих файлов проекта.
 project_root="$(dirname "$(dirname "$(dirname "$(readlink -f "$0")")")")"
@@ -11,132 +33,82 @@ readonly dotenv="$project_root/.env"
 cd "$project_root" || exit
 
 #######################################
-# Запросить подтверждение готовности
-# файла с переменными окружения.
-#######################################
-function confirm_dotenv() {
-    read -p "Файл .env уже заполнен? [y/n] " -n 1 -r
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        exit
-    fi
-}
-
-#######################################
 # Загрузить переменные окружения из .env файла
 # или выйти, если файл не существует.
 #######################################
 function load_dotenv() {
     if [ -f "$dotenv" ]; then
-        eval export "$(cat "$dotenv")"
+        set -a
+        # shellcheck disable=SC1090
+        . "$dotenv"
+        set +a
         echo "Переменные окружения загружены из файла $dotenv"
     else
         echo "Файл с переменными окружения $dotenv не существует"
-        exit
+        exit 1
     fi
 }
 
 #######################################
-# Установить системные пакеты.
+# Обновить файлы проекта из основной ветки репозитория.
+# Необходимо для получения актуальных версий compose.yaml и скриптов.
 #######################################
-function install_packages() {
-    sudo apt-get update
-    sudo apt-get upgrade -y
-    sudo apt-get install -y \
-        cron \
-        ufw \
-        ca-certificates \
-        curl \
-        gnupg
+function pull_repository() {
+    git fetch origin
+    git checkout main
+    git pull
 }
 
 #######################################
-# Выполнить настройку ufw (Uncomplicated Firewall).
-# Разрешить трафик через следующие порты:
-# - SSH
-# - HTTP
-# - HTTPS
-# - rsync
-# - PostgreSQL
-# - MinIO
+# Создать каталоги хоста для bind-mounts Docker Compose.
+# Каталоги создаются заранее с корректными правами,
+# иначе Docker создает их от имени пользователя root.
 #######################################
-function enable_ufw() {
-    sudo ufw enable
-    sudo ufw allow 22
-    sudo ufw allow 80
-    sudo ufw allow 443
-    sudo ufw allow 873
-    sudo ufw allow 5432
-    sudo ufw allow 9000
-    sudo ufw allow 9001
-    sudo ufw status
+function create_docker_directories() {
+    echo "Создание директорий для Docker volumes..."
+    mkdir -p "$project_root/storage"
+    mkdir -p "$project_root/static"
+    mkdir -p "$project_root/backups"
+    mkdir -p "$project_root/logs"
+    mkdir -p "$project_root/temp"
+    mkdir -p "$project_root/traefik/letsencrypt"
+    mkdir -p "${HOME}/.postgresql"
 }
 
 #######################################
-# Установить Docker в соответствии с рекомендуемым порядком действий
-# на странице документации: https://docs.docker.com/engine/install/debian/
+# Остановить текущие контейнеры.
+# Внимание: флаг -v не используется намеренно - он удаляет именованные тома
+# (postgres-data, minio-data). Сертификаты Let's Encrypt хранятся
+# в bind-mount ./traefik/letsencrypt и командой down не затрагиваются.
 #######################################
-function install_docker() {
-    # Добавить официальный GPG-ключ Docker.
-    sudo install -m 0755 -d /etc/apt/keyrings
-    curl -fsSL https://download.docker.com/linux/debian/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-    sudo chmod a+r /etc/apt/keyrings/docker.gpg
-
-    # Добавить репозиторий Docker в источники Apt.
-    # shellcheck disable=SC1091
-    echo \
-        "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian \
-        $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | sudo tee /etc/apt/sources.list.d/docker.list >/dev/null
-    sudo apt-get update
-
-    # Установить пакеты Docker.
-    sudo apt-get install -y \
-        docker-ce \
-        docker-ce-cli \
-        containerd.io \
-        docker-buildx-plugin \
-        docker-compose-plugin
-
-    # Установить авто-запуск службы Docker.
-    sudo systemctl enable docker.service
-    sudo systemctl enable containerd.service
-
-    sudo chmod 666 /var/run/docker.sock
+function compose_down() {
+    $COMPOSE_CMD down
 }
 
 #######################################
-# Авторизоваться в Docker с использованием
-# логина и пароля из переменных окружения.
-# Адрес хоста может быть пустым - в таком
-# случае будет подключение к Docker Hub.
+# Вытянуть свежие образы из реестра.
 #######################################
-function login_docker() {
-    docker login \
-        --username="$DOCKER_USERNAME" \
-        --password="$DOCKER_PASSWORD" \
-        "$DOCKER_REGISTRY"
+function compose_pull() {
+    $COMPOSE_CMD pull
 }
 
 #######################################
-# Запустить контейнеры при помощи Docker Compose,
-# вытянув образ основного контейнера из репозитория
-# и выполнив сборку остальных контейнеров.
+# Запустить контейнеры в фоновом режиме.
 #######################################
 function compose_up() {
-    docker compose pull
-    docker compose up -d
-    docker compose ps
+    $COMPOSE_CMD up -d
+    $COMPOSE_CMD ps
 }
 
 #######################################
 # Последовательный вызов основных функций скрипта.
 #######################################
 function main() {
-    confirm_dotenv
     load_dotenv
-    install_packages
-    enable_ufw
-    install_docker
-    login_docker
+    pull_repository
+    create_docker_directories
+    compose_down
+    compose_pull
     compose_up
 }
 

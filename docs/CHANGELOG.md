@@ -1,5 +1,23 @@
 # История изменений
 
+## 2026-08-15
+
+- Прокси-сервер nginx заменён на Traefik (v3.7): обслуживает HTTPS с автоматическими сертификатами Let's Encrypt, запросы маршрутизируются по Docker-лейблам; каталог nginx/ и том nginx-certs удалены
+- Состояние ACME-клиента Traefik хранится на хосте (bind-mount traefik/letsencrypt/acme.json): команда docker compose down -v сертификаты не затрагивает; каталог добавлен в .gitignore как содержащий приватные ключи
+- Выпуск сертификатов управляется переменной TRAEFIK_CERT_RESOLVER: в продакшене le (Let's Encrypt), в разработке пустая строка (self-signed, ACME-клиент пассивен)
+- Публикация порта приложения 8000 наружу прекращена: весь трафик проходит через Traefik (80/443)
+- Логирование контейнеров переведено на комбинированную стратегию: якорь x-logging (json-file, ротация 10 МБ x 3 файла) применён ко всем сервисам; журналы доступа и ошибок Gunicorn пишутся в stdout
+- Логгер django.request единообразно подключён к консольному хэндлеру наряду с остальными логгерами (схема хэндлера console не менялась)
+- Скрипт scripts/docker/deploy.sh перепрофилирован под неинтерактивный деплой из CI/CD (обновление репозитория, подготовка каталогов, пересоздание контейнеров); первичная настройка сервера вынесена в новый скрипт scripts/docker/setup.sh (пакеты, Docker, ufw, cron бэкапов)
+- Из скрипта обновления bare-metal-развертывания убран вызов pgcert.sh: получение SSL-сертификата PostgreSQL выполняется при первичной настройке (scripts/server/setup.sh, scripts/docker/setup.sh) и вручную при ротации CA
+- Скрипты bare-metal-развертывания переименованы в соответствие с Docker-скриптами: scripts/server/deploy.sh (первичная настройка) → setup.sh, scripts/server/update.sh (деплой обновлений) → deploy.sh
+- deploy-workflow SourceCraft и зеркальный GitHub workflow переключены на scripts/docker/deploy.sh
+- Из Dockerfile убраны неиспользуемые пакет cron и вызов scripts/cronjobs.sh: задачи cron выполняются на хосте через setup.sh
+- Порт приложения вынесен в переменную окружения DJANGO_PORT (используется Traefik и entrypoint.sh); переменная NGINX_PORT переименована в TRAEFIK_HTTP_PORT (compose.yaml, tests, .env.example)
+- Интеграционные тесты прокси адаптированы под Traefik (tests/test_traefik.py): HTTPS с self-signed сертификатом, проверка редиректа HTTP на HTTPS
+- Документация (README, AGENTS) дополнена разделами о Docker-развертывании, сертификатах Let's Encrypt и проверке Traefik в среде разработки; скилл production-diagnostics переписан под Docker-окружение
+- C4-диаграмма контейнеров дополнена компонентами Traefik, Docker Engine, Docker Compose и реестрами образов
+
 ## 2026-08-14
 
 - Сервисы postgres и minio в compose.yaml переведены на профиль dev: без активного профиля поднимаются только website и nginx (режим для окружений с внешним PostgreSQL и внешним объектным хранилищем), профиль активируется переменной COMPOSE_PROFILES=dev или флагом --profile dev
