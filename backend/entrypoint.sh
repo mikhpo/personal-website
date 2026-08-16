@@ -149,9 +149,14 @@ function main() {
         num_workers=$(calculate_worker_count)
         # Журналы доступа и ошибок пишутся в stdout/stderr контейнера
         # и собираются Docker logging driver'ом (json-file с ротацией).
+        # Рециклинг воркеров после ~500 запросов ограничивает дрейф RSS:
+        # обработка фотографий (Pillow, ImageKit) удерживает память воркером
+        # после пика и не возвращает её аллокатору.
         $gunicorn \
             --bind="$DJANGO_HOST":"$DJANGO_PORT" \
             --workers="$num_workers" \
+            --max-requests=500 \
+            --max-requests-jitter=50 \
             --access-logfile=- \
             --error-logfile=- \
             --pythonpath="$website_dir" \
