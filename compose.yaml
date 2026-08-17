@@ -12,13 +12,15 @@ services:
   # Веб-сайт на Django. Запускается либо через Gunicorn, либо через команду runserver.
   # Способ запуска и параметры запуска определяются скриптом entrypoint.sh.
   website:
-    image: ${DOCKER_REGISTRY:-docker.io}/mikhpo/personal-website:latest
+    # Имя образа совпадает с публикуемым CI (PROJECT_NAME=personal_website,
+    # см. .sourcecraft/ci.yaml): Docker Hub не допускает разных написаний.
+    image: ${DOCKER_REGISTRY:-docker.io}/mikhpo/personal_website:latest
     platform: "linux/amd64"
     build:
       context: .
       dockerfile: ./Dockerfile
       tags:
-        - mikhpo/personal-website:latest
+        - mikhpo/personal_website:latest
         - ghcr.io/mikhpo/personal-website:latest
       platforms:
         - "linux/amd64"
