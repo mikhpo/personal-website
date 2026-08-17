@@ -111,7 +111,6 @@ function calculate_worker_count() {
 # Основное тело скрипта.
 # Адреса каталогов и файлов проекта определяются по адресу скрипта.
 # Способ запуска контейнера определяется по переменной окружения DEBUG.
-# Переменные окружения считываются из .env файла.
 #######################################
 function main() {
     website_dir="$(dirname "$(readlink -f "$0")")"
@@ -121,8 +120,20 @@ function main() {
     python="$root_dir/.venv/bin/python"
     gunicorn="$root_dir/.venv/bin/gunicorn"
 
-    # Дождаться готовности кластера PostgreSQL и объектного хранилища MinIO.
-    # Если сервисы предоставляются вне Docker Compose, они обычно уже доступны
+    # Загрузить переменные окружения из .env файла, если он существует.
+    # В Docker-окружении файл отсутствует: переменные уже внедрены через
+    # env_file в compose.yaml. Блок заменяет прежний eval export, который
+    # при отсутствии файла выполнял export без аргументов и печатал
+    # значения секретных переменных в логи контейнера.
+    if [ -f "$dotenv" ]; then
+        set -a
+        # shellcheck disable=SC1090
+        . "$dotenv"
+        set +a
+    fi
+
+    # Дождаться готовности кластера PostgreSQL.
+    # Если сервис предоставляется вне Docker Compose, он обычно уже доступен
     # и ожидание завершается сразу. В противном случае контейнеры могут
     # стартовать параллельно без depends_on.
     wait_for_port "${POSTGRES_HOST}" "${POSTGRES_PORT}"
@@ -135,11 +146,15 @@ function main() {
     $python "$manage" migrate
     $python "$manage" collectstatic --noinput
 
-    # Загрузить переменные окружения из .env файла.
-    eval export "$(cat "$dotenv")"
-
-    # Установить алиас для сервера MinIO.
-    set_minio_alias
+    # Установить алиас для сервера MinIO. Алиас настраивается только для
+    # настоящего MinIO (локальная разработка, профиль dev). При STORAGE_TYPE=s3
+    # внешнее S3-хранилище не является MinIO-сервером: команда mc admin info
+    # завершается ошибкой и уводит контейнер в crash-loop. Алиас для
+    # резервного копирования (mc mirror в scripts/s3backup.sh) устанавливается
+    # отдельно на хосте.
+    if [ "${STORAGE_TYPE}" != "s3" ]; then
+        set_minio_alias
+    fi
 
     # В зависимости от значения переменной окружения DEBUG определить способ запуска.
     debug_bool=$(str_to_bool "$DEBUG")

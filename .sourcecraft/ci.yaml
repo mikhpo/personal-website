@@ -303,5 +303,5 @@ workflows:
               # при холодном старте может занимать десятки минут.
               command_timeout: 30m
               script: |
-                cd /root/personal-website
+                cd /srv/personal-website
                 bash scripts/docker/deploy.sh

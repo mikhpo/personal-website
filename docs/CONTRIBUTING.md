@@ -247,10 +247,9 @@ Poetry сконфигурирован таким образом, чтобы ви
 Общий порядок действий:
 
 1. Установить Git командой `sudo apt-get update && sudo apt-get install -y git`
-1. На целевом хосте создать ключ SSH и добавить в профиль в GitHub
+1. На целевом хосте создать ключ SSH и добавить его в профиль SourceCraft (см. ниже)
 1. Сменить рабочую директорию на `/srv`
-1. Клонировать исходный код на целевой хост: `git clone git@github.com:<project-name>/personal-website.git`
-1. Сменить рабочую директорию на `/srv/personal-website`
+1. Клонировать исходный код на целевой хост: `git clone ssh://ssh.sourcecraft.dev/mikhpo/personal-website.git /srv/personal-website`
 1. Заполнить файл .env с конфигурационными параметрами: `nano .env`
 1. Запустить скрипт первичной настройки:
     * `bash scripts/docker/setup.sh` для развертывания в контейнере
@@ -258,14 +257,21 @@ Poetry сконфигурирован таким образом, чтобы ви
 
 Последующие обновления развертываются скриптами `scripts/docker/deploy.sh` и `scripts/server/deploy.sh` соответственно (подробнее — в разделе [«Развертывание на сервере (Docker)»](./README.md#развертывание-на-сервере-docker) файла README.md).
 
-### Добавление SSH-ключей хоста в GitHub
+### Добавление SSH-ключей хоста в SourceCraft
 
-Добавление SSH-ключа хоста в профиль GitHub требуется для выполнения команд `git clone`, `git pull` и т.д.
+Добавление SSH-ключа хоста в профиль SourceCraft требуется для выполнения команд `git clone`, `git pull` и т.д. Ключ добавляется через веб-интерфейс настроек профиля SourceCraft.
 
 1. Проверить существующие ключи: `ls -al ~/.ssh`
 1. Создать новый ключ: `ssh-keygen -t ed25519 -C "Personal Website Deployment"`
 1. Скопировать новый ключ: `cat ~/.ssh/id_ed25519.pub`
-1. Добавить ключ в настройки профиля GitHub: <https://github.com/settings/ssh/new>
+1. Добавить ключ в настройки профиля SourceCraft (раздел SSH-ключей)
+
+Пример конфигурации `~/.ssh/config` для доступа к репозиторию:
+
+    Host ssh.sourcecraft.dev
+      User git
+      IdentityFile ~/.ssh/id_ed25519
+      IdentitiesOnly yes
 
 ## Логирование
 

@@ -231,7 +231,7 @@
 
       docker run -v ~/.postgresql/root.crt:/root/.postgresql/root.crt:ro \
                  -e POSTGRES_SSL_MODE=verify-full \
-                 ghcr.io/mikhpo/personal-website:latest
+                 mikhpo/personal_website:latest
 
 * Kubernetes: сертификат помещается в Secret и монтируется в pod по пути `POSTGRES_SSL_ROOT_CERT_PATH`.
 
@@ -316,6 +316,14 @@
 ### Переменные окружения
 
 Полный список переменных окружения с описаниями зафиксирован в файле [.env.example](./.env.example). Отдельные переменные описаны в соответствующих разделах: `TRAEFIK_CERT_RESOLVER` и `ACME_EMAIL` — в разделе «Сертификаты Let's Encrypt (Traefik)», `STORAGE_TYPE` — в разделе «Настройка файлового хранилища», `COMPOSE_PROFILES` — в разделе «Режим разработки».
+
+### Экранирование символа доллара
+
+Docker Compose выполняет интерполяцию переменных в значениях из `.env`: фрагмент вида `$l` в `SECRET_KEY` молча заменяется пустой строкой (compose warning: `The "l" variable is not set`), и значение внутри контейнера незаметно отличается от ожидаемого. Последствия — инвалидация сессий и подписанных токенов при расхождении ключа между средами.
+
+При переносе `.env` в Docker-окружение экранируйте каждый символ `$` удвоением (`$` → `$$`). Это касается всех значений с `$`, прежде всего `SECRET_KEY`. Проверка после запуска: `docker compose config` не выдаёт предупреждений вида `The "..." variable is not set`, а значение внутри контейнера совпадает с исходным:
+
+    docker compose exec website printenv SECRET_KEY
 
 Порт приложения наружу не публикуется: весь внешний трафик проходит через traefik (порты 80/443).
 
@@ -452,89 +460,30 @@ React компоненты рендерятся в Django шаблонах че�
 
 ## CI/CD
 
-Проект использует GitHub Actions для автоматизации процессов тестирования, сборки и деплоя.
+Источник истины для кода и развертывания — SourceCraft (репозиторий `mikhpo/personal-website`); GitHub-зеркало служит только для чтения и в цепочке развертывания не участвует. Автоматизация тестирования, сборки и деплоя настроена в SourceCraft CI.
 
-### GitHub Actions Workflows
+### Рабочие процессы SourceCraft CI
 
-1. **test.yml** — запускается при каждом pull request
-2. **release.yml** — запускается при закрытии pull request в ветку main
-3. **deploy.yml** — запускается после успешного релиза
+Конфигурация — в файле [.sourcecraft/ci.yaml](./.sourcecraft/ci.yaml):
 
-Подробности конфигурации см. в файлах `.github/workflows/*.yml`.
+1. **lint-workflow** — Ruff, MyPy, ESLint, markdownlint; запускается на pull request и при пуше в неосновные ветки
+2. **test-workflow** — тесты PyTest и Jest; запускается на pull request и при пуше в неосновные ветки
+3. **build-workflow** — сборка Docker-образа (тег `test`), тесты внутри контейнера, публикация тега `tested` в Docker Hub и Yandex Container Registry
+4. **release-workflow** — перетегирование образа `tested` в `latest` при пуше в main
+5. **deploy-workflow** — деплой на сервер по SSH (запуск `scripts/docker/deploy.sh`)
 
-### Требуемые GitHub Secrets
+### Требуемые секреты SourceCraft
 
-| Секрет                | Описание                         |
-| --------------------- | -------------------------------- |
-| `SECRET_KEY`          | Секретный ключ Django            |
-| `EMAIL_HOST_USER`     | Email для отправки уведомлений   |
-| `EMAIL_HOST_PASSWORD` | Пароль email сервиса             |
-| `DOMAIN_NAME`         | Доменное имя сайта               |
-| `DOCKER_USERNAME`     | Имя пользователя Docker Hub      |
-| `DOCKER_PASSWORD`     | Токен доступа Docker Hub         |
-| `GHCR_DELETE_TOKEN`   | Токен для удаления тегов из GHCR |
-| `SERVER_HOST`         | IP-адрес или домен VPS сервера   |
-| `SERVER_USER`         | Имя пользователя на VPS          |
-| `DEPLOY_SSH_KEY`      | SSH-ключ для деплоя              |
-
-### 1. `test.yml` — Тестирование кода и контейнера
-
-Workflow выполняет проверку качества кода, запуск тестов и сборку Docker-образа.
-
-**Задачи (jobs):**
-
-| Задача                    | Описание                                                      |
-| ------------------------- | ------------------------------------------------------------- |
-| `cache-poetry`            | Кэширование Python зависимостей Poetry                        |
-| `cache-npm`               | Кэширование JavaScript зависимостей npm                       |
-| `ruff_check`              | Проверка кода с помощью Ruff                                  |
-| `mypy_check`              | Статический анализ типов Mypy                                 |
-| `eslint_check`            | Статический анализ JavaScript кода ESLint                     |
-| `markdownlint_check`      | Проверка Markdown файлов                                      |
-| `jest_check`              | Тестирование React компонентов с Jest                         |
-| `test_python_with_pytest` | Запуск тестов Python с помощью Pytest                         |
-| `build_docker_image`      | Сборка Docker-образа и публикация в GHCR с тегом `test`       |
-| `test_docker_container`   | Запуск тестов внутри контейнера, перетегирование как `tested` |
-
-**Условия запуска:** при открытии, переоткрытии Pull Request или добавлении новых коммитов.
-
-### 2. `release.yml` — Публикация образа в реестры
-
-Перетегирует протестированный Docker-образ (`tested`) как `latest` и публикует в GHCR и Docker Hub.
-
-**Задачи (jobs):**
-
-| Задача                 | Описание                                                     |
-| ---------------------- | ------------------------------------------------------------ |
-| `retag_and_push_image` | Логин в реестры, перетегирование образа, публикация, очистка |
-
-**Условия запуска:** после слияния Pull Request в `main` или вручную.
-
-### 3. `deploy.yml` — Деплой на VPS сервер
-
-Подключается к VPS серверу по SSH и выполняет скрипт обновления.
-
-**Задачи (jobs):**
-
-| Задача   | Описание                               |
-| -------- | -------------------------------------- |
-| `deploy` | Деплой приложения на VPS сервер по SSH |
-
-**Условия запуска:** после успешного завершения workflow "Release image".
-
-## SourceCraft CI/CD
-
-Проект также использует SourceCraft CI/CD для альтернативной автоматизации процессов тестирования, сборки и деплоя.
-
-### Workflows
-
-1. **lint-workflow** — статический анализ и линтинг, запускается при pull request
-2. **test-workflow** — тестирование, запускается при pull request
-3. **build-workflow** — сборка и тестирование образа приложения, запускается при pull request
-4. **release-workflow** — релиз Docker-образа, запускается при пуше в основную ветку
-5. **deploy-workflow** — деплой приложения на VPS, запускается вручную
-
-Подробности конфигурации см. в файле `.sourcecraft/ci.yaml`.
+| Секрет                    | Описание                                |
+| ------------------------- | --------------------------------------- |
+| `SECRET_KEY`              | Секретный ключ Django                   |
+| `DOCKER_USERNAME`         | Имя пользователя Docker Hub             |
+| `DOCKER_PASSWORD`         | Пароль доступа Docker Hub               |
+| `YC_OAUTH_TOKEN`          | OAuth-токен Yandex Cloud                |
+| `YC_CONTAINER_REGISTRY_ID`| ID реестра Yandex Container Registry    |
+| `SERVER_HOST`             | IP-адрес или домен сервера              |
+| `SERVER_USER`             | Имя пользователя на сервере             |
+| `DEPLOY_SSH_KEY`          | SSH-ключ для деплоя                     |
 
 ### 1. `lint-workflow` — Статический анализ и линтинг
 
