@@ -2,14 +2,11 @@
 
 ## 2026-08-17
 
-- Имя образа приложения унифицировано с публикуемым CI (mikhpo/personal_website, подчёркивание) в compose.yaml и README: прежде compose ссылался на несуществующий образ с дефисом, и docker compose pull падал ошибкой object not found
-- Из цепочки сборки убран тег ghcr.io: реестр GitHub не используется для развертывания
+- Имя образа приложения в compose.yaml унифицировано с публикуемым SourceCraft CI (mikhpo/personal_website, подчёркивание): прежде compose ссылался на несуществующий образ с дефисом, и docker compose pull падал ошибкой object not found
 - entrypoint.sh: настройка алиаса MinIO пропускается при STORAGE_TYPE=s3 — команда mc admin info неприменима к внешнему S3-хранилищу и уводила контейнер в crash-loop
 - entrypoint.sh: заменён eval export файла .env на безопасную загрузку с проверкой существования — при отсутствии файла export без аргументов печатал значения секретных переменных в логи контейнера
-- GitHub-зеркало выведено из цепочки развертывания: workflows GitHub Actions удалены (CI/CD полностью выполняется SourceCraft), инструкции клонирования в README и CONTRIBUTING переведены на ssh://ssh.sourcecraft.dev
+- Инструкции развертывания (README, CONTRIBUTING) дополнены адресом клонирования SourceCraft как основным; задокументировано экранирование символа доллара в значениях .env для Docker Compose ($$): без удвоения compose молча искажает значения вроде SECRET_KEY
 - deploy-workflow SourceCraft переключён на целевой каталог /srv/personal-website
-- Документировано экранирование символа доллара в значениях .env для Docker Compose (README, .env.example): без удвоения ($$) compose молча искажает значения вроде SECRET_KEY
-- Из .env.example удалена неиспользуемая переменная GITHUB_TOKEN
 
 ## 2026-08-16
 

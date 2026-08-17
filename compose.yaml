@@ -21,6 +21,7 @@ services:
       dockerfile: ./Dockerfile
       tags:
         - mikhpo/personal_website:latest
+        - ghcr.io/mikhpo/personal-website:latest
       platforms:
         - "linux/amd64"
     environment:

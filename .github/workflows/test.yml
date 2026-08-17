@@ -1,0 +1,397 @@
+# Выполнить Python тесты веб-сайта.
+name: Test code
+
+# Рабочий процесс выполняется при открытии и переоткрытии Pull Request,
+# а также при добавлении новых коммитов в Pull Request.
+on:
+  pull_request:
+
+env:
+  DEBUG: True
+  SECRET_KEY: ${{ secrets.SECRET_KEY }}
+  PROJECT_NAME: personal_website
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: postgres
+  POSTGRES_HOST: localhost
+  POSTGRES_PORT: 5432
+  POSTGRES_DB: personal_website
+  EMAIL_HOST_USER: ${{ secrets.EMAIL_HOST_USER }}
+  EMAIL_HOST_PASSWORD: ${{ secrets.EMAIL_HOST_PASSWORD }}
+  DOMAIN_NAME: ${{ secrets.DOMAIN_NAME }}
+  LANG: ru_RU.utf8
+  PYTHON_VERSION: "3.12"
+  NODE_VERSION: "latest"
+  TEST_TAG: test
+  TESTED_TAG: tested
+  TEST_IMAGE_NAME: ghcr.io/${{ github.repository }}:${TEST_TAG}
+  TESTED_IMAGE_NAME: ghcr.io/${{ github.repository }}:${TESTED_TAG}
+  STORAGE_TYPE: filesystem
+
+jobs:
+  # Кэширование зависимостей Poetry.
+  cache-poetry:
+    name: Cache Poetry dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Poetry
+        run: |
+          python -m pip install --upgrade pip
+          pip install poetry
+
+      - name: Install Python dependencies
+        run: poetry install
+
+      - name: Cache Poetry dependencies
+        uses: actions/cache@v4
+        with:
+          key: poetry-${{ hashFiles('**/poetry.lock') }}
+          path: .venv
+
+  # Кэширование зависимостей npm.
+  cache-npm:
+    name: Cache npm dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install Node.js dependencies
+        run: npm install
+
+      - name: Cache npm dependencies
+        uses: actions/cache@v4
+        with:
+          key: npm-${{ hashFiles('**/package-lock.json') }}
+          path: node_modules
+
+  # Статический анализ кода Python при помощи Ruff.
+  ruff_check:
+    name: Ruff lint
+    runs-on: ubuntu-latest
+    needs: cache-poetry
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Restore Poetry cache
+        uses: actions/cache@v4
+        with:
+          key: poetry-${{ hashFiles('**/poetry.lock') }}
+          path: .venv
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install poetry
+          poetry install
+
+      - name: Check Ruff linter
+        run: poetry run ruff check
+
+  # Статический анализ типов Python при помощи Mypy.
+  mypy_check:
+    name: Mypy check
+    runs-on: ubuntu-latest
+    needs: cache-poetry
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Restore Poetry cache
+        uses: actions/cache@v4
+        with:
+          key: poetry-${{ hashFiles('**/poetry.lock') }}
+          path: .venv
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install poetry
+          poetry install
+
+      - name: Run Mypy tool
+        run: poetry run mypy .
+
+  # Статический анализ кода JavaScript при помощи ESLint.
+  eslint_check:
+    name: ESLint check
+    runs-on: ubuntu-latest
+    needs: cache-npm
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Restore npm cache
+        uses: actions/cache@v4
+        with:
+          key: npm-${{ hashFiles('**/package-lock.json') }}
+          path: node_modules
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install Node.js dependencies
+        run: npm install
+
+      - name: Run ESLint
+        run: npm run eslint
+
+  # Проверка Markdown файлов при помощи markdownlint.
+  markdownlint_check:
+    name: Markdownlint check
+    runs-on: ubuntu-latest
+    needs: cache-npm
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Restore npm cache
+        uses: actions/cache@v4
+        with:
+          key: npm-${{ hashFiles('**/package-lock.json') }}
+          path: node_modules
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install Node.js dependencies
+        run: npm install
+
+      - name: Run markdownlint
+        run: npx markdownlint-cli *.md docs/*.md
+
+  # Выполнение тестов JavaScript при помощи Jest.
+  jest_check:
+    name: Jest tests
+    runs-on: ubuntu-latest
+    needs: cache-npm
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Restore npm cache
+        uses: actions/cache@v4
+        with:
+          key: npm-${{ hashFiles('**/package-lock.json') }}
+          path: node_modules
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install Node.js dependencies
+        run: npm install
+
+      - name: Run Jest tests
+        run: npm test
+
+      - name: Upload Jest coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: jest-coverage-report
+          path: frontend/coverage/
+
+  # Выполнение тестов Python при помощи Pytest.
+  test_python_with_pytest:
+    name: Pytest run
+    runs-on: ubuntu-latest
+    needs: [cache-poetry, cache-npm]
+    services:
+      postgres: &postgres_service
+        image: postgres
+        env:
+          POSTGRES_USER: ${{ env.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ env.POSTGRES_DB }}
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Restore Poetry cache
+        uses: actions/cache@v4
+        with:
+          key: poetry-${{ hashFiles('**/poetry.lock') }}
+          path: .venv
+
+      - name: Restore npm cache
+        uses: actions/cache@v4
+        with:
+          key: npm-${{ hashFiles('**/package-lock.json') }}
+          path: node_modules
+
+      - name: Install locales
+        run: |
+          sudo apt-get update
+          sudo apt-get install locales
+          sudo rm -rf /var/lib/apt/lists/*
+          sudo localedef -i ru_RU -c -f UTF-8 -A /usr/share/locale/locale.alias ${{ env.LANG }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: "latest"
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install poetry
+          poetry install
+
+      - name: Install Node.js dependencies
+        run: |
+          npm install
+          npm ls
+
+      - name: Build React frontend
+        run: npm run build
+
+      - name: Check Django migrations
+        run: poetry run python personal_website/manage.py makemigrations --dry-run --check
+
+      - name: Collect static files
+        run: poetry run python personal_website/manage.py collectstatic --noinput
+
+      - name: Run Pytest
+        run: poetry run pytest
+
+      - name: Upload Coverage HTML report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-html-report
+          path: htmlcov/
+
+  # Сборка Docker-образа приложения.
+  # Образ публикуется в реестр после сборки.
+  build_docker_image:
+    name: Build Docker image
+    runs-on: ubuntu-latest
+    needs: test_python_with_pytest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Docker image
+        run: |
+          set -e
+          docker build -t ${{ env.TEST_IMAGE_NAME }} -f Dockerfile .
+
+      - name: Push Docker image to GitHub Container Registry
+        run: |
+          set -e
+          docker push ${{ env.TEST_IMAGE_NAME }}
+
+  # Тестирование контейнеризованного приложения.
+  # Собранный ранее образ скачивается и используется для запуска тестов.
+  # Тесты запускаются только после успешной сборки Docker-образа.
+  test_docker_container:
+    name: Test in Docker container
+    runs-on: ubuntu-latest
+    needs: build_docker_image
+    services:
+      postgres: *postgres_service
+    env:
+    # Используется IP-адрес шлюза Docker-сети — обычно это 172.17.0.1.
+      POSTGRES_HOST: "172.17.0.1"
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull Docker image from GHCR
+        run: docker pull ${{ env.TEST_IMAGE_NAME }}
+
+      # Ожидание готовности сервиса PostgreSQL перед запуском тестов.
+      # Этот шаг необходим, чтобы убедиться, что база данных доступна для приложения.
+      - name: Wait for PostgreSQL
+        run: |
+          for i in {1..10}; do
+            pg_isready -h ${{ env.POSTGRES_HOST }} -p ${{ env.POSTGRES_PORT }} && break
+            sleep 2
+          done
+
+      - name: Run tests inside Docker container
+        run: |
+          docker run --rm \
+            --env SECRET_KEY="${{ secrets.SECRET_KEY }}" \
+            --env POSTGRES_USER=${{ env.POSTGRES_USER }} \
+            --env POSTGRES_PASSWORD=${{ env.POSTGRES_PASSWORD }} \
+            --env POSTGRES_DB=${{ env.POSTGRES_DB }} \
+            --env POSTGRES_HOST=${{ env.POSTGRES_HOST }} \
+            --entrypoint "" \
+            ${{ env.TEST_IMAGE_NAME }} \
+            /bin/bash -c "\
+              poetry run python personal_website/manage.py collectstatic --noinput && \
+              poetry run pytest \
+            "
+
+      # Если тестирование пройдено успешно, то перетегировать образ как протестированный.
+      - name: Tag image as tested for GHCR
+        run: |
+          docker tag ${{ env.TEST_IMAGE_NAME }} ${{ env.TESTED_IMAGE_NAME }}
+
+      - name: Push image to GHCR with tested tag
+        run: |
+          docker push ${{ env.TESTED_IMAGE_NAME }}
+
+      # Удаление старого тега из GHCR
+      - name: Delete test tag from GHCR
+        uses: dataaxiom/ghcr-cleanup-action@v1
+        with:
+          token: ${{ secrets.GHCR_DELETE_TOKEN }}
+          delete-tags: ${{ env.TEST_TAG }}

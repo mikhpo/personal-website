@@ -247,9 +247,9 @@ Poetry сконфигурирован таким образом, чтобы ви
 Общий порядок действий:
 
 1. Установить Git командой `sudo apt-get update && sudo apt-get install -y git`
-1. На целевом хосте создать ключ SSH и добавить его в профиль SourceCraft (см. ниже)
+1. На целевом хосте создать ключ SSH и добавить его в профиль SourceCraft (см. ниже); для GitHub-зеркала — в профиль GitHub
 1. Сменить рабочую директорию на `/srv`
-1. Клонировать исходный код на целевой хост: `git clone ssh://ssh.sourcecraft.dev/mikhpo/personal-website.git /srv/personal-website`
+1. Клонировать исходный код на целевой хост: `git clone ssh://ssh.sourcecraft.dev/mikhpo/personal-website.git /srv/personal-website` (зеркало: `git clone git@github.com:mikhpo/personal-website.git /srv/personal-website`)
 1. Заполнить файл .env с конфигурационными параметрами: `nano .env`
 1. Запустить скрипт первичной настройки:
     * `bash scripts/docker/setup.sh` для развертывания в контейнере
