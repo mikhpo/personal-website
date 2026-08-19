@@ -49,7 +49,7 @@ Poetry сконфигурирован таким образом, чтобы ви
     poetry run python backend/manage.py collectstatic --noinput
     poetry run python backend/manage.py runserver
 
-Сервисы postgres и minio относятся к профилю dev. Явное указание имени сервиса в команде активирует профиль автоматически, поэтому флаг для запуска отдельных сервисов не требуется. Для подъема всех сервисов сразу используйте `docker compose --profile dev up` или переменную `COMPOSE_PROFILES=dev` в файле `.env`. Без активного профиля поднимаются только website и traefik — этот режим подходит для окружений, где используется внешний PostgreSQL и внешнее объектное хранилище.
+Каждый инфраструктурный сервис относится к собственному профилю: postgres, minio, traefik. Явное указание имени сервиса в команде активирует профиль автоматически, поэтому флаг для запуска отдельных сервисов не требуется. Для подъема всех сервисов сразу используйте `docker compose --profile postgres --profile minio --profile traefik up` или переменную `COMPOSE_PROFILES=postgres,minio,traefik` в файле `.env`. Без активных профилей поднимается только приложение (сервис application) — этот режим подходит для окружений, где используются внешний PostgreSQL, внешнее объектное хранилище и хостовый обратный прокси.
 
 Предварительно активировать виртуальное окружение при этом не нужно. Однако можно запустить сервер разработки и традиционным способом - через предварительную активацию виртуального окружения:
 
@@ -109,7 +109,7 @@ Poetry сконфигурирован таким образом, чтобы ви
 
 Для запуска pytest в контейнере используется команда:
 
-    docker compose exec website poetry run pytest
+    docker compose exec application poetry run pytest
 
 ## Статический анализ
 
@@ -125,20 +125,20 @@ Poetry сконфигурирован таким образом, чтобы ви
 
 Проект использует Docker и Compose для контейнеризации. Настройки сборки приложения определены в [Dockerfile](../Dockerfile), а в файле [compose.yaml](../compose.yaml) определены параметры запуска сервисов в контейнерах. Docker Compose поднимает следующие сервисы:
 
-* Основное приложение Django
-* База данных PostgreSQL (профиль dev)
-* Прокси-сервер Traefik
-* Объектное хранилище MinIO (профиль dev)
+* Основное приложение Django (сервис application)
+* База данных PostgreSQL (профиль postgres)
+* Прокси-сервер Traefik (профиль traefik)
+* Объектное хранилище MinIO (профиль minio)
 
-Сервисы postgres и minio относятся к профилю dev: без активного профиля поднимаются только website и traefik. Такой режим предназначен для окружений, где используется внешний PostgreSQL и внешнее объектное хранилище.
+Каждый инфраструктурный сервис подключается собственным профилем: без активных профилей поднимается только приложение (сервис application). Такой режим предназначен для окружений, где используются внешний PostgreSQL, внешнее объектное хранилище и хостовый обратный прокси.
 
 Для запуска контейнеров в интерактивном режиме можно использовать команду:
 
-    docker compose --profile dev up
+    docker compose --profile postgres --profile minio --profile traefik up
 
 Для запуска контейнеров в неинтерактивном режиме используется команда:
 
-    docker compose --profile dev up -d
+    docker compose --profile postgres --profile minio --profile traefik up -d
 
 Для сборки образов контейнеров без поднятия сервисов используется команда:
 
@@ -146,7 +146,7 @@ Poetry сконфигурирован таким образом, чтобы ви
 
 Для отслеживания изменений и автоматического пересоздания контейнеров в режиме разработки можно использовать команду:
 
-    docker compose --profile dev up -d && docker compose --profile dev watch
+    docker compose --profile postgres --profile minio --profile traefik up -d && docker compose --profile postgres --profile minio --profile traefik watch
 
 Для удаления контейнеров и вспомогательных ресурсов (томов, сетей) используется команда:
 
@@ -263,7 +263,7 @@ Docker Compose выполняет интерполяцию переменных 
 
 При переносе `.env` в Docker-окружение экранируйте каждый символ `$` удвоением (`$` → `$$`). Это касается всех значений с `$`, прежде всего `SECRET_KEY`. Проверка после запуска: `docker compose config` не выдаёт предупреждений вида `The "..." variable is not set`, а значение внутри контейнера совпадает с исходным:
 
-    docker compose exec website printenv SECRET_KEY
+    docker compose exec application printenv SECRET_KEY
 
 ### Добавление SSH-ключей хоста в SourceCraft
 

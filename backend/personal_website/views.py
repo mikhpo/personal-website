@@ -1,7 +1,38 @@
 """Представления основного модуля проекта."""
 
+from django.db import connection
+from django.http import HttpRequest, HttpResponse
 from django.templatetags.static import static
-from django.views.generic import RedirectView
+from django.views.generic import RedirectView, View
+
+
+class HealthView(View):
+    """Проверка живости приложения и соединения с базой данных.
+
+    Единая точка живости для всех режимов запуска: healthcheck контейнера,
+    проверка после развертывания, внешний мониторинг. Выполняет тривиальный
+    запрос к базе данных, не требует аутентификации и не выполняет
+    перенаправлений.
+    """
+
+    def get(self, request: HttpRequest) -> HttpResponse:  # noqa: ARG002
+        """
+        Выполнить проверочный запрос к базе данных.
+
+        Args:
+            request (HttpRequest): HTTP-запрос проверки (не используется).
+
+        Returns:
+            HttpResponse: Тело "ok" со статусом 200 при доступной базе данных,
+            статус 503 при ошибке выполнения запроса.
+        """
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT 1")
+                cursor.fetchone()
+        except Exception:  # noqa: BLE001
+            return HttpResponse("unavailable", status=503)
+        return HttpResponse("ok")
 
 
 class StaticRedirectView(RedirectView):

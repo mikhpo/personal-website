@@ -91,10 +91,12 @@ function str_to_bool() {
 #######################################
 # Опрделение количество воркеров Gunicorn.
 # Количество воркеров определяется по формуле: (2 * количество логических ядер CPU) + 1.
+# Формула прожорлива к оперативной памяти на слабом железе, поэтому переменная
+# окружения GUNICORN_WORKERS перекрывает её явным числом воркеров.
 # Количество логических ядер CPU определяется разными способами в зависимости от оболочки:
 #   - для оболочки bash: командой npoc
 #   - для оболочки zsh: командой sysctl hw.logicalcpu
-# Переменные окружения: SHELL - используемая оболочка.
+# Переменные окружения: SHELL - используемая оболочка, GUNICORN_WORKERS - число воркеров.
 # Возвращает: количество воркеров (целое число).
 #######################################
 function calculate_worker_count() {
@@ -138,20 +140,25 @@ function main() {
     # стартовать параллельно без depends_on.
     wait_for_port "${POSTGRES_HOST}" "${POSTGRES_PORT}"
 
-    # Извлечь хост и порт MinIO из значения переменной MINIO_SERVER_URL.
-    read -r minio_host minio_port <<< "$(parse_service_url "${MINIO_SERVER_URL}")"
-    wait_for_port "$minio_host" "$minio_port"
+    # Дождаться готовности MinIO: только при STORAGE_TYPE=filesystem
+    # (хранилище приложения) и непустом MINIO_SERVER_URL. При STORAGE_TYPE=s3
+    # с внешним S3-хранилищем локального MinIO может не быть, и безусловное
+    # ожидание добавляло к каждому старту таймаут недоступного адреса.
+    if [ "${STORAGE_TYPE}" != "s3" ] && [ -n "${MINIO_SERVER_URL}" ]; then
+        read -r minio_host minio_port <<< "$(parse_service_url "${MINIO_SERVER_URL}")"
+        wait_for_port "$minio_host" "$minio_port"
+    fi
 
     # Выполнить миграции и собрать статические файлы.
     $python "$manage" migrate
     $python "$manage" collectstatic --noinput
 
-    # Установить алиас для сервера MinIO. Алиас настраивается только для
-    # настоящего MinIO (локальная разработка, профиль dev). При STORAGE_TYPE=s3
-    # внешнее S3-хранилище не является MinIO-сервером: команда mc admin info
-    # завершается ошибкой и уводит контейнер в crash-loop. Алиас для
-    # резервного копирования (mc mirror в scripts/s3backup.sh) устанавливается
-    # отдельно на хосте.
+    # Установить алиас для сервера MinIO. Алиас настраивается только при
+    # STORAGE_TYPE=filesystem с локальным MinIO (профиль minio): внешнее
+    # S3-хранилище при STORAGE_TYPE=s3 не является MinIO-сервером, команда
+    # mc admin info завершается ошибкой и уводит контейнер в crash-loop.
+    # Алиас для резервного копирования (mc mirror в scripts/s3backup.sh)
+    # устанавливается отдельно на хосте.
     if [ "${STORAGE_TYPE}" != "s3" ]; then
         set_minio_alias
     fi
@@ -161,7 +168,10 @@ function main() {
     if $debug_bool; then
         $python "$manage" runserver "$DJANGO_HOST":"$DJANGO_PORT"
     else
-        num_workers=$(calculate_worker_count)
+        # Переменная окружения GUNICORN_WORKERS перекрывает формулу по числу
+        # ядер: на слабом железе (homelab) стандартное число воркеров
+        # избыточно для доступного объема оперативной памяти.
+        num_workers="${GUNICORN_WORKERS:-$(calculate_worker_count)}"
         # Журналы доступа и ошибок пишутся в stdout/stderr контейнера
         # и собираются Docker logging driver'ом (json-file с ротацией).
         # Рециклинг воркеров после ~500 запросов ограничивает дрейф RSS:

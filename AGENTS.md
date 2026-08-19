@@ -15,12 +15,12 @@
 ## Docker Compose
 
 - Используется для запуска приложения и его зависимостей
-- Сервисы postgres и minio относятся к профилю dev и запускаются только вместе с ним
-- Запустить приложение и все зависимости: `docker compose --profile dev up -d` (или `docker compose up -d` при `COMPOSE_PROFILES=dev` в `.env`)
-- Запустить приложение без сервисов postgres и minio: `docker compose up -d` (использовать или V2 `docker compose`, или V1 `docker-compose`; режим для окружений, где база данных и объектное хранилище предоставляются вне Docker Compose)
+- Каждый инфраструктурный сервис относится к собственному профилю: postgres, minio, traefik
+- Запустить приложение и все зависимости: `docker compose --profile postgres --profile minio --profile traefik up -d` (или `docker compose up -d` при `COMPOSE_PROFILES=postgres,minio,traefik` в `.env`)
+- Запустить приложение без инфраструктурных сервисов: `docker compose up -d` (использовать или V2 `docker compose`, или V1 `docker-compose`; режим для окружений, где база данных, объектное хранилище и обратный прокси предоставляются вне Docker Compose)
 - Запустить только зависимости (базу данных и объектное хранилище): `docker compose up -d postgres minio` (явное имя сервиса активирует профиль автоматически)
 - Остановить всё приложение и зависимости: `docker compose down`
-- В окружениях, где postgres и minio не используются, переменную `COMPOSE_PROFILES` не задавать; диагностические команды адресовать только сервисам website и traefik (`up -d postgres` поднял бы dev-сервис)
+- В окружениях, где postgres и minio не используются, переменную `COMPOSE_PROFILES` не задавать; диагностические команды адресовать только сервисам application и traefik (`up -d postgres` поднял бы сервис профиля postgres)
 
 ## Структура проекта
 
@@ -125,7 +125,7 @@
 ### Настройка S3 хранилища
 
 - Проект поддерживает использование S3-совместимых хранилищ для хранения медиа файлов
-- Для включения S3 хранилища необходимо установить переменную окружения `STORAGE_TYPE=s3` и запустить MinIO через Docker Compose: `docker compose up -d minio` (явное имя сервиса активирует профиль dev)
+- Для включения S3 хранилища необходимо установить переменную окружения `STORAGE_TYPE=s3` и запустить MinIO через Docker Compose: `docker compose up -d minio` (явное имя сервиса активирует профиль minio)
 
 ## Стиль кода
 

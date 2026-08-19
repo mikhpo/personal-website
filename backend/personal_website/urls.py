@@ -10,7 +10,7 @@ from django.views.generic import RedirectView
 
 from blog.sitemaps import ArticleSitemap, CategorySitemap, SeriesSitemap, TopicSitemap
 from gallery.sitemaps import AlbumSitemap, PhotoSitemap, TagSitemap
-from personal_website.views import StaticRedirectView
+from personal_website.views import HealthView, StaticRedirectView
 
 sitemaps = {
     "articles": ArticleSitemap,
@@ -23,6 +23,10 @@ sitemaps = {
 }
 
 urlpatterns = [
+    # Проверка живости приложения и базы данных для healthcheck и мониторинга.
+    # Маршрут размещен до редиректа корня, не требует аутентификации
+    # и не выполняет перенаправлений.
+    path("health/", HealthView.as_view(), name="health"),
     path("", RedirectView.as_view(url="main/", permanent=True)),
     path(
         "favicon.ico",

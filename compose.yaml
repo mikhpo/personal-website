@@ -1,17 +1,21 @@
 # Общая конфигурация логирования для всех сервисов.
 # Docker собирает stdout/stderr контейнеров в driver json-file
 # с ротацией по размеру: не более 3 файлов по 10 МБ на контейнер.
-# Детальные логи приложения дополнительно пишутся в volume (см. сервис website).
+# Детальные логи приложения дополнительно пишутся в volume (см. сервис application).
 x-logging: &default-logging
   driver: "json-file"
   options:
     max-size: "10m"
     max-file: "3"
 
+# Инфраструктурные сервисы подключаются собственными профилями:
+# postgres, minio, traefik. Пустое значение COMPOSE_PROFILES означает,
+# что все инфраструктурные сервисы внешние (managed-БД, удаленное S3,
+# хостовый обратный прокси), и поднимается только приложение.
 services:
   # Веб-сайт на Django. Запускается либо через Gunicorn, либо через команду runserver.
   # Способ запуска и параметры запуска определяются скриптом entrypoint.sh.
-  website:
+  application:
     # Имя образа совпадает с публикуемым CI (PROJECT_NAME=personal_website,
     # см. .sourcecraft/ci.yaml): Docker Hub не допускает разных написаний.
     image: ${DOCKER_REGISTRY:-docker.io}/mikhpo/personal_website:latest
@@ -31,8 +35,17 @@ services:
       - LOGS_ROOT=/srv/website/logs
       - TEMP_ROOT=/srv/website/temp
     env_file: .env
-    # Порты не публикуются: трафик терминирует Traefik во внутренней сети Compose.
-    # Публикация порта приложения наружу не нужна и обходит правила файрвола хоста.
+    # Порт приложения публикуется постоянно, но только на localhost хоста:
+    # этого требует хостовый обратный прокси (nginx) при внешних БД и хранилище.
+    # При работе с Traefik публикация безвредна: прокси обращается к приложению
+    # по внутренней сети Compose, а порт недоступен с других хостов.
+    ports:
+      - "127.0.0.1:${DJANGO_PORT:-8000}:8000"
+    # Доступ к сервисам операционной системы хоста (systemd-PostgreSQL,
+    # хостовый nginx) с Linux: имя host.docker.internal на Linux из коробки
+    # не разрешается без этой записи.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - ${STORAGE_ROOT:-./storage/}:/srv/website/storage:rw
       - ${STATIC_ROOT:-./static/}:/srv/website/static:rw
@@ -61,12 +74,13 @@ services:
       - "traefik.http.routers.website.tls.certresolver=${TRAEFIK_CERT_RESOLVER:-}"
       - "traefik.http.services.website.loadbalancer.server.port=${DJANGO_PORT:-8000}"
     # Порядок запуска относительно PostgreSQL и MinIO не задаётся через depends_on:
-    # эти сервисы относятся к профилю dev и могут отсутствовать в текущем окружении,
-    # поэтому готовность ожидается скриптом entrypoint.sh (функция wait_for_port).
+    # эти сервисы относятся к собственным профилям (postgres, minio) и могут
+    # отсутствовать в текущем окружении, поэтому готовность ожидается скриптом
+    # entrypoint.sh (функция wait_for_port).
     restart: always
     logging: *default-logging
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000"]
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -79,6 +93,10 @@ services:
   # Let's Encrypt получаются и обновляются автоматически.
   # Приложение обнаруживается по Docker-лейблам.
   traefik:
+    # Прокси занимает порты 80/443 хоста, поэтому подключается только профилем
+    # traefik: на мультипроектном хосте терминированием TLS занимается прокси
+    # операционной системы, а приложение всегда доступно на 127.0.0.1:${DJANGO_PORT}.
+    profiles: ["traefik"]
     image: traefik:v3.7
     command:
       - "--providers.docker=true"
@@ -112,18 +130,22 @@ services:
 
   # Кластер PostgreSQL для веб-сайта. База данных создается автоматически.
   # Сервис предназначен для окружений, где база данных не предоставляется
-  # внешним сервисом. Поднимается при активном профиле dev
-  # (флаг --profile dev или переменная COMPOSE_PROFILES).
+  # внешним сервисом (managed-кластер или systemd-PostgreSQL на хосте).
+  # Поднимается при активном профиле postgres (флаг --profile postgres,
+  # переменная COMPOSE_PROFILES или явное имя сервиса в команде up).
   postgres:
-    profiles: ["dev"]
+    profiles: ["postgres"]
     image: postgres:17
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB}
     env_file: .env
+    # Порт публикуется только на localhost хоста: внешний доступ к базе
+    # данных не предусмотрен, подключаются приложение и утилиты
+    # администрирования на самом хосте.
     ports:
-      - ${POSTGRES_PORT}:${POSTGRES_PORT}
+      - "127.0.0.1:${POSTGRES_PORT}:${POSTGRES_PORT}"
     volumes:
       - postgres-data:/var/lib/postgresql/data:rw
     restart: always
@@ -135,20 +157,23 @@ services:
       retries: 5
 
   # S3-совместимое объектное хранилище Minio. Предназначено для окружений,
-  # где объектное хранилище не предоставляется внешним сервисом.
-  # Поднимается при активном профиле dev (флаг --profile dev или
-  # переменная COMPOSE_PROFILES).
+  # где объектное хранилище не предоставляется внешним сервисом (удаленный
+  # S3 или локальный каталог при STORAGE_TYPE=filesystem).
+  # Поднимается при активном профиле minio (флаг --profile minio,
+  # переменная COMPOSE_PROFILES или явное имя сервиса в команде up).
   minio:
-    profiles: ["dev"]
+    profiles: ["minio"]
     image: minio/minio
     command: minio server /data --console-address ":9001"
     environment:
       - MINIO_ROOT_USER=${MINIO_ROOT_USER}
       - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
     env_file: .env
+    # Порты API (9000) и веб-консоли (9001) публикуются только на localhost
+    # хоста: внешний доступ к объектному хранилищу не предусмотрен.
     ports:
-      - 9000:9000
-      - 9001:9001
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
     volumes:
       - minio-data:/data:rw
     restart: always
