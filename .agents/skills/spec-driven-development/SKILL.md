@@ -1,5 +1,5 @@
 ---
-name: spec-driven-plan
+name: spec-driven-development
 description: Создание локальных поэтапных планов в духе Spec-Driven Development (spec/plan/tasks + протокол агента) и работа по ним — этапы-PR, последовательный цикл агентов, возобновление без потери контекста
 ---
 
