@@ -23,9 +23,6 @@ sitemaps = {
 }
 
 urlpatterns = [
-    # Проверка живости приложения и базы данных для healthcheck и мониторинга.
-    # Маршрут размещен до редиректа корня, не требует аутентификации
-    # и не выполняет перенаправлений.
     path("health/", HealthView.as_view(), name="health"),
     path("", RedirectView.as_view(url="main/", permanent=True)),
     path(
