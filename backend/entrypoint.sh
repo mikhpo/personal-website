@@ -11,20 +11,6 @@ readonly DJANGO_HOST="0.0.0.0"
 readonly DJANGO_PORT="${DJANGO_PORT:-8000}"
 
 #######################################
-# Установить алиас для сервера MinIO.
-# Параметры алиаса зависят из переменных окружения.
-#######################################
-function set_minio_alias() {
-    mc=$(which mc)
-    $mc alias set \
-    "${MINIO_ALIAS}" \
-    "${MINIO_SERVER_URL}" \
-    "${MINIO_ACCESS_KEY}" \
-    "${MINIO_SECRET_KEY}"
-    $mc admin info "${MINIO_ALIAS}"
-}
-
-#######################################
 # Дождаться открытия TCP-порта на хосте.
 # Проверка выполняется средствами bash (/dev/tcp) без внешних зависимостей
 # от клиентов баз данных. Используется для ожидания готовности сервисов
@@ -140,28 +126,25 @@ function main() {
     # стартовать параллельно без depends_on.
     wait_for_port "${POSTGRES_HOST}" "${POSTGRES_PORT}"
 
-    # Дождаться готовности MinIO: только при STORAGE_TYPE=filesystem
-    # (хранилище приложения) и непустом MINIO_SERVER_URL. При STORAGE_TYPE=s3
-    # с внешним S3-хранилищем локального MinIO может не быть, и безусловное
-    # ожидание добавляло к каждому старту таймаут недоступного адреса.
-    if [ "${STORAGE_TYPE}" != "s3" ] && [ -n "${MINIO_SERVER_URL}" ]; then
-        read -r minio_host minio_port <<< "$(parse_service_url "${MINIO_SERVER_URL}")"
-        wait_for_port "$minio_host" "$minio_port"
+    # Дождаться готовности объектного хранилища при STORAGE_TYPE=s3:
+    # медиафайлы и статика обслуживаются S3, без него приложение неработоспособно.
+    # Проверка выполняется по эндпоинту AWS_S3_ENDPOINT_URL на уровне TCP
+    # и не зависит от провайдера: локальный MinIO и публичное облако
+    # проверяются одинаково. При STORAGE_TYPE=filesystem приложение
+    # от S3 не зависит, ожидание не выполняется.
+    if [ "${STORAGE_TYPE}" = "s3" ] && [ -n "${AWS_S3_ENDPOINT_URL}" ]; then
+        read -r s3_host s3_port <<< "$(parse_service_url "${AWS_S3_ENDPOINT_URL}")"
+        wait_for_port "$s3_host" "$s3_port"
     fi
 
     # Выполнить миграции и собрать статические файлы.
     $python "$manage" migrate
     $python "$manage" collectstatic --noinput
 
-    # Установить алиас для сервера MinIO. Алиас настраивается только при
-    # STORAGE_TYPE=filesystem с локальным MinIO (профиль minio): внешнее
-    # S3-хранилище при STORAGE_TYPE=s3 не является MinIO-сервером, команда
-    # mc admin info завершается ошибкой и уводит контейнер в crash-loop.
-    # Алиас для резервного копирования (mc mirror в scripts/s3backup.sh)
-    # устанавливается отдельно на хосте.
-    if [ "${STORAGE_TYPE}" != "s3" ]; then
-        set_minio_alias
-    fi
+    # Алиас сервера MinIO в контейнере не настраивается: у него нет
+    # потребителей внутри контейнера, резервное копирование выполняется
+    # на хосте собственным клиентом mc (алиас — см. task minio-alias
+    # и scripts/s3backup.sh).
 
     # В зависимости от значения переменной окружения DEBUG определить способ запуска.
     debug_bool=$(str_to_bool "$DEBUG")
