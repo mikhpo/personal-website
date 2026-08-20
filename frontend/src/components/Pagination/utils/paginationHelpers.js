@@ -15,8 +15,8 @@
  * - Если параметров нет, то параметр page добавляется через символ ?.
  *
  * Примеры:
- * - '/articles' → '/articles?page=2'
- * - '/articles?category=tech' → '/articles?category=tech&page=2'
+ * - '/articles' -> '/articles?page=2'
+ * - '/articles?category=tech' -> '/articles?category=tech&page=2'
  */
 export const getPageUrl = (baseUrl, pageNumber) => {
   const separator = baseUrl.includes('?') ? '&' : '?';
@@ -43,9 +43,9 @@ export const getPageUrl = (baseUrl, pageNumber) => {
  *    корректируется начальная страница, чтобы показать максимум элементов
  *
  * Примеры:
- * - currentPage=5, totalPages=10, maxVisiblePages=5 → {startPage: 3, endPage: 7}
- * - currentPage=1, totalPages=10, maxVisiblePages=5 → {startPage: 1, endPage: 5}
- * - currentPage=10, totalPages=10, maxVisiblePages=5 → {startPage: 6, endPage: 10}
+ * - currentPage=5, totalPages=10, maxVisiblePages=5 -> {startPage: 3, endPage: 7}
+ * - currentPage=1, totalPages=10, maxVisiblePages=5 -> {startPage: 1, endPage: 5}
+ * - currentPage=10, totalPages=10, maxVisiblePages=5 -> {startPage: 6, endPage: 10}
  */
 export const calculatePageRange = (currentPage, totalPages, maxVisiblePages = 5) => {
   let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));

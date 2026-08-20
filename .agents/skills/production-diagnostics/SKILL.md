@@ -1,6 +1,6 @@
 ---
 name: production-diagnostics
-description: Диагностика продакшен-сервера — параметры среды и доступ, поиск и чтение логов, проверка состояния сервисов и эндпоинтов
+description: Диагностика продакшен-сервера - параметры среды и доступ, поиск и чтение логов, проверка состояния сервисов и эндпоинтов
 ---
 
 ## Предназначение
@@ -11,18 +11,18 @@ description: Диагностика продакшен-сервера — пар
 
 Источники информации о среде деплоя (хост, способ подключения, путь проекта, конфигурация):
 
-- Окружения SourceCraft: `src envs` — список доступных сред; переключение флагом `--env <name>`, текущее видно в `src auth status`.
-- Скрипты деплоя в репозитории: `scripts/docker/` (setup.sh, deploy.sh, update.sh) — путь проекта на сервере и последовательность деплоя (git pull + docker compose pull + up).
-- Конфигурация стекa: `compose.yaml` — сервисы (website, traefik), тома, переменные окружения.
-- CI-конфиг деплоя (`.sourcecraft/ci.yaml`, workflow `deploy-workflow`; зеркально `.github/workflows/deploy.yml`) — шаги деплоя и используемые секреты сервера (хост, пользователь, ключ).
-- `~/.ssh/config` — алиас подключения к серверу.
-- `.env` на сервере — актуальные переменные среды (DOMAIN_NAME, STORAGE_TYPE, DEBUG, параметры БД и хранилища).
+- Окружения SourceCraft: `src envs` - список доступных сред; переключение флагом `--env <name>`, текущее видно в `src auth status`.
+- Скрипты деплоя в репозитории: `scripts/docker/` (setup.sh, deploy.sh, update.sh) - путь проекта на сервере и последовательность деплоя (git pull + docker compose pull + up).
+- Конфигурация стекa: `compose.yaml` - сервисы (website, traefik), тома, переменные окружения.
+- CI-конфиг деплоя (`.sourcecraft/ci.yaml`, workflow `deploy-workflow`; зеркально `.github/workflows/deploy.yml`) - шаги деплоя и используемые секреты сервера (хост, пользователь, ключ).
+- `~/.ssh/config` - алиас подключения к серверу.
+- `.env` на сервере - актуальные переменные среды (DOMAIN_NAME, STORAGE_TYPE, DEBUG, параметры БД и хранилища).
 - Публичный адрес сайта (домен/URL) для проверки в браузере: переменная `DOMAIN_NAME` в `.env` на сервере.
 
 ## Доступ и расположение
 
 - Подключение по алиасу из `~/.ssh/config`: `ssh <алиас>`.
-- Путь проекта на сервере: `/root/personal-website`. Приложение выполняется в контейнерах Docker Compose (сервис `website`), проксирование и TLS — контейнер `traefik`.
+- Путь проекта на сервере: `/root/personal-website`. Приложение выполняется в контейнерах Docker Compose (сервис `website`), проксирование и TLS - контейнер `traefik`.
 - Порт приложения 8000 не публикуется наружу: весь внешний трафик проходит через Traefik (порты 80/443).
 
 ## Логи
@@ -71,7 +71,7 @@ docker inspect --format '{{.Name}} {{.State.Status}} (health: {{.State.Health.St
 
 ### Через публичный домен
 
-Основной способ — запрос по публичному домену сайта (домен брать из `DOMAIN_NAME`, см. раздел «Параметры целевой среды»). Это именно то, что видит пользователь:
+Основной способ - запрос по публичному домену сайта (домен брать из `DOMAIN_NAME`, см. раздел «Параметры целевой среды»). Это именно то, что видит пользователь:
 
 ```bash
 # внешний запрос
@@ -87,11 +87,11 @@ ssh <алиас> 'curl -sS -o /dev/null -w "%{http_code}\n" -H "Accept: text/htm
 
 DRF выбирает рендерер по заголовку `Accept`:
 
-- `Accept: application/json` — JSONRenderer.
-- `Accept: text/html` — BrowsableAPIRenderer (HTML-рендеринг, строит filter-формы для viewset'ов с `filterset_fields`).
-- `Accept: */*` — первый рендерер из `DEFAULT_RENDERER_CLASSES` (обычно JSON).
+- `Accept: application/json` - JSONRenderer.
+- `Accept: text/html` - BrowsableAPIRenderer (HTML-рендеринг, строит filter-формы для viewset'ов с `filterset_fields`).
+- `Accept: */*` - первый рендерер из `DEFAULT_RENDERER_CLASSES` (обычно JSON).
 
-Если 500 возникает только для одного из форматов — проблема в соответствующем рендерере/шаблоне, а не в queryset/сериализации.
+Если 500 возникает только для одного из форматов - проблема в соответствующем рендерере/шаблоне, а не в queryset/сериализации.
 
 ### Изоляция слоя Django (в обход Traefik)
 
@@ -124,5 +124,5 @@ PYEOF
 ## Ограничения (read-only)
 
 - Для диагностики использовать только чтение: `docker compose logs/ps`, `docker inspect`, `tail`, `grep`, `curl` GET, `manage.py shell` с GET-запросами.
-- Не читать `.env` без явной необходимости — там секреты; переменные окружения узнавать через `manage.py shell` (`settings.*`) или `docker compose exec website env | grep -v -iE 'key|password|secret'`.
+- Не читать `.env` без явной необходимости - там секреты; переменные окружения узнавать через `manage.py shell` (`settings.*`) или `docker compose exec website env | grep -v -iE 'key|password|secret'`.
 - Не перезапускать сервисы и не менять конфиги без отдельного разрешения.

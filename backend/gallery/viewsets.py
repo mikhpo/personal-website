@@ -72,7 +72,7 @@ class PhotoViewSet(viewsets.ReadOnlyModelViewSet):
     ordering: ClassVar[list] = ["-taken_at"]
 
     def get_queryset(self) -> "QuerySet[Photo]":
-        """В list отдаёт только public=True, в retrieve — любую фотографию."""
+        """В list отдаёт только public=True, в retrieve - любую фотографию."""
         queryset = Photo.objects.select_related("album").prefetch_related("tags")
         if self.action == "list":
             return queryset.filter(public=True)

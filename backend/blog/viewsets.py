@@ -32,7 +32,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
     ordering: ClassVar[list] = ["name"]
 
     def get_queryset(self) -> "QuerySet[Category]":
-        """В list отдаёт только public=True, в retrieve — любую категорию."""
+        """В list отдаёт только public=True, в retrieve - любую категорию."""
         queryset = Category.objects.all()
         if self.action == "list":
             return queryset.filter(public=True)
@@ -51,7 +51,7 @@ class TopicViewSet(viewsets.ModelViewSet):
     ordering: ClassVar[list] = ["name"]
 
     def get_queryset(self) -> "QuerySet[Topic]":
-        """В list отдаёт только public=True, в retrieve — любую тему."""
+        """В list отдаёт только public=True, в retrieve - любую тему."""
         queryset = Topic.objects.all()
         if self.action == "list":
             return queryset.filter(public=True)
@@ -70,7 +70,7 @@ class SeriesViewSet(viewsets.ModelViewSet):
     ordering: ClassVar[list] = ["name"]
 
     def get_queryset(self) -> "QuerySet[Series]":
-        """В list отдаёт только public=True, в retrieve — любую серию."""
+        """В list отдаёт только public=True, в retrieve - любую серию."""
         queryset = Series.objects.all()
         if self.action == "list":
             return queryset.filter(public=True)
@@ -90,7 +90,7 @@ class ArticleViewSet(viewsets.ModelViewSet):
     ordering: ClassVar[list] = ["-published_at"]
 
     def get_queryset(self) -> "QuerySet[Article]":
-        """В list отдаёт только public=True, в retrieve — любую статью.
+        """В list отдаёт только public=True, в retrieve - любую статью.
 
         select_related/prefetch_related оптимизируют сериализацию вложенных
         объектов (автор, категории, темы, серии, комментарии).

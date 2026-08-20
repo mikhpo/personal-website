@@ -117,6 +117,9 @@ ignore = [
     "S501",
 ]
 "**/signals.py" = ["ANN401", "ARG001"]
+"tools/*.py" = [
+    "S603", # утилиты вызывают системные команды (git) с литеральными аргументами
+]
 
 [tool.ruff.lint.pydocstyle]
 convention = "pep257" # Варианты: "google", "numpy", "pep257".

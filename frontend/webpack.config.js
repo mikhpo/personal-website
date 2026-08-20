@@ -33,7 +33,7 @@ module.exports = {
     // publicPath определяет URL-префикс бандлов (включая lazy-chunks) в webpack-stats.json.
     // Значение берется из переменной окружения WEBPACK_PUBLIC_PATH и должно совпадать
     // со STATIC_URL той среды, для которой выполняется сборка (локально '/static/',
-    // в S3-режиме — адрес бакета или CDN с префиксом static/).
+    // в S3-режиме - адрес бакета или CDN с префиксом static/).
     publicPath: process.env.WEBPACK_PUBLIC_PATH || '/static/',
   },
 
@@ -98,7 +98,7 @@ module.exports = {
     // в бандл: редактор динамически загружает плагины, темы и скины через отдельные
     // HTTP-запросы по статическим URL (например, /static/tinymce/themes/silver/theme.min.js),
     // а стили и скрипты Bootstrap подключаются в шаблонах как отдельные файлы.
-    // Webpack не знает об этих файлах, поэтому копируем их в backend/staticfiles/ —
+    // Webpack не знает об этих файлах, поэтому копируем их в backend/staticfiles/ -
     // откуда Django раздаёт их по тем же URL /static/tinymce/ и /static/bootstrap/dist/.
     // Такой копией вместо каталога node_modules в STATICFILES_DIRS объём статики
     // сокращается с десятков тысяч файлов до нескольких сотен.

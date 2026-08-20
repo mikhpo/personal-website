@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 class ArticleDetailView(DetailView):
-    """Представление одной статьи — рендерит React компонент ArticleDetail."""
+    """Представление одной статьи - рендерит React компонент ArticleDetail."""
 
     model = Article
 

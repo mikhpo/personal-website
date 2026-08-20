@@ -1,6 +1,6 @@
 ---
 name: yc-postgresql
-description: Управление кластером Managed PostgreSQL в Yandex Cloud через yc — параметры подключения, настройка внешнего доступа, проверка подключения, управление пользователями и паролями.
+description: Управление кластером Managed PostgreSQL в Yandex Cloud через yc - параметры подключения, настройка внешнего доступа, проверка подключения, управление пользователями и паролями.
 ---
 
 ## Предназначение
@@ -17,12 +17,12 @@ description: Управление кластером Managed PostgreSQL в Yande
 
 Источники информации о кластере:
 
-- `yc config list` — текущий cloud-id, folder-id, subject-id.
-- `yc managed-postgresql cluster list` — список кластеров папки.
-- `yc managed-postgresql cluster get <имя> --full` — полная конфигурация: версия, ресурсы, access, connection manager, сеть, группы безопасности.
-- `yc managed-postgresql host list --cluster-name <имя>` — хосты, зоны, роли и PUBLIC IP (ключевое поле для внешнего доступа).
-- `yc managed-postgresql user list --cluster-name <имя>` — пользователи, их БД и conn_limit.
-- `yc managed-postgresql database list --cluster-name <имя>` — базы и владельцы.
+- `yc config list` - текущий cloud-id, folder-id, subject-id.
+- `yc managed-postgresql cluster list` - список кластеров папки.
+- `yc managed-postgresql cluster get <имя> --full` - полная конфигурация: версия, ресурсы, access, connection manager, сеть, группы безопасности.
+- `yc managed-postgresql host list --cluster-name <имя>` - хосты, зоны, роли и PUBLIC IP (ключевое поле для внешнего доступа).
+- `yc managed-postgresql user list --cluster-name <имя>` - пользователи, их БД и conn_limit.
+- `yc managed-postgresql database list --cluster-name <имя>` - базы и владельцы.
 
 ## Анализ кластера (read-only)
 
@@ -40,7 +40,7 @@ yc managed-postgresql host list --cluster-name postgresql
 yc managed-postgresql user list --cluster-name postgresql
 yc managed-postgresql database list --cluster-name postgresql
 
-# Группы безопасности кластера (None — используются default-SG сети)
+# Группы безопасности кластера (None - используются default-SG сети)
 yc managed-postgresql cluster get postgresql --format json | \
   python3 -c "import sys,json; print('security_group_ids:', json.load(sys.stdin).get('security_group_ids'))"
 
@@ -74,7 +74,7 @@ yc vpc security-group get <default-sg-id>
    dig +short <FQDN>
    ```
 
-3. Группы безопасности. Если к кластеру не привязаны SG (`security_group_ids: None`), действует default-SG сети. Проверить, что default-SG разрешает входящий TCP на 6432 из нужного диапазона (например, `0.0.0.0/0`). Для текущего проекта default-SG уже открыта (`INGRESS ANY из 0.0.0.0/0`) — дополнительно менять ничего не нужно.
+3. Группы безопасности. Если к кластеру не привязаны SG (`security_group_ids: None`), действует default-SG сети. Проверить, что default-SG разрешает входящий TCP на 6432 из нужного диапазона (например, `0.0.0.0/0`). Для текущего проекта default-SG уже открыта (`INGRESS ANY из 0.0.0.0/0`) - дополнительно менять ничего не нужно.
 
 Если нужно ограничить доступ конкретными IP, привязать к кластеру отдельную SG правилом `INGRESS TCP 6432 из <CIDR>`:
 
@@ -84,7 +84,7 @@ yc managed-postgresql cluster update postgresql --security-group-ids <sg-id>
 
 ## Проверка подключения
 
-Проверка по слоям (сетевой уровень → SSL → аутентификация):
+Проверка по слоям (сетевой уровень -> SSL -> аутентификация):
 
 ```bash
 # Резолвинг FQDN в публичный IP
@@ -105,7 +105,7 @@ PGPASSWORD=<пароль> psql \
   -c "SELECT current_user, current_database();"
 ```
 
-Особенность вывода: при подключении через Odyssey `inet_server_addr()/inet_server_port()` возвращают `127.0.0.1:5432` (пулер проксирует на локальный PostgreSQL) — это нормально, не признак ошибки.
+Особенность вывода: при подключении через Odyssey `inet_server_addr()/inet_server_port()` возвращают `127.0.0.1:5432` (пулер проксирует на локальный PostgreSQL) - это нормально, не признак ошибки.
 
 ## Управление паролями
 
@@ -119,9 +119,9 @@ PGPASSWORD=<пароль> psql \
 - Lockbox GetPayload API возвращает `404` для секретов этого типа.
 - В метаданных операции пароль также отсутствует.
 
-### Рекомендуемый способ — явный алфавитно-цифровой пароль
+### Рекомендуемый способ - явный алфавитно-цифровой пароль
 
-Сгенерировать пароль без спецсимволов (не требует экранирования нигде) и задать его одной командой (переменные не сохраняются между вызовами shell — задавать в той же команде):
+Сгенерировать пароль без спецсимволов (не требует экранирования нигде) и задать его одной командой (переменные не сохраняются между вызовами shell - задавать в той же команде):
 
 ```bash
 PW=$(openssl rand -base64 48 | tr -dc 'A-Za-z0-9' | head -c 24) && \
@@ -134,7 +134,7 @@ PGPASSWORD="$PW" psql \
 
 ### Экранирование паролей со спецсимволами
 
-Если пароль содержит спецсимволы — использовать одинарные кавычки (в zsh/bash всё внутри одинарных кавычек буквально, без раскрытия глобов и истории). Одинарная кавычка внутри пароля вставляется последовательностью `'\''`:
+Если пароль содержит спецсимволы - использовать одинарные кавычки (в zsh/bash всё внутри одинарных кавычек буквально, без раскрытия глобов и истории). Одинарная кавычка внутри пароля вставляется последовательностью `'\''`:
 
 ```bash
 PW='пароль'\''с_одинарной_кавычкой'
