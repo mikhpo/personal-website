@@ -44,9 +44,34 @@ ALLOWED_HOSTS = [
     "127.0.0.1",
     "localhost",
     "testserver",  # Для тестов
-    DOMAIN_NAME,
-    f"www.{DOMAIN_NAME}",
 ]
+
+# Источники, которым Django доверяет при проверке CSRF для HTTPS-форм.
+CSRF_TRUSTED_ORIGINS = []
+
+# Записи с доменом добавляются только при заданном DOMAIN_NAME,
+# иначе в списки попадают значения None и www.None.
+if DOMAIN_NAME:
+    ALLOWED_HOSTS += [DOMAIN_NAME, f"www.{DOMAIN_NAME}"]
+    CSRF_TRUSTED_ORIGINS += [f"https://{DOMAIN_NAME}", f"https://www.{DOMAIN_NAME}"]
+
+# Блок безопасности для развертывания за обратным прокси с терминацией HTTPS.
+# Дефолты безопасны для разработки: все механизмы выключены.
+SECURE_SSL_REDIRECT = str_to_bool(os.getenv("SECURE_SSL_REDIRECT", default="False"))
+
+# Длительность HSTS в секундах: 0 - механизм выключен, типовое продуктивное значение - 31536000 (год).
+SECURE_HSTS_SECONDS = int(os.getenv("SECURE_HSTS_SECONDS", default="0") or "0")
+
+# Передача cookies сессии и CSRF только по HTTPS.
+SESSION_COOKIE_SECURE = str_to_bool(os.getenv("SESSION_COOKIE_SECURE", default="False"))
+CSRF_COOKIE_SECURE = str_to_bool(os.getenv("CSRF_COOKIE_SECURE", default="False"))
+
+# Доверие заголовку X-Forwarded-Proto от прокси: Django считает запрос защищенным,
+# если прокси передал протокол https. Значение заголовка фиксировано под прокси,
+# которые проставляют X-Forwarded-Proto (хостовый nginx, Traefik).
+SECURE_PROXY_SSL_HEADER: tuple[str, str] | None = None
+if str_to_bool(os.getenv("SECURE_PROXY_SSL_HEADER", default="False")):
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 # Список приложений = модули Django + модули сообщества + приложения проекта.
 INSTALLED_APPS = [
@@ -491,8 +516,10 @@ REST_FRAMEWORK = {
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
-    f"https://{DOMAIN_NAME}",
 ]
+
+if DOMAIN_NAME:
+    CORS_ALLOWED_ORIGINS.append(f"https://{DOMAIN_NAME}")
 
 # Разрешить отправку cookies
 CORS_ALLOW_CREDENTIALS = True
