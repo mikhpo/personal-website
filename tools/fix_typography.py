@@ -44,8 +44,14 @@ def replace_typography(path: Path) -> bool:
         return False
 
     data = path.read_bytes()
-    # NUL-байт - признак бинарного файла: побайтовая замена его испортит.
-    if b"\x00" in data or not any(old in data for old, _ in REPLACEMENTS):
+    # Обрабатываются только файлы, декодируемые как UTF-8: бинарные данные
+    # могут содержать те же байтовые последовательности, и замена их повредит.
+    try:
+        data.decode("utf-8")
+    except UnicodeDecodeError:
+        return False
+
+    if not any(old in data for old, _ in REPLACEMENTS):
         return False
 
     for old, new in REPLACEMENTS:
