@@ -39,8 +39,11 @@ services:
     # этого требует хостовый обратный прокси (nginx) при внешних БД и хранилище.
     # При работе с Traefik публикация безвредна: прокси обращается к приложению
     # по внутренней сети Compose, а порт недоступен с других хостов.
+    # Контейнерный порт равен хостовому: приложение внутри контейнера слушает
+    # тот же DJANGO_PORT (entrypoint.sh), поэтому обе стороны публикации
+    # следуют переменной одинаково.
     ports:
-      - "127.0.0.1:${DJANGO_PORT:-8000}:8000"
+      - "127.0.0.1:${DJANGO_PORT:-8000}:${DJANGO_PORT:-8000}"
     # Доступ к сервисам операционной системы хоста (systemd-PostgreSQL,
     # хостовый nginx) с Linux: имя host.docker.internal на Linux из коробки
     # не разрешается без этой записи.
@@ -80,7 +83,7 @@ services:
     restart: always
     logging: *default-logging
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
+      test: ["CMD", "curl", "-f", "http://localhost:${DJANGO_PORT:-8000}/health/"]
       interval: 5s
       timeout: 5s
       retries: 5
