@@ -11,20 +11,6 @@ readonly DJANGO_HOST="0.0.0.0"
 readonly DJANGO_PORT="${DJANGO_PORT:-8000}"
 
 #######################################
-# Установить алиас для сервера MinIO.
-# Параметры алиаса зависят из переменных окружения.
-#######################################
-function set_minio_alias() {
-    mc=$(which mc)
-    $mc alias set \
-    "${MINIO_ALIAS}" \
-    "${MINIO_SERVER_URL}" \
-    "${MINIO_ACCESS_KEY}" \
-    "${MINIO_SECRET_KEY}"
-    $mc admin info "${MINIO_ALIAS}"
-}
-
-#######################################
 # Дождаться открытия TCP-порта на хосте.
 # Проверка выполняется средствами bash (/dev/tcp) без внешних зависимостей
 # от клиентов баз данных. Используется для ожидания готовности сервисов
@@ -91,10 +77,12 @@ function str_to_bool() {
 #######################################
 # Опрделение количество воркеров Gunicorn.
 # Количество воркеров определяется по формуле: (2 * количество логических ядер CPU) + 1.
+# Формула прожорлива к оперативной памяти на слабом железе, поэтому переменная
+# окружения GUNICORN_WORKERS перекрывает её явным числом воркеров.
 # Количество логических ядер CPU определяется разными способами в зависимости от оболочки:
 #   - для оболочки bash: командой npoc
 #   - для оболочки zsh: командой sysctl hw.logicalcpu
-# Переменные окружения: SHELL - используемая оболочка.
+# Переменные окружения: SHELL - используемая оболочка, GUNICORN_WORKERS - число воркеров.
 # Возвращает: количество воркеров (целое число).
 #######################################
 function calculate_worker_count() {
@@ -138,30 +126,31 @@ function main() {
     # стартовать параллельно без depends_on.
     wait_for_port "${POSTGRES_HOST}" "${POSTGRES_PORT}"
 
-    # Извлечь хост и порт MinIO из значения переменной MINIO_SERVER_URL.
-    read -r minio_host minio_port <<< "$(parse_service_url "${MINIO_SERVER_URL}")"
-    wait_for_port "$minio_host" "$minio_port"
+    # Дождаться готовности объектного хранилища при STORAGE_TYPE=s3:
+    # медиафайлы и статика обслуживаются S3, без него приложение неработоспособно.
+    # Проверка выполняется по эндпоинту AWS_S3_ENDPOINT_URL на уровне TCP
+    # и не зависит от провайдера: локальный MinIO и публичное облако
+    # проверяются одинаково.
+    if [ "${STORAGE_TYPE}" = "s3" ] && [ -n "${AWS_S3_ENDPOINT_URL}" ]; then
+        read -r s3_host s3_port <<< "$(parse_service_url "${AWS_S3_ENDPOINT_URL}")"
+        wait_for_port "$s3_host" "$s3_port"
+    fi
 
     # Выполнить миграции и собрать статические файлы.
     $python "$manage" migrate
     $python "$manage" collectstatic --noinput
-
-    # Установить алиас для сервера MinIO. Алиас настраивается только для
-    # настоящего MinIO (локальная разработка, профиль dev). При STORAGE_TYPE=s3
-    # внешнее S3-хранилище не является MinIO-сервером: команда mc admin info
-    # завершается ошибкой и уводит контейнер в crash-loop. Алиас для
-    # резервного копирования (mc mirror в scripts/s3backup.sh) устанавливается
-    # отдельно на хосте.
-    if [ "${STORAGE_TYPE}" != "s3" ]; then
-        set_minio_alias
-    fi
 
     # В зависимости от значения переменной окружения DEBUG определить способ запуска.
     debug_bool=$(str_to_bool "$DEBUG")
     if $debug_bool; then
         $python "$manage" runserver "$DJANGO_HOST":"$DJANGO_PORT"
     else
-        num_workers=$(calculate_worker_count)
+        # Переменная окружения GUNICORN_WORKERS задает число воркеров явно
+        # (целое число), перекрывая формулу по числу ядер: на слабом железе
+        # (homelab) стандартное число воркеров избыточно для доступного
+        # объема оперативной памяти.
+        num_workers="${GUNICORN_WORKERS:-$(calculate_worker_count)}"
+
         # Журналы доступа и ошибок пишутся в stdout/stderr контейнера
         # и собираются Docker logging driver'ом (json-file с ротацией).
         # Рециклинг воркеров после ~500 запросов ограничивает дрейф RSS:
