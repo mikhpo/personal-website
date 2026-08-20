@@ -1,6 +1,7 @@
 """Представления основного модуля проекта."""
 
 from django.db import connection
+from django.db.utils import DatabaseError
 from django.http import HttpRequest, HttpResponse
 from django.templatetags.static import static
 from django.views.generic import RedirectView, View
@@ -30,7 +31,7 @@ class HealthView(View):
             with connection.cursor() as cursor:
                 cursor.execute("SELECT 1")
                 cursor.fetchone()
-        except Exception:  # noqa: BLE001
+        except DatabaseError:
             return HttpResponse("unavailable", status=503)
         return HttpResponse("ok")
 

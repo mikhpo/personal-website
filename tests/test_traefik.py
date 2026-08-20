@@ -97,7 +97,7 @@ class TestTraefik(unittest.TestCase):
             response = requests.get(target, timeout=10, verify=False)
         self.assertEqual(response.status_code, HTTPStatus.OK)
         content_type = response.headers.get("Content-Type")
-        self.assertIn(content_type, "image/x-icon")
+        self.assertEqual(content_type, "image/x-icon")
 
     def _resolve_location(self, location: str) -> str:
         """Преобразовать значение заголовка Location в абсолютный адрес."""
