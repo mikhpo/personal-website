@@ -1,31 +1,72 @@
 #!/bin/bash
 #
-# Восстановление бэкапа системного файлового хранилища при помощи утилиты MinIO Client.
+# Копирование медиафайлов из S3 в файловое хранилище при помощи MinIO Client.
+# Источник по умолчанию - префикс storage бакета бэкапов (BACKUP_BUCKET).
+# Первым аргументом можно указать другой адрес вида alias/бакет[/префикс] -
+# например, медиа-бакет при переносе хранилища с s3 на filesystem:
+#   ./scripts/s3restore.sh "$MINIO_ALIAS/$AWS_STORAGE_BUCKET_NAME"
+# Остальные аргументы передаются mc mirror: --dry-run для пробного прогона,
+# --limit-download 100M - чтобы восстановление не монополизировало канал,
+# --remove - чтобы приемник стал точным зеркалом источника
+# (по умолчанию существующие в приемнике файлы не удаляются).
 
 # Выйти в случае ошибки.
 set -e
 
+# Зафиксировать дату и время выполнения.
+now=$(date '+%Y-%m-%d %H:%M:%S')
+echo "Копирование медиафайлов из S3. Дата и время выполнения: $now"
+
 # Прочитать переменные окружения из файла .env в корневом каталоге проекта.
-project_root="$(dirname "$(readlink -f "$0")")"
-readonly dotenv="$project_root/.env"
+# Путь к .env можно задать через переменную окружения DOTENV_PATH.
+project_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+readonly dotenv="${DOTENV_PATH:-$project_root/.env}"
 if [ -f "$dotenv" ]; then
-    eval export "$(cat "$dotenv")"
+    set -a
+    # shellcheck disable=SC1090
+    . "$dotenv"
+    set +a
     echo "Переменные окружения загружены из файла $dotenv"
 fi
 
-# Определить адреса источника и целевого ресурса.
-readonly S3_BUCKET="$MINIO_ALIAS/$BACKUP_BUCKET"
-readonly SOURCE="$S3_BUCKET/storage"
+# Проверить обязательные переменные окружения.
+if [ -z "$MC_PATH" ]; then
+    echo "Ошибка: MC_PATH не задана в .env" >&2
+    exit 1
+fi
+if [ -z "$STORAGE_ROOT" ]; then
+    echo "Ошибка: STORAGE_ROOT не задана в .env" >&2
+    exit 1
+fi
+
+# Определить источник: аргумент вида alias/бакет[/префикс] или бакет бэкапов.
+if [ "$#" -gt 0 ]; then
+    readonly SOURCE="$1"
+    shift
+else
+    readonly SOURCE="$MINIO_ALIAS/$BACKUP_BUCKET/storage"
+fi
+# Адрес без алиаса (например, при незаданной переменной окружения в команде
+# запуска) молча направляет копию не в тот ресурс, поэтому отвергается сразу.
+if [[ ! "$SOURCE" =~ ^[^/]+/.+ ]]; then
+    echo "Ошибка: источник \"$SOURCE\" должен иметь вид alias/бакет[/префикс]" >&2
+    exit 1
+fi
 readonly TARGET="$STORAGE_ROOT"
-echo "Адрес файлового хранилища: $TARGET"
+echo "Источник: $SOURCE"
+echo "Приемник: файловое хранилище $TARGET"
 
-# Выполнить копирование резервной копии в локальную систему.
-echo "Копирование бэкапа в $TARGET"
+# Выполнить копирование. Дополнительные аргументы передаются mc mirror.
 $MC_PATH mirror \
-    --limit-download 100M \
     "$SOURCE" \
-    "$TARGET"
+    "$TARGET" \
+    "$@"
 
-# Определение конечного размера хранилища.
-storage_size=$(du -sh "$TARGET" | cut -f 1 | tr -d ' ')
-echo "Размер файлового хранилища: $storage_size"
+# Определить конечный размер хранилища. При пробном прогоне копирование
+# не выполнялось, поэтому размер приемника не снимается.
+if [[ " $* " == *" --dry-run "* ]]; then
+    echo "Пробный прогон: копирование не выполнялось"
+else
+    storage_size=$(du -sh "$TARGET" | cut -f 1 | tr -d ' ')
+    echo "Размер файлового хранилища: $storage_size"
+fi

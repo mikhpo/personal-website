@@ -1,39 +1,74 @@
 #!/bin/bash
 #
-# Создание бэкапа файлового хранилища или медиа-бакета S3.
-# При STORAGE_TYPE=filesystem копирует из локального STORAGE_ROOT в бакет бэкапов.
-# При STORAGE_TYPE=s3 копирует из медиа-бакета S3 в бакет бэкапов (S3->S3).
+# Копирование медиафайлов в S3 при помощи MinIO Client.
+# Источник определяется по STORAGE_TYPE: локальный каталог STORAGE_ROOT
+# либо медиа-бакет S3. Приемник поддерживает точное зеркало: файлы,
+# отсутствующие в источнике, удаляются в приемнике.
+# Приемник по умолчанию - префикс storage бакета бэкапов (BACKUP_BUCKET).
+# Первым аргументом можно указать другой адрес вида alias/бакет[/префикс] -
+# например, медиа-бакет при переносе хранилища с filesystem на s3:
+#   ./scripts/s3backup.sh "$MINIO_ALIAS/$AWS_STORAGE_BUCKET_NAME"
+# Остальные аргументы передаются mc mirror (например, --dry-run).
 
 # Выйти в случае ошибки.
 set -e
 
 # Зафиксировать дату и время выполнения.
 now=$(date '+%Y-%m-%d %H:%M:%S')
-echo "Cоздание бэкапа файлового хранилища или медиа-бакета S3. Дата и время выполнения: $now"
+echo "Копирование медиафайлов в S3. Дата и время выполнения: $now"
 
 # Прочитать переменные окружения из файла .env.
 # Путь к .env можно задать через переменную окружения DOTENV_PATH.
 project_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 readonly dotenv="${DOTENV_PATH:-$project_root/.env}"
 if [ -f "$dotenv" ]; then
-    eval export "$(grep -v '^#' "$dotenv" | grep -v '^$')"
+    set -a
+    # shellcheck disable=SC1090
+    . "$dotenv"
+    set +a
     echo "Переменные окружения загружены из файла $dotenv"
+fi
+
+# Проверить обязательные переменные окружения.
+if [ -z "$MC_PATH" ]; then
+    echo "Ошибка: MC_PATH не задана в .env" >&2
+    exit 1
 fi
 
 # Проверить тип хранилища и установить источник.
 if [ "$STORAGE_TYPE" = "s3" ]; then
     # Источник - медиа-бакет S3.
     if [ -z "$AWS_STORAGE_BUCKET_NAME" ]; then
-        echo "Ошибка: AWS_STORAGE_BUCKET_NAME не задана в .env при STORAGE_TYPE=s3"
+        echo "Ошибка: AWS_STORAGE_BUCKET_NAME не задана в .env при STORAGE_TYPE=s3" >&2
         exit 1
     fi
     SOURCE="$MINIO_ALIAS/$AWS_STORAGE_BUCKET_NAME"
-    echo "Источник бэкапа: бакет S3 $SOURCE"
+    echo "Источник: бакет S3 $SOURCE"
 else
     # Источник - локальное файловое хранилище.
     SOURCE="$STORAGE_ROOT"
-    echo "Адрес файлового хранилища: $SOURCE"
+    echo "Источник: файловое хранилище $SOURCE"
 fi
+
+# Определить приемник: аргумент вида alias/бакет[/префикс] или бакет бэкапов.
+if [ "$#" -gt 0 ]; then
+    readonly TARGET="$1"
+    shift
+else
+    readonly TARGET="$MINIO_ALIAS/$BACKUP_BUCKET/storage"
+fi
+# Адрес без алиаса (например, при незаданной переменной окружения в команде
+# запуска) молча направляет копию не в тот ресурс, поэтому отвергается сразу.
+if [[ ! "$TARGET" =~ ^[^/]+/.+ ]]; then
+    echo "Ошибка: приемник \"$TARGET\" должен иметь вид alias/бакет[/префикс]" >&2
+    exit 1
+fi
+echo "Приемник: $TARGET"
+
+# Создать бакет приемника, если не существует.
+bucket="${TARGET#*/}"
+readonly bucket="${bucket%%/*}"
+$MC_PATH mb --ignore-existing "$MINIO_ALIAS/$bucket"
 
 # Определить размер источника.
 if [ "$STORAGE_TYPE" = "s3" ]; then
@@ -43,16 +78,19 @@ else
 fi
 echo "Размер источника: $storage_size"
 
-# Создать бакет в S3, если не существует.
-readonly S3_BUCKET="$MINIO_ALIAS/$BACKUP_BUCKET"
-$MC_PATH mb --ignore-existing "$S3_BUCKET"
-readonly TARGET="$S3_BUCKET/storage"
-
-# Выполнить резервное копирование.
-# Файлы, отсутствующие в источнике, удаляются в целевом ресурсе.
-echo "Выполнение резервного копирования в $TARGET"
+# Выполнить копирование.
+# Дополнительные аргументы передаются mc mirror.
 $MC_PATH mirror \
     --overwrite \
     --remove \
     "$SOURCE" \
-    "$TARGET"
+    "$TARGET" \
+    "$@"
+
+# Определить размер приемника. При пробном прогоне копирование
+# не выполнялось, поэтому размер приемника не снимается.
+if [[ " $* " == *" --dry-run "* ]]; then
+    echo "Пробный прогон: копирование не выполнялось"
+else
+    echo "Размер приемника: $($MC_PATH du "$TARGET" | awk '{print $1}')"
+fi
