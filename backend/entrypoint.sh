@@ -130,8 +130,7 @@ function main() {
     # медиафайлы и статика обслуживаются S3, без него приложение неработоспособно.
     # Проверка выполняется по эндпоинту AWS_S3_ENDPOINT_URL на уровне TCP
     # и не зависит от провайдера: локальный MinIO и публичное облако
-    # проверяются одинаково. При STORAGE_TYPE=filesystem приложение
-    # от S3 не зависит, ожидание не выполняется.
+    # проверяются одинаково.
     if [ "${STORAGE_TYPE}" = "s3" ] && [ -n "${AWS_S3_ENDPOINT_URL}" ]; then
         read -r s3_host s3_port <<< "$(parse_service_url "${AWS_S3_ENDPOINT_URL}")"
         wait_for_port "$s3_host" "$s3_port"
