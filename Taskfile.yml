@@ -267,13 +267,16 @@ tasks:
     desc: Запустить контейнеры в фоновом режиме
     summary: |
       Запускает контейнеры Docker сервисов, определенных в файле Compose, в фоновом режиме (detached).
+      Поднимается типовой набор для локальной разработки: приложение и PostgreSQL.
+      MinIO и Traefik подключаются профилями (COMPOSE_PROFILES в .env) или явным
+      указанием имени сервиса.
       Флаг --wait блокирует выполнение до прохождения healthcheck всех сервисов
       (применяется при использовании Docker Compose V2).
     preconditions:
       - test -f compose.yaml
       - test -f .env
     cmds:
-      - "{{.COMPOSE_CMD}} up -d {{.COMPOSE_WAIT}} application postgres minio"
+      - "{{.COMPOSE_CMD}} up -d {{.COMPOSE_WAIT}} application postgres"
       - "{{.COMPOSE_CMD}} ps"
 
   restart:
@@ -281,22 +284,23 @@ tasks:
     summary: |
       Пересоздает и перезапускает контейнеры Docker сервисов, определенных в файле Compose,
       в фоновом режиме (detached). Полезно в случае изменений переменных окружения.
-      Профили postgres, minio и traefik подключают все инфраструктурные сервисы.
+      Набор сервисов определяется активными профилями COMPOSE_PROFILES из файла .env.
       Флаг --wait блокирует выполнение до прохождения healthcheck всех сервисов
       (применяется при использовании Docker Compose V2).
     preconditions:
       - test -f compose.yaml
       - test -f .env
     cmds:
-      - "{{.COMPOSE_CMD}} --profile postgres --profile minio --profile traefik up --detach --force-recreate {{.COMPOSE_WAIT}}"
+      - "{{.COMPOSE_CMD}} up --detach --force-recreate {{.COMPOSE_WAIT}}"
       - "{{.COMPOSE_CMD}} ps"
 
   watch:
     desc: Запустить контейнеры в фоновом режиме и отслеживать изменения кода
     summary: |
       Запускает контейнеры Docker в фоновом режиме и пересоздает контейнеры в случае изменений при помощи Compose Watch.
-      Профили postgres, minio и traefik подключают инфраструктурные сервисы,
-      флаг --wait дожидается прохождения healthcheck (применяется при использовании Docker Compose V2).
+      Поднимается типовой набор для локальной разработки: приложение и PostgreSQL;
+      дополнительные сервисы подключаются профилями из COMPOSE_PROFILES в .env.
+      Флаг --wait дожидается прохождения healthcheck (применяется при использовании Docker Compose V2).
     preconditions:
       - test -f compose.yaml
       - test -f .env
@@ -305,7 +309,7 @@ tasks:
       MINIO_SERVER_URL: http://minio:9000
       MINIO_BROWSER_REDIRECT_URL: http://minio:9001
     cmds:
-      - "{{.COMPOSE_CMD}} --profile postgres --profile minio --profile traefik up -d {{.COMPOSE_WAIT}}"
+      - "{{.COMPOSE_CMD}} --profile postgres up -d {{.COMPOSE_WAIT}}"
       - "{{.COMPOSE_CMD}} ps"
       - "{{.COMPOSE_CMD}} watch"
 
