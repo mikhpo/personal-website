@@ -2,7 +2,7 @@
 #
 # Создание бэкапа файлового хранилища или медиа-бакета S3.
 # При STORAGE_TYPE=filesystem копирует из локального STORAGE_ROOT в бакет бэкапов.
-# При STORAGE_TYPE=s3 копирует из медиа-бакета S3 в бакет бэкапов (S3→S3).
+# При STORAGE_TYPE=s3 копирует из медиа-бакета S3 в бакет бэкапов (S3->S3).
 
 # Выйти в случае ошибки.
 set -e
@@ -22,7 +22,7 @@ fi
 
 # Проверить тип хранилища и установить источник.
 if [ "$STORAGE_TYPE" = "s3" ]; then
-    # Источник — медиа-бакет S3.
+    # Источник - медиа-бакет S3.
     if [ -z "$AWS_STORAGE_BUCKET_NAME" ]; then
         echo "Ошибка: AWS_STORAGE_BUCKET_NAME не задана в .env при STORAGE_TYPE=s3"
         exit 1
@@ -30,7 +30,7 @@ if [ "$STORAGE_TYPE" = "s3" ]; then
     SOURCE="$MINIO_ALIAS/$AWS_STORAGE_BUCKET_NAME"
     echo "Источник бэкапа: бакет S3 $SOURCE"
 else
-    # Источник — локальное файловое хранилище.
+    # Источник - локальное файловое хранилище.
     SOURCE="$STORAGE_ROOT"
     echo "Адрес файлового хранилища: $SOURCE"
 fi

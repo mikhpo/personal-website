@@ -3,7 +3,7 @@
 # Разовый логический дамп базы данных PostgreSQL через pg_dump.
 # Без выгрузки во внешнее хранилище. Неинтерактивный.
 #
-# Параметры подключения — флагами или переменными окружения libpq
+# Параметры подключения - флагами или переменными окружения libpq
 # (PGHOST, PGPORT, PGUSER, PGDATABASE, PGPASSWORD).
 #
 # Коды возврата:
@@ -97,6 +97,6 @@ if [ ! -s "$output" ]; then
     exit 3
 fi
 
-# Результат — одна структурированная строка в stdout; диагностика — в stderr.
+# Результат - одна структурированная строка в stdout; диагностика - в stderr.
 size_bytes=$(wc -c < "$output" | tr -d ' ')
 printf 'dump_path=%s\tdatabase=%s\tsize_bytes=%s\n' "$output" "$dbname" "$size_bytes"

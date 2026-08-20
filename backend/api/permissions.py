@@ -17,12 +17,12 @@ class IsPublicOrAuthor(permissions.BasePermission):
 
     Чтение: безопасные методы разрешены всем. Видимость конкретного объекта
     в списках (list/индекс/sitemap) регулируется на уровне get_queryset()
-    соответствующего view — публичными считаются объекты с public=True,
+    соответствующего view - публичными считаются объекты с public=True,
     но детальный просмотр (retrieve/detail) любого объекта по прямой ссылке
     доступен всем пользователям.
 
-    Запись (создание/изменение/удаление) любых объектов — независимо от
-    значения public — доступна только администраторам (staff).
+    Запись (создание/изменение/удаление) любых объектов - независимо от
+    значения public - доступна только администраторам (staff).
 
     Модель должна иметь поле:
     - public: BooleanField
@@ -43,7 +43,7 @@ class IsPublicOrAuthor(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
 
-        # Запись (создание/изменение/удаление) — только для администраторов
+        # Запись (создание/изменение/удаление) - только для администраторов
         user = request.user
         return bool(isinstance(user, AbstractBaseUser) and user.is_staff)
 

@@ -42,7 +42,7 @@ describe('PhotoNavigation', () => {
   test('рендерит обе кнопки если обе фотографии есть', () => {
     render(<PhotoNavigation previousPhoto={previousPhoto} nextPhoto={nextPhoto} />);
     expect(screen.getByText('← Предыдущая')).toBeInTheDocument();
-    expect(screen.getByText('Следующая →')).toBeInTheDocument();
+    expect(screen.getByText('Следующая ->')).toBeInTheDocument();
   });
 
   /**
@@ -52,7 +52,7 @@ describe('PhotoNavigation', () => {
   test('рендерит только кнопку "Предыдущая" если nextPhoto null', () => {
     render(<PhotoNavigation previousPhoto={previousPhoto} nextPhoto={null} />);
     expect(screen.getByText('← Предыдущая')).toBeInTheDocument();
-    expect(screen.queryByText('Следующая →')).not.toBeInTheDocument();
+    expect(screen.queryByText('Следующая ->')).not.toBeInTheDocument();
   });
 
   /**
@@ -62,7 +62,7 @@ describe('PhotoNavigation', () => {
   test('рендерит только кнопку "Следующая" если previousPhoto null', () => {
     render(<PhotoNavigation previousPhoto={null} nextPhoto={nextPhoto} />);
     expect(screen.queryByText('← Предыдущая')).not.toBeInTheDocument();
-    expect(screen.getByText('Следующая →')).toBeInTheDocument();
+    expect(screen.getByText('Следующая ->')).toBeInTheDocument();
   });
 
   /**
@@ -81,7 +81,7 @@ describe('PhotoNavigation', () => {
    */
   test('кнопка "Следующая" имеет правильную ссылку', () => {
     render(<PhotoNavigation previousPhoto={null} nextPhoto={nextPhoto} />);
-    const button = screen.getByText('Следующая →');
+    const button = screen.getByText('Следующая ->');
     expect(button).toHaveAttribute('href', '/gallery/photo/next-photo/');
   });
 
@@ -130,7 +130,7 @@ describe('PhotoNavigation', () => {
     const next = { slug: 'photo-2' };
     render(<PhotoNavigation previousPhoto={prev} nextPhoto={next} />);
     const prevButton = screen.getByText('← Предыдущая');
-    const nextButton = screen.getByText('Следующая →');
+    const nextButton = screen.getByText('Следующая ->');
     expect(prevButton).toHaveAttribute('href', '/gallery/photo/photo-1/');
     expect(nextButton).toHaveAttribute('href', '/gallery/photo/photo-2/');
   });

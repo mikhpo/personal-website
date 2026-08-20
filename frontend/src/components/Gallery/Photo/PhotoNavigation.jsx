@@ -37,7 +37,7 @@ const PhotoNavigation = ({ previousPhoto, nextPhoto }) => {
             variant="primary"
             href={`/gallery/photo/${nextPhoto.slug}/`}
           >
-            Следующая →
+            {"Следующая ->"}
           </Button>
         )}
       </div>

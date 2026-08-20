@@ -244,7 +244,7 @@ class Photo(models.Model):
             self.slug = get_unique_slug(self, self.name)
         super().save(*args, **kwargs)
 
-        # После super().save() файл находится в хранилище — можно извлечь EXIF.
+        # После super().save() файл находится в хранилище - можно извлечь EXIF.
         if needs_exif_update:
             self.exif = self._extract_exif_from_image()
             self.taken_at = compute_datetime_taken(self)

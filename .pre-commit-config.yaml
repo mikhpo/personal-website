@@ -35,6 +35,12 @@ repos:
       - id: poetry-install
   - repo: local
     hooks:
+      - id: fix-typography
+        name: fix-typography
+        description: Автозамена длинного тире (U+2014) на дефис и стрелки (U+2192) на "->"
+        entry: python3 tools/fix_typography.py
+        language: system
+        types: [text]
       - id: eslint
         name: eslint
         description: Статический анализ кода JavaScript при помощи ESLint

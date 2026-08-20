@@ -18,15 +18,15 @@ if [ -f "$dotenv" ]; then
     echo "Переменные окружения загружены из файла $dotenv"
 fi
 
-# Если URL сертификата не задан, то SSL не используется — пропуск загрузки.
+# Если URL сертификата не задан, то SSL не используется - пропуск загрузки.
 if [ -z "$POSTGRES_SSL_CERT_URL" ]; then
-    echo "POSTGRES_SSL_CERT_URL не задан — загрузка SSL-сертификата пропущена"
+    echo "POSTGRES_SSL_CERT_URL не задан - загрузка SSL-сертификата пропущена"
     exit 0
 fi
 
 # Полный путь к файлу сертификата. Приоритет:
-#   1. POSTGRES_SSL_CERT_HOST_PATH — путь на хосте (Docker, когда пути хоста и контейнера различаются).
-#   2. POSTGRES_SSL_ROOT_CERT_PATH — канонический путь, который читает Django (bare-metal, общий случай).
+#   1. POSTGRES_SSL_CERT_HOST_PATH - путь на хосте (Docker, когда пути хоста и контейнера различаются).
+#   2. POSTGRES_SSL_ROOT_CERT_PATH - канонический путь, который читает Django (bare-metal, общий случай).
 #   3. Дефолт ~/.postgresql/root.crt (конвенция libpq, см. документацию PostgreSQL, раздел 32.19.1).
 readonly cert_path="${POSTGRES_SSL_CERT_HOST_PATH:-${POSTGRES_SSL_ROOT_CERT_PATH:-$HOME/.postgresql/root.crt}}"
 mkdir -p "$(dirname "$cert_path")"
