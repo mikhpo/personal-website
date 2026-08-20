@@ -141,11 +141,6 @@ function main() {
     $python "$manage" migrate
     $python "$manage" collectstatic --noinput
 
-    # Алиас сервера MinIO в контейнере не настраивается: у него нет
-    # потребителей внутри контейнера, резервное копирование выполняется
-    # на хосте собственным клиентом mc (алиас — см. task minio-alias
-    # и scripts/s3backup.sh).
-
     # В зависимости от значения переменной окружения DEBUG определить способ запуска.
     debug_bool=$(str_to_bool "$DEBUG")
     if $debug_bool; then
