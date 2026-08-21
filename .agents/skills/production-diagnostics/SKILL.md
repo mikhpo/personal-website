@@ -12,7 +12,7 @@ description: Диагностика продакшен-сервера - пара
 Источники информации о среде деплоя (хост, способ подключения, путь проекта, конфигурация):
 
 - Окружения SourceCraft: `src envs` - список доступных сред; переключение флагом `--env <name>`, текущее видно в `src auth status`.
-- Скрипты деплоя в репозитории: `scripts/docker/` (setup.sh, deploy.sh, update.sh) - путь проекта на сервере и последовательность деплоя (git pull + docker compose pull + up).
+- Скрипты деплоя в репозитории: `scripts/deploy.sh` (общий вход: бэкап и диспетчеризация по DEPLOY_MODE) и `scripts/docker/` (setup.sh, deploy.sh) - путь проекта на сервере и последовательность деплоя (git pull + docker compose pull + up).
 - Конфигурация стекa: `compose.yaml` - сервисы (website, traefik), тома, переменные окружения.
 - CI-конфиг деплоя (`.sourcecraft/ci.yaml`, workflow `deploy-workflow`; зеркально `.github/workflows/deploy.yml`) - шаги деплоя и используемые секреты сервера (хост, пользователь, ключ).
 - `~/.ssh/config` - алиас подключения к серверу.

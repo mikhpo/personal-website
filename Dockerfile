@@ -54,6 +54,10 @@ COPY --from=minio/mc:latest /usr/bin/mc /usr/local/bin/mc
 ENV WORK_DIR=/srv/website
 WORKDIR $WORK_DIR
 
+# Метка, по которой scripts/docker/deploy.sh ограничивает docker image prune
+# образами этого проекта, не затрагивая образы других проектов хоста.
+LABEL org.opencontainers.image.title="personal-website"
+
 # Установить зависимости Python через Poetry.
 COPY pyproject.toml poetry.toml poetry.lock ./
 RUN poetry install --no-interaction && \

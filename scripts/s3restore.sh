@@ -23,10 +23,12 @@ project_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 readonly dotenv="${DOTENV_PATH:-$project_root/.env}"
 if [ -f "$dotenv" ]; then
     set -a
-    # shellcheck disable=SC1090
     . "$dotenv"
     set +a
     echo "Переменные окружения загружены из файла $dotenv"
+else
+    echo "Ошибка: файл с переменными окружения $dotenv не существует" >&2
+    exit 1
 fi
 
 # Проверить обязательные переменные окружения.

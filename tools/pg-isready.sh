@@ -1,4 +1,3 @@
-
 #!/bin/bash
 #
 # Скрипт для проверки готовности базы данных PostgreSQL
@@ -20,11 +19,11 @@ until
     attempt=$((attempt + 1))
     echo "Ожидание готовности PostgreSQL (попытка $attempt)..."
     pg_isready \
-    -h ${POSTGRES_HOST:-localhost} \
-    -p ${POSTGRES_PORT:-5432} \
-    -U ${POSTGRES_USER:-postgres} \
-    -d ${POSTGRES_DB:-postgres}; do
-    if [ $attempt -ge $max_attempts ]; then
+    -h "${POSTGRES_HOST:-localhost}" \
+    -p "${POSTGRES_PORT:-5432}" \
+    -U "${POSTGRES_USER:-postgres}" \
+    -d "${POSTGRES_DB:-postgres}"; do
+    if [ "$attempt" -ge "$max_attempts" ]; then
         echo "PostgreSQL не готов к подключению в течение заданного времени"
         exit 1
     fi

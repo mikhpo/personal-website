@@ -33,6 +33,10 @@ repos:
       - id: poetry-check
       - id: poetry-lock
       - id: poetry-install
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.11.0.1
+    hooks:
+      - id: shellcheck
   - repo: local
     hooks:
       - id: fix-typography

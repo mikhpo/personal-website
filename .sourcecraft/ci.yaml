@@ -304,4 +304,4 @@ workflows:
               command_timeout: 30m
               script: |
                 cd /srv/personal-website
-                bash scripts/docker/deploy.sh
+                bash scripts/deploy.sh
