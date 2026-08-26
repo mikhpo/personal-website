@@ -188,7 +188,9 @@ Cron бэкапов (cronjobs.sh) добавлять только на осно�
     journalctl -u personal-website -f              # логи Gunicorn
 
 Рецепты и объяснения каждой настройки - docs/deployment/application.md
-(раздел 4) и docs/deployment/proxy.md (раздел 2).
+(раздел 4) и docs/deployment/proxy.md (раздел 2). Вариант systemd-режима
+с unix-сокетом (socket activation, мультипроектный хост) - там же,
+application.md раздел 4.
 
 ## Сценарий homelab (мультипроектный хост)
 

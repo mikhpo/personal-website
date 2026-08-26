@@ -101,6 +101,11 @@ server {
 - статика и медиа через nginx не раздаются: в filesystem-режиме их
   обслуживает WhiteNoise, при STORAGE_TYPE=s3 - объектное хранилище.
 
+При запуске приложения в systemd-режиме с unix-сокетом адресация
+меняется на `proxy_pass http://unix:/run/personal-website.sock`,
+остальные директивы vhost не меняются (вариант сокета -
+[application.md](./application.md), раздел 4).
+
 Включение vhost:
 
 ```bash

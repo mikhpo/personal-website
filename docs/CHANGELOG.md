@@ -2,6 +2,7 @@
 
 ## 2026-08-26
 
+- Добавлен вариант systemd-режима с unix-сокетом (socket activation): юниты в scripts/server/systemd/socket/, подраздел в application.md; дефолт остается TCP на 127.0.0.1
 - Из шаблонов конфигурационных файлов (systemd-юнит, vhost'ы nginx) удалены комментарии: логика описана в docs/deployment/
 - Термин «ось» изъят из документации: параметры развертывания называются естественными словами, «эталонные конфигурации» переименованы в «эталонные сценарии развертывания»
 - Созданы рецепты развертывания docs/deployment/proxy.md и application.md (хостовый nginx + certbot, Traefik в compose, docker run, systemd Gunicorn)

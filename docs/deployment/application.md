@@ -201,6 +201,58 @@ journalctl -u personal-website --since today
   (БД в контейнере с приложением на хосте - допустимое сочетание
   параметров развертывания).
 
+### Вариант: unix-сокет вместо TCP-порта
+
+Дефолт systemd-режима - TCP-порт на 127.0.0.1 (единый контракт
+приложения со всеми способами запуска). Когда Gunicorn и nginx -
+процессы одной операционной системы (эталон D, мультипроектный
+bare-metal-хост), приложение переводится на unix-сокет с активацией
+сокетом (systemd socket activation). Преимущества:
+
+- бесшовные рестарты: на время перезапуска сервиса соединения копятся
+  в backlog сокета, а не отвергаются;
+- мультипроектный хост: каждому приложению свой сокет, пул TCP-портов
+  вести не нужно, nginx адресует vhost'ы путями сокетов;
+- доступ ограничен правами файла сокета (SocketGroup=www-data,
+  SocketMode=0660), а не привязкой порта.
+
+Ограничение: вариант не сочетается с контейнерными прокси - Traefik
+в контейнере не видит сокет хостовой ОС (de facto это значит «только
+хостовой nginx»; контракт порта DJANGO_PORT для варианта не выполняется).
+
+Комплект юнитов - scripts/server/systemd/socket/ (setup.sh устанавливает
+TCP-вариант; сокет подключается вручную):
+
+- personal-website.socket - юнит сокета:
+  ListenStream=/run/personal-website.sock, права - группой www-data;
+- personal-website.service.template - сервисный юнит без --bind:
+  Gunicorn наследует готовый дескриптор сокета от systemd (переменные
+  LISTEN_FDS/LISTEN_PID); рендерится envsubst по WORK_DIR и
+  SERVICE_USER, как основной шаблон выше.
+
+Установка:
+
+```bash
+export WORK_DIR=/srv/personal-website SERVICE_USER=<пользователь>
+envsubst "\$WORK_DIR \$SERVICE_USER" < personal-website.service.template |
+    sudo tee /etc/systemd/system/personal-website.service >/dev/null
+sudo cp personal-website.socket /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now personal-website.socket
+```
+
+Сервисный юнит активируется первым соединением с сокетом (раздел
+[Install] есть только у юнита сокета): запрос после загрузки сервера
+ждет ExecStartPre - миграции и collectstatic. Проверка:
+
+```bash
+curl --unix-socket /run/personal-website.sock http://localhost/health/
+```
+
+Vhost nginx адресуется сокетом:
+`proxy_pass http://unix:/run/personal-website.sock` - остальные директивы
+те же ([proxy.md](./proxy.md), раздел 2).
+
 ## 5. Взаимодействие с прокси
 
 Приложение во всех режимах доступно на 127.0.0.1:${DJANGO_PORT};
