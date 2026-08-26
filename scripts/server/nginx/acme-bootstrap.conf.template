@@ -1,7 +1,3 @@
-# Временная конфигурация vhost на период первичного выпуска сертификата:
-# только HTTP и ответы на проверки ACME. После получения сертификата
-# setup.sh заменяет файл на personal-website.conf.template (полная
-# конфигурация с терминированием TLS).
 server {
     listen 80;
     server_name ${DOMAIN_NAME} www.${DOMAIN_NAME};

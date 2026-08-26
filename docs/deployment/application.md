@@ -147,15 +147,8 @@ User=mikhpo
 Group=www-data
 WorkingDirectory=/srv/personal-website
 EnvironmentFile=/srv/personal-website/.env
-# Миграции и сбор статики выполняются при каждом старте сервиса -
-# тот же контракт приложения, что у entrypoint.sh в контейнере.
 ExecStartPre=/srv/personal-website/.venv/bin/python backend/manage.py migrate --noinput
 ExecStartPre=/srv/personal-website/.venv/bin/python backend/manage.py collectstatic --noinput
-# Префикс ":" отключает подстановку переменных окружения systemd: строка
-# передается bash без изменений. Bash вычисляет число воркеров той же
-# формулой, что и entrypoint.sh: GUNICORN_WORKERS, иначе (2 x CPU) + 1.
-# Остальные переменные (DJANGO_PORT, GUNICORN_WORKERS) приходят из
-# EnvironmentFile.
 ExecStart=:/bin/bash -c 'exec /srv/personal-website/.venv/bin/gunicorn \
     --bind=127.0.0.1:${DJANGO_PORT:-8000} \
     --workers=${GUNICORN_WORKERS:-$((2 * $(nproc --all) + 1))} \
@@ -165,9 +158,6 @@ ExecStart=:/bin/bash -c 'exec /srv/personal-website/.venv/bin/gunicorn \
     --error-logfile=- \
     --pythonpath=/srv/personal-website/backend \
     personal_website.wsgi:application'
-# Ожидание готовности внешней БД (wait_for_port из entrypoint.sh) здесь
-# недоступно: при старте раньше базы данных миграции завершатся ошибкой,
-# сервис перезапустится с задержкой до успешного старта.
 Restart=on-failure
 RestartSec=5s
 
@@ -193,6 +183,10 @@ journalctl -u personal-website --since today
 
 - переменные читаются из .env директивой EnvironmentFile (значения
   буквально, одинарные/двойные кавычки значений отбрасываются);
+- префикс ":" в ExecStart отключает подстановку переменных окружения
+  systemd: строка передается bash без изменений, поэтому выражения
+  ${DJANGO_PORT:-8000} и ${GUNICORN_WORKERS:-...} вычисляет bash
+  при старте, а не systemd при загрузке юнита;
 - ожидание внешней БД средствами entrypoint.sh недоступно: порядок
   старта обеспечивается After=network-online.target и рестартами
   (Restart=on-failure) до успешного подключения;

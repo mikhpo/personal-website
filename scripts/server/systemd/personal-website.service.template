@@ -8,15 +8,8 @@ User=${SERVICE_USER}
 Group=www-data
 WorkingDirectory=${WORK_DIR}
 EnvironmentFile=${WORK_DIR}/.env
-# Миграции и сбор статики выполняются при каждом старте сервиса -
-# тот же контракт приложения, что у entrypoint.sh в контейнере.
 ExecStartPre=${WORK_DIR}/.venv/bin/python backend/manage.py migrate --noinput
 ExecStartPre=${WORK_DIR}/.venv/bin/python backend/manage.py collectstatic --noinput
-# Префикс ":" отключает подстановку переменных окружения systemd: строка
-# передается bash без изменений. Bash вычисляет число воркеров той же
-# формулой, что и entrypoint.sh: GUNICORN_WORKERS, иначе (2 x CPU) + 1.
-# Остальные переменные (DJANGO_PORT, GUNICORN_WORKERS) приходят из
-# EnvironmentFile.
 ExecStart=:/bin/bash -c 'exec ${WORK_DIR}/.venv/bin/gunicorn \
     --bind=127.0.0.1:${DJANGO_PORT:-8000} \
     --workers=${GUNICORN_WORKERS:-$((2 * $(nproc --all) + 1))} \
@@ -26,9 +19,6 @@ ExecStart=:/bin/bash -c 'exec ${WORK_DIR}/.venv/bin/gunicorn \
     --error-logfile=- \
     --pythonpath=${WORK_DIR}/backend \
     personal_website.wsgi:application'
-# Ожидание готовности внешней БД (wait_for_port из entrypoint.sh) здесь
-# недоступно: при старте раньше базы данных миграции завершатся ошибкой,
-# сервис перезапустится с задержкой до успешного старта.
 Restart=on-failure
 RestartSec=5s
 

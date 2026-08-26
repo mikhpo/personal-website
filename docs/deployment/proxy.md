@@ -53,12 +53,10 @@ scripts/server/nginx/personal-website.conf.template, переменные
 ${DOMAIN_NAME} и ${DJANGO_PORT} подставляются из .env):
 
 ```nginx
-# HTTP: проверка ACME и редирект на HTTPS.
 server {
     listen 80;
     server_name example.com www.example.com;
 
-    # Проверки ACME (HTTP-01) при выпуске и продлении сертификата.
     location /.well-known/acme-challenge/ {
         root /var/www/certbot;
     }
@@ -68,7 +66,6 @@ server {
     }
 }
 
-# HTTPS: терминирование TLS и проксирование приложения.
 server {
     listen 443 ssl http2;
     server_name example.com www.example.com;
@@ -76,7 +73,6 @@ server {
     ssl_certificate /etc/letsencrypt/live/example.com/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/example.com/privkey.pem;
 
-    # Лимит тела запроса: загрузка фотографий в галерею.
     client_max_body_size 50m;
 
     location / {
@@ -115,7 +111,8 @@ nginx не стартует с директивой ssl_certificate на нес�
 
 1. Временный vhost: только сервер HTTP с location
    /.well-known/acme-challenge/ (шаблон
-   scripts/server/nginx/acme-bootstrap.conf.template).
+   scripts/server/nginx/acme-bootstrap.conf.template), прочие запросы
+   получают 503.
 2. Выпуск сертификата (см. ниже).
 3. Замена vhost на полную конфигурацию и перезагрузка nginx.
 
