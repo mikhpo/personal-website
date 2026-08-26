@@ -61,17 +61,22 @@ function load_dotenv() {
 # Установить системные пакеты.
 # mc (MinIO Client) требуется для резервного копирования
 # файлового хранилища по расписанию cron на хосте.
+# rclone требуется для целей бэкапов вне S3 (локальные каталоги,
+# облачные диски) при systemd-развертывании; в compose-режиме rclone и mc
+# находятся в образе приложения. rclone устанавливается пакетом
+# дистрибутива: версия стабильного Debian покрывает используемые операции
+# (copy, sync, lsf, delete с фильтрами по возрасту), а обновления приходят
+# вместе с системой; официальный установщик rclone.org дает более свежие
+# версии ценой ручного сопровождения.
 #######################################
 function install_packages() {
     sudo apt-get update
     sudo apt-get upgrade -y
-    sudo apt-get install -y \
-        cron \
-        curl \
-        git \
-        gnupg \
-        ca-certificates \
-        ufw
+    local packages=(cron curl git gnupg ca-certificates ufw)
+    if [ "$DEPLOY_MODE" = "systemd" ]; then
+        packages+=(rclone)
+    fi
+    sudo apt-get install -y "${packages[@]}"
 
     # Установить MinIO Client, если еще не установлен.
     if ! command -v mc >/dev/null 2>&1; then

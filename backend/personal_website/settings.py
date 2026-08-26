@@ -98,6 +98,7 @@ INSTALLED_APPS = [
     "drf_spectacular",
     "drf_spectacular_sidecar",
     "accounts",
+    "backup",
     "gallery",
     "blog",
     "main",
@@ -187,13 +188,41 @@ MEDIA_ROOT = os.getenv("STORAGE_ROOT", default=PROJECT_DIR / "storage")
 # Адрес временной папки для тестирования.
 TEMP_ROOT = os.getenv("TEMP_ROOT", default=PROJECT_DIR / "temp")
 
+# Абсолютный путь до каталога резервных копий (дампы БД хранятся в его db/).
+BACKUP_ROOT = os.getenv("BACKUP_ROOT", default=PROJECT_DIR / "backups")
+
+# Путь к MinIO Client для операций резервного копирования медиа.
+MC_PATH = os.getenv("MC_PATH")
+
+# Параметры S3-хранилища медиа.
+MINIO_ALIAS = os.getenv("MINIO_ALIAS")
+AWS_STORAGE_BUCKET_NAME = os.getenv("AWS_STORAGE_BUCKET_NAME")
+AWS_S3_ENDPOINT_URL = os.getenv("AWS_S3_ENDPOINT_URL")
+AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
+AWS_S3_REGION_NAME = os.getenv("AWS_S3_REGION_NAME", "us-east-1")
+
+# Цели резервного копирования: имя -> спецификация из записей BACKUP_TARGET_<ИМЯ> в .env.
+BACKUP_TARGET_PREFIX = "BACKUP_TARGET_"
+
+BACKUP_TARGETS = {
+    name.removeprefix(BACKUP_TARGET_PREFIX): value
+    for name, value in os.environ.items()
+    if name.startswith(BACKUP_TARGET_PREFIX)
+}
+
+# Имена целей БД и медиа (через пробел) и ретеншн дампов БД в днях.
+BACKUP_DB_TARGETS = os.getenv("BACKUP_DB_TARGETS", default="")
+BACKUP_MEDIA_TARGETS = os.getenv("BACKUP_MEDIA_TARGETS", default="")
+BACKUP_DB_RETENTION_DAYS = int(os.getenv("BACKUP_DB_RETENTION_DAYS", default="14") or "14")
+
 # Общие параметры S3 для продуктивных хранилищ (медиа и статика).
 s3_storage_options = {
-    "bucket_name": os.getenv("AWS_STORAGE_BUCKET_NAME"),
-    "access_key": os.getenv("AWS_ACCESS_KEY_ID"),
-    "secret_key": os.getenv("AWS_SECRET_ACCESS_KEY"),
-    "region_name": os.getenv("AWS_S3_REGION_NAME", "us-east-1"),
-    "endpoint_url": os.getenv("AWS_S3_ENDPOINT_URL"),
+    "bucket_name": AWS_STORAGE_BUCKET_NAME,
+    "access_key": AWS_ACCESS_KEY_ID,
+    "secret_key": AWS_SECRET_ACCESS_KEY,
+    "region_name": AWS_S3_REGION_NAME,
+    "endpoint_url": AWS_S3_ENDPOINT_URL,
     "file_overwrite": True,
     "default_acl": "public-read",
     "querystring_auth": False,
@@ -437,6 +466,11 @@ LOGGING = {
             "when": "midnight",
             "backupCount": 7,
         },
+        "backup_console": {
+            "level": "INFO",
+            "class": "logging.StreamHandler",
+            "formatter": "simple",
+        },
     },
     "loggers": {
         "django": {
@@ -455,6 +489,11 @@ LOGGING = {
         },
         PROJECT_NAME: {
             "handlers": ["console", PROJECT_NAME],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "backup": {
+            "handlers": ["backup_console"],
             "level": "INFO",
             "propagate": False,
         },

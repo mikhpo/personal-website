@@ -35,8 +35,9 @@ case "$mode" in
         ;;
 esac
 
-# Резервное копирование медиафайлов до изменений развертывания.
-bash "$project_root/scripts/s3backup.sh"
+# Резервное копирование до изменений развертывания: БД и медиа
+# копируются в настроенные цели плагинной системы бэкапов.
+bash "$project_root/scripts/backup.sh" backup
 
 case "$mode" in
     compose)

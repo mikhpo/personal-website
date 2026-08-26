@@ -34,7 +34,7 @@ description: Диагностика продакшен-сервера - пара
 - Приложение и Gunicorn (access + ошибки воркеров, старт, краши): `docker compose logs website` или `docker logs <контейнер>`.
 - Traefik (маршрутизация, ACME, сертификаты): `docker compose logs traefik`.
 - Лог приложения (Django, файловый handler с ежедневной ротацией): каталог `logs/` проекта на хосте (volume `${LOGS_ROOT:-./logs/}` -> `/srv/website/logs` внутри контейнера).
-- Резервное копирование: `logs/s3backup.log` на хосте (задача cron хоста).
+- Резервное копирование: `logs/backup.log` на хосте (задача cron хоста, `scripts/backup.sh backup`).
 
 ### Поиск ошибок в логах
 

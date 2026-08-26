@@ -18,8 +18,13 @@ default_logs_dir="$project_root/logs"
 # Считывание переменных окружения из файла .env.
 dotenv="$project_root/.env"
 if [ -f "$dotenv" ]; then
-    eval export "$(cat "$dotenv")"
+    set -a
+    . "$dotenv"
+    set +a
     echo "Переменные окружения загружены из файла $dotenv"
+else
+    echo "Файл с переменными окружения $dotenv не существует" >&2
+    exit 1
 fi
 
 # Проверка на наличие переменной окружения, в которой указан корневой адрес логов.
@@ -32,7 +37,7 @@ fi
 
 # Массив задач на добавление.
 cron_jobs=(
-    "1 23 * * * $bash $scripts/s3backup.sh >> $logs/s3backup.log 2>&1"
+    "1 23 * * * $bash $scripts/backup.sh backup >> $logs/backup.log 2>&1"
 )
 
 # Получение содержимого текущего crontab файла.

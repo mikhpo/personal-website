@@ -37,6 +37,7 @@ RUN apt-get update && \
     locales \
     ca-certificates \
     postgresql-client-${POSTGRES_VERSION} \
+    rclone \
     rsync && \
     rm -rf /var/lib/apt/lists/*
 
