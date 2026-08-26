@@ -622,7 +622,7 @@ Workflow для автоматического деплоя приложения
 
 ### Альтернативные методы развертывания
 
-Помимо основного Docker-развертывания сохраняется bare-metal способ запуска сервисов непосредственно в системе хоста (systemd-юниты Gunicorn, системный nginx, системный PostgreSQL). Скрипты для этого способа расположены в [scripts/server/](./scripts/server/) (setup.sh - первичная настройка, deploy.sh - деплой обновлений, restart.sh - перезапуск). Способ сохраняется для совместимости; для новых серверов рекомендуется Docker-развертывание.
+Запуск приложения в операционной системе хоста (systemd-юнит Gunicorn, системный nginx с certbot) - равноправный вариант развертывания наряду с Docker, рассчитанный в том числе на слабое и homelab-железо. Скрипты варианта расположены в [scripts/server/](./scripts/server/) (setup.sh - первичная настройка, deploy.sh - деплой обновлений, restart.sh - перезапуск; шаблоны systemd-юнита и vhost nginx - в подкаталогах systemd/ и nginx/). Рецепты режимов запуска и проксирования - в [docs/deployment/application.md](./docs/deployment/application.md) и [docs/deployment/proxy.md](./docs/deployment/proxy.md).
 
 ## Дополнительная информация
 

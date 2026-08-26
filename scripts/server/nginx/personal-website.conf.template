@@ -1,0 +1,39 @@
+# Основная конфигурация vhost: редирект HTTP на HTTPS, ответы на проверки
+# ACME, терминирование TLS и проксирование приложения на 127.0.0.1.
+# Устанавливается scripts/server/setup.sh после первичного выпуска
+# сертификата (до этого используется acme-bootstrap.conf.template,
+# потому что nginx не стартует с ssl_certificate на несуществующий файл).
+# Статика и медиа приложением не раздаются через nginx: в filesystem-режиме
+# их обслуживает WhiteNoise, при STORAGE_TYPE=s3 - объектное хранилище.
+server {
+    listen 80;
+    server_name ${DOMAIN_NAME} www.${DOMAIN_NAME};
+
+    # Проверки ACME (HTTP-01) при выпуске и продлении сертификата certbot'ом.
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+server {
+    listen 443 ssl http2;
+    server_name ${DOMAIN_NAME} www.${DOMAIN_NAME};
+
+    ssl_certificate /etc/letsencrypt/live/${DOMAIN_NAME}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/${DOMAIN_NAME}/privkey.pem;
+
+    # Лимит тела запроса: загрузка фотографий в галерею.
+    client_max_body_size 50m;
+
+    location / {
+        proxy_pass http://127.0.0.1:${DJANGO_PORT};
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_redirect off;
+    }
+}
