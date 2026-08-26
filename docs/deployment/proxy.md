@@ -87,6 +87,10 @@ server {
 
 Назначение директив:
 
+- HTTP-сервер выполняет редирект 301 на HTTPS, кроме запросов
+  /.well-known/acme-challenge/: на них отвечает certbot (проверки
+  HTTP-01 при выпуске и продлении), root /var/www/certbot совпадает
+  с аргументом -w команды certbot ниже;
 - proxy_pass на 127.0.0.1:${DJANGO_PORT} - контракт приложения;
 - Host, X-Forwarded-For, X-Forwarded-Proto - приложение за прокси
   собирает CSRF_TRUSTED_ORIGINS из домена и доверяет

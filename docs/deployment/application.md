@@ -190,9 +190,11 @@ journalctl -u personal-website --since today
 - ожидание внешней БД средствами entrypoint.sh недоступно: порядок
   старта обеспечивается After=network-online.target и рестартами
   (Restart=on-failure) до успешного подключения;
-- воркеры ограничиваются GUNICORN_WORKERS: формула (2 x CPU) + 1
-  прожорлива к RAM на слабом железе (Pillow/ImageKit удерживают память;
-  рециклинг --max-requests ограничивает дрейф RSS);
+- число воркеров вычисляется при старте той же формулой, что
+  и entrypoint.sh в контейнере: GUNICORN_WORKERS из EnvironmentFile,
+  иначе (2 x CPU) + 1; формула прожорлива к RAM на слабом железе
+  (Pillow/ImageKit удерживают память; рециклинг --max-requests
+  ограничивает дрейф RSS), поэтому GUNICORN_WORKERS задается явно;
 - локальный PostgreSQL под systemd (systemd-PG) - один из вариантов
   размещения базы данных; рецепт появится в [database.md](./database.md),
   до этого используется managed-кластер или контейнер профиля postgres
