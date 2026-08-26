@@ -72,60 +72,60 @@
 
 ## 2026-08-15
 
-- Прокси-сервер nginx заменён на Traefik (v3.7): обслуживает HTTPS с автоматическими сертификатами Let's Encrypt, запросы маршрутизируются по Docker-лейблам; каталог nginx/ и том nginx-certs удалены
-- Состояние ACME-клиента Traefik хранится на хосте (bind-mount traefik/letsencrypt/acme.json): команда docker compose down -v сертификаты не затрагивает; каталог добавлен в .gitignore как содержащий приватные ключи
-- Выпуск сертификатов управляется переменной TRAEFIK_CERT_RESOLVER: в продакшене le (Let's Encrypt), в разработке пустая строка (self-signed, ACME-клиент пассивен)
-- Публикация порта приложения 8000 наружу прекращена: весь трафик проходит через Traefik (80/443)
-- Логирование контейнеров переведено на комбинированную стратегию: якорь x-logging (json-file, ротация 10 МБ x 3 файла) применён ко всем сервисам; журналы доступа и ошибок Gunicorn пишутся в stdout
-- Логгер django.request единообразно подключён к консольному хэндлеру наряду с остальными логгерами (схема хэндлера console не менялась)
-- Скрипт scripts/docker/deploy.sh перепрофилирован под неинтерактивный деплой из CI/CD (обновление репозитория, подготовка каталогов, пересоздание контейнеров); первичная настройка сервера вынесена в новый скрипт scripts/docker/setup.sh (пакеты, Docker, ufw, cron бэкапов)
-- Из скрипта обновления bare-metal-развертывания убран вызов pgcert.sh: получение SSL-сертификата PostgreSQL выполняется при первичной настройке (scripts/server/setup.sh, scripts/docker/setup.sh) и вручную при ротации CA
-- Скрипты bare-metal-развертывания переименованы в соответствие с Docker-скриптами: scripts/server/deploy.sh (первичная настройка) -> setup.sh, scripts/server/update.sh (деплой обновлений) -> deploy.sh
-- deploy-workflow SourceCraft и зеркальный GitHub workflow переключены на scripts/docker/deploy.sh
-- Из Dockerfile убраны неиспользуемые пакет cron и вызов scripts/cronjobs.sh: задачи cron выполняются на хосте через setup.sh
-- Порт приложения вынесен в переменную окружения DJANGO_PORT (используется Traefik и entrypoint.sh); переменная NGINX_PORT переименована в TRAEFIK_HTTP_PORT (compose.yaml, tests, .env.example)
-- Интеграционные тесты прокси адаптированы под Traefik (tests/test_traefik.py): HTTPS с self-signed сертификатом, проверка редиректа HTTP на HTTPS
-- Документация (README, AGENTS) дополнена разделами о Docker-развертывании, сертификатах Let's Encrypt и проверке Traefik в среде разработки; скилл production-diagnostics переписан под Docker-окружение
-- C4-диаграмма контейнеров дополнена компонентами Traefik, Docker Engine, Docker Compose и реестрами образов
+- Прокси-сервер nginx заменён на Traefik (v3.7) с автоматическими сертификатами Let's Encrypt; каталог nginx/ и том nginx-certs удалены
+- Состояние ACME-клиента Traefik хранится на хосте (bind-mount traefik/letsencrypt/acme.json)
+- Выпуск сертификатов управляется переменной TRAEFIK_CERT_RESOLVER
+- Публикация порта приложения 8000 наружу прекращена: весь трафик проходит через Traefik
+- Логирование контейнеров переведено на json-file с ротацией (якорь x-logging)
+- Логгер django.request подключён к консольному хэндлеру
+- scripts/docker/deploy.sh перепрофилирован под неинтерактивный деплой из CI/CD; первичная настройка вынесена в scripts/docker/setup.sh
+- Из скрипта обновления bare-metal-развертывания убран вызов pgcert.sh
+- Скрипты bare-metal-развертывания переименованы: deploy.sh -> setup.sh, update.sh -> deploy.sh
+- deploy-workflow SourceCraft и GitHub workflow переключены на scripts/docker/deploy.sh
+- Из Dockerfile убраны пакет cron и вызов scripts/cronjobs.sh
+- Порт приложения вынесен в переменную DJANGO_PORT; NGINX_PORT переименована в TRAEFIK_HTTP_PORT
+- Интеграционные тесты прокси адаптированы под Traefik (tests/test_traefik.py)
+- Документация дополнена разделами о Docker-развертывании и сертификатах; скилл production-diagnostics переписан под Docker-окружение
+- C4-диаграмма контейнеров дополнена компонентами Traefik, Docker Engine и реестрами образов
 
 ## 2026-08-14
 
-- Сервисы postgres и minio в compose.yaml переведены на профиль dev: без активного профиля поднимаются только website и nginx (режим для окружений с внешним PostgreSQL и внешним объектным хранилищем), профиль активируется переменной COMPOSE_PROFILES=dev или флагом --profile dev
-- Зависимости depends_on сервиса website от postgres и minio заменены ожиданием готовности сервисов в entrypoint.sh (функция wait_for_port с ограничением числа попыток)
-- В .env.example добавлена переменная COMPOSE_PROFILES для активации dev-профиля
-- Задачи Taskfile up-detached, watch и restart обновлены под профиль dev; флаг --wait подставляется условно и применяется только при наличии Docker Compose V2
-- Документация (README, CONTRIBUTING, AGENTS) дополнена описанием профилей Docker Compose
-- Раздача статических файлов переведена на объектное хранилище: в S3-режиме collectstatic собирает файлы в префикс static/ того же бакета (хранилище выбирается селектором select_static_storage), локально и в тестах продолжает работать WhiteNoise
-- Заголовки кэширования статических файлов в S3: сборкам с хешем содержимого в имени назначается бессрочное immutable-кэширование, остальным файлам - умеренный срок
-- STATIC_URL и webpack publicPath вынесены в переменные окружения (STATIC_URL, WEBPACK_PUBLIC_PATH); update.sh загружает .env до сборки фронтенда
-- Запросы /favicon.ico и /robots.txt обслуживаются постоянными редиректами Django на адрес статического хранилища вместо раздачи nginx из локальной файловой системы
-- WhiteNoise (middleware и WHITENOISE_ROOT) отключается в S3-режиме
-- Из конфигураций nginx (bare-metal и Docker) удалены файловые локации /static/, /media/, /favicon.ico, /robots.txt: nginx выполняет только проксирование, статические и медиафайлы обслуживает объектное хранилище
+- Сервисы postgres и minio переведены на профиль dev, активируется переменной COMPOSE_PROFILES
+- Зависимости depends_on заменены ожиданием готовности сервисов в entrypoint.sh (функция wait_for_port)
+- В .env.example добавлена переменная COMPOSE_PROFILES
+- Задачи Taskfile up-detached, watch и restart обновлены под профиль dev
+- Документация дополнена описанием профилей Docker Compose
+- Раздача статики в S3-режиме переведена на объектное хранилище, локально продолжает работать WhiteNoise
+- Сборкам статики с хешем в имени назначается бессрочное immutable-кэширование
+- STATIC_URL и webpack publicPath вынесены в переменные окружения
+- Запросы /favicon.ico и /robots.txt обслуживаются постоянными редиректами Django на статическое хранилище
+- WhiteNoise отключается в S3-режиме
+- Из конфигураций nginx удалены файловые локации статики и медиа
 - Интеграционные тесты nginx обновлены под редиректы favicon и robots.txt
-- Каталог node_modules исключён из STATICFILES_DIRS: tinymce и bootstrap/dist копируются сборкой фронтенда в backend/staticfiles, объём выгрузки статики сокращается с десятков тысяч файлов до нескольких сотен
-- Из продакшен-выгрузки статики исключены source-map'ы (*.map) и документация (*.md)
-- Таймаут удалённой команды деплоя увеличен до 30 минут в конфигурациях SourceCraft и GitHub
+- Каталог node_modules исключён из STATICFILES_DIRS
+- Из продакшен-выгрузки статики исключены source-map'ы и документация
+- Таймаут удалённой команды деплоя увеличен до 30 минут
 
 ## 2026-08-13
 
-- Самописные скрипты бэкапа и восстановления БД (scripts/pgbackup.sh, scripts/pgrestore.sh) заменены стандартными утилитами pg_dump и pg_restore; процедуры перенесены в документацию (раздел README) и скиллы (postgresql-dump, postgresql-restore)
-- Из scripts/server/restart.sh убран перезапуск базы данных: сервер приложения не отвечает за управление СУБД
+- Самописные скрипты бэкапа и восстановления БД заменены утилитами pg_dump и pg_restore; процедуры перенесены в документацию и скиллы
+- Из scripts/server/restart.sh убран перезапуск базы данных
 - Из scripts/cronjobs.sh и scripts/docker/update.sh удалены вызовы убранных скриптов
 
 ## 2026-08-11
 
-- SSL-сертификат для Managed PostgreSQL доставляется в контейнер при запуске, а не при сборке образа
-- Добавлен скрипт scripts/pgcert.sh для загрузки SSL-сертификата PostgreSQL (вызывается из deploy.sh и update.sh)
-- Из Dockerfile и compose.yaml удалены build-args; в compose.yaml добавлен bind-mount сертификата через POSTGRES_SSL_ROOT_CERT_PATH (контейнер) и опциональную POSTGRES_SSL_CERT_HOST_PATH (хост)
+- SSL-сертификат Managed PostgreSQL доставляется в контейнер при запуске, а не при сборке образа
+- Добавлен скрипт scripts/pgcert.sh для загрузки SSL-сертификата PostgreSQL
+- Из Dockerfile и compose.yaml удалены build-args; добавлен bind-mount сертификата (POSTGRES_SSL_ROOT_CERT_PATH, POSTGRES_SSL_CERT_HOST_PATH)
 - Раздел по настройке базы данных перенесён из CONTRIBUTING.md в README.md
-- Унифицирована логика публичности объектов с полем public (Album, Photo, Article, Category, Topic, Series): списки и sitemap показывают только public=True, детальный просмотр любого объекта по прямой ссылке доступен всем
-- Исправлена ошибка 404 при доступе к скрытым фотографиям по прямой ссылке, приходящей со страниц альбомов
-- Удалены staff-ветки в get_queryset просмотровых views и viewsets: staff и не-staff видят основной сайт одинаково, для администрирования служит отдельный интерфейс /admin/
-- Запись объектов с полем public (создание/изменение/удаление через REST API) ограничена администраторами; раннее разрешение «любому аутентифицированному» заменено на staff-only. Комментарии к статьям по-прежнему может оставлять любой аутентифицированный пользователь, а изменять/удалять - только автору комментария или администратору
-- Вложенные связи в retrieve (фотографии внутри альбома) фильтруются по public=True
-- Prev/next навигация на детальной странице фотографии теперь строится только по публичным соседям альбома
-- На детальные страницы скрытых объектов добавлен meta robots noindex для запрета индексации share-ссылок поисковиками
-- Расширены тесты API и views под новую инварианту публичности
+- Унифицирована логика публичности объектов с полем public: списки и sitemap показывают только public=True, детальный просмотр доступен всем
+- Исправлена ошибка 404 при доступе к скрытым фотографиям по прямой ссылке
+- Удалены staff-ветки в get_queryset просмотровых views и viewsets
+- Запись объектов с полем public через REST API ограничена администраторами
+- Вложенные связи в retrieve фильтруются по public=True
+- Prev/next навигация на детальной странице фотографии строится только по публичным соседям
+- На детальные страницы скрытых объектов добавлен meta robots noindex
+- Расширены тесты API и views под инварианту публичности
 
 ## 2026-08-09
 
