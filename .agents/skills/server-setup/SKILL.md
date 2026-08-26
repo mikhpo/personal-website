@@ -6,8 +6,8 @@ description: Первоначальная настройка нового сер
 ## Предназначение
 
 Первоначальная настройка нового сервера под развертывание проекта (миграция
-на новый сервер, разворот тестовой среды) в одном из двух вариантов оси
-«Приложение»:
+на новый сервер, разворот тестовой среды) одним из двух способов запуска
+приложения:
 
 - Docker Compose - scripts/docker/setup.sh, рецепты
   docs/deployment/application.md (раздел 2) и proxy.md;
@@ -23,11 +23,11 @@ description: Первоначальная настройка нового сер
 для: деплоя обновлений (scripts/deploy.sh), диагностики прода (скилл
 production-diagnostics), переключения DNS и демонтажа старого сервера.
 
-## Матрица профилей и осей
+## Типовые сценарии развертывания
 
 Инфраструктурные сервисы compose.yaml относятся к собственным профилям:
 postgres, minio, traefik (переменная COMPOSE_PROFILES в .env, пустое
-значение - все внешние). Типовые наборы:
+значение - все внешние). Типовые сочетания параметров:
 
 | Сценарий | COMPOSE_PROFILES | Прокси | БД | Хранилище |
 | --- | --- | --- | --- | --- |
@@ -37,7 +37,8 @@ postgres, minio, traefik (переменная COMPOSE_PROFILES в .env, пус�
 | Homelab (эталон C) | postgres,minio | хостовый nginx+certbot | контейнер | MinIO (s3) |
 | Bare-metal (эталон D) | Docker нет | хостовый nginx+certbot | systemd-PG или managed | filesystem |
 
-Полная матрица осей и эталонов - docs/deployment/matrix.md.
+Полная матрица параметров развертывания и эталонных сценариев -
+docs/deployment/matrix.md.
 
 ## Два режима прокси
 
@@ -74,7 +75,7 @@ postgres, minio, traefik (переменная COMPOSE_PROFILES в .env, пус�
 1. Источник кода:
    - SourceCraft: `ssh://ssh.sourcecraft.dev/mikhpo/personal-website.git` - основной источник разработки, main всегда актуален.
    - GitHub: `git@github.com:mikhpo/personal-website.git` - зеркало; может отставать. Перед выбором сверить `git ls-remote` обоих репозиториев и предупредить пользователя при расхождении.
-2. Вариант оси «Приложение»: Docker Compose (scripts/docker/setup.sh)
+2. Способ запуска приложения: Docker Compose (scripts/docker/setup.sh)
    или systemd Gunicorn (scripts/server/setup.sh, без Docker на хосте).
 3. Назначение среды: продакшен или тестовая. От ответа зависят
    сертификаты (ACME staging на тестовых - Traefik и certbot) и cron
@@ -197,7 +198,7 @@ Cron бэкапов (cronjobs.sh) добавлять только на осно�
   проектов).
 - Приложение публикуется только на 127.0.0.1:${DJANGO_PORT}; порт
   выбирается не занятым другими проектами хоста.
-- Ось «БД»: контейнер профиля postgres, systemd-PG (рецепт
+- База данных: контейнер профиля postgres, systemd-PG (рецепт
   docs/deployment/database.md) или managed-кластер - без изменений
   приложения.
 - Файрвол: наружу открыты только 22/80/443; доступ к БД и хранилищу

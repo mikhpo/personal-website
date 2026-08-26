@@ -2,6 +2,7 @@
 
 ## 2026-08-26
 
+- Термин «ось» изъят из документации по решению пользователя: пять независимых параметров развертывания (способ запуска приложения, размещение базы данных, тип хранилища, вариант прокси, конфигурация резервного копирования) называются естественными словами без сквозного собирательного термина; «эталонные конфигурации» переименованы в «эталонные сценарии развертывания» (A-D); фразы переформулированы целиком
 - Созданы рецепты развертывания docs/deployment/proxy.md (хостовый nginx + certbot: vhost, двухфазный выпуск сертификата webroot, systemd timer и deploy-hook, вариант DNS-01, режим Traefik в compose, пост-мортем nginx-в-контейнере, неподдерживаемые варианты) и docs/deployment/application.md (контракт приложения, Docker Compose, полная команда docker run с сетями и bind-монтами, systemd Gunicorn с юнитом и логами journal)
 - Переменная TRAEFIK_ACME_CASERVER в compose.yaml и .env.example: адрес ACME CA-сервера Traefik - пусто для продакшена Let's Encrypt, staging-каталог для тестовых сред (защита от исчерпания rate limits)
 - Скрипты scripts/server/ переработаны под текущую архитектуру: приложение слушает 127.0.0.1:${DJANGO_PORT} (unix-сокет Gunicorn удален), юнит personal-website.service с ExecStartPre миграций/collectstatic и формулой воркеров entrypoint.sh, vhost nginx из шаблона (proxy_pass на 127.0.0.1, X-Forwarded-заголовки, client_max_body_size 50m), выпуск сертификата certbot certonly webroot с ACME staging для тестовых сред; удалены устаревшие makelink.sh и шаблоны backend/config/
