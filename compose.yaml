@@ -109,6 +109,10 @@ services:
       - "--certificatesresolvers.le.acme.tlschallenge=true"
       - "--certificatesresolvers.le.acme.email=${ACME_EMAIL}"
       - "--certificatesresolvers.le.acme.storage=/letsencrypt/acme.json"
+      # ACME CA-сервер: пустое значение - продакшен Let's Encrypt (дефолт Traefik),
+      # staging-каталог для тестовых сред - защита от исчерпания rate limits
+      # при экспериментах с сертификатами (см. docs/deployment/proxy.md).
+      - "--certificatesresolvers.le.acme.caserver=${TRAEFIK_ACME_CASERVER:-}"
       # Встроенный health-endpoint для команды `traefik healthcheck --ping`
       # (порт 8080 наружу не публикуется).
       - "--ping=true"

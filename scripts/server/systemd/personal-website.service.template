@@ -1,0 +1,26 @@
+[Unit]
+Description=personal-website (Django, Gunicorn)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=${SERVICE_USER}
+Group=www-data
+WorkingDirectory=${WORK_DIR}
+EnvironmentFile=${WORK_DIR}/.env
+ExecStartPre=${WORK_DIR}/.venv/bin/python backend/manage.py migrate --noinput
+ExecStartPre=${WORK_DIR}/.venv/bin/python backend/manage.py collectstatic --noinput
+ExecStart=:/bin/bash -c 'exec ${WORK_DIR}/.venv/bin/gunicorn \
+    --bind=127.0.0.1:${DJANGO_PORT:-8000} \
+    --workers=${GUNICORN_WORKERS:-$((2 * $(nproc --all) + 1))} \
+    --max-requests=500 \
+    --max-requests-jitter=50 \
+    --access-logfile=- \
+    --error-logfile=- \
+    --pythonpath=${WORK_DIR}/backend \
+    personal_website.wsgi:application'
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target

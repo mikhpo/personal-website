@@ -1,61 +1,87 @@
 #!/bin/bash
 #
-# Деплой обновления приложения при bare-metal развертывании.
-# Выполнение bash команд:
+# Деплой обновления приложения при systemd-развертывании (DEPLOY_MODE=systemd).
+# Выполняется на сервере (в том числе из CI/CD через scripts/deploy.sh):
 # 1. Вытягивание изменений из Git.
-# 2. Обновление зависимостей.
-# 3. Сборка фронтенда.
-# 4. Миграция базы данных.
-# 5. Перезапуск Gunicorn.
-# 6. Перезапуск Nginx.
-# Адрес корневого каталога проекта определяется автоматически.
-# Актуально для развертывания серевисов в системе хоста.
+# 2. Обновление зависимостей и сборка фронтенда.
+# 3. Переустановка systemd-юнита и vhost nginx из шаблонов репозитория.
+# 4. Перезапуск приложения и nginx.
+# Миграции и collectstatic выполняются юнитом при старте (ExecStartPre).
 
+# Выйти в случае ошибки.
+set -e
+
+# Определение рабочих файлов проекта.
 project_root="$(dirname "$(dirname "$(dirname "$(readlink -f "$0")")")")"
+readonly dotenv="$project_root/.env"
+readonly systemd_template="$project_root/scripts/server/systemd/personal-website.service.template"
+readonly nginx_template="$project_root/scripts/server/nginx/personal-website.conf.template"
+readonly service_file="/etc/systemd/system/personal-website.service"
+readonly sites_available="/etc/nginx/sites-available/personal-website"
 cd "$project_root" || exit
 
-readonly python="$project_root/.venv/bin/python"
-readonly manage="$project_root/backend/manage.py"
-readonly config_dir="$project_root/backend/config"
-readonly gunicorn_dir="$config_dir/gunicorn"
-readonly gunicorn_socket="$gunicorn_dir/gunicorn.socket"
-readonly gunicorn_service="$gunicorn_dir/gunicorn.service"
-readonly DESTINATION_DIR="/etc/systemd/system/"
+#######################################
+# Загрузить переменные окружения из .env файла
+# или выйти, если файл не существует.
+#######################################
+function load_dotenv() {
+    if [ -f "$dotenv" ]; then
+        set -a
+        # shellcheck disable=SC1090
+        . "$dotenv"
+        set +a
+        echo "Переменные окружения загружены из файла $dotenv"
+    else
+        echo "Файл с переменными окружения $dotenv не существует" >&2
+        exit 1
+    fi
+}
 
-cd "$project_root" || exit
+#######################################
+# Обновить файлы проекта из основной ветки репозитория.
+#######################################
+function pull_repository() {
+    git fetch origin
+    git checkout main
+    git pull
+}
 
-# Вытянуть изменения из удаленного репозитория.
-git fetch origin
-git checkout main
-git pull
+#######################################
+# Обновить зависимости и собрать фронтенд.
+# .env загружается до сборки: WEBPACK_PUBLIC_PATH определяет
+# адрес бандлов в webpack-stats.json.
+#######################################
+function build_project() {
+    npm install
+    npm run build
+    poetry install
+}
 
-# Загрузить переменные окружения из .env до сборки фронтенда:
-# WEBPACK_PUBLIC_PATH определяет адрес бандлов в webpack-stats.json.
-if [ -f "$project_root/.env" ]; then
-    set -a
-    . "$project_root/.env"
-    set +a
-fi
+#######################################
+# Переустановить systemd-юнит и vhost nginx из шаблонов репозитория
+# (изменения шаблонов вступают в силу вместе с деплоем).
+#######################################
+function install_configs() {
+    local user="${SUDO_USER:-$(id -un)}"
+    export WORK_DIR="$project_root"
+    export SERVICE_USER="$user"
+    export DOMAIN_NAME="$DOMAIN_NAME"
+    export DJANGO_PORT="${DJANGO_PORT:-8000}"
+    envsubst "\$WORK_DIR \$SERVICE_USER" <"$systemd_template" | sudo tee "$service_file" >/dev/null
+    envsubst "\$DOMAIN_NAME \$DJANGO_PORT" <"$nginx_template" | sudo tee "$sites_available" >/dev/null
+    sudo systemctl daemon-reload
+}
 
-# Обновить зависимости.
-npm install
-npm run build
-poetry install
+#######################################
+# Последовательный вызов основных функций скрипта.
+#######################################
+function main() {
+    load_dotenv
+    pull_repository
+    build_project
+    install_configs
+    bash "$project_root/scripts/server/restart.sh" -f
+    bash "$project_root/scripts/cronjobs.sh"
+}
 
-# Собрать статические файлы (source-map'ы и документация в выгрузку не нужны).
-$python "$manage" collectstatic --noinput --ignore "*.map" --ignore "*.md"
-
-# Выполнить миграции базы данных.
-$python "$manage" migrate
-
-# Обновить конфигурационные файлы Gunicorn.
-sudo cp -f "$gunicorn_socket" $DESTINATION_DIR
-export WORK_DIR="$project_root"
-envsubst < "$gunicorn_service" > "$DESTINATION_DIR"/gunicorn.service
-systemctl daemon-reload
-
-# Перезапустить сервисы.
-bash "$project_root"/scripts/server/restart.sh -f
-
-# Обновить задачи в cron.
-bash "$project_root"/scripts/cronjobs.sh
+main
