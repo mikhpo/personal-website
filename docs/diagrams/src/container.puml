@@ -8,7 +8,7 @@ Person(user, "Пользователь")
 Person(admin, "Администратор")
 
 System_Boundary(server, "Сервер") {
-    Container(proxy, "Обратный прокси", "Traefik (профиль traefik) | nginx + certbot на хосте", "Терминирование HTTPS, выпуск и обновление сертификатов, проксирование на 127.0.0.1:DJANGO_PORT")
+    Container(proxy, "Обратный прокси", "Traefik (профиль traefik) | nginx + certbot на хосте", "Терминирование HTTPS, выпуск и обновление сертификатов, проксирование на 127.0.0.1:DJANGO_PORT, раздача медиа с диска при filesystem")
     Container(gunicorn, "WSGI-сервер", "Gunicorn", "Запускает Django приложение (Docker Compose, docker run или systemd), обрабатывает HTTP-запросы")
     Container(backend, "Бэкенд", "Django + DRF", "REST API, бизнес-логика, админка, рендеринг шаблонов, приложение backup")
     Container(frontend, "Фронтенд", "React + Webpack", "React компоненты, интеграция с Django шаблонами, сборка через Webpack")
@@ -36,7 +36,7 @@ Rel(proxy, le, "Получает и обновляет сертификаты", 
 note as VariantsNote
   Пять независимых параметров развертывания: способ запуска приложения,
   размещение БД, тип хранилища, вариант прокси, конфигурация бэкапов.
-  Поддерживаемые сочетания - эталонные сценарии A-D
+  Поддерживаемые сочетания - типовые сценарии развертывания
   (docs/deployment/matrix.md).
 end note
 

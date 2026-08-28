@@ -35,11 +35,11 @@ postgres, minio, traefik (переменная COMPOSE_PROFILES в .env, пус�
 | --- | --- | --- | --- | --- |
 | Локальная разработка | postgres | нет | контейнер | filesystem |
 | Разработка с S3 | postgres,minio | нет | контейнер | MinIO (s3) |
-| Облако-соло (эталон B) | пусто | traefik в compose | managed | S3 удаленный |
-| Homelab (эталон C) | postgres,minio | хостовый nginx+certbot | контейнер | MinIO (s3) |
-| Bare-metal (эталон D) | Docker нет | хостовый nginx+certbot | systemd-PG или managed | filesystem |
+| Облако-соло | пусто | traefik в compose | managed | S3 удаленный |
+| Homelab | postgres,minio | хостовый nginx+certbot | контейнер | MinIO (s3) |
+| Сервер без Docker | Docker нет | хостовый nginx+certbot | systemd-PG или managed | filesystem |
 
-Полная матрица параметров развертывания и эталонных сценариев -
+Полная матрица параметров развертывания и типовых сценариев -
 docs/deployment/matrix.md.
 
 ## Два режима прокси
@@ -51,7 +51,8 @@ docs/deployment/matrix.md.
   расходовать лимиты продакшена. В dev TRAEFIK_CERT_RESOLVER пуст -
   self-signed без обращений к Let's Encrypt.
 - Хостовый nginx + certbot - основной путь, в том числе для
-  мультипроектного homelab-хоста: vhost на проект, приложение всегда
+  мультипроектного homelab-хоста: конфигурация сайта на проект
+  (включая раздачу медиа с диска при filesystem), приложение всегда
   на 127.0.0.1:${DJANGO_PORT}, прокси-слой проекта ничего не занимает
   (профиль traefik не активируется). Рецепт и двухфазный выпуск
   сертификата - docs/deployment/proxy.md; тестовые среды выпускают
@@ -183,14 +184,17 @@ Cron бэкапов (cronjobs.sh) добавлять только на осно�
    экранирование `$$` не требуется (systemd читает значения буквально).
 3. Запуск `bash scripts/server/setup.sh`: пакеты (python3, poetry, node,
    postgresql-client, nginx, certbot, rclone, mc), зависимости проекта,
-   systemd-юнит personal-website.service, vhost nginx и сертификат
-   certbot (двухфазно, webroot), cron бэкапов.
+   systemd-юнит personal-website.service, конфигурация сайта nginx
+   (с раздачей медиа из STORAGE_ROOT) и сертификат certbot (двухфазно,
+   webroot), cron бэкапов; финальная проверка сервиса и /health/
+   выполняется скриптом.
 
 Проверка после установки:
 
     systemctl status personal-website nginx
     curl -s http://127.0.0.1:8000/health/         # 200 ok
-    curl -sI http://${domain}/                     # 301 -> https (vhost nginx)
+    curl -sI http://${domain}/                     # 301 -> https (сайт в nginx)
+    curl -sI http://${domain}/media/<файл>          # 200 (раздача с диска)
     journalctl -u personal-website -f              # логи Gunicorn
 
 Рецепты и объяснения каждой настройки - docs/deployment/application.md
@@ -202,8 +206,8 @@ application.md раздел 4.
 
 - Прокси-слой проекта не занимает 80/443: профиль traefik не
   активируется, терминирование TLS - общий хостовый nginx по рецепту
-  docs/deployment/proxy.md (vhost на проект; рядом живут vhost'ы других
-  проектов).
+  docs/deployment/proxy.md (конфигурация сайта на проект; рядом живут
+  конфигурации других проектов).
 - Приложение публикуется только на 127.0.0.1:${DJANGO_PORT}; порт
   выбирается не занятым другими проектами хоста.
 - База данных: контейнер профиля postgres, systemd-PG (рецепт

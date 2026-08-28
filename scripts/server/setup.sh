@@ -254,13 +254,19 @@ EOF
 }
 
 #######################################
-# Заменить временную конфигурацию nginx на полную
-# (терминирование TLS и проксирование приложения).
+# Установить полную конфигурацию сайта nginx
+# (терминирование TLS, раздача медиа с диска
+# и проксирование приложения).
+# Каталог STORAGE_ROOT должен быть читаем пользователю nginx
+# (www-data): файлы приложения создаются с правами 644
+# и каталогами 755 по умолчанию.
 #######################################
-function install_nginx_vhost() {
+function install_nginx_site() {
     export DOMAIN_NAME="$DOMAIN_NAME"
     export DJANGO_PORT="${DJANGO_PORT:-8000}"
-    envsubst "\$DOMAIN_NAME \$DJANGO_PORT" <"$nginx_template" | sudo tee "$sites_available" >/dev/null
+    export STORAGE_ROOT="${STORAGE_ROOT:-$project_root/storage}"
+    envsubst "\$DOMAIN_NAME \$DJANGO_PORT \$STORAGE_ROOT" \
+        <"$nginx_template" | sudo tee "$sites_available" >/dev/null
     sudo nginx -t
     sudo systemctl reload nginx
 }
@@ -272,6 +278,23 @@ function install_nginx_vhost() {
 function start_services() {
     sudo systemctl restart personal-website.service
     bash "$project_root/scripts/cronjobs.sh"
+}
+
+#######################################
+# Проверить результат настройки: состояние сервиса приложения,
+# последние записи журнала и ответ эндпоинта /health/.
+# Сервис может выполнять миграции (ExecStartPre), поэтому curl
+# повторяет попытки и сбой проверки не прерывает скрипт.
+#######################################
+function verify_services() {
+    echo
+    echo "Проверка установленного приложения..."
+    sudo systemctl status personal-website.service --no-pager || true
+    sudo journalctl -u personal-website.service -n 20 --no-pager
+    curl -fsS --max-time 5 --retry 10 --retry-delay 3 --retry-connrefused \
+        "http://127.0.0.1:${DJANGO_PORT:-8000}/health/" \
+        || echo "Эндпоинт /health/ не ответил - сервис, вероятно, еще выполняет" \
+            "миграции; проследите за ним: journalctl -u personal-website -f"
 }
 
 #######################################
@@ -293,12 +316,11 @@ function main() {
     install_systemd_unit
     install_nginx_bootstrap
     setup_certbot
-    install_nginx_vhost
+    install_nginx_site
     start_services
+    verify_services
     echo
-    echo "Локальный PostgreSQL под systemd: рецепт появится в docs/deployment/database.md;"
-    echo "до этого используется managed-кластер или контейнер профиля postgres."
-    echo "Настройка завершена. Проверка: systemctl status personal-website и journalctl -u personal-website -f"
+    echo "Настройка завершена."
 }
 
 main

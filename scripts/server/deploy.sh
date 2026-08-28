@@ -4,7 +4,8 @@
 # Выполняется на сервере (в том числе из CI/CD через scripts/deploy.sh):
 # 1. Вытягивание изменений из Git.
 # 2. Обновление зависимостей и сборка фронтенда.
-# 3. Переустановка systemd-юнита и vhost nginx из шаблонов репозитория.
+# 3. Переустановка systemd-юнита и конфигурации сайта nginx
+#    из шаблонов репозитория.
 # 4. Перезапуск приложения и nginx.
 # Миграции и collectstatic выполняются юнитом при старте (ExecStartPre).
 
@@ -58,8 +59,9 @@ function build_project() {
 }
 
 #######################################
-# Переустановить systemd-юнит и vhost nginx из шаблонов репозитория
-# (изменения шаблонов вступают в силу вместе с деплоем).
+# Переустановить systemd-юнит и конфигурацию сайта nginx
+# из шаблонов репозитория (изменения шаблонов вступают
+# в силу вместе с деплоем).
 #######################################
 function install_configs() {
     local user="${SUDO_USER:-$(id -un)}"
@@ -67,8 +69,9 @@ function install_configs() {
     export SERVICE_USER="$user"
     export DOMAIN_NAME="$DOMAIN_NAME"
     export DJANGO_PORT="${DJANGO_PORT:-8000}"
+    export STORAGE_ROOT="${STORAGE_ROOT:-$project_root/storage}"
     envsubst "\$WORK_DIR \$SERVICE_USER" <"$systemd_template" | sudo tee "$service_file" >/dev/null
-    envsubst "\$DOMAIN_NAME \$DJANGO_PORT" <"$nginx_template" | sudo tee "$sites_available" >/dev/null
+    envsubst "\$DOMAIN_NAME \$DJANGO_PORT \$STORAGE_ROOT" <"$nginx_template" | sudo tee "$sites_available" >/dev/null
     sudo systemctl daemon-reload
 }
 

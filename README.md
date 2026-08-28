@@ -135,7 +135,7 @@
 
 ## Развертывание
 
-Развертывание настраивается пятью независимыми параметрами: способ запуска приложения (Docker Compose / docker run / systemd Gunicorn), размещение базы данных (managed / контейнер / systemd), тип хранилища (filesystem / S3 / MinIO), вариант прокси (Traefik в compose / хостовый nginx + certbot) и конфигурация бэкапов. Поддерживаемые сочетания зафиксированы эталонными сценариями - [docs/deployment/matrix.md](./docs/deployment/matrix.md).
+Развертывание настраивается пятью независимыми параметрами: способ запуска приложения (Docker Compose / docker run / systemd Gunicorn), размещение базы данных (managed / контейнер / systemd), тип хранилища (filesystem / S3 / MinIO), вариант прокси (Traefik в compose / хостовый nginx + certbot) и конфигурация бэкапов. Поддерживаемые сочетания собраны в типовых сценариях - [docs/deployment/matrix.md](./docs/deployment/matrix.md).
 
 Конфигурация задается одним файлом `.env` с секциями по параметрам (полный список переменных - [.env.example](./.env.example)). Рецепты по параметрам:
 
