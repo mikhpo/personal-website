@@ -21,7 +21,8 @@ description: Первоначальная настройка нового сер
 
 Границы применения: настройка сервера и запуск приложения. Не применяется
 для: деплоя обновлений (scripts/deploy.sh), диагностики прода (скилл
-production-diagnostics), переключения DNS и демонтажа старого сервера.
+production-diagnostics), операций бэкапов (скиллы backup-restore,
+backup-audit), переключения DNS и демонтажа старого сервера.
 
 ## Типовые сценарии развертывания
 
@@ -138,6 +139,10 @@ SSH-ключ сервера и настройка подключения (клю
   self-signed); `le` для продакшена. На тестовых средах с выпуском
   сертификатов - `TRAEFIK_ACME_CASERVER` со staging-URL.
 - `POSTGRES_SSL_CERT_HOST_PATH=<домашний каталог>/.postgresql/root.crt` - путь на хосте для bind-mount (если пользователь не root).
+- Секция «Бэкапы» (только основной сервер): цели `BACKUP_TARGET_<ИМЯ>`
+  (префиксы mc:/rclone:) и списки BACKUP_DB_TARGETS/BACKUP_MEDIA_TARGETS;
+  схема и настройка алиасов mc / remotes rclone -
+  docs/deployment/backups.md.
 
 `chmod 600 .env`.
 

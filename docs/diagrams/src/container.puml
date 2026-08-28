@@ -2,33 +2,42 @@
 
 !include <C4/C4_Container>
 
-title Архитектура проекта
+title Архитектура проекта (варианты размещения - docs/deployment/matrix.md)
 
 Person(user, "Пользователь")
 Person(admin, "Администратор")
-System_Boundary(project, "Персональный сайт") {
-    Container(traefik, "Обратный прокси-сервер", "Traefik", "Проксирует запросы в приложение, обслуживает HTTPS с автоматическими сертификатами Let's Encrypt")
-    Container(gunicorn, "WSGI-сервер", "Gunicorn", "Запускает Django приложение, обрабатывает HTTP-запросы")
-    Container(backend, "Бэкенд", "Django + DRF", "REST API, бизнес-логика, админка, рендеринг шаблонов")
+
+System_Boundary(server, "Сервер") {
+    Container(proxy, "Обратный прокси", "Traefik (профиль traefik) | nginx + certbot на хосте", "Терминирование HTTPS, выпуск и обновление сертификатов, проксирование на 127.0.0.1:DJANGO_PORT")
+    Container(gunicorn, "WSGI-сервер", "Gunicorn", "Запускает Django приложение (Docker Compose, docker run или systemd), обрабатывает HTTP-запросы")
+    Container(backend, "Бэкенд", "Django + DRF", "REST API, бизнес-логика, админка, рендеринг шаблонов, приложение backup")
     Container(frontend, "Фронтенд", "React + Webpack", "React компоненты, интеграция с Django шаблонами, сборка через Webpack")
 }
 
-System_Ext(db, "База данных", "PostgreSQL")
-System_Ext(s3, "Объектное хранилище", "S3/MinIO")
+System_Ext(db, "База данных", "PostgreSQL", "Managed-кластер провайдера | контейнер compose (профиль postgres) | systemd на хосте")
+System_Ext(s3, "Хранилище медиа и статики", "S3 / файловая система", "Удаленный S3 | MinIO (профиль minio) | filesystem-каталог на диске")
+System_Ext(backup_targets, "Цели бэкапов", "mc: / rclone:", "Дампы БД и зеркальная копия медиа: бакеты S3/MinIO, локальные диски, облачные хранилища")
 System_Ext(smtp, "SMTP-сервер", "Внешний сервис электронной почты")
 System_Ext(le, "Let's Encrypt", "ACME-сервер")
 
-Rel(user, traefik, "Читает и комментирует", "HTTPS")
-Rel(admin, traefik, "Публикует и редактирует", "HTTPS")
-Rel(traefik, gunicorn, "Проксирует запросы", "HTTP")
+Rel(user, proxy, "Читает и комментирует", "HTTPS")
+Rel(admin, proxy, "Публикует и редактирует", "HTTPS")
+Rel(proxy, gunicorn, "Проксирует запросы", "HTTP (127.0.0.1:DJANGO_PORT)")
 Rel(gunicorn, backend, "Запускает Django приложение", "WSGI")
 Rel(backend, frontend, "Рендерит шаблоны с React", "django-webpack-loader")
 Rel(frontend, backend, "Запрашивает данные через API", "HTTP/REST")
 Rel(backend, db, "Читает и записывает данные", "SQL")
-Rel(backend, s3, "Хранит медиа и статику", "S3 API")
+Rel(backend, s3, "Хранит медиа и статику", "S3 API / файловая система")
 Rel(backend, smtp, "Почтовые рассылки", "SMTP")
 Rel(smtp, user, "Доставка почты")
-Rel(backend, s3, "Резервное копирование и восстановление", "MinIO Client")
-Rel(traefik, le, "Получает и обновляет сертификаты", "ACME")
+Rel(backend, backup_targets, "Дампы БД (pg_dump) и зеркальная синхронизация медиа", "mc / rclone")
+Rel(proxy, le, "Получает и обновляет сертификаты", "ACME")
+
+note as VariantsNote
+  Пять независимых параметров развертывания: способ запуска приложения,
+  размещение БД, тип хранилища, вариант прокси, конфигурация бэкапов.
+  Поддерживаемые сочетания - эталонные сценарии A-D
+  (docs/deployment/matrix.md).
+end note
 
 @enduml

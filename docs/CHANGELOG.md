@@ -1,5 +1,16 @@
 # История изменений
 
+## 2026-08-28
+
+- .env.example перестроен секциями по независимым параметрам развертывания (приложение, база данных, хранилище, прокси, бэкапы, реестры/CI), каждая секция ссылается на свой документ docs/deployment/
+- Созданы документы docs/deployment/matrix.md (матрица параметров, эталонные сценарии A-D, поддерживаемое и неподдерживаемое), database.md (managed/compose/systemd-PG, мажорный апгрейд), storage.md (filesystem/S3/MinIO, статика, перенос между типами), backups.md (цели mc:/rclone:, семантика, cron и systemd timer, восстановление)
+- Ops-разделы README.md (хранилище, база данных, pg_dump/pg_restore, развертывание, сертификаты Traefik, детали CI/CD) вынесены в docs/deployment/; README сокращен с 630 до ~330 строк
+- Добавлены скиллы backup-restore (операции бэкапа/восстановления, смена типа хранилища) и backup-audit (проверка настройки и квартальный restore-дрилл)
+- Скиллы postgresql-dump/postgresql-restore переведены на соглашения системы бэкапов (имена дампов с временем, каталоги целей); production-diagnostics - сервис application, эндпоинт /health/, systemd-режим, путь /srv/personal-website
+- Диаграмма контейнеров отражает вариантность размещения (прокси, БД, хранилище, цели бэкапов) и пять параметров развертывания
+- Покрытие markdownlint расширено на docs/deployment/*.md (npm-скрипт, CI обеих платформ)
+- Исправлены устаревшие ссылки в docs/CONTRIBUTING.md (перенесенные разделы, eslint.config.mjs, Taskfile.yml)
+
 ## 2026-08-26
 
 - Добавлен вариант systemd-режима с unix-сокетом (socket activation): юниты в scripts/server/systemd/socket/, подраздел в application.md; дефолт остается TCP на 127.0.0.1

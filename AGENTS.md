@@ -277,7 +277,7 @@
 - Запускать Ruff для проверки стиля кода и автоматического исправления ошибок: `poetry run ruff check --fix`
 - Запускать Mypy для проверки типов: `poetry run mypy .`
 - Проверять JavaScript код с помощью ESLint: `npm run lint` или `npx eslint .`
-- Проверять Markdown файлы с помощью markdownlint: `npx markdownlint-cli *.md docs/*.md`
+- Проверять Markdown файлы с помощью markdownlint: `npx markdownlint-cli *.md docs/*.md docs/deployment/*.md`
 - Выполнять все проверки перед коммитом через pre-commit хуки
 
 ## Frontend стек
