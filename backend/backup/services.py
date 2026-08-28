@@ -35,9 +35,6 @@ from backup.utils import (
 
 logger = logging.getLogger(__name__)
 
-PERCENT_BASE = 100
-WARN_PERCENT = 5
-
 
 # --- БД: бэкап ---------------------------------------------------------------
 
@@ -330,8 +327,8 @@ def verify_media(media_targets: list[str]) -> None:
     """Проверка медиа-целей: наличие содержимого storage/ и число объектов.
 
     Ошибка - пустой или недоступный storage/ цели при непустом источнике;
-    расхождение числа объектов больше WARN_PERCENT процентов - предупреждение
-    в журнале.
+    любое расхождение числа объектов с источником - предупреждение
+    в журнале: зеркало полное, расхождений быть не должно.
 
     Args:
         media_targets (list[str]): Имена медиа-целей.
@@ -348,9 +345,7 @@ def verify_media(media_targets: list[str]) -> None:
             logger.info("Цель %s (медиа): пусто или недоступен storage/ при %s объектах источника", name, source_count)
             failures += 1
             continue
-        diff = abs(source_count - target_count)
-        percent = diff * PERCENT_BASE // source_count if source_count else 0
-        if percent > WARN_PERCENT:
+        if target_count != source_count:
             logger.info(
                 "Цель %s (медиа): предупреждение - %s объектов против %s в источнике",
                 name,

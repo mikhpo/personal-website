@@ -51,7 +51,7 @@ workflows:
               - echo "Запуск ESLint для проверки JavaScript/TypeScript кода"
               - npm run eslint
               - echo "Проверка Markdown файлов с помощью markdownlint"
-              - npx markdownlint-cli *.md docs/*.md docs/deployment/*.md
+              - npx markdownlint-cli '**/*.md' --ignore-path .gitignore
 
   # Тестирование
   test-workflow:
