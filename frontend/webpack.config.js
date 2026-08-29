@@ -10,9 +10,15 @@
  * @version 1.0.0
  */
 const path = require('path');
+const fs = require('fs');
 const BundleTracker = require('webpack-bundle-tracker');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
+
+// backend/staticfiles стоит раньше frontend/dist в STATICFILES_DIRS:
+// случайно оставшиеся там tinymce и bootstrap затеняют свежие файлы.
+fs.rmSync(path.resolve(__dirname, '../backend/staticfiles/bootstrap'), { recursive: true, force: true });
+fs.rmSync(path.resolve(__dirname, '../backend/staticfiles/tinymce'), { recursive: true, force: true });
 
 module.exports = {
   /**
@@ -98,19 +104,20 @@ module.exports = {
     // в бандл: редактор динамически загружает плагины, темы и скины через отдельные
     // HTTP-запросы по статическим URL (например, /static/tinymce/themes/silver/theme.min.js),
     // а стили и скрипты Bootstrap подключаются в шаблонах как отдельные файлы.
-    // Webpack не знает об этих файлах, поэтому копируем их в backend/staticfiles/ -
-    // откуда Django раздаёт их по тем же URL /static/tinymce/ и /static/bootstrap/dist/.
+    // Webpack не знает об этих файлах, поэтому копируем их в выходной каталог сборки -
+    // Django раздаёт их по тем же URL /static/tinymce/ и /static/bootstrap/dist/.
     // Такой копией вместо каталога node_modules в STATICFILES_DIRS объём статики
-    // сокращается с десятков тысяч файлов до нескольких сотен.
+    // сокращается с десятков тысяч файлов до нескольких сотен. Все артефакты сборки
+    // попадают в frontend/dist - единственный каталог, который переносится в Docker-образ.
     new CopyWebpackPlugin({
       patterns: [
         {
           from: path.resolve(__dirname, '../node_modules/tinymce'),
-          to: path.resolve(__dirname, '../backend/staticfiles/tinymce'),
+          to: path.resolve(__dirname, 'dist/tinymce'),
         },
         {
           from: path.resolve(__dirname, '../node_modules/bootstrap/dist'),
-          to: path.resolve(__dirname, '../backend/staticfiles/bootstrap/dist'),
+          to: path.resolve(__dirname, 'dist/bootstrap/dist'),
         },
       ],
     }),
