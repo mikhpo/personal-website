@@ -87,6 +87,16 @@ mc alias set <алиас> <endpoint> <access-key> <secret-key>
 rclone config
 ```
 
+В Docker Compose команды резервного копирования выполняются внутри
+контейнера application, поэтому алиасы нужны контейнерному клиенту mc.
+Алиас медиа-хранилища `MINIO_ALIAS` настраивается entrypoint.sh при
+каждом старте контейнера из переменных `MINIO_SERVER_URL`,
+`MINIO_ACCESS_KEY` и `MINIO_SECRET_KEY`. Дополнительные mc-алиасы
+(цели на других серверах S3) настраиваются вручную: в systemd-режиме -
+один раз на хосте, в compose - в контейнере application, повторяя
+настройку после пересоздания контейнера. Поэтому для mc-целей в
+compose-режиме удобно использовать тот же алиас `MINIO_ALIAS`.
+
 Переменные окружения (секция «Бэкапы» .env):
 
 - `BACKUP_DB_TARGETS`, `BACKUP_MEDIA_TARGETS` - списки целей;
@@ -228,9 +238,13 @@ journalctl -u personal-website-backup.service --since today
    зеркально синхронизируется в цель.
 3. Изменить `STORAGE_TYPE` и параметры хранилища в .env и перезапустить
    приложение.
-4. Выполнить `bash scripts/backup.sh restore_media TRANSFER` - медиа
+4. При обратном переносе из s3 удалить статику из временной цели:
+   в s3-режиме медиа-бакет содержит и статику (префикс `static/`),
+   и без этого шага она попадет в новый каталог хранилища -
+   `mc rm --recursive --force <алиас>/<бакет>/storage/static`.
+5. Выполнить `bash scripts/backup.sh restore_media TRANSFER` - медиа
    копируются в новое хранилище.
-5. Проверить число объектов (`backup_media --verify` после добавления
+6. Проверить число объектов (`backup_media --verify` после добавления
    постоянных целей) и удалить временную цель из .env.
 
 ## 8. Правило 3-2-1 и защита целей
