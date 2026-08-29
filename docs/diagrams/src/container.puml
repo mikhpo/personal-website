@@ -6,29 +6,29 @@ title Архитектура проекта
 
 Person(user, "Пользователь")
 Person(admin, "Администратор")
-System_Boundary(project, "Персональный сайт") {
-    Container(traefik, "Обратный прокси-сервер", "Traefik", "Проксирует запросы в приложение, обслуживает HTTPS с автоматическими сертификатами Let's Encrypt")
-    Container(gunicorn, "WSGI-сервер", "Gunicorn", "Запускает Django приложение, обрабатывает HTTP-запросы")
-    Container(backend, "Бэкенд", "Django + DRF", "REST API, бизнес-логика, админка, рендеринг шаблонов")
-    Container(frontend, "Фронтенд", "React + Webpack", "React компоненты, интеграция с Django шаблонами, сборка через Webpack")
+
+System_Boundary(server, "Сервер") {
+    Container(proxy, "Обратный прокси", "nginx + certbot", "HTTPS, сертификаты, раздача медиа")
+    Container(gunicorn, "WSGI-сервер", "Gunicorn", "Запускает Django-приложение")
+    Container(backend, "Бэкенд", "Django + DRF", "API, бизнес-логика, резервное копирование")
+    Container(frontend, "Фронтенд", "React + Webpack", "Пользовательский интерфейс")
 }
 
 System_Ext(db, "База данных", "PostgreSQL")
-System_Ext(s3, "Объектное хранилище", "S3/MinIO")
-System_Ext(smtp, "SMTP-сервер", "Внешний сервис электронной почты")
-System_Ext(le, "Let's Encrypt", "ACME-сервер")
+System_Ext(s3, "Хранилище", "S3 / файловая система")
+System_Ext(smtp, "SMTP-сервер", "Внешний сервис")
+System_Ext(le, "ACME-сервер", "Let's Encrypt")
 
-Rel(user, traefik, "Читает и комментирует", "HTTPS")
-Rel(admin, traefik, "Публикует и редактирует", "HTTPS")
-Rel(traefik, gunicorn, "Проксирует запросы", "HTTP")
-Rel(gunicorn, backend, "Запускает Django приложение", "WSGI")
-Rel(backend, frontend, "Рендерит шаблоны с React", "django-webpack-loader")
-Rel(frontend, backend, "Запрашивает данные через API", "HTTP/REST")
-Rel(backend, db, "Читает и записывает данные", "SQL")
-Rel(backend, s3, "Хранит медиа и статику", "S3 API")
-Rel(backend, smtp, "Почтовые рассылки", "SMTP")
+Rel(user, proxy, "Читает и комментирует", "HTTPS")
+Rel(admin, proxy, "Публикует и редактирует", "HTTPS")
+Rel(proxy, gunicorn, "Проксирует запросы", "HTTP")
+Rel(gunicorn, backend, "Запускает Django-приложение", "WSGI")
+Rel(backend, frontend, "Рендерит шаблоны", "django-webpack-loader")
+Rel(frontend, backend, "Запрашивает данные", "HTTP/REST")
+Rel(backend, db, "Читает и записывает", "SQL")
+Rel(backend, s3, "Хранит медиа и статику", "S3 API / файловая система")
+Rel(backend, smtp, "Отправляет письма", "SMTP")
 Rel(smtp, user, "Доставка почты")
-Rel(backend, s3, "Резервное копирование и восстановление", "MinIO Client")
-Rel(traefik, le, "Получает и обновляет сертификаты", "ACME")
+Rel(proxy, le, "Получает сертификаты", "ACME")
 
 @enduml

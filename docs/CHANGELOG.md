@@ -1,5 +1,17 @@
 # История изменений
 
+## 2026-08-28
+
+- Созданы документы docs/deployment/: matrix.md (параметры и типовые сценарии развертывания), application.md, database.md, storage.md, proxy.md, backups.md; .env.example перестроен секциями по параметрам
+- Документация docs/deployment/ переписана связной прозой; правило закреплено в AGENTS.md
+- Traefik заменен на nginx + certbot: официальный образ nginx (профиль nginx) с шаблоном конфигурации, раздача медиа filesystem-хранилища прокси с диска, certbot отдельным контейнером (выпуск standalone в scripts/docker/setup.sh, продление webroot по cron через scripts/docker/renew-cert.sh), self-signed сертификат локального стека - задача task dev-cert; переменные TRAEFIK_* заменены на HTTP_PORT/HTTPS_PORT
+- Добавлен интеграционный тест раздачи медиа через прокси (tests/test_proxy.py)
+- scripts/server/setup.sh показывает состояние запущенных сервисов
+- Добавлены скиллы backup-restore, backup-audit, restore-drill; скиллы postgresql-dump/postgresql-restore переведены на соглашения системы бэкапов
+- Проверка --verify медиа-целей сообщает о любом расхождении числа объектов с источником
+- Ops-разделы README.md вынесены в docs/deployment/
+- markdownlint охватывает все markdown-файлы репозитория
+
 ## 2026-08-26
 
 - Добавлен вариант systemd-режима с unix-сокетом (socket activation): юниты в scripts/server/systemd/socket/, подраздел в application.md; дефолт остается TCP на 127.0.0.1

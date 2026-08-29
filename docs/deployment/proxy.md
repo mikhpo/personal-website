@@ -1,37 +1,21 @@
 # Прокси и сертификаты
 
-Слой терминирования HTTPS выбирается независимо от остальных параметров
+Прокси-сервер выбирается независимо от остальных параметров
 развертывания (база данных, хранилище, способ запуска приложения).
 Контракт приложения для любого варианта прокси - порт на 127.0.0.1
 (см. [application.md](./application.md)), поэтому прокси-слой заменяется
 без изменений приложения.
 
-Содержание:
+## 1. Инструмент
 
-1. Рекомендация и обоснование
-2. Рецепт хостового nginx + certbot
-3. Режим Traefik в Docker Compose
-4. Пост-мортем: nginx-в-контейнере
-5. Неподдерживаемые варианты
+Прокси-инструмент один для всех вариантов - nginx. Он работает либо
+в контейнере Docker Compose (профиль nginx, рецепт в разделе 3), либо
+в операционной системе хоста с сертификатами certbot (раздел 2).
 
-## 1. Рекомендация и обоснование
-
-Основной путь - nginx на хосте операционной системы с сертификатами
-certbot. Обоснование:
-
-- мультипроектный хост: один nginx обслуживает vhost'ы всех проектов
-  и единолично занимает порты 80/443, прокси-слой проекта ничего
-  не занимает (см. профиль traefik ниже);
-- равноправие способов запуска: nginx одинаково проксирует контейнерные
-  бэкенды (Docker Compose, docker run) и systemd-бэкенды - для него
-  разницы нет, все они слушают 127.0.0.1:${DJANGO_PORT};
-- решение пользователя: при функциональной эквивалентности Traefik
-  и nginx предпочтение отдается nginx (больше опыта работы
-  и документации).
-
-Traefik в Docker Compose - поддерживаемый вариант одиночного сервера
-«все в Docker»: без плейсхолдеров и внешних файлов, сертификаты
-выпускаются автоматически. Рецепт - в разделе 3.
+nginx раздает медиа filesystem-хранилища с локального диска, работает
+с сертификатами любого удостоверяющего центра (меняются только
+PEM-файлы) и проксирует бэкенды обоих способов запуска: контейнерные
+и systemd слушают один и тот же 127.0.0.1:${DJANGO_PORT}.
 
 ## 2. Рецепт хостового nginx + certbot
 
@@ -42,15 +26,24 @@ sudo apt-get install -y nginx certbot
 ```
 
 Плагин python3-certbot-nginx не используется: конфигурация nginx
-принадлежит администратору, certbot работает методом webroot
-и не изменяет конфигурацию прокси.
+принадлежит администратору, certbot работает методом webroot и ничего
+в конфигурации прокси не меняет.
 
-### Vhost проекта
+### Конфигурация сайта проекта
 
-Файл /etc/nginx/sites-available/personal-website (ставит
+Файл /etc/nginx/sites-available/personal-website устанавливается
 scripts/server/setup.sh из шаблона
-scripts/server/nginx/personal-website.conf.template, переменные
-${DOMAIN_NAME} и ${DJANGO_PORT} подставляются из .env):
+scripts/server/nginx/personal-website.conf.template. Подстановка
+значений выполняется утилитой envsubst (пакет gettext-base) по списку
+переменных:
+
+```bash
+envsubst "$DOMAIN_NAME $DJANGO_PORT $STORAGE_ROOT" \
+    < personal-website.conf.template > personal-website.conf
+```
+
+setup.sh выполняет подстановку этими же переменными из .env
+и требует sudo для записи в /etc/nginx/sites-available/.
 
 ```nginx
 server {
@@ -75,6 +68,10 @@ server {
 
     client_max_body_size 50m;
 
+    location /media/ {
+        alias /srv/personal-website/storage/;
+    }
+
     location / {
         proxy_pass http://127.0.0.1:8000;
         proxy_set_header Host $host;
@@ -85,28 +82,34 @@ server {
 }
 ```
 
-Назначение директив:
+Назначение директив следующее. HTTP-сервер выполняет редирект 301
+на HTTPS для всех запросов, кроме /.well-known/acme-challenge/:
+на них отвечает certbot (проверки HTTP-01 при выпуске и продлении),
+а root /var/www/certbot совпадает с аргументом -w команды certbot
+ниже. Директива proxy_pass ведет на 127.0.0.1:${DJANGO_PORT} - это
+и есть контракт приложения. Заголовки Host, X-Forwarded-For
+и X-Forwarded-Proto нужны приложению за прокси: из домена собирается
+CSRF_TRUSTED_ORIGINS, а X-Forwarded-Proto доверяется при включенном
+SECURE_PROXY_SSL_HEADER (см. .env.example, блок безопасности).
+Директива client_max_body_size 50m поднимает дефолтный лимит 1m,
+иначе загрузка фотографий галереи не проходит.
 
-- HTTP-сервер выполняет редирект 301 на HTTPS, кроме запросов
-  /.well-known/acme-challenge/: на них отвечает certbot (проверки
-  HTTP-01 при выпуске и продлении), root /var/www/certbot совпадает
-  с аргументом -w команды certbot ниже;
-- proxy_pass на 127.0.0.1:${DJANGO_PORT} - контракт приложения;
-- Host, X-Forwarded-For, X-Forwarded-Proto - приложение за прокси
-  собирает CSRF_TRUSTED_ORIGINS из домена и доверяет
-  X-Forwarded-Proto при включенном SECURE_PROXY_SSL_HEADER
-  (см. .env.example, блок безопасности);
-- client_max_body_size 50m - загрузка фотографий галереи не проходит
-  на дефолтном лимите 1m;
-- статика и медиа через nginx не раздаются: в filesystem-режиме их
-  обслуживает WhiteNoise, при STORAGE_TYPE=s3 - объектное хранилище.
+Location /media/ раздает медиафайлы filesystem-хранилища напрямую
+с диска: alias указывает на каталог STORAGE_ROOT, и nginx читает
+файлы сам, не задействуя воркеры приложения (при STORAGE_TYPE=s3
+медиа отдает объектное хранилище, и этот location молча не совпадает
+ни с одним запросом). Чтобы раздача работала, каталог STORAGE_ROOT
+и файлы в нем должны быть читаемы пользователю nginx (www-data):
+приложение создает файлы с правами 644 и каталоги 755 по умолчанию,
+чего достаточно. Контейнерный nginx раздает медиа так же - каталог
+хранилища монтируется прямо в прокси (раздел 3).
 
 При запуске приложения в systemd-режиме с unix-сокетом адресация
 меняется на `proxy_pass http://unix:/run/personal-website.sock`,
-остальные директивы vhost не меняются (вариант сокета -
+остальные директивы конфигурации сайта не меняются (вариант сокета -
 [application.md](./application.md), раздел 4).
 
-Включение vhost:
+Включение конфигурации сайта:
 
 ```bash
 sudo ln -sfn /etc/nginx/sites-available/personal-website /etc/nginx/sites-enabled/
@@ -115,15 +118,16 @@ sudo nginx -t && sudo systemctl reload nginx
 
 ### Первичный выпуск сертификата (двухфазный)
 
-nginx не стартует с директивой ssl_certificate на несуществующий файл,
-поэтому сертификат выпускается до включения HTTPS-блока:
+nginx не стартует с директивой ssl_certificate, указывающей
+на несуществующий файл, поэтому сертификат выпускается до включения
+HTTPS-блока. Порядок такой:
 
-1. Временный vhost: только сервер HTTP с location
-   /.well-known/acme-challenge/ (шаблон
-   scripts/server/nginx/acme-bootstrap.conf.template), прочие запросы
-   получают 503.
-2. Выпуск сертификата (см. ниже).
-3. Замена vhost на полную конфигурацию и перезагрузка nginx.
+1. ставится временная конфигурация сайта - только сервер HTTP
+   с location /.well-known/acme-challenge/ (шаблон
+   scripts/server/nginx/acme-bootstrap.conf.template); прочие запросы
+   получают 503;
+2. выпускается сертификат (команда ниже);
+3. временная конфигурация заменяется полной и nginx перезагружается.
 
 scripts/server/setup.sh выполняет все три фазы автоматически.
 
@@ -137,16 +141,17 @@ sudo certbot certonly --webroot -w /var/www/certbot \
 ```
 
 Тестовые среды выпускают сертификат в ACME staging, чтобы не расходовать
-лимиты продакшена Let's Encrypt: флаг --staging (setup.sh включает его
-при CERTBOT_STAGING=True в .env или окружении). Сертификаты staging
-не являются доверенными - схема проверяется, браузерные предупреждения
-ожидаемы. Переход на продакшен: удалить тестовый сертификат
-(sudo certbot delete --cert-name example.com) и повторить выпуск без
---staging.
+лимиты продакшена Let's Encrypt: флаг --staging включается setup.sh
+автоматически при CERTBOT_STAGING=True в .env или окружении.
+Сертификаты staging не являются доверенными - так проверяется сама
+схема, а браузерные предупреждения ожидаемы. Для перехода
+на продакшен тестовый сертификат удаляется
+(`sudo certbot delete --cert-name example.com`) и выпуск повторяется
+уже без --staging.
 
-Продление: пакет certbot поставляет systemd timer certbot.timer
-(запуски дважды в сутки, продление - при истечении 1/3 срока).
-Перезагрузка nginx после каждого обновления - deploy hook
+Продление выполняет systemd timer certbot.timer из пакета certbot:
+запуски дважды в сутки, продление - при истечении трети срока.
+Перезагрузку nginx после каждого обновления делает deploy hook
 /etc/letsencrypt/renewal-hooks/deploy/nginx-reload.sh:
 
 ```bash
@@ -163,9 +168,9 @@ systemctl list-timers certbot.timer
 
 ### Вариант DNS-01
 
-Проверка DNS-01 требуется, когда порты 80/443 недоступны извне
-(CGNAT, блокировка провайдером) или нужен wildcard-сертификат.
-Выполняется плагином DNS-провайдера домена, например:
+Проверка DNS-01 требуется, когда порты 80/443 недоступны извне (CGNAT,
+блокировка провайдером) или нужен wildcard-сертификат. Выполняется
+она плагином DNS-провайдера домена, например:
 
 ```bash
 sudo apt-get install -y python3-certbot-dns-cloudflare
@@ -175,78 +180,77 @@ sudo certbot certonly --dns-cloudflare \
     --email admin@example.com --agree-tos --no-eff-mail
 ```
 
-Учетные данные плагина хранятся на сервере с правами 600
-у пользователя root. Ручной режим (certbot certonly --manual)
-для продления по расписанию не годится: требует подтверждения
-в интерактиве при каждом продлении. При выборе DNS-01 vhost меняется
-только отсутствием location ACME-проверки (проверки идут через DNS).
+Учетные данные плагина хранятся на сервере с правами 600 у пользователя
+root. Ручной режим (certbot certonly --manual) для продления
+по расписанию не годится: при каждом продлении он требует интерактивного
+подтверждения. При выборе DNS-01 конфигурация сайта меняется только
+отсутствием location ACME-проверки - проверки идут через DNS.
 
-## 3. Режим Traefik в Docker Compose
+## 3. Рецепт nginx + certbot в Docker Compose
 
-Подключается профилем traefik (COMPOSE_PROFILES=traefik или
-docker compose --profile traefik up). Конфигурация - labels сервиса
-application в compose.yaml; отдельного файла конфигурации нет.
+Прокси подключается профилем nginx (`COMPOSE_PROFILES=nginx` или
+`docker compose --profile nginx up`). Сервис использует официальный
+образ nginx; конфигурация рендерится из шаблона
+[nginx/personal-website.conf.template](../../nginx/personal-website.conf.template)
+самим образом (envsubst по переменным окружения DOMAIN_NAME и DJANGO_PORT).
+Она повторяет конфигурацию хостового варианта: редирект HTTP -> HTTPS,
+webroot для проверок ACME, `location /media/` с alias на примонтированный
+каталог хранилища (`STORAGE_ROOT` подключается в прокси read-only) и
+proxy_pass на сервис application. Каталог nginx/letsencrypt с журналами
+и сертификатами - bind mount, переживает `docker compose down -v`.
 
-Переменные окружения (.env):
+До первого выпуска сертификата nginx не стартует: директива
+ssl_certificate указывает на файл, которого еще нет. Поэтому первичный
+выпуск выполняется standalone-методом до подъема стека - certbot
+поднимает собственный HTTP-сервер на порту 80:
 
-- TRAEFIK_CERT_RESOLVER - имя сертификатного резолвера в labels
-  маршрутизатора: 'le' в продакшене (выпуск через TLS-ALPN-01),
-  пустая строка в разработке (ACME-клиент пассивен, HTTPS обслуживается
-  встроенным self-signed сертификатом Traefik, обращений к Let's Encrypt
-  нет);
-- ACME_EMAIL - адрес регистрации аккаунта ACME и уведомлений;
-- TRAEFIK_ACME_CASERVER - адрес ACME CA-сервера: пусто - продакшен
-  Let's Encrypt (дефолт Traefik), для тестовых сред -
-  <https://acme-staging-v02.api.letsencrypt.org/directory>
-  (защита от исчерпания лимитов продакшена при повторных выпусках).
+```bash
+docker compose run --rm -p 80:80 certbot certonly --standalone \
+    -d example.com -d www.example.com \
+    --email admin@example.com --agree-tos --no-eff-mail
+```
 
-Состояние ACME-клиента - traefik/letsencrypt/acme.json (bind-mount,
-переживает docker compose down -v). Перенос между серверами -
-копированием каталога до первого старта Traefik.
+Эту команду выполняет scripts/docker/setup.sh при активном профиле nginx
+(идемпотентно: существующий сертификат пропускается; тестовые среды
+добавляют --staging при CERTBOT_STAGING=True). После выпуска конфигурация
+nginx не меняется никогда.
 
-Ограничение: настроен только challenge TLS-ALPN-01 - требуется
-доступный извне порт 443. При недоступных 80/443 (CGNAT) Traefik
-с текущей конфигурацией сертификаты выпускать не может; сценарий
-закрывается хостовым nginx + certbot с DNS-01 (раздел 2).
+Продление работает через webroot: запущенный nginx отвечает на проверки
+ACME из каталога nginx/acme-webroot, общий с certbot. Основной механизм -
+cron хоста (добавляется scripts/cronjobs.sh): ежедневно в 04:17
+запускается [scripts/docker/renew-cert.sh](../../scripts/docker/renew-cert.sh) -
+`docker compose run --rm certbot renew --webroot -w /var/www/certbot`
+с последующей перезагрузкой конфигурации nginx; при неактивном профиле
+nginx скрипт ничего не делает. Логи - `${LOGS_ROOT}/cert-renew.log`.
 
-## 4. Пост-мортем: nginx-в-контейнере
+Альтернатива для сред без хостового планировщика - контейнер certbot
+с циклом продления и docker.sock для сигнала перезагрузки nginx:
 
-До коммита 692b9a94 (2026-08-15) прокси работал как кастомный образ
-nginx с cron и certbot внутри контейнера: конфигурация генерировалась
-из шаблона через envsubst, обновление сертификатов выполнял cron
-контейнера, а плагин python3-certbot-nginx правил живой конфиг
-в рантайме. Схема заменена на Traefik. Причины не воскрешать ее
-(в том числе под видом «контейнерного nginx без Traefik»):
+```yaml
+entrypoint: /bin/sh -c 'trap exit TERM; while :; do
+  certbot renew --webroot -w /var/www/certbot --deploy-hook
+  "docker kill --signal HUP nginx"; sleep 12h; done'
+volumes:
+  - /var/run/docker.sock:/var/run/docker.sock
+```
 
-1. Два демона в одном контейнере (nginx + cron) нарушают модель
-   «один главный процесс - один контейнер».
-2. Падение cron внутри контейнера незаметно: продление сертификатов
-   молча прекращается, проблема всплывает только при истечении
-   сертификата.
-3. Certbot с плагином nginx мутирует живую конфигурацию в рантайме -
-   фактический конфиг расходится с шаблоном в репозитории.
-4. Собственный инфраструктурный образ - отдельная единица
-   сопровождения (базовый образ, версии certbot, безопасности
-   обновления).
-5. Продление сертификатов привязано к циклу деплоев (перезапусков
-   контейнера), а не к расписанию.
-6. Отсутствие dev-режима: без домена и публичного адреса схема
-   не работала вовсе.
+Издержки варианта: контейнер certbot получает доступ к docker.sock,
+эквивалентный правам root на хосте, поэтому основным выбран cron.
 
-Вывод: каждый слой получает подходящий инструмент - в контейнере
-Traefik (декларативные labels, автоматический ACME), на хосте -
-nginx + certbot (systemd timer, deploy hooks).
+Ручной удостоверяющий центр (например, местный УЦ при недоступности
+Let's Encrypt) не требует изменения схемы: файлы fullchain.pem
+и privkey.pem укладываются в nginx/letsencrypt/live/<домен>/ (теми же
+путями, что использует certbot), после чего выполняется
+`docker compose exec nginx nginx -s reload`. Certbot в этом случае
+не участвует вовсе.
 
-## 5. Неподдерживаемые варианты
+Локальная разработка без домена использует self-signed сертификат -
+задача `task dev-cert` генерирует его в nginx/letsencrypt/live/localhost/
+теми же путями, поэтому конфигурация nginx одна для всех сред. Порты
+прокси настраиваются переменными HTTP_PORT/HTTPS_PORT (полезно, если
+80/443 хоста заняты). Проверка прокси после подъема стека:
 
-- Общий Traefik-стек сервера (Traefik в отдельном compose-проекте,
-  обслуживающий проекты через внешние сети). Потребовал бы
-  external-сетей и разбиения единого compose.yaml - осознанно нет;
-  сценарий мультипроектного проксирования закрыт хостовым nginx.
-- Nginx-в-контейнере - см. пост-мортем в разделе 4.
-- Socket-proxy для docker.sock. Traefik с примонтированным
-  /var/run/docker.sock эквивалентен правам root на хосте; при желании
-  усилить изоляцию используется образ tecnativa/docker-socket-proxy
-  (read-only прокси Docker API), но это опция усиления, а не
-  поддерживаемый путь проекта: основной вариант прокси (хостовый nginx)
-  docker.sock не получает вовсе.
+```bash
+curl -sk https://localhost/health/
+curl -sk https://localhost/media/<файл>
+```

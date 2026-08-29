@@ -38,7 +38,26 @@ EOF
 src issue edit <N> --status closed
 ```
 
-Прочее: `src issue get <N>`, `src issue list`, `src issue add-comment <N>`.
+Прочее: `src issue get <N>`, `src issue list`, `src issue list-comments <N>`.
+
+### Комментарии к задаче
+
+Ответ на чужой комментарий - всегда в его ветке, через `--parent-id` (id берется из `src issue list-comments <N> --json` или REST API):
+
+```bash
+src issue add-comment <N> --parent-id <comment_id> --body "$(cat <<'EOF'
+Текст ответа.
+EOF
+)"
+```
+
+Без `--parent-id` комментарий публикуется верхнего уровня - при ответе пользователю это ошибка.
+
+Прочее:
+
+- `src issue edit-comment <N> --id <comment_id> --body "..."` - правка своего комментария;
+- `src issue delete-comment <comment_id>` - удаление; id передается позиционно, флага `--id` нет. Удаление мягкое: тело очищается, но сущность-заглушка остается в API-списке;
+- в REST API (`/repos/{org}/{repo}/issues/<N>/comments`) ветка видна во вложенном объекте `parent.id` - поля `parent_id` нет, не путать при проверках.
 
 ## Pull request'ы
 

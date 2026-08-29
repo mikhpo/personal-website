@@ -95,6 +95,28 @@ class TestBackupMedia(MediaTestCaseMixin):
         self.assertFalse((self.target_root / "stale.jpg").exists())
 
 
+class TestVerifyMedia(MediaTestCaseMixin):
+    """Тесты проверки медиа-целей verify_media."""
+
+    def test_matching_target_reports_no_discrepancy(self) -> None:
+        """Полное зеркало источника не дает предупреждения о расхождении."""
+        with self.media_settings():
+            services.backup_media()
+            with self.assertLogs("backup.services", level="INFO") as logs:
+                services.verify_media(["DISK"])
+        self.assertFalse(any("предупреждение" in message for message in logs.output))
+
+    def test_discrepancy_warns(self) -> None:
+        """Любое расхождение числа объектов с источником - предупреждение."""
+        stored = self.target_root / "storage"
+        stored.mkdir(parents=True)
+        (stored / "img1.jpg").write_bytes(b"image")
+        (stored / "extra.jpg").write_bytes(b"extra")
+        with self.media_settings(), self.assertLogs("backup.services", level="INFO") as logs:
+            services.verify_media(["DISK"])
+        self.assertTrue(any("предупреждение" in message for message in logs.output))
+
+
 class TestRestoreMedia(MediaTestCaseMixin):
     """Тесты функции restore_media."""
 

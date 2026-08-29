@@ -38,6 +38,7 @@ fi
 # Массив задач на добавление.
 cron_jobs=(
     "1 23 * * * $bash $scripts/backup.sh backup >> $logs/backup.log 2>&1"
+    "17 4 * * * $bash $scripts/docker/renew-cert.sh >> $logs/cert-renew.log 2>&1"
 )
 
 # Получение содержимого текущего crontab файла.

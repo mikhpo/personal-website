@@ -19,8 +19,8 @@ CACHE
 /storage/
 /backups/
 /temp/
-nginx/conf.d
-/traefik/
+/nginx/letsencrypt/
+/nginx/acme-webroot/
 .ruff_cache
 TODO.md
 todo

@@ -16,7 +16,7 @@
     "test": "jest --config frontend/jest.config.js",
     "test:watch": "jest --config frontend/jest.config.js --watch",
     "eslint": "eslint . --max-warnings 0",
-    "markdownlint": "markdownlint *.md docs/*.md --ignore-path .gitignore"
+    "markdownlint": "markdownlint '**/*.md' --ignore-path .gitignore"
   },
   "author": "Mikhail Polyakov",
   "license": "ISC",

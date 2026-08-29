@@ -185,7 +185,7 @@ jobs:
         run: npm install
 
       - name: Run markdownlint
-        run: npx markdownlint-cli *.md docs/*.md
+        run: npx markdownlint-cli '**/*.md' --ignore-path .gitignore
 
   # Выполнение тестов JavaScript при помощи Jest.
   jest_check:

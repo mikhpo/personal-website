@@ -155,6 +155,23 @@ tasks:
       - "{{.COMPOSE_CMD}} exec application npm test"
       - "{{.COMPOSE_CMD}} exec application poetry run pytest {{.CLI_ARGS}}"
 
+  dev-cert:
+    desc: Выпустить self-signed сертификат локального стека nginx
+    summary: |
+      Команда создает сертификат для контейнерного nginx локального стека
+      (DOMAIN_NAME из .env, по умолчанию localhost): до первого выпуска
+      сертификата nginx не стартует. Сертификат попадает в
+      nginx/letsencrypt/live/<домен>/ - тот же путь, что использует certbot
+      в продакшене, поэтому конфигурация nginx одна для всех сред.
+    preconditions:
+      - test -f compose.yaml
+    cmds:
+      - mkdir -p nginx/letsencrypt/live/{{.DOMAIN_NAME | default "localhost"}}
+      - openssl req -x509 -newkey rsa:2048 -nodes -days 365
+        -subj "/CN={{.DOMAIN_NAME | default "localhost"}}"
+        -keyout nginx/letsencrypt/live/{{.DOMAIN_NAME | default "localhost"}}/privkey.pem
+        -out nginx/letsencrypt/live/{{.DOMAIN_NAME | default "localhost"}}/fullchain.pem
+
   test-integration:
     desc: Выполнить интеграционные тесты
     summary: |
@@ -163,18 +180,21 @@ tasks:
       окружения проекта. Сервисы поднимаются в контейнерах Docker через Compose;
       флаг --wait дожидается прохождения healthcheck всех сервисов (применяется
       при использовании Docker Compose V2), чтобы тесты не стартовали раньше
-      готовности приложения.
+      готовности приложения. Для nginx предварительно выпускается self-signed
+      сертификат локального стека (задача dev-cert).
     preconditions:
       - test -f compose.yaml
       - test -f pyproject.toml
       - test -f .env
     env:
       POSTGRES_HOST: postgres
+      DOMAIN_NAME: '{{.DOMAIN_NAME | default "localhost"}}'
       MINIO_SERVER_URL: http://127.0.0.1:9000
       MINIO_BROWSER_REDIRECT_URL: http://127.0.0.1:9001
     cmds:
+      - task: dev-cert
       - defer: "{{.COMPOSE_CMD}} down"
-      - "{{.COMPOSE_CMD}} up -d {{.COMPOSE_WAIT}} application postgres traefik minio"
+      - "{{.COMPOSE_CMD}} up -d {{.COMPOSE_WAIT}} application postgres nginx minio"
       - "{{.COMPOSE_CMD}} ps"
       - poetry run pytest ./tests {{.CLI_ARGS}}
 
@@ -268,7 +288,7 @@ tasks:
     summary: |
       Запускает контейнеры Docker сервисов, определенных в файле Compose, в фоновом режиме (detached).
       Поднимается типовой набор для локальной разработки: приложение и PostgreSQL.
-      MinIO и Traefik подключаются профилями (COMPOSE_PROFILES в .env) или явным
+      MinIO и nginx подключаются профилями (COMPOSE_PROFILES в .env) или явным
       указанием имени сервиса.
       Флаг --wait блокирует выполнение до прохождения healthcheck всех сервисов
       (применяется при использовании Docker Compose V2).
