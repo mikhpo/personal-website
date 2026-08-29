@@ -28,36 +28,25 @@
 
 ## 2. Типовые сценарии развертывания
 
-| Параметр | Локальная разработка | Облачный сервер | Homelab | Сервер без Docker |
-| --- | --- | --- | --- | --- |
-| Запуск приложения | Compose (разработка) | Compose | Compose | systemd Gunicorn |
-| База данных | контейнер compose | managed | контейнер compose | systemd-PG |
-| Хранилище | filesystem | S3 удаленный | MinIO локальный (s3) | filesystem |
-| Прокси | nginx + certbot в compose | nginx + certbot в compose | хостовый nginx + certbot | хостовый nginx + certbot |
-| COMPOSE_PROFILES | postgres,minio,nginx | nginx | postgres,minio | - (Docker нет) |
-| Проверка | task test-integration | релизный деплой CI | compose config + тестовый хост | чеклист + тестовый хост |
+Сценарии описывают продакшен-развертывания; локальная разработка -
+не сценарий развертывания, ее порядок описан в
+[README.md](../../README.md).
 
-Сценарий «облачный сервер» - действующий прод: он проверяется каждым
-релизным деплоем (цепочка release-deploy CI), отдельной джобы не имеет.
-Сценарии «homelab» и «сервер без Docker» обкатываются на тестовом хосте
-перед использованием; «локальная разработка» покрывается интеграционными
-тестами на машине разработчика.
+| Параметр | Облачный сервер | Домашний сервер | Сервер без Docker |
+| --- | --- | --- | --- |
+| Запуск приложения | Compose | Compose | systemd Gunicorn |
+| База данных | managed | контейнер compose | systemd-PG |
+| Хранилище | S3 удаленный | MinIO локальный (s3) | filesystem |
+| Прокси | nginx + certbot в compose | хостовый nginx + certbot | хостовый nginx + certbot |
+| COMPOSE_PROFILES | nginx | postgres,minio | - (Docker нет) |
+| Проверка | релизный деплой CI | compose config + тестовый хост | чеклист + тестовый хост |
+
+«Сервер без Docker» - действующий прод. «Облачный сервер» - целевое
+состояние контейнерного продакшена: проверяется каждым релизным
+деплоем (цепочка release-deploy CI), отдельной джобы не имеет.
+«Домашний сервер» обкатывается на тестовом хосте перед использованием.
 
 ## 3. Чеклисты сценариев
-
-### Локальная разработка
-
-1. `COMPOSE_PROFILES='postgres,minio,nginx'`,
-   `STORAGE_TYPE='filesystem'`, `DOMAIN_NAME='localhost'`;
-2. `task dev-cert` - self-signed сертификат локального стека nginx
-   (до него nginx не стартует);
-3. `docker compose up -d --wait` - все сервисы healthy;
-4. `curl -sk https://localhost/health/` - 200;
-5. `task test-integration` - интеграционные тесты проходят
-   (маршрутизация nginx, robots.txt, favicon, API, раздача медиа
-   из примонтированного хранилища);
-6. обращений к Let's Encrypt нет: сертификат self-signed
-   (certbot не запускался).
 
 ### Облачный сервер
 
@@ -72,7 +61,7 @@
 6. бэкапы настроены ([backups.md](./backups.md)): `backup --verify`
    проходит по всем целям.
 
-### Homelab
+### Домашний сервер
 
 1. Профили postgres,minio; хостовый nginx + certbot по рецепту
    [proxy.md](./proxy.md) (конфигурация сайта проекта, сертификат
