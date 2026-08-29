@@ -13,17 +13,17 @@ description: Диагностика продакшен-сервера - пара
 
 - Окружения SourceCraft: `src envs` - список доступных сред; переключение флагом `--env <name>`, текущее видно в `src auth status`.
 - Скрипты деплоя в репозитории: `scripts/deploy.sh` (общий вход: бэкап и диспетчеризация по DEPLOY_MODE из .env) и ветви `scripts/docker/`, `scripts/server/` - путь проекта на сервере и последовательность деплоя.
-- Конфигурация стекa: `compose.yaml` - сервисы (application, traefik, postgres, minio; инфраструктурные подключаются профилями через COMPOSE_PROFILES).
+- Конфигурация стекa: `compose.yaml` - сервисы (application, nginx, certbot, postgres, minio; инфраструктурные подключаются профилями через COMPOSE_PROFILES).
 - Способ запуска: DEPLOY_MODE в .env на сервере - compose (контейнеры, диагностика через docker compose) или systemd (systemctl/journalctl юнита personal-website; скилл server-setup).
 - CI-конфиг деплоя (`.sourcecraft/ci.yaml`, workflow `deploy-workflow`; зеркально `.github/workflows/deploy.yml`) - шаги деплоя и используемые секреты сервера (хост, пользователь, ключ).
 - `~/.ssh/config` - алиас подключения к серверу.
-- `.env` на сервере - актуальные переменные среды (DOMAIN_NAME, STORAGE_TYPE, DEBUG, DEPLOY_MODE, GUNICORN_WORKERS, TRAEFIK_ACME_CASERVER, параметры БД и хранилища; секция «Бэкапы»: BACKUP_DB_TARGETS, BACKUP_MEDIA_TARGETS, цели BACKUP_TARGET_<ИМЯ>).
+- `.env` на сервере - актуальные переменные среды (DOMAIN_NAME, STORAGE_TYPE, DEBUG, DEPLOY_MODE, GUNICORN_WORKERS, CERTBOT_STAGING, параметры БД и хранилища; секция «Бэкапы»: BACKUP_DB_TARGETS, BACKUP_MEDIA_TARGETS, цели BACKUP_TARGET_<ИМЯ>).
 - Публичный адрес сайта (домен/URL) для проверки в браузере: переменная `DOMAIN_NAME` в `.env` на сервере.
 
 ## Доступ и расположение
 
 - Подключение по алиасу из `~/.ssh/config`: `ssh <алиас>`.
-- Путь проекта на сервере: `/srv/personal-website`. При compose-режиме приложение выполняется в контейнере Docker Compose (сервис `application`), проксирование и TLS - контейнер `traefik` либо хостовый nginx (по DEPLOY_MODE и COMPOSE_PROFILES).
+- Путь проекта на сервере: `/srv/personal-website`. При compose-режиме приложение выполняется в контейнере Docker Compose (сервис `application`), проксирование и TLS - контейнер `nginx` либо хостовый nginx (по COMPOSE_PROFILES).
 - Порт приложения публикуется только на 127.0.0.1 (DJANGO_PORT): весь внешний трафик проходит через прокси-слой.
 
 ## Логи
@@ -33,7 +33,7 @@ description: Диагностика продакшен-сервера - пара
 Применяется комбинированная стратегия: stdout/stderr контейнеров собирает Docker (driver json-file, ротация 10 МБ x 3 файла), детальные логи приложения пишутся в файлы через volume.
 
 - Приложение и Gunicorn (access + ошибки воркеров, старт, краши): `docker compose logs application` или `docker logs <контейнер>`; в systemd-режиме - `journalctl -u personal-website`.
-- Traefik (маршрутизация, ACME, сертификаты): `docker compose logs traefik`.
+- nginx (маршрутизация, TLS): `docker compose logs nginx`; продление сертификатов - `${LOGS_ROOT}/cert-renew.log` (cron renew-cert.sh).
 - Лог приложения (Django, файловый handler с ежедневной ротацией): каталог `logs/` проекта на хосте (volume `${LOGS_ROOT:-./logs/}` -> `/srv/website/logs` внутри контейнера).
 - Резервное копирование: `${LOGS_ROOT}/backup.log` на хосте (задача cron хоста или systemd timer, `scripts/backup.sh backup`).
 
@@ -43,8 +43,8 @@ description: Диагностика продакшен-сервера - пара
 # docker logs: строки с ошибками/traceback
 docker compose logs application --since 2h | grep -iE "error|traceback|exception"
 
-# Traefik: проблемы маршрутизации и сертификатов
-docker compose logs traefik --since 2h | grep -iE "error|acme|certificate"
+# nginx: проблемы маршрутизации и TLS
+docker compose logs nginx --since 2h | grep -iE "error|ssl|certificate"
 
 # Django-лог на хосте: traceback и 500
 grep -nE "Traceback|Internal Server Error|Error|Exception" logs/<project>.log | tail -40

@@ -29,7 +29,7 @@
 Проект адаптирован для развертывания на Linux. Для развертывания используются следующие технологии:
 
 * [Gunicorn](https://gunicorn.org/) (HTTP-сервер)
-* [Traefik](https://traefik.io/) (прокси-сервер, TLS-терминирование)
+* [nginx](https://nginx.org/) + certbot (прокси-сервер, TLS-терминирование, раздача медиа)
 * [Docker](https://www.docker.com/) (контейнеризация)
 
 ![container](./docs/diagrams/out/container/container.svg)
@@ -45,11 +45,11 @@
     ├── requirements.txt
     ├── pyproject.toml
     ├── package.json
-    ├── compose.yaml           # сервисы Docker Compose (профили postgres, minio, traefik)
+    ├── compose.yaml           # сервисы Docker Compose (профили postgres, minio, nginx)
     ├── scripts/               # скрипты деплоя, бэкапов и первичной настройки сервера
     ├── tools/                 # вспомогательные скрипты для разработки
     ├── tests/                 # пакет интеграционных тестов
-    ├── traefik/               # состояние ACME-клиента (сертификаты Let's Encrypt)
+    ├── nginx/                # шаблон конфигурации прокси, сертификаты Let's Encrypt
     ├── backend/                # Django бэкенд
     │   ├── manage.py
     │   ├── Dockerfile          # параметры сборки контейнера приложения
@@ -100,7 +100,7 @@
 
 Для локальной разработки необходимо запускать фронтенд и бэкенд отдельно в режиме наблюдения за изменениями файлов.
 
-Каждый инфраструктурный сервис в compose.yaml относится к собственному профилю: postgres, minio, traefik. Для типичной локальной разработки достаточно профиля postgres с файловым хранилищем. Профили активируются через переменную `COMPOSE_PROFILES` в файле `.env` (например, `postgres` или `postgres,minio`) или через флаг `docker compose --profile <имя>`. Без активных профилей поднимается только сервис application - использовать этот режим, если база данных, объектное хранилище и обратный прокси предоставляются вне Docker Compose.
+Каждый инфраструктурный сервис в compose.yaml относится к собственному профилю: postgres, minio, nginx. Для типичной локальной разработки достаточно профиля postgres с файловым хранилищем. Профили активируются через переменную `COMPOSE_PROFILES` в файле `.env` (например, `postgres` или `postgres,minio`) или через флаг `docker compose --profile <имя>`. Без активных профилей поднимается только сервис application - использовать этот режим, если база данных, объектное хранилище и обратный прокси предоставляются вне Docker Compose.
 
 ### Запуск с использованием Taskfile (рекомендуется)
 
@@ -135,14 +135,14 @@
 
 ## Развертывание
 
-Развертывание настраивается пятью независимыми параметрами: способ запуска приложения (Docker Compose / docker run / systemd Gunicorn), размещение базы данных (managed / контейнер / systemd), тип хранилища (filesystem / S3 / MinIO), вариант прокси (Traefik в compose / хостовый nginx + certbot) и конфигурация бэкапов. Поддерживаемые сочетания собраны в типовых сценариях - [docs/deployment/matrix.md](./docs/deployment/matrix.md).
+Развертывание настраивается пятью независимыми параметрами: способ запуска приложения (Docker Compose / docker run / systemd Gunicorn), размещение базы данных (managed / контейнер / systemd), тип хранилища (filesystem / S3 / MinIO), вариант прокси (nginx + certbot в compose или на хосте) и конфигурация бэкапов. Поддерживаемые сочетания собраны в типовых сценариях - [docs/deployment/matrix.md](./docs/deployment/matrix.md).
 
 Конфигурация задается одним файлом `.env` с секциями по параметрам (полный список переменных - [.env.example](./.env.example)). Рецепты по параметрам:
 
 * [Запуск приложения](./docs/deployment/application.md) - контракт приложения, Compose, docker run, systemd Gunicorn
 * [База данных](./docs/deployment/database.md) - managed-кластер, контейнер, systemd-PG, SSL, мажорный апгрейд
 * [Файловое хранилище](./docs/deployment/storage.md) - filesystem, S3, MinIO, статика
-* [Прокси и сертификаты](./docs/deployment/proxy.md) - хостовый nginx + certbot, Traefik, перенос сертификатов
+* [Прокси и сертификаты](./docs/deployment/proxy.md) - nginx + certbot в compose и на хосте, выпуск и продление сертификатов
 * [Резервное копирование](./docs/deployment/backups.md) - цели, расписание, восстановление, смена типа хранилища
 
 Первичная настройка сервера автоматизирована: `bash scripts/docker/setup.sh` (Compose) или `bash scripts/server/setup.sh` (systemd); порядок действий описан в скилле server-setup. Обновление приложения выполняется общим диспетчером `bash scripts/deploy.sh` - им же пользуется CI/CD (механизм выбирается переменной `DEPLOY_MODE`).

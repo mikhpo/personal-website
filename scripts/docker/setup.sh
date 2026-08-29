@@ -163,8 +163,40 @@ function create_docker_directories() {
     mkdir -p "$project_root/backups"
     mkdir -p "$project_root/logs"
     mkdir -p "$project_root/temp"
-    mkdir -p "$project_root/traefik/letsencrypt"
+    mkdir -p "$project_root/nginx/letsencrypt"
+    mkdir -p "$project_root/nginx/acme-webroot"
     mkdir -p "${HOME}/.postgresql"
+}
+
+#######################################
+# Выпустить сертификат Let's Encrypt для контейнерного nginx
+# (профиль nginx): certbot standalone поднимает собственный HTTP-сервер
+# на порту 80 до первого старта nginx, поэтому конфигурация nginx
+# статична с самого начала. Тестовые среды выпускают сертификат
+# в ACME staging (CERTBOT_STAGING=True в .env или окружении).
+# Идемпотентно: при существующем сертификате выпуск пропускается.
+#######################################
+function issue_certificate() {
+    case ",${COMPOSE_PROFILES:-}," in
+        *,nginx,*) ;;
+        *) return ;;
+    esac
+    local domain="${DOMAIN_NAME:?DOMAIN_NAME не задан в .env}"
+    if [ -d "$project_root/nginx/letsencrypt/live/$domain" ]; then
+        return
+    fi
+    local args=(
+        certonly --standalone
+        -d "$domain" -d "www.$domain"
+        --email "${ACME_EMAIL:?ACME_EMAIL не задан в .env}"
+        --agree-tos --no-eff-mail --noninteractive
+    )
+    case "$(echo "${CERTBOT_STAGING:-}" | tr '[:upper:]' '[:lower:]')" in
+        true | 1 | yes | y) args+=(--staging) ;;
+    esac
+    local compose_cmd
+    compose_cmd="$(detect_compose_cmd)"
+    $compose_cmd run --rm -p 80:80 certbot "${args[@]}"
 }
 
 #######################################
@@ -198,6 +230,7 @@ function main() {
     login_docker
     load_postgres_cert
     create_docker_directories
+    issue_certificate
     add_cronjobs
     compose_up
 }

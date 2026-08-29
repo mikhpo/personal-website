@@ -18,7 +18,7 @@
 | Запуск приложения | Docker Compose / docker run / systemd Gunicorn | DEPLOY_MODE, DJANGO_PORT, GUNICORN_WORKERS |
 | База данных | managed-кластер / контейнер compose / systemd на хосте | POSTGRES_*, профиль postgres |
 | Хранилище | filesystem / S3 удаленный / MinIO локальный | STORAGE_TYPE, AWS_*, профиль minio |
-| Прокси | Traefik в compose / хостовый nginx + certbot | COMPOSE_PROFILES, TRAEFIK_*, ACME_EMAIL |
+| Прокси | nginx + certbot в compose / nginx + certbot на хосте | COMPOSE_PROFILES, HTTP_PORT, HTTPS_PORT, ACME_EMAIL |
 | Бэкапы | источники x цели (mc:, rclone:), расписание | BACKUP_*, cron/systemd timer |
 
 Бэкапы настраиваются независимо от остальных параметров в любом
@@ -33,8 +33,8 @@
 | Запуск приложения | Compose (разработка) | Compose | Compose | systemd Gunicorn |
 | База данных | контейнер compose | managed | контейнер compose | systemd-PG |
 | Хранилище | filesystem | S3 удаленный | MinIO локальный (s3) | filesystem |
-| Прокси | Traefik в compose | Traefik в compose | хостовый nginx + certbot | хостовый nginx + certbot |
-| COMPOSE_PROFILES | postgres,minio,media,traefik | traefik | postgres,minio | - (Docker нет) |
+| Прокси | nginx + certbot в compose | nginx + certbot в compose | хостовый nginx + certbot | хостовый nginx + certbot |
+| COMPOSE_PROFILES | postgres,minio,nginx | nginx | postgres,minio | - (Docker нет) |
 | Проверка | task test-integration | релизный деплой CI | compose config + тестовый хост | чеклист + тестовый хост |
 
 Сценарий «облачный сервер» - действующий прод: он проверяется каждым
@@ -47,23 +47,25 @@
 
 ### Локальная разработка
 
-1. `COMPOSE_PROFILES='postgres,minio,media,traefik'`,
-   `STORAGE_TYPE='filesystem'`,
-   `TRAEFIK_CERT_RESOLVER=''` (self-signed, обращений к Let's Encrypt нет);
-2. `docker compose up -d --wait` - все сервисы healthy;
-3. `curl -s http://127.0.0.1:${DJANGO_PORT}/health/` - 200;
-4. `task test-integration` - интеграционные тесты проходят
-   (маршрутизация traefik, robots.txt, favicon, API, раздача медиа
-   контейнером профиля media);
-5. признаки пассивного ACME: `traefik/letsencrypt/acme.json` отсутствует
-   или пуст.
+1. `COMPOSE_PROFILES='postgres,minio,nginx'`,
+   `STORAGE_TYPE='filesystem'`, `DOMAIN_NAME='localhost'`;
+2. `task dev-cert` - self-signed сертификат локального стека nginx
+   (до него nginx не стартует);
+3. `docker compose up -d --wait` - все сервисы healthy;
+4. `curl -sk https://localhost/health/` - 200;
+5. `task test-integration` - интеграционные тесты проходят
+   (маршрутизация nginx, robots.txt, favicon, API, раздача медиа
+   из примонтированного хранилища);
+6. обращений к Let's Encrypt нет: сертификат self-signed
+   (certbot не запускался).
 
 ### Облачный сервер
 
-1. Профили: только traefik; POSTGRES_* - FQDN managed-кластера,
+1. Профили: только nginx; POSTGRES_* - FQDN managed-кластера,
    `POSTGRES_SSL_MODE='verify-full'`, сертификат доставлен pgcert.sh;
 2. `STORAGE_TYPE='s3'`, AWS_* - бакет провайдера; статика - из бакета;
-3. `TRAEFIK_CERT_RESOLVER='le'`, `ACME_EMAIL` задан;
+3. `ACME_EMAIL` задан; scripts/docker/setup.sh выпускает сертификат
+   Let's Encrypt standalone до подъема стека;
 4. деплой `bash scripts/deploy.sh` (вызывается deploy-workflow CI):
    бэкап, обновление, контейнеры пересозданы;
 5. `https://<домен>/health/` - 200, сертификат валиден;
@@ -108,11 +110,11 @@
 
 Осознанно не поддерживается:
 
-- общий Traefik-стек сервера с external-сетями (мультипроектное
+- общий прокси-стек сервера с external-сетями (мультипроектное
   проксирование закрывает хостовый nginx);
-- nginx-в-контейнере как прокси-слой (пост-мортем -
-  [proxy.md](./proxy.md), раздел 4); контейнер nginx профиля media -
-  файловый сервер медиа за Traefik, а не прокси;
+- Traefik и другие прокси-серверы (Caddy, HAProxy) - проект
+  останавливается на nginx; история выбора - [proxy.md](./proxy.md),
+  раздел 4;
 - overlay-файлы compose - единый compose.yaml с профилями;
 - шифрование бэкапов и restic (файлы в целях остаются обычными);
 - модели заданий бэкапов и админка бэкапов - только management-команды

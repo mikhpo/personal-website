@@ -9,8 +9,8 @@ x-logging: &default-logging
     max-file: "3"
 
 # Инфраструктурные сервисы подключаются собственными профилями:
-# postgres, minio, traefik, media (раздача медиа filesystem-хранилища
-# за Traefik). Пустое значение COMPOSE_PROFILES означает,
+# postgres, minio, nginx (обратный прокси с раздачей медиа
+# filesystem-хранилища). Пустое значение COMPOSE_PROFILES означает,
 # что все инфраструктурные сервисы внешние (managed-БД, удаленное S3,
 # хостовый обратный прокси), и поднимается только приложение.
 services:
@@ -36,11 +36,11 @@ services:
     env_file: .env
     # Порт приложения публикуется постоянно, но только на localhost хоста:
     # этого требует хостовый обратный прокси (nginx) при внешних БД и хранилище.
-    # При работе с Traefik публикация безвредна: прокси обращается к приложению
-    # по внутренней сети Compose, а порт недоступен с других хостов.
-    # Контейнерный порт равен хостовому: приложение внутри контейнера слушает
-    # тот же DJANGO_PORT (entrypoint.sh), поэтому обе стороны публикации
-    # следуют переменной одинаково.
+    # При контейнерном nginx публикация безвредна: прокси обращается
+    # к приложению по внутренней сети Compose, а порт недоступен с других
+    # хостов. Контейнерный порт равен хостовому: приложение внутри контейнера
+    # слушает тот же DJANGO_PORT (entrypoint.sh), поэтому обе стороны
+    # публикации следуют переменной одинаково.
     ports:
       - "127.0.0.1:${DJANGO_PORT:-8000}:${DJANGO_PORT:-8000}"
     # Доступ к сервисам операционной системы хоста (systemd-PostgreSQL,
@@ -62,19 +62,6 @@ services:
         source: ${POSTGRES_SSL_CERT_HOST_PATH:-${POSTGRES_SSL_ROOT_CERT_PATH:-/root/.postgresql/root.crt}}
         target: ${POSTGRES_SSL_ROOT_CERT_PATH:-/root/.postgresql/root.crt}
         read_only: true
-    labels:
-      - "traefik.enable=true"
-      # Маршрутизация по доменам основного и www-хоста.
-      - "traefik.http.routers.website.rule=Host(`${DOMAIN_NAME}`) || Host(`www.${DOMAIN_NAME}`)"
-      - "traefik.http.routers.website.entrypoints=websecure"
-      # TLS включается всегда; в dev-режиме используется встроенный
-      # self-signed сертификат Traefik.
-      - "traefik.http.routers.website.tls=true"
-      # Certresolver подключается только непустым значением переменной
-      # TRAEFIK_CERT_RESOLVER (прод: le). Пустое значение в dev-среде
-      # оставляет ACME-клиент пассивным - выпуск сертификатов не выполняется.
-      - "traefik.http.routers.website.tls.certresolver=${TRAEFIK_CERT_RESOLVER:-}"
-      - "traefik.http.services.website.loadbalancer.server.port=${DJANGO_PORT:-8000}"
     # Порядок запуска относительно PostgreSQL и MinIO не задаётся через depends_on:
     # эти сервисы относятся к собственным профилям (postgres, minio) и могут
     # отсутствовать в текущем окружении, поэтому готовность ожидается скриптом
@@ -91,69 +78,49 @@ services:
         - action: rebuild
           path: .
 
-  # Файловый сервер медиа filesystem-хранилища за Traefik: nginx читает
-  # каталог хранилища напрямую, запросы /media/ не нагружают приложение.
-  # Поднимается при активном профиле media (STORAGE_TYPE=filesystem
-  # с контейнерным прокси; при STORAGE_TYPE=s3 медиа отдает бакет).
-  media:
-    profiles: ["media"]
+  # Обратный прокси nginx: терминирование TLS, проксирование приложения
+  # и раздача медиа filesystem-хранилища напрямую с диска (location /media/,
+  # каталог хранилища монтируется в прокси read-only - запросы медиа
+  # не нагружают воркеры приложения). Конфигурация рендерится официальным
+  # образом из шаблона nginx/personal-website.conf.template (envsubst
+  # только по переменным окружения; переменные самого nginx не затрагиваются).
+  # Сертификаты выпускает и продлевает certbot (сервис certbot);
+  # до первого выпуска сертификата nginx не стартует - первичный выпуск
+  # standalone выполняется до подъема стека (docs/deployment/proxy.md).
+  nginx:
+    profiles: ["nginx"]
     image: nginx:1.29-alpine
-    volumes:
-      - ${STORAGE_ROOT:-./storage/}:/usr/share/nginx/html/media:ro
-    labels:
-      - "traefik.enable=true"
-      # Маршрутизатор медиа приоритетнее хостового: правило длиннее
-      # правила website за счет PathPrefix, запросы /media/ уходят сюда.
-      - "traefik.http.routers.website-media.rule=(Host(`${DOMAIN_NAME}`) || Host(`www.${DOMAIN_NAME}`)) && PathPrefix(`/media/`)"
-      - "traefik.http.routers.website-media.entrypoints=websecure"
-      - "traefik.http.routers.website-media.tls=true"
-      - "traefik.http.routers.website-media.tls.certresolver=${TRAEFIK_CERT_RESOLVER:-}"
-      - "traefik.http.services.website-media.loadbalancer.server.port=80"
-    restart: always
-    logging: *default-logging
-
-  # Обратный прокси-сервер Traefik. Обслуживает HTTPS: сертификаты
-  # Let's Encrypt получаются и обновляются автоматически.
-  # Приложение обнаруживается по Docker-лейблам.
-  traefik:
-    # Прокси занимает порты 80/443 хоста, поэтому подключается только профилем
-    # traefik: на мультипроектном хосте терминированием TLS занимается прокси
-    # операционной системы, а приложение всегда доступно на 127.0.0.1:${DJANGO_PORT}.
-    profiles: ["traefik"]
-    image: traefik:v3.7
-    command:
-      - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=false"
-      - "--entrypoints.web.address=:80"
-      - "--entrypoints.websecure.address=:443"
-      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
-      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
-      - "--certificatesresolvers.le.acme.tlschallenge=true"
-      - "--certificatesresolvers.le.acme.email=${ACME_EMAIL}"
-      - "--certificatesresolvers.le.acme.storage=/letsencrypt/acme.json"
-      # ACME CA-сервер: пустое значение - продакшен Let's Encrypt (дефолт Traefik),
-      # staging-каталог для тестовых сред - защита от исчерпания rate limits
-      # при экспериментах с сертификатами (см. docs/deployment/proxy.md).
-      - "--certificatesresolvers.le.acme.caserver=${TRAEFIK_ACME_CASERVER:-}"
-      # Встроенный health-endpoint для команды `traefik healthcheck --ping`
-      # (порт 8080 наружу не публикуется).
-      - "--ping=true"
+    environment:
+      - DOMAIN_NAME=${DOMAIN_NAME}
+      - DJANGO_PORT=${DJANGO_PORT:-8000}
     ports:
-      - ${TRAEFIK_HTTP_PORT:-80}:80
-      - 443:443
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      # Состояние ACME-клиента (аккаунт, сертификаты) хранится на хосте:
-      # bind-mount не удаляется командой docker compose down -v
-      # и переносится между серверами целиком.
-      - ./traefik/letsencrypt:/letsencrypt
+      - ./nginx/personal-website.conf.template:/etc/nginx/templates/default.conf.template:ro
+      - ${STORAGE_ROOT:-./storage/}:/srv/media:ro
+      - ./nginx/letsencrypt:/etc/letsencrypt:ro
+      - ./nginx/acme-webroot:/var/www/certbot:rw
     restart: always
     logging: *default-logging
     healthcheck:
-      test: ["CMD", "traefik", "healthcheck", "--ping"]
+      test: ["CMD-SHELL", "wget -q --spider --no-check-certificate https://127.0.0.1/health/"]
       interval: 5s
-      timeout: 3s
-      retries: 3
+      timeout: 5s
+      retries: 5
+
+  # Выпуск и продление сертификатов Let's Encrypt. Сервис не работает
+  # постоянно: команды запускаются через docker compose run --rm certbot ...
+  # (первичный выпуск certonly --standalone до первого старта nginx,
+  # продление renew --webroot по cron хоста - scripts/docker/renew-cert.sh).
+  # Профиль certbot активируется только явным именем сервиса в команде run.
+  certbot:
+    profiles: ["certbot"]
+    image: certbot/certbot:latest
+    volumes:
+      - ./nginx/letsencrypt:/etc/letsencrypt:rw
+      - ./nginx/acme-webroot:/var/www/certbot:rw
+    logging: *default-logging
 
   # Кластер PostgreSQL для веб-сайта. База данных создается автоматически.
   # Сервис предназначен для окружений, где база данных не предоставляется

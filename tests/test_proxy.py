@@ -1,4 +1,4 @@
-"""Интеграционное тестирование прокси-сервера Traefik."""
+"""Интеграционное тестирование прокси-сервера nginx."""
 
 import os
 import unittest
@@ -10,19 +10,19 @@ import requests
 from dotenv import load_dotenv
 
 
-class TestTraefik(unittest.TestCase):
-    """Интеграционные тесты Traefik.
+class TestProxy(unittest.TestCase):
+    """Интеграционные тесты контейнерного nginx.
 
-    Запросы выполняются по протоколу HTTPS: в dev-среде без certresolver
-    Traefik обслуживает соединения встроенным self-signed сертификатом,
+    Запросы выполняются по протоколу HTTPS: в локальном стеке nginx
+    обслуживает соединения self-signed сертификатом (task dev-cert),
     поэтому проверка сертификата отключается.
     """
 
     @classmethod
     def setUpClass(cls) -> None:
-        """Определить параметры подключения к Traefik."""
+        """Определить параметры подключения к nginx."""
         load_dotenv()
-        cls.port = os.getenv("TRAEFIK_HTTPS_PORT", default="443")
+        cls.port = os.getenv("HTTPS_PORT", default="443")
         cls.url = f"https://localhost:{cls.port}"
         # Отключить предупреждения о непроверяемом self-signed сертификате.
         warnings.filterwarnings("ignore", category=UserWarning)
@@ -36,15 +36,15 @@ class TestTraefik(unittest.TestCase):
         страницы прокси-сервера, файлы Bootstrap включены в шаблон.
         """
         root_url = f"{self.url}/"
-        # verify=False - осознанное решение для интеграционного теста:
-        # в dev-среде без certresolver Traefik обслуживает HTTPS встроенным
-        # self-signed сертификатом. Для продакшена с сертификатами Let's Encrypt
+        # verify=False - осознательное решение для интеграционного теста:
+        # в локальном стеке nginx обслуживает HTTPS self-signed сертификатом
+        # (task dev-cert). Для продакшена с сертификатами Let's Encrypt
         # проверка должна быть включена (см. докстринг класса).
         response = requests.get(root_url, timeout=10, verify=False)
         status = response.status_code
         text = response.text
         self.assertEqual(status, HTTPStatus.OK)
-        self.assertNotIn("traefik", text.lower())
+        self.assertNotIn("welcome to nginx", text.lower())
         self.assertIn("bootstrap", text.lower())
 
     def test_http_redirect(self) -> None:
@@ -53,7 +53,7 @@ class TestTraefik(unittest.TestCase):
         Входная точка web отвечает постоянным редиректом
         на одноименный маршрут входной точки websecure.
         """
-        http_port = os.getenv("TRAEFIK_HTTP_PORT", default="80")
+        http_port = os.getenv("HTTP_PORT", default="80")
         http_url = f"http://localhost:{http_port}/"
         response = requests.get(http_url, allow_redirects=False, timeout=10)
         status = response.status_code
@@ -103,17 +103,17 @@ class TestTraefik(unittest.TestCase):
     def test_media_file(self) -> None:
         """Тест раздачи медиафайлов filesystem-хранилища.
 
-        При STORAGE_TYPE=filesystem медиа раздает контейнер media
-        (профиль media, nginx): Traefik маршрутизирует запросы /media/
-        в него, минуя приложение. Проверяется сквозной путь - файл,
-        записанный в каталог хранилища на хосте, доступен через прокси.
-        При STORAGE_TYPE=s3 медиа отдает бакет, и маршрут /media/
-        не используется - тест пропускается.
+        При STORAGE_TYPE=filesystem медиа раздает контейнерный nginx:
+        каталог хранилища примонтирован в прокси, запросы /media/
+        обслуживаются напрямую с диска, минуя приложение. Проверяется
+        сквозной путь - файл, записанный в каталог хранилища на хосте,
+        доступен через прокси. При STORAGE_TYPE=s3 медиа отдает бакет,
+        и маршрут /media/ не используется - тест пропускается.
         """
         if os.getenv("STORAGE_TYPE", "filesystem") != "filesystem":
             self.skipTest("медиа раздаются объектным хранилищем (STORAGE_TYPE=s3)")
         storage_root = Path(os.getenv("STORAGE_ROOT", "storage"))
-        media_file = storage_root / "traefik_media_test.txt"
+        media_file = storage_root / "proxy_media_test.txt"
         media_file.parent.mkdir(parents=True, exist_ok=True)
         media_file.write_text("media test", encoding="utf-8")
         try:

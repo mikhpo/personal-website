@@ -71,7 +71,8 @@ function create_docker_directories() {
     mkdir -p "$project_root/backups"
     mkdir -p "$project_root/logs"
     mkdir -p "$project_root/temp"
-    mkdir -p "$project_root/traefik/letsencrypt"
+    mkdir -p "$project_root/nginx/letsencrypt"
+    mkdir -p "$project_root/nginx/acme-webroot"
     mkdir -p "${HOME}/.postgresql"
 }
 
@@ -79,7 +80,7 @@ function create_docker_directories() {
 # Остановить текущие контейнеры.
 # Внимание: флаг -v не используется намеренно - он удаляет именованные тома
 # (postgres-data, minio-data). Сертификаты Let's Encrypt хранятся
-# в bind-mount ./traefik/letsencrypt и командой down не затрагиваются.
+# в bind-mount ./nginx/letsencrypt и командой down не затрагиваются.
 #######################################
 function compose_down() {
     $COMPOSE_CMD down
