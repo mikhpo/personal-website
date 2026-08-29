@@ -15,9 +15,8 @@ const BundleTracker = require('webpack-bundle-tracker');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 
-// Ранее vendor-статика копировалась в backend/staticfiles: на машинах
-// разработки там могли остаться устаревшие копии. Каталог стоит раньше
-// frontend/dist в STATICFILES_DIRS, поэтому остатки затеняют свежие файлы.
+// backend/staticfiles стоит раньше frontend/dist в STATICFILES_DIRS:
+// случайно оставшиеся там tinymce и bootstrap затеняют свежие файлы.
 fs.rmSync(path.resolve(__dirname, '../backend/staticfiles/bootstrap'), { recursive: true, force: true });
 fs.rmSync(path.resolve(__dirname, '../backend/staticfiles/tinymce'), { recursive: true, force: true });
 
