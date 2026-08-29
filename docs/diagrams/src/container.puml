@@ -17,7 +17,7 @@ System_Boundary(server, "Сервер") {
 System_Ext(db, "База данных", "PostgreSQL")
 System_Ext(s3, "Хранилище", "S3 / файловая система")
 System_Ext(smtp, "SMTP-сервер", "Внешний сервис")
-System_Ext(le, "Let's Encrypt", "ACME-сервер")
+System_Ext(le, "ACME-сервер", "Let's Encrypt")
 
 Rel(user, proxy, "Читает и комментирует", "HTTPS")
 Rel(admin, proxy, "Публикует и редактирует", "HTTPS")
