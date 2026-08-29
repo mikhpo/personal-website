@@ -281,20 +281,12 @@ function start_services() {
 }
 
 #######################################
-# Проверить результат настройки: состояние сервиса приложения,
-# последние записи журнала и ответ эндпоинта /health/.
-# Сервис может выполнять миграции (ExecStartPre), поэтому curl
-# повторяет попытки и сбой проверки не прерывает скрипт.
+# Показать состояние сервисов, запущенных настройкой:
+# приложение, nginx и timer продления сертификатов
+# (аналог docker compose ps контейнерного развертывания).
 #######################################
-function verify_services() {
-    echo
-    echo "Проверка установленного приложения..."
-    sudo systemctl status personal-website.service --no-pager || true
-    sudo journalctl -u personal-website.service -n 20 --no-pager
-    curl -fsS --max-time 5 --retry 10 --retry-delay 3 --retry-connrefused \
-        "http://127.0.0.1:${DJANGO_PORT:-8000}/health/" \
-        || echo "Эндпоинт /health/ не ответил - сервис, вероятно, еще выполняет" \
-            "миграции; проследите за ним: journalctl -u personal-website -f"
+function show_services_status() {
+    sudo systemctl status personal-website.service nginx.service certbot.timer --no-pager || true
 }
 
 #######################################
@@ -318,7 +310,7 @@ function main() {
     setup_certbot
     install_nginx_site
     start_services
-    verify_services
+    show_services_status
     echo
     echo "Настройка завершена."
 }

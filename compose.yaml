@@ -9,7 +9,8 @@ x-logging: &default-logging
     max-file: "3"
 
 # Инфраструктурные сервисы подключаются собственными профилями:
-# postgres, minio, traefik. Пустое значение COMPOSE_PROFILES означает,
+# postgres, minio, traefik, media (раздача медиа filesystem-хранилища
+# за Traefik). Пустое значение COMPOSE_PROFILES означает,
 # что все инфраструктурные сервисы внешние (managed-БД, удаленное S3,
 # хостовый обратный прокси), и поднимается только приложение.
 services:
@@ -89,6 +90,27 @@ services:
       watch:
         - action: rebuild
           path: .
+
+  # Файловый сервер медиа filesystem-хранилища за Traefik: nginx читает
+  # каталог хранилища напрямую, запросы /media/ не нагружают приложение.
+  # Поднимается при активном профиле media (STORAGE_TYPE=filesystem
+  # с контейнерным прокси; при STORAGE_TYPE=s3 медиа отдает бакет).
+  media:
+    profiles: ["media"]
+    image: nginx:1.29-alpine
+    volumes:
+      - ${STORAGE_ROOT:-./storage/}:/usr/share/nginx/html/media:ro
+    labels:
+      - "traefik.enable=true"
+      # Маршрутизатор медиа приоритетнее хостового: правило длиннее
+      # правила website за счет PathPrefix, запросы /media/ уходят сюда.
+      - "traefik.http.routers.website-media.rule=(Host(`${DOMAIN_NAME}`) || Host(`www.${DOMAIN_NAME}`)) && PathPrefix(`/media/`)"
+      - "traefik.http.routers.website-media.entrypoints=websecure"
+      - "traefik.http.routers.website-media.tls=true"
+      - "traefik.http.routers.website-media.tls.certresolver=${TRAEFIK_CERT_RESOLVER:-}"
+      - "traefik.http.services.website-media.loadbalancer.server.port=80"
+    restart: always
+    logging: *default-logging
 
   # Обратный прокси-сервер Traefik. Обслуживает HTTPS: сертификаты
   # Let's Encrypt получаются и обновляются автоматически.

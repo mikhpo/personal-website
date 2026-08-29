@@ -5,8 +5,8 @@
 - .env.example перестроен секциями по независимым параметрам развертывания (приложение, база данных, хранилище, прокси, бэкапы, реестры/CI), каждая секция ссылается на свой документ docs/deployment/
 - Созданы документы docs/deployment/matrix.md (матрица параметров, типовые сценарии развертывания, поддерживаемое и неподдерживаемое), database.md (managed/compose/systemd-PG, мажорный апгрейд), storage.md (filesystem/S3/MinIO, статика, перенос между типами), backups.md (цели mc:/rclone:, семантика, cron и systemd timer, восстановление)
 - Документация docs/deployment/ переписана связной прозой для людей (полные предложения вместо рубленых фраз); правило закреплено в AGENTS.md
-- Медиа в filesystem-режиме раздаются nginx напрямую с диска: в шаблон конфигурации сайта добавлен location /media/ с alias на STORAGE_ROOT, setup.sh и deploy.sh рендерят путь (ранее при DEBUG=False медиа не раздавал никто)
-- scripts/server/setup.sh выполняет финальную проверку сам: systemctl status, journalctl и curl /health/ с повторами
+- Медиа в filesystem-режиме раздаются прокси напрямую с диска, минуя приложение: в шаблон конфигурации сайта nginx добавлен location /media/ с alias на STORAGE_ROOT (setup.sh и deploy.sh рендерят путь), для Traefik добавлен профиль media - контейнер nginx, монтирующий хранилище read-only, с маршрутизатором PathPrefix(/media/); интеграционный тест раздачи медиа через Traefik
+- scripts/server/setup.sh показывает состояние запущенных сервисов (personal-website, nginx, certbot.timer) - аналог docker compose ps
 - Разделы «Содержание:» удалены из docs/deployment/ - навигация по заголовкам Markdown
 - Термины документации: «эталоны A-D» заменены типовыми сценариями с именованными названиями, «vhost» - конфигурация сайта nginx, «живость» - работоспособность, «de facto» - фактически
 - Ops-разделы README.md (хранилище, база данных, pg_dump/pg_restore, развертывание, сертификаты Traefik, детали CI/CD) вынесены в docs/deployment/; README сокращен с 630 до ~330 строк

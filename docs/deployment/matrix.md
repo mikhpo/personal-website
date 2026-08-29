@@ -34,7 +34,7 @@
 | База данных | контейнер compose | managed | контейнер compose | systemd-PG |
 | Хранилище | filesystem | S3 удаленный | MinIO локальный (s3) | filesystem |
 | Прокси | Traefik в compose | Traefik в compose | хостовый nginx + certbot | хостовый nginx + certbot |
-| COMPOSE_PROFILES | postgres,minio,traefik | traefik | postgres,minio | - (Docker нет) |
+| COMPOSE_PROFILES | postgres,minio,media,traefik | traefik | postgres,minio | - (Docker нет) |
 | Проверка | task test-integration | релизный деплой CI | compose config + тестовый хост | чеклист + тестовый хост |
 
 Сценарий «облачный сервер» - действующий прод: он проверяется каждым
@@ -47,12 +47,14 @@
 
 ### Локальная разработка
 
-1. `COMPOSE_PROFILES='postgres,minio,traefik'`, `STORAGE_TYPE='filesystem'`,
+1. `COMPOSE_PROFILES='postgres,minio,media,traefik'`,
+   `STORAGE_TYPE='filesystem'`,
    `TRAEFIK_CERT_RESOLVER=''` (self-signed, обращений к Let's Encrypt нет);
 2. `docker compose up -d --wait` - все сервисы healthy;
 3. `curl -s http://127.0.0.1:${DJANGO_PORT}/health/` - 200;
 4. `task test-integration` - интеграционные тесты проходят
-   (маршрутизация traefik, robots.txt, favicon, API);
+   (маршрутизация traefik, robots.txt, favicon, API, раздача медиа
+   контейнером профиля media);
 5. признаки пассивного ACME: `traefik/letsencrypt/acme.json` отсутствует
    или пуст.
 
@@ -108,10 +110,9 @@
 
 - общий Traefik-стек сервера с external-сетями (мультипроектное
   проксирование закрывает хостовый nginx);
-- nginx-в-контейнере (пост-мортем - [proxy.md](./proxy.md), раздел 4);
-- раздача медиа из filesystem-хранилища контейнерным прокси: Traefik
-  не видит диск хоста, продакшен с filesystem рассчитан на хостовой
-  nginx (см. [proxy.md](./proxy.md), раздел 2);
+- nginx-в-контейнере как прокси-слой (пост-мортем -
+  [proxy.md](./proxy.md), раздел 4); контейнер nginx профиля media -
+  файловый сервер медиа за Traefik, а не прокси;
 - overlay-файлы compose - единый compose.yaml с профилями;
 - шифрование бэкапов и restic (файлы в целях остаются обычными);
 - модели заданий бэкапов и админка бэкапов - только management-команды

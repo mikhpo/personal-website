@@ -4,6 +4,7 @@ import os
 import unittest
 import warnings
 from http import HTTPStatus
+from pathlib import Path
 
 import requests
 from dotenv import load_dotenv
@@ -98,6 +99,30 @@ class TestTraefik(unittest.TestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
         content_type = response.headers.get("Content-Type")
         self.assertEqual(content_type, "image/x-icon")
+
+    def test_media_file(self) -> None:
+        """Тест раздачи медиафайлов filesystem-хранилища.
+
+        При STORAGE_TYPE=filesystem медиа раздает контейнер media
+        (профиль media, nginx): Traefik маршрутизирует запросы /media/
+        в него, минуя приложение. Проверяется сквозной путь - файл,
+        записанный в каталог хранилища на хосте, доступен через прокси.
+        При STORAGE_TYPE=s3 медиа отдает бакет, и маршрут /media/
+        не используется - тест пропускается.
+        """
+        if os.getenv("STORAGE_TYPE", "filesystem") != "filesystem":
+            self.skipTest("медиа раздаются объектным хранилищем (STORAGE_TYPE=s3)")
+        storage_root = Path(os.getenv("STORAGE_ROOT", "storage"))
+        media_file = storage_root / "traefik_media_test.txt"
+        media_file.parent.mkdir(parents=True, exist_ok=True)
+        media_file.write_text("media test", encoding="utf-8")
+        try:
+            media_url = f"{self.url}/media/{media_file.name}"
+            response = requests.get(media_url, timeout=10, verify=False)
+            self.assertEqual(response.status_code, HTTPStatus.OK)
+            self.assertEqual(response.text, "media test")
+        finally:
+            media_file.unlink(missing_ok=True)
 
     def _resolve_location(self, location: str) -> str:
         """Преобразовать значение заголовка Location в абсолютный адрес."""
