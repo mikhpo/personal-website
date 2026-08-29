@@ -202,6 +202,12 @@ AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
 AWS_S3_REGION_NAME = os.getenv("AWS_S3_REGION_NAME", "us-east-1")
 
+# Корневые каталоги (префиксы) медиа и статики внутри S3-бакета:
+# резервное копирование адресует медиа по префиксу, статика не попадает
+# в медиа-цели.
+S3_MEDIA_LOCATION = "media"
+S3_STATIC_LOCATION = "static"
+
 # Цели резервного копирования: имя -> спецификация из записей BACKUP_TARGET_<ИМЯ> в .env.
 BACKUP_TARGET_PREFIX = "BACKUP_TARGET_"
 
@@ -246,7 +252,7 @@ STORAGES = {
     },
     "s3_static": {
         "BACKEND": "personal_website.storages.CustomS3StaticStorage",
-        "OPTIONS": {**s3_storage_options, "location": "static"},
+        "OPTIONS": {**s3_storage_options, "location": S3_STATIC_LOCATION},
     },
     "test": {
         "BACKEND": "personal_website.storages.CustomFileSystemStorage",
@@ -264,7 +270,7 @@ STORAGES = {
     },
     "s3": {
         "BACKEND": "personal_website.storages.CustomS3Storage",
-        "OPTIONS": s3_storage_options,
+        "OPTIONS": {**s3_storage_options, "location": S3_MEDIA_LOCATION},
     },
 }
 

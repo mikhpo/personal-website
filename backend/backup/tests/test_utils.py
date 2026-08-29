@@ -69,10 +69,10 @@ class TestMediaAddress(SimpleTestCase):
         self.assertIsNone(media_rclone_env())
 
     @override_settings(**S3_SETTINGS)
-    def test_s3_addresses_media_bucket(self) -> None:
-        """При s3 mc адресует бакет алиасом, rclone - remote с RCLONE_CONFIG_*."""
-        self.assertEqual(media_mc_address(), "local/media")
-        self.assertEqual(media_rclone_address(), "media:media")
+    def test_s3_addresses_media_prefix(self) -> None:
+        """При s3 mc адресует префикс media/ бакета, rclone - remote с RCLONE_CONFIG_*."""
+        self.assertEqual(media_mc_address(), "local/media/media")
+        self.assertEqual(media_rclone_address(), "media:media/media")
         self.assertEqual(
             media_rclone_env(),
             {
