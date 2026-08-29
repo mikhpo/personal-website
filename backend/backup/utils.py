@@ -31,14 +31,15 @@ def media_mc_address() -> str:
     """Адрес медиа-хранилища для MinIO Client.
 
     Returns:
-        str: "alias/бакет" при STORAGE_TYPE=s3, иначе путь MEDIA_ROOT.
+        str: "alias/бакет/префикс" при STORAGE_TYPE=s3 (префикс - каталог
+        медиа в бакете), иначе путь MEDIA_ROOT.
 
     Example:
         >>> media_mc_address()
-        'local/media-bucket'
+        'local/media-bucket/media'
     """
     if is_s3():
-        return f"{settings.MINIO_ALIAS}/{settings.AWS_STORAGE_BUCKET_NAME}"
+        return f"{settings.MINIO_ALIAS}/{settings.AWS_STORAGE_BUCKET_NAME}/{settings.S3_MEDIA_LOCATION}"
     return str(settings.MEDIA_ROOT)
 
 
@@ -46,15 +47,15 @@ def media_rclone_address() -> str:
     """Адрес медиа-хранилища для rclone.
 
     Returns:
-        str: "media:бакет" при STORAGE_TYPE=s3 (remote собирается из
-        RCLONE_CONFIG_* в media_rclone_env), иначе путь MEDIA_ROOT.
+        str: "media:бакет/префикс" при STORAGE_TYPE=s3 (remote собирается
+        из RCLONE_CONFIG_* в media_rclone_env), иначе путь MEDIA_ROOT.
 
     Example:
         >>> media_rclone_address()
-        'media:media-bucket'
+        'media:media-bucket/media'
     """
     if is_s3():
-        return f"{RCLONE_MEDIA_REMOTE}:{settings.AWS_STORAGE_BUCKET_NAME}"
+        return f"{RCLONE_MEDIA_REMOTE}:{settings.AWS_STORAGE_BUCKET_NAME}/{settings.S3_MEDIA_LOCATION}"
     return str(settings.MEDIA_ROOT)
 
 

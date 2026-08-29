@@ -96,6 +96,27 @@ function calculate_worker_count() {
 }
 
 #######################################
+# Настроить алиас объектного хранилища для клиента mc.
+# Команды резервного копирования выполняются внутри контейнера
+# и адресуют mc-цели и медиа-бакет через алиас MINIO_ALIAS
+# (см. docs/deployment/backups.md). Без алиаса mc обращается
+# к дефолтному local (localhost:9000) и операции завершаются ошибкой.
+#######################################
+function set_minio_alias() {
+    if [ -z "${MINIO_ALIAS}" ] || [ -z "${MINIO_SERVER_URL}" ]; then
+        return
+    fi
+    if ! command -v mc >/dev/null 2>&1; then
+        return
+    fi
+    mc alias set \
+        "${MINIO_ALIAS}" \
+        "${MINIO_SERVER_URL}" \
+        "${MINIO_ACCESS_KEY}" \
+        "${MINIO_SECRET_KEY}"
+}
+
+#######################################
 # Основное тело скрипта.
 # Адреса каталогов и файлов проекта определяются по адресу скрипта.
 # Способ запуска контейнера определяется по переменной окружения DEBUG.
@@ -135,6 +156,12 @@ function main() {
         read -r s3_host s3_port <<< "$(parse_service_url "${AWS_S3_ENDPOINT_URL}")"
         wait_for_port "$s3_host" "$s3_port"
     fi
+
+    # Алиас нужен и при filesystem (mc-цели бэкапов), и при s3 (адресация
+    # медиа-бакета резервным копированием). Переменные MINIO_SERVER_URL и
+    # MINIO_ALIAS заполняются для локального MinIO и S3-совместимых
+    # хранилищ; для внешних S3 без этих переменных алиас не нужен.
+    set_minio_alias
 
     # Выполнить миграции и собрать статические файлы.
     $python "$manage" migrate
