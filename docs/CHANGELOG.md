@@ -1,5 +1,9 @@
 # История изменений
 
+## 2026-08-29
+
+- Dockerfile копирует backend/staticfiles (bootstrap/dist, tinymce) из node-builder стадии в финальный образ: без этого в опубликованном образе vendor-статика отсутствовала, а /static/bootstrap/... давал 404 (#102)
+
 ## 2026-08-28
 
 - Созданы документы docs/deployment/: matrix.md (параметры и типовые сценарии развертывания), application.md, database.md, storage.md, proxy.md, backups.md; .env.example перестроен секциями по параметрам
