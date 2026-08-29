@@ -10,9 +10,11 @@ description: Первоначальная настройка нового сер
 приложения:
 
 - Docker Compose - scripts/docker/setup.sh, рецепты
-  docs/deployment/application.md (раздел 2) и proxy.md;
+  [application.md](../../../docs/deployment/application.md) (раздел 2)
+  и [proxy.md](../../../docs/deployment/proxy.md);
 - systemd Gunicorn на хосте (без Docker) - scripts/server/setup.sh, рецепты
-  docs/deployment/application.md (раздел 4) и proxy.md (раздел 2).
+  [application.md](../../../docs/deployment/application.md) (раздел 4)
+  и [proxy.md](../../../docs/deployment/proxy.md) (раздел 2).
 
 Сервером может быть виртуальная машина облачного провайдера, физический
 или домашний сервер. Провайдер-специфичных шагов скилл не
@@ -40,7 +42,7 @@ postgres, minio, nginx (переменная COMPOSE_PROFILES в .env, пуст�
 | Сервер без Docker | Docker нет | хостовый nginx+certbot | systemd-PG или managed | filesystem |
 
 Полная матрица параметров развертывания и типовых сценариев -
-docs/deployment/matrix.md.
+[docs/deployment/matrix.md](../../../docs/deployment/matrix.md).
 
 ## Два режима прокси
 
@@ -59,7 +61,7 @@ docs/deployment/matrix.md.
   (включая раздачу медиа с диска при filesystem), приложение всегда
   на 127.0.0.1:${DJANGO_PORT}, прокси-слой проекта ничего не занимает
   (профиль nginx не активируется). Рецепт и двухфазный выпуск
-  сертификата - docs/deployment/proxy.md; тестовые среды выпускают
+  сертификата - [docs/deployment/proxy.md](../../../docs/deployment/proxy.md); тестовые среды выпускают
   сертификат в ACME staging (CERTBOT_STAGING=True для
   scripts/server/setup.sh).
 
@@ -147,7 +149,7 @@ SSH-ключ сервера и настройка подключения (клю
 - Секция «Бэкапы» (только основной сервер): цели `BACKUP_TARGET_<ИМЯ>`
   (префиксы mc:/rclone:) и списки BACKUP_DB_TARGETS/BACKUP_MEDIA_TARGETS;
   схема и настройка алиасов mc / remotes rclone -
-  docs/deployment/backups.md.
+  [docs/deployment/backups.md](../../../docs/deployment/backups.md).
 
 `chmod 600 .env`.
 
@@ -200,21 +202,24 @@ Cron бэкапов (cronjobs.sh) добавлять только на осно�
     curl -sI http://${domain}/media/<файл>          # 200 (раздача с диска)
     journalctl -u personal-website -f              # логи Gunicorn
 
-Рецепты и объяснения каждой настройки - docs/deployment/application.md
-(раздел 4) и docs/deployment/proxy.md (раздел 2). Вариант systemd-режима
-с unix-сокетом (socket activation, мультипроектный хост) - там же,
-application.md раздел 4.
+Рецепты и объяснения каждой настройки -
+[application.md](../../../docs/deployment/application.md)
+(раздел 4) и [proxy.md](../../../docs/deployment/proxy.md) (раздел 2).
+Вариант systemd-режима с unix-сокетом (socket activation, мультипроектный
+хост) - там же, [application.md](../../../docs/deployment/application.md),
+раздел 4.
 
 ## Сценарий домашнего сервера (мультипроектный хост)
 
 - Прокси-слой проекта не занимает 80/443: профиль nginx не
   активируется, терминирование TLS - общий хостовый nginx по рецепту
-  docs/deployment/proxy.md (конфигурация сайта на проект; рядом живут
+  [docs/deployment/proxy.md](../../../docs/deployment/proxy.md)
+  (конфигурация сайта на проект; рядом живут
   конфигурации других проектов).
 - Приложение публикуется только на 127.0.0.1:${DJANGO_PORT}; порт
   выбирается не занятым другими проектами хоста.
 - База данных: контейнер профиля postgres, systemd-PG (рецепт
-  docs/deployment/database.md) или managed-кластер - без изменений
+  [docs/deployment/database.md](../../../docs/deployment/database.md)) или managed-кластер - без изменений
   приложения.
 - Файрвол: наружу открыты только 22/80/443; доступ к БД и хранилищу
   других проектов не открывается.

@@ -20,7 +20,7 @@ psql … -c "SELECT version();"           # версия сервера
 
 ## Параметры подключения и аутентификация
 
-Те же, что использует приложение (см. docs/deployment/database.md, раздел 1). Флаги:
+Те же, что использует приложение (см. [docs/deployment/database.md](../../../docs/deployment/database.md), раздел 1). Флаги:
 
 * `-h <хост>` - имя хоста или путь к каталогу unix-сокета;
 * `-p <порт>` - порт сервера;
@@ -70,5 +70,5 @@ psql … -c "SELECT app, name FROM django_migrations ORDER BY app, name;"
 ## Рекомендации
 
 * Перед восстановлением в рабочую базу снять свежий дамп (скилл postgresql-dump) как точку отката.
-* Если кластер требует SSL, использовать параметры подключения приложения (docs/deployment/database.md).
-* Дампы системы бэкапов лежат в `${BACKUP_ROOT}/db/` (имена `<база>_<дата>_<время>.dump`) и в `db/` целей бэкапов (docs/deployment/backups.md).
+* Если кластер требует SSL, использовать параметры подключения приложения ([docs/deployment/database.md](../../../docs/deployment/database.md)).
+* Дампы системы бэкапов лежат в `${BACKUP_ROOT}/db/` (имена `<база>_<дата>_<время>.dump`) и в `db/` целей бэкапов ([docs/deployment/backups.md](../../../docs/deployment/backups.md)).
