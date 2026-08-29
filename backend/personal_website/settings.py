@@ -168,7 +168,7 @@ STATIC_URL = os.getenv("STATIC_URL", default="/static/")
 STATIC_ROOT = os.getenv("STATIC_ROOT", default=BASE_DIR / "static")
 
 # Каталоги исходных статических файлов.
-# bootstrap/dist и tinymce копируются сборкой фронтенда в backend/staticfiles,
+# bootstrap/dist и tinymce копируются сборкой фронтенда в frontend/dist,
 # поэтому каталог node_modules целиком здесь не нужен.
 STATICFILES_DIRS = [
     BASE_DIR / "staticfiles",  # backend/staticfiles - исходные статические файлы

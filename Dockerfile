@@ -71,10 +71,6 @@ COPY . .
 COPY --from=node-builder /app/frontend/dist $WORK_DIR/frontend/dist
 COPY --from=node-builder /app/frontend/webpack-stats.json $WORK_DIR/frontend/webpack-stats.json
 
-# Копирование vendor-статики, собранной webpack в node-builder
-# (bootstrap/dist, tinymce): collectstatic собирает ее в STATIC_ROOT.
-COPY --from=node-builder /app/backend/staticfiles $WORK_DIR/backend/staticfiles
-
 # Выполнить скрипт, запускающий сервер.
 ENV PYTHONPATH=.
 ENTRYPOINT ["/bin/bash", "backend/entrypoint.sh"]

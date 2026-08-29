@@ -2,7 +2,7 @@
 
 ## 2026-08-29
 
-- Dockerfile копирует backend/staticfiles (bootstrap/dist, tinymce) из node-builder стадии в финальный образ: без этого в опубликованном образе vendor-статика отсутствовала, а /static/bootstrap/... давал 404 (#102)
+- Vendor-статика (bootstrap/dist, tinymce) копируется сборкой фронтенда в frontend/dist и переносится в Docker-образ в его составе: прежняя схема с копированием в backend/staticfiles оставляла эти файлы за пределами публикуемого образа, /static/bootstrap/... отвечал 404; устаревшие копии в backend/staticfiles удаляются при сборке
 
 ## 2026-08-28
 
