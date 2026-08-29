@@ -19,7 +19,7 @@
 Проект использует следующие технологии:
 
 * [Django](https://www.djangoproject.com/) (бэкенд)
-* [Django REST Framework](https://www.django-rest-framework.com/) (REST API)
+* [Django REST Framework](https://www.django-rest-framework.org/) (REST API)
 * [React](https://react.dev/) 19 (фронтенд)
 * [Webpack](https://webpack.js.org/) 5 (сборка фронтенда)
 * [Bootstrap](https://getbootstrap.com/) 5 (стили)
@@ -29,7 +29,7 @@
 Проект адаптирован для развертывания на Linux. Для развертывания используются следующие технологии:
 
 * [Gunicorn](https://gunicorn.org/) (HTTP-сервер)
-* [nginx](https://nginx.org/) + certbot (прокси-сервер, TLS-терминирование, раздача медиа)
+* [nginx](https://nginx.org/) + [certbot](https://certbot.eff.org/) (прокси-сервер, HTTPS, раздача медиа)
 * [Docker](https://www.docker.com/) (контейнеризация)
 
 ![container](./docs/diagrams/out/container/container.svg)
@@ -49,7 +49,7 @@
     ├── scripts/               # скрипты деплоя, бэкапов и первичной настройки сервера
     ├── tools/                 # вспомогательные скрипты для разработки
     ├── tests/                 # пакет интеграционных тестов
-    ├── nginx/                # шаблон конфигурации прокси, сертификаты Let's Encrypt
+    ├── nginx/                 # шаблон конфигурации прокси, сертификаты Let's Encrypt
     ├── backend/                # Django бэкенд
     │   ├── manage.py
     │   ├── Dockerfile          # параметры сборки контейнера приложения
@@ -104,14 +104,7 @@
 
 ### Запуск с использованием Taskfile (рекомендуется)
 
-* Запустить сервер разработки с PostgreSQL: `task runserver`
-* Запустить в режиме hot-reload: `task watch`
-* Полный цикл тестирования: `task test`
-* Интеграционные тесты локального стека (приложение, PostgreSQL,
-  MinIO и nginx с self-signed сертификатом): `task test-integration`;
-  сертификат выпускается задачей `task dev-cert` (test-integration
-  делает это сам)
-* Статический анализ: `task check`
+Основные команды - `task runserver` (сервер разработки с PostgreSQL), `task watch` (hot-reload), `task test` (полный цикл тестирования) и `task check` (статический анализ). Интеграционные тесты локального стека (приложение, PostgreSQL, MinIO и nginx с self-signed сертификатом) - `task test-integration`. Полный список команд Taskfile - в [docs/CONTRIBUTING.md](./docs/CONTRIBUTING.md).
 
 ### Ручной запуск режима разработки
 
@@ -277,24 +270,8 @@ React компоненты рендерятся в Django шаблонах че�
     <script src="{% webpack_static 'frontend/dist/js/main.js' %}"></script>
     <div id="react-mount-point"></div>
 
-## CI/CD
-
-Проект использует две системы автоматизации: SourceCraft CI (основная - тестирование, сборка, релиз и деплой) и GitHub Actions (зеркало для проверки кода и сборки образов). Развертывание на сервере выполняет deploy-workflow SourceCraft вызовом `scripts/deploy.sh` (целевой каталог /srv/personal-website).
-
-Workflows SourceCraft ([.sourcecraft/ci.yaml](./.sourcecraft/ci.yaml)):
-
-1. lint-workflow - статический анализ и линтинг, при pull request
-2. test-workflow - тестирование, при pull request
-3. build-workflow - сборка и тестирование образа приложения, при pull request
-4. release-workflow - релиз Docker-образа, при пуше в основную ветку
-5. deploy-workflow - деплой приложения на сервер (release -> deploy), вручную
-
-Workflows GitHub Actions ([.github/workflows/](./.github/workflows/)): test.yml - тестирование кода и контейнера, release.yml - публикация образа в реестры, deploy.yml - деплой на сервер.
-
-Состав задач и требуемые секреты перечислены в комментариях файлов конфигурации соответствующих workflow.
-
 ## Дополнительная информация
 
-* [Матрица развертывания и рецепты docs/deployment/](./docs/deployment/matrix.md)
+* [Способы развертывания и инструкции](./docs/deployment/matrix.md)
 * [Руководство по разработке](./docs/CONTRIBUTING.md)
 * [История изменений](./docs/CHANGELOG.md)
