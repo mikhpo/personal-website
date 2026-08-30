@@ -59,6 +59,12 @@ repos:
         language: system
         types: [file]
         files: \.(md|markdown)$
+      - id: djlint
+        name: djlint
+        description: Проверка HTML-шаблонов при помощи djlint
+        entry: poetry run djlint
+        language: system
+        types: [html]
       - id: mypy
         name: mypy
         description: Выполнить проверки типов при помощи Mypy

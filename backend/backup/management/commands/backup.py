@@ -4,6 +4,7 @@ from typing import Any
 
 from django.core.management.base import BaseCommand, CommandParser
 
+from backup.reports import run_with_report
 from backup.services import backup_db, backup_media
 
 
@@ -18,5 +19,12 @@ class Command(BaseCommand):
 
     def handle(self, *args: Any, **options: Any) -> None:  # noqa: ANN401, ARG002
         """Выполнить бэкап БД и медиа либо проверку их целей."""
-        backup_db(verify=options["verify"])
-        backup_media(verify=options["verify"])
+        if options["verify"]:
+            backup_db(verify=True)
+            backup_media(verify=True)
+            return
+
+        def backup_both() -> dict[str, Any]:
+            return {"db": backup_db(), "media": backup_media()}
+
+        run_with_report("backup", "backup (БД и медиа)", backup_both)

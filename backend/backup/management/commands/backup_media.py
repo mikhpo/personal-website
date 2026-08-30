@@ -4,6 +4,7 @@ from typing import Any
 
 from django.core.management.base import BaseCommand, CommandParser
 
+from backup.reports import run_with_report
 from backup.services import backup_media
 
 
@@ -18,4 +19,11 @@ class Command(BaseCommand):
 
     def handle(self, *args: Any, **options: Any) -> None:  # noqa: ANN401, ARG002
         """Выполнить бэкап медиа либо проверку их целей."""
-        backup_media(verify=options["verify"])
+
+        def backup_media_files() -> dict[str, Any]:
+            return {"media": backup_media()}
+
+        if options["verify"]:
+            backup_media(verify=True)
+            return
+        run_with_report("backup_media", "backup_media", backup_media_files)

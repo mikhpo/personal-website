@@ -54,6 +54,18 @@ class Target:
         self.name = name
         self.path = path
 
+    def describe(self) -> str:
+        """Человекочитаемое описание цели для отчетов и журналов.
+
+        Returns:
+            str: Строка вида "OFFSITE (mc: local/backups)".
+
+        Example:
+            >>> McTarget("OFFSITE", "local/backups").describe()
+            'OFFSITE (mc: local/backups)'
+        """
+        return f"{self.name} ({self.prefix}: {self.path})"
+
 
 def count_lines(result: subprocess.CompletedProcess[str]) -> int:
     r"""Число непустых строк захваченного вывода.
