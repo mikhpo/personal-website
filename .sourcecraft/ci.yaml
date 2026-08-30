@@ -303,5 +303,5 @@ workflows:
               # при холодном старте может занимать десятки минут.
               command_timeout: 30m
               script: |
-                cd /srv/personal-website
+                cd ${{ secrets.PROJECT_DIR }}
                 bash scripts/deploy.sh
