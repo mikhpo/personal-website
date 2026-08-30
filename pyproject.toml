@@ -134,6 +134,7 @@ indent-style = "space"
 docstring-code-format = true
 
 [tool.djlint]
+profile = "django"
 # H021 - inline-стили обязательны для email-шаблонов: почтовые клиенты
 # вырезают блоки <style>, поэтому стили дублируются в атрибутах тегов
 ignore = "H006,H013,H021"
