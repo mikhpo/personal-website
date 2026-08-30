@@ -26,5 +26,5 @@ jobs:
           # при холодном старте может занимать десятки минут.
           command_timeout: 30m
           script: |
-            cd /root/personal-website
+            cd ${{ secrets.PROJECT_DIR }}
             bash scripts/deploy.sh

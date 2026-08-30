@@ -174,7 +174,7 @@ Poetry сконфигурирован таким образом, чтобы ви
 
 ## CI/CD
 
-Проект использует две системы автоматизации: SourceCraft CI (тестирование, сборка, релиз и деплой) и GitHub Actions (зеркало для проверки кода и сборки образов). Развертывание на сервере выполняет deploy-workflow SourceCraft вызовом `scripts/deploy.sh` (целевой каталог /srv/personal-website).
+Проект использует две системы автоматизации: SourceCraft CI (тестирование, сборка, релиз и деплой) и GitHub Actions (зеркало для проверки кода и сборки образов). Развертывание на сервере выполняет deploy-workflow SourceCraft вызовом `scripts/deploy.sh` в каталоге из секрета PROJECT_DIR; значение задается секретами обеих платформ и должно совпадать с путем рабочей копии репозитория на сервере.
 
 Workflows SourceCraft ([.sourcecraft/ci.yaml](../.sourcecraft/ci.yaml)):
 
