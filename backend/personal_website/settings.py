@@ -222,6 +222,9 @@ BACKUP_DB_TARGETS = os.getenv("BACKUP_DB_TARGETS", default="")
 BACKUP_MEDIA_TARGETS = os.getenv("BACKUP_MEDIA_TARGETS", default="")
 BACKUP_DB_RETENTION_DAYS = int(os.getenv("BACKUP_DB_RETENTION_DAYS", default="14") or "14")
 
+# E-mail получателя отчетов о результатах бэкапирования; пусто - оповещения отключены.
+BACKUP_NOTIFY_EMAIL = os.getenv("BACKUP_NOTIFY_EMAIL", default="")
+
 # Общие параметры S3 для продуктивных хранилищ (медиа и статика).
 s3_storage_options = {
     "bucket_name": AWS_STORAGE_BUCKET_NAME,

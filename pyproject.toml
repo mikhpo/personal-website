@@ -134,7 +134,10 @@ indent-style = "space"
 docstring-code-format = true
 
 [tool.djlint]
-ignore = "H006,H013"
+# H021 - inline-стили обязательны для email-шаблонов (клиенты вырезают <style>);
+# H030, H031 - meta description и keywords предназначены для веб-страниц,
+# к письмам неприменимы
+ignore = "H006,H013,H021,H030,H031"
 
 [tool.pytest.ini_options]
 markers = [

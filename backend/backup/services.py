@@ -6,11 +6,13 @@
 backup.targets, запуск внешних команд - backup.process.
 """
 
+import json
 import logging
 import os
 import shutil
 import time
 from pathlib import Path
+from typing import Any
 
 from django.conf import settings
 from django.core.management.base import CommandError
@@ -163,7 +165,7 @@ def verify_db_targets(db_targets: list[str]) -> None:
     logger.info("Проверка целей БД пройдена")
 
 
-def backup_db(*, verify: bool = False) -> None:
+def backup_db(*, verify: bool = False) -> dict[str, Any] | None:
     """Резервное копирование БД в цели либо проверка целей (verify=True).
 
     Список целей берется из BACKUP_DB_TARGETS; при пустом списке бэкап
@@ -173,6 +175,11 @@ def backup_db(*, verify: bool = False) -> None:
     Args:
         verify (bool): True - проверить существующие дампы целей вместо
             создания нового дампа.
+
+    Returns:
+        dict[str, Any] | None: Данные для отчета (цели, имя и объем дампа,
+        ретеншн, число оставшихся дампов) при реальном запуске; None при
+        проверке целей либо пустом списке целей.
 
     Raises:
         CommandError: При verify=True цели не настроены либо проверка
@@ -188,17 +195,26 @@ def backup_db(*, verify: bool = False) -> None:
             msg = "цели БД не настроены: BACKUP_DB_TARGETS пуст"
             raise CommandError(msg)
         verify_db_targets(db_targets)
-        return
+        return None
     if not db_targets:
         logger.info("БД не копируется: BACKUP_DB_TARGETS пуст")
-        return
+        return None
     resolved = [resolve_target(name) for name in db_targets]
     dump_name, dump_path = dump_database()
+    dump_size = Path(dump_path).stat().st_size
     for target in resolved:
         logger.info("Копирование дампа в цель %s (%s: %s)", target.name, target.prefix, target.path)
         target.push_dump(dump_path, dump_name)
     apply_retention(resolved, settings.BACKUP_DB_RETENTION_DAYS)
+    remaining = len(list((Path(settings.BACKUP_ROOT) / "db").glob("*.dump")))
     logger.info("Резервное копирование БД завершено")
+    return {
+        "targets": [target.describe() for target in resolved],
+        "dump_name": dump_name,
+        "dump_size": dump_size,
+        "retention_days": settings.BACKUP_DB_RETENTION_DAYS,
+        "remaining": remaining,
+    }
 
 
 # --- БД: восстановление ------------------------------------------------------
@@ -310,17 +326,41 @@ def restore_db(source_arg: str, dump_name: str | None = None) -> None:
 # --- Медиа -------------------------------------------------------------------
 
 
-def media_source_count() -> int:
-    """Число объектов медиа в хранилище.
+def media_source_stats() -> tuple[int, int]:
+    """Число и суммарный объем объектов медиа в хранилище.
 
     Returns:
-        int: Количество объектов медиа-бакета при STORAGE_TYPE=s3
-        (mc ls) либо файлов MEDIA_ROOT (os.walk).
+        tuple[int, int]: Количество объектов и суммарный размер в байтах;
+        источник - медиа-бакет при STORAGE_TYPE=s3 (mc ls --json) либо
+        каталог MEDIA_ROOT (os.walk).
     """
     if is_s3():
-        result = run_command([mc_executable(), "ls", "--recursive", media_mc_address()], capture=True)
-        return len([line for line in (result.stdout or "").splitlines() if line.strip()])
-    return sum(len(files) for _root, _dirs, files in os.walk(settings.MEDIA_ROOT))
+        result = run_command([mc_executable(), "ls", "--recursive", "--json", media_mc_address()], capture=True)
+        count = 0
+        size = 0
+        for line in (result.stdout or "").splitlines():
+            if not line.strip():
+                continue
+            try:
+                item = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if item.get("type") == "file":
+                count += 1
+                size += int(item.get("size", 0))
+        return count, size
+    count = 0
+    size = 0
+    for root, _dirs, files in os.walk(settings.MEDIA_ROOT):
+        for name in files:
+            count += 1
+            size += (Path(root) / name).stat().st_size
+    return count, size
+
+
+def media_source_count() -> int:
+    """Число объектов медиа в хранилище (см. media_source_stats)."""
+    return media_source_stats()[0]
 
 
 def verify_media(media_targets: list[str]) -> None:
@@ -360,7 +400,7 @@ def verify_media(media_targets: list[str]) -> None:
     logger.info("Проверка медиа-целей пройдена")
 
 
-def backup_media(*, verify: bool = False) -> None:
+def backup_media(*, verify: bool = False) -> dict[str, Any] | None:
     """Зеркальная синхронизация медиа в цели либо проверка целей (verify=True).
 
     Список целей берется из BACKUP_MEDIA_TARGETS; при пустом списке
@@ -371,6 +411,11 @@ def backup_media(*, verify: bool = False) -> None:
     Args:
         verify (bool): True - проверить существующее содержимое целей
             вместо синхронизации.
+
+    Returns:
+        dict[str, Any] | None: Данные для отчета (цели, число объектов
+        и суммарный объем хранилища) при реальном запуске; None при
+        проверке целей либо пустом списке целей.
 
     Raises:
         CommandError: При STORAGE_TYPE=s3 не заданы обязательные настройки;
@@ -388,15 +433,21 @@ def backup_media(*, verify: bool = False) -> None:
             msg = "цели медиа не настроены: BACKUP_MEDIA_TARGETS пуст"
             raise CommandError(msg)
         verify_media(media_targets)
-        return
+        return None
     if not media_targets:
         logger.info("Медиа не копируется: BACKUP_MEDIA_TARGETS пуст")
-        return
+        return None
     resolved = [resolve_target(name) for name in media_targets]
     for target in resolved:
         logger.info("Синхронизация медиа в цель %s (%s: %s)", target.name, target.prefix, target.path)
         target.sync_media()
+    count, size = media_source_stats()
     logger.info("Резервное копирование медиа завершено")
+    return {
+        "targets": [target.describe() for target in resolved],
+        "count": count,
+        "size": size,
+    }
 
 
 def restore_media(target_name: str) -> None:
