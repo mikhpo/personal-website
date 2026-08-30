@@ -156,8 +156,10 @@ function setup_locale() {
 
 #######################################
 # Создать каталоги данных из .env, если они заданы абсолютными путями.
-# Каталоги создаются от имени пользователя сервиса, иначе команды
-# приложения (загрузка медиа, дампы бэкапов) падают на правах доступа.
+# Каталоги и их содержимое передаются сервис-пользователю: при переходе
+# с контейнерного запуска внутри могут остаться файлы, созданные
+# контейнером от root, - без этого старт systemd-сервиса завершается
+# PermissionError на файлах журналов.
 #######################################
 function create_data_directories() {
     local user="${SUDO_USER:-$(id -un)}"
@@ -165,7 +167,7 @@ function create_data_directories() {
     for dir in "${STORAGE_ROOT:-}" "${STATIC_ROOT:-}" "${BACKUP_ROOT:-}" "${LOGS_ROOT:-}" "${TEMP_ROOT:-}"; do
         if [ -n "$dir" ]; then
             sudo mkdir -p "$dir"
-            sudo chown "$user" "$dir"
+            sudo chown -R "$user" "$dir"
         fi
     done
 }
