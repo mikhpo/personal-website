@@ -2,18 +2,24 @@
 <html lang="ru">
     <head>
         <meta charset="utf-8" />
+        <meta name="description" content="Отчет системы резервного копирования personal-website" />
+        <meta name="keywords" content="резервное копирование, бэкап, отчет, personal-website" />
         <title>Резервное копирование - personal-website</title>
     </head>
     <body style="margin:0;
                  padding:0;
                  background:#f1f3f4;
                  font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif">
-        <div style="max-width:640px;margin:0 auto;padding:24px 16px;">
+        <div style="max-width:640px;
+                    margin:0 auto;
+                    padding:24px 16px">
             <div style="background:#ffffff;
                         border:1px solid #dadce0;
                         border-radius:8px;
                         padding:24px 28px">
-                <h2 style="font-size:18px;margin:0 0 4px;color:#202124;">
+                <h2 style="font-size:18px;
+                           margin:0 0 4px;
+                           color:#202124">
                     Резервное копирование
                     {% if status == "успех" %}
                         <span style="background:#e6f4ea;
@@ -35,8 +41,12 @@
                                      letter-spacing:.4px">{{ status }}</span>
                     {% endif %}
                 </h2>
-                <p style="color:#5f6368;font-size:12px;margin:0 0 16px;">personal-website</p>
-                <table style="border-collapse:collapse;width:100%;margin:8px 0 20px;">
+                <p style="color:#5f6368;
+                          font-size:12px;
+                          margin:0 0 16px">personal-website</p>
+                <table style="border-collapse:collapse;
+                              width:100%;
+                              margin:8px 0 20px">
                     <tr>
                         <td style="padding:7px 14px;
                                    color:#5f6368;
@@ -44,7 +54,9 @@
                                    background:#f8f9fa;
                                    border:1px solid #dadce0;
                                    font-size:13px">Команда</td>
-                        <td style="padding:7px 14px;border:1px solid #dadce0;font-size:13px;">
+                        <td style="padding:7px 14px;
+                                   border:1px solid #dadce0;
+                                   font-size:13px">
                             <code>{{ label }}</code>
                         </td>
                     </tr>
@@ -55,7 +67,9 @@
                                    background:#f8f9fa;
                                    border:1px solid #dadce0;
                                    font-size:13px">Хост</td>
-                        <td style="padding:7px 14px;border:1px solid #dadce0;font-size:13px;">{{ hostname }}</td>
+                        <td style="padding:7px 14px;
+                                   border:1px solid #dadce0;
+                                   font-size:13px">{{ hostname }}</td>
                     </tr>
                     <tr>
                         <td style="padding:7px 14px;
@@ -64,7 +78,9 @@
                                    background:#f8f9fa;
                                    border:1px solid #dadce0;
                                    font-size:13px">Начало</td>
-                        <td style="padding:7px 14px;border:1px solid #dadce0;font-size:13px;">{{ started_text }}</td>
+                        <td style="padding:7px 14px;
+                                   border:1px solid #dadce0;
+                                   font-size:13px">{{ started_text }}</td>
                     </tr>
                     <tr>
                         <td style="padding:7px 14px;
@@ -73,7 +89,9 @@
                                    background:#f8f9fa;
                                    border:1px solid #dadce0;
                                    font-size:13px">Длительность</td>
-                        <td style="padding:7px 14px;border:1px solid #dadce0;font-size:13px;">{{ duration_text }}</td>
+                        <td style="padding:7px 14px;
+                                   border:1px solid #dadce0;
+                                   font-size:13px">{{ duration_text }}</td>
                     </tr>
                 </table>
                 {% if db %}
@@ -82,7 +100,9 @@
                                margin:18px 0 4px;
                                text-transform:uppercase;
                                letter-spacing:.5px">База данных</h3>
-                    <table style="border-collapse:collapse;width:100%;margin:8px 0 20px;">
+                    <table style="border-collapse:collapse;
+                                  width:100%;
+                                  margin:8px 0 20px">
                         <tr>
                             <td style="padding:7px 14px;
                                        color:#5f6368;
@@ -90,7 +110,9 @@
                                        background:#f8f9fa;
                                        border:1px solid #dadce0;
                                        font-size:13px">Цель</td>
-                            <td style="padding:7px 14px;border:1px solid #dadce0;font-size:13px;">
+                            <td style="padding:7px 14px;
+                                       border:1px solid #dadce0;
+                                       font-size:13px">
                                 {% for target in db.targets %}
                                     {{ target }}
                                     {% if not forloop.last %}<br>{% endif %}
@@ -104,7 +126,9 @@
                                        background:#f8f9fa;
                                        border:1px solid #dadce0;
                                        font-size:13px">Дамп</td>
-                            <td style="padding:7px 14px;border:1px solid #dadce0;font-size:13px;">
+                            <td style="padding:7px 14px;
+                                       border:1px solid #dadce0;
+                                       font-size:13px">
                                 <code>{{ db.dump_name }}</code>
                             </td>
                         </tr>
@@ -115,7 +139,9 @@
                                        background:#f8f9fa;
                                        border:1px solid #dadce0;
                                        font-size:13px">Объем дампа</td>
-                            <td style="padding:7px 14px;border:1px solid #dadce0;font-size:13px;">{{ db.size_text }}</td>
+                            <td style="padding:7px 14px;
+                                       border:1px solid #dadce0;
+                                       font-size:13px">{{ db.size_text }}</td>
                         </tr>
                         <tr>
                             <td style="padding:7px 14px;
@@ -124,7 +150,9 @@
                                        background:#f8f9fa;
                                        border:1px solid #dadce0;
                                        font-size:13px">Ретеншн</td>
-                            <td style="padding:7px 14px;border:1px solid #dadce0;font-size:13px;">
+                            <td style="padding:7px 14px;
+                                       border:1px solid #dadce0;
+                                       font-size:13px">
                                 дампы старше {{ db.retention_days }} дней удалены (осталось {{ db.remaining_text }})
                             </td>
                         </tr>
@@ -136,7 +164,9 @@
                                margin:18px 0 4px;
                                text-transform:uppercase;
                                letter-spacing:.5px">Медиа</h3>
-                    <table style="border-collapse:collapse;width:100%;margin:8px 0 20px;">
+                    <table style="border-collapse:collapse;
+                                  width:100%;
+                                  margin:8px 0 20px">
                         <tr>
                             <td style="padding:7px 14px;
                                        color:#5f6368;
@@ -144,7 +174,9 @@
                                        background:#f8f9fa;
                                        border:1px solid #dadce0;
                                        font-size:13px">Цель</td>
-                            <td style="padding:7px 14px;border:1px solid #dadce0;font-size:13px;">
+                            <td style="padding:7px 14px;
+                                       border:1px solid #dadce0;
+                                       font-size:13px">
                                 {% for target in media.targets %}
                                     {{ target }}
                                     {% if not forloop.last %}<br>{% endif %}
@@ -158,7 +190,9 @@
                                        background:#f8f9fa;
                                        border:1px solid #dadce0;
                                        font-size:13px">Объектов</td>
-                            <td style="padding:7px 14px;border:1px solid #dadce0;font-size:13px;">{{ media.count_text }}</td>
+                            <td style="padding:7px 14px;
+                                       border:1px solid #dadce0;
+                                       font-size:13px">{{ media.count_text }}</td>
                         </tr>
                         <tr>
                             <td style="padding:7px 14px;
@@ -167,12 +201,16 @@
                                        background:#f8f9fa;
                                        border:1px solid #dadce0;
                                        font-size:13px">Объем</td>
-                            <td style="padding:7px 14px;border:1px solid #dadce0;font-size:13px;">{{ media.size_text }}</td>
+                            <td style="padding:7px 14px;
+                                       border:1px solid #dadce0;
+                                       font-size:13px">{{ media.size_text }}</td>
                         </tr>
                     </table>
                 {% endif %}
                 {% if journal %}
-                    <p style="font-size:13px;color:#202124;margin:0 0 8px;">Журнал команды:</p>
+                    <p style="font-size:13px;
+                              color:#202124;
+                              margin:0 0 8px">Журнал команды:</p>
                     <pre style="background:#f8f9fa;
                                 color:#202124;
                                 border:1px solid #dadce0;
@@ -185,7 +223,9 @@
                                 margin:0">{{ journal }}</pre>
                 {% endif %}
             </div>
-            <p style="color:#80868b;font-size:11px;margin:14px 4px;">
+            <p style="color:#80868b;
+                      font-size:11px;
+                      margin:14px 4px">
                 Отчет системы резервного копирования personal-website. Письмо отправлено
                 автоматически, отвечать на него не нужно.
             </p>
