@@ -23,7 +23,7 @@ description: Диагностика продакшен-сервера - пара
 ## Доступ и расположение
 
 - Подключение по алиасу из `~/.ssh/config`: `ssh <алиас>`.
-- Путь проекта на сервере: `/srv/personal-website`. При compose-режиме приложение выполняется в контейнере Docker Compose (сервис `application`), проксирование и TLS - контейнер `nginx` либо хостовый nginx (по COMPOSE_PROFILES).
+- Путь проекта на сервере: значение секрета `PROJECT_DIR` CI-платформы (на текущем проде - `/root/personal-website`). При compose-режиме приложение выполняется в контейнере Docker Compose (сервис `application`), проксирование и TLS - контейнер `nginx` либо хостовый nginx (по COMPOSE_PROFILES).
 - Порт приложения публикуется только на 127.0.0.1 (DJANGO_PORT): весь внешний трафик проходит через прокси-слой.
 
 ## Логи
@@ -59,7 +59,7 @@ tail -n 200 ${LOGS_ROOT}/backup.log | grep -iE "error|exception|traceback"
 ## Состояние сервисов
 
 ```bash
-cd /srv/personal-website
+cd "$PROJECT_DIR"
 
 # Первичная проверка живости - эндпоинт /health/ (SELECT 1):
 # 200 - БД доступна, 503 - ошибка подключения
