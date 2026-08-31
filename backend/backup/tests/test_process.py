@@ -74,3 +74,31 @@ class TestPipeCommands(SimpleTestCase):
         """Аварийное завершение получателя - ошибка конвейера."""
         with self.assertRaisesMessage(CommandError, "конвейер"):
             pipe_commands(["echo", "x"], ["false"])
+
+    def test_source_sigpipe_with_dest_success(self) -> None:
+        """Завершение источника по SIGPIPE при успешном получателе - не ошибка.
+
+        Получатель вправе остановить чтение до конца потока (pg_restore -l
+        читает только заголовок и оглавление дампа); источник получает
+        SIGPIPE после этого - штатная семантика конвейера. Оболочка
+        сообщает такой код как 141 (128 + номер сигнала), прямой потомок
+        получает сигнал (-13) - проверяются обе формы.
+        """
+        result = pipe_commands(
+            ["/bin/sh", "-c", "dd if=/dev/zero bs=1M count=8 2>/dev/null"],
+            ["head", "-c", "1"],
+        )
+        self.assertEqual(result.returncode, 0)
+        result = pipe_commands(
+            ["python3", "-c", "import sys; sys.stdout.buffer.write(b'x' * 8192)"],
+            ["head", "-c", "1"],
+        )
+        self.assertEqual(result.returncode, 0)
+
+    def test_dest_failure_with_source_sigpipe_raises(self) -> None:
+        """SIGPIPE источника не маскирует ошибку получателя."""
+        with self.assertRaisesMessage(CommandError, "конвейер"):
+            pipe_commands(
+                ["/bin/sh", "-c", "dd if=/dev/zero bs=1M count=8 2>/dev/null"],
+                ["false"],
+            )
