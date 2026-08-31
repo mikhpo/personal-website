@@ -7,6 +7,7 @@
 """
 
 import os
+import signal
 import subprocess
 import sys
 
@@ -75,6 +76,10 @@ def pipe_commands(
     Вывод источника передается получателю через канал в памяти; так дамп
     цели попадает напрямую в pg_restore, не занимая диск.
 
+    Завершение источника по SIGPIPE при успешном получателе ошибкой не
+    считается: получатель вправе остановить чтение до конца потока
+    (pg_restore -l читает только заголовок и оглавление дампа).
+
     Args:
         source (list[str]): Команда источника, пишущая поток в stdout
             (например, mc cat / rclone cat).
@@ -127,11 +132,12 @@ def pipe_commands(
     finally:
         os.close(read_fd)
     source_code = src.wait()
-    if result.returncode != 0 or source_code != 0:
+    source_sigpipe = source_code in (-signal.SIGPIPE, 128 + signal.SIGPIPE)
+    if result.returncode != 0 or (source_code != 0 and not source_sigpipe):
         for stream in (result.stdout, result.stderr):
             if stream:
                 sys.stderr.write(stream.rstrip() + "\n")
-        failed = " ".join(source) if source_code else " ".join(dest)
+        failed = " ".join(dest) if source_sigpipe else " ".join(source)
         msg = f"конвейер завершился с ошибкой ({source_code}, {result.returncode}): {failed}"
         raise CommandError(msg)
     return result
