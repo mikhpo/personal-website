@@ -269,6 +269,91 @@ class TestCustomS3Storage(SimpleTestCase):
         # Не должно вызывать ошибок
         self.storage.rmdir("test/directory")
 
+    def test_save_exists_read_delete_under_location(self) -> None:
+        """Круг save - exists - read_bytes - delete работает под префиксом location.
+
+        Прямые вызовы boto3 в методах хранилища обязаны адресовать ключи
+        с префиксом location: без нормализации exists/delete/read_bytes
+        проверяли бы корень бакета вместо префикса - ImageKit считал кэш
+        отсутствующим и перегенерировал его на каждый запрос.
+        """
+        location_storage = self._make_storage_with_location()
+        content = b"Location roundtrip"
+        name = "roundtrip/loc-file.txt"
+
+        saved_name = location_storage.save(name, ContentFile(content))
+        self.assertTrue(location_storage.exists(saved_name))
+        self.assertEqual(location_storage.read_bytes(saved_name), content)
+
+        location_storage.delete(saved_name)
+        self.assertFalse(location_storage.exists(saved_name))
+
+    def test_exists_false_for_missing_file_under_location(self) -> None:
+        """Отсутствующий файл не считается существующим под префиксом location."""
+        location_storage = self._make_storage_with_location()
+        self.assertFalse(location_storage.exists("roundtrip/no-such-file.txt"))
+
+    def test_listdir_under_location(self) -> None:
+        """Метод listdir видит файлы под префиксом location."""
+        location_storage = self._make_storage_with_location()
+        files = ["roundtrip/list/a.txt", "roundtrip/list/b.txt"]
+        for name in files:
+            location_storage.save(name, ContentFile(b"x"))
+        try:
+            got_files, _got_dirs = location_storage.listdir("roundtrip/list")
+        finally:
+            location_storage.rmtree("roundtrip/list")
+        self.assertEqual(sorted(got_files), ["a.txt", "b.txt"])
+
+    def test_get_modified_time_under_location(self) -> None:
+        """get_modified_time находит объект под префиксом location."""
+        location_storage = self._make_storage_with_location()
+        saved_name = location_storage.save("roundtrip/mtime.txt", ContentFile(b"x"))
+        try:
+            modified = location_storage.get_modified_time(saved_name)
+        finally:
+            location_storage.delete(saved_name)
+        self.assertIsNotNone(modified)
+
+    def test_copy_file_and_replace_under_location(self) -> None:
+        """copy_file и replace адресуют ключи под префиксом location."""
+        location_storage = self._make_storage_with_location()
+        source = location_storage.save("roundtrip/copy-src.txt", ContentFile(b"copy me"))
+        target = "roundtrip/copy-dst.txt"
+
+        location_storage.copy_file(source, target)
+        self.assertTrue(location_storage.exists(target))
+
+        moved = "roundtrip/copy-moved.txt"
+        location_storage.replace(target, moved)
+        self.assertFalse(location_storage.exists(target))
+        self.assertTrue(location_storage.exists(moved))
+
+        location_storage.delete(moved)
+        location_storage.delete(source)
+
+    def test_rmtree_under_location(self) -> None:
+        """Метод rmtree удаляет объекты под префиксом location."""
+        location_storage = self._make_storage_with_location()
+        names = ["roundtrip/tree/one.txt", "roundtrip/tree/two.txt"]
+        for name in names:
+            location_storage.save(name, ContentFile(b"x"))
+
+        location_storage.rmtree("roundtrip/tree")
+        self.assertFalse(location_storage.exists(names[0]))
+        self.assertFalse(location_storage.exists(names[1]))
+
+    def _make_storage_with_location(self) -> CustomS3Storage:
+        """Создать хранилище с location-префиксом, как в продуктиве."""
+        return CustomS3Storage(
+            bucket_name=settings.STORAGES["s3"]["OPTIONS"]["bucket_name"],
+            access_key=settings.STORAGES["s3"]["OPTIONS"]["access_key"],
+            secret_key=settings.STORAGES["s3"]["OPTIONS"]["secret_key"],
+            region_name=settings.STORAGES["s3"]["OPTIONS"]["region_name"],
+            endpoint_url=settings.STORAGES["s3"]["OPTIONS"]["endpoint_url"],
+            location="media-tests",
+        )
+
 
 class TestFakerFileStorageAdapter(SimpleTestCase):
     """Тесты для адаптера FakerFileStorageAdapter."""

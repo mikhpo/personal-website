@@ -404,7 +404,12 @@ class CustomFileSystemStorage(BaseStorageMixin, FileSystemStorage):
 
 
 class CustomS3Storage(BaseStorageMixin, S3Boto3Storage):
-    """Расширенная S3 система хранения с дополнительными методами для работы с файлами."""
+    """Расширенная S3 система хранения с дополнительными методами для работы с файлами.
+
+    Методы принимают имена относительно корня хранилища; ключи бакета
+    нормализуются с префиксом location (_normalize_name) - без него прямые
+    вызовы boto3 адресовали бы корень бакета вместо префикса media/.
+    """
 
     def save(self, name: str, content: Any, *args, **kwargs) -> str:  # noqa: ANN401
         """
@@ -459,7 +464,7 @@ class CustomS3Storage(BaseStorageMixin, S3Boto3Storage):
         """
         try:
             paginator = self.connection.meta.client.get_paginator("list_objects_v2")
-            pages = paginator.paginate(Bucket=self.bucket_name, Prefix=prefix, Delimiter="/")
+            pages = paginator.paginate(Bucket=self.bucket_name, Prefix=self._normalize_name(prefix), Delimiter="/")
 
             files = []
             dirs = []
@@ -558,7 +563,7 @@ class CustomS3Storage(BaseStorageMixin, S3Boto3Storage):
         relative_name = self._normalize_s3_path(relative_name)
 
         try:
-            obj = self.connection.Object(self.bucket_name, relative_name)
+            obj = self.connection.Object(self.bucket_name, self._normalize_name(relative_name))
             # Получаем время последнего изменения из метаданных объекта
             modified_time = obj.last_modified
             # Преобразуем в локальное время Django
@@ -650,7 +655,7 @@ class CustomS3Storage(BaseStorageMixin, S3Boto3Storage):
 
             # Получаем список всех объектов с данным префиксом
             paginator = self.connection.meta.client.get_paginator("list_objects_v2")
-            pages = paginator.paginate(Bucket=self.bucket_name, Prefix=relative_path)
+            pages = paginator.paginate(Bucket=self.bucket_name, Prefix=self._normalize_name(relative_path))
 
             # Собираем все ключи для удаления
             delete_keys = []
@@ -783,11 +788,11 @@ class CustomS3Storage(BaseStorageMixin, S3Boto3Storage):
 
         try:
             # Копируем объект с новым ключом
-            copy_source = {"Bucket": self.bucket_name, "Key": src_key}
+            copy_source = {"Bucket": self.bucket_name, "Key": self._normalize_name(src_key)}
             self.connection.meta.client.copy_object(
                 CopySource=copy_source,
                 Bucket=self.bucket_name,
-                Key=dst_key,
+                Key=self._normalize_name(dst_key),
             )
         except Exception as error:
             error_message = f"Не удалось скопировать файл из {src_key} в {dst_key}: {error}"
@@ -797,7 +802,7 @@ class CustomS3Storage(BaseStorageMixin, S3Boto3Storage):
             # Удаляем исходный объект
             self.connection.meta.client.delete_object(
                 Bucket=self.bucket_name,
-                Key=src_key,
+                Key=self._normalize_name(src_key),
             )
         except Exception as error:
             error_message = f"Не удалось удалить исходный файл {src_key}: {error}"
@@ -817,7 +822,7 @@ class CustomS3Storage(BaseStorageMixin, S3Boto3Storage):
         try:
             self.connection.meta.client.delete_object(
                 Bucket=self.bucket_name,
-                Key=relative_name,
+                Key=self._normalize_name(relative_name),
             )
         except Exception:
             if not missing_ok:
@@ -846,11 +851,11 @@ class CustomS3Storage(BaseStorageMixin, S3Boto3Storage):
             src_key = self._normalize_s3_path(src_key)
 
             # Копируем объект с новым ключом
-            copy_source = {"Bucket": self.bucket_name, "Key": src_key}
+            copy_source = {"Bucket": self.bucket_name, "Key": self._normalize_name(src_key)}
             self.connection.meta.client.copy_object(
                 CopySource=copy_source,
                 Bucket=self.bucket_name,
-                Key=dst_key,
+                Key=self._normalize_name(dst_key),
             )
         # Файл не существует в S3, пытаемся обработать как локальный файл
         # Проверяем, является ли путь локальным (не начинается с s3://)
@@ -882,7 +887,7 @@ class CustomS3Storage(BaseStorageMixin, S3Boto3Storage):
         """
         relative_name = self._get_relative_name(name)
         relative_name = self._normalize_s3_path(relative_name)
-        obj = self.connection.Object(self.bucket_name, relative_name)
+        obj = self.connection.Object(self.bucket_name, self._normalize_name(relative_name))
         return obj.get()["Body"].read()
 
     def exists(self, name: str) -> bool:
@@ -898,7 +903,7 @@ class CustomS3Storage(BaseStorageMixin, S3Boto3Storage):
         try:
             relative_name = self._get_relative_name(name)
             relative_name = self._normalize_s3_path(relative_name)
-            self.connection.Object(self.bucket_name, relative_name).load()
+            self.connection.Object(self.bucket_name, self._normalize_name(relative_name)).load()
         except Exception:  # noqa: BLE001
             return False
         else:
