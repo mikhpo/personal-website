@@ -72,6 +72,7 @@ function install_configs() {
     export STORAGE_ROOT="${STORAGE_ROOT:-$project_root/storage}"
     envsubst "\$WORK_DIR \$SERVICE_USER" <"$systemd_template" | sudo tee "$service_file" >/dev/null
     envsubst "\$DOMAIN_NAME \$DJANGO_PORT \$STORAGE_ROOT" <"$nginx_template" | sudo tee "$sites_available" >/dev/null
+    sudo systemctl enable personal-website.service
     sudo systemctl daemon-reload
 }
 
