@@ -16,7 +16,7 @@ import sys
 import time
 from collections.abc import Callable
 from contextlib import redirect_stderr
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Any, TextIO
 
 from django.conf import settings
@@ -25,7 +25,7 @@ from django.core.management.base import CommandError
 from django.template.loader import render_to_string
 from typing_extensions import Self
 
-from backup.utils import BYTES_PER_KIB
+from backup.utils import BYTES_PER_KIB, now_local
 
 logger = logging.getLogger(__name__)
 
@@ -191,13 +191,13 @@ def report_subject(command: str, status: str, started: datetime) -> str:
     Args:
         command (str): Имя команды ("backup_db").
         status (str): Статус запуска (STATUS_OK или STATUS_FAIL).
-        started (datetime): Момент начала запуска (UTC).
+        started (datetime): Момент начала запуска (Europe/Moscow).
 
     Returns:
-        str: Тема вида "[personal-website] Бэкап: успех - backup (2026-08-30 23:01 UTC)".
+        str: Тема вида "[personal-website] Бэкап: успех - backup (2026-08-30 23:01 МСК)".
     """
     stamp = started.strftime("%Y-%m-%d %H:%M")
-    return f"[{PROJECT_NAME}] Бэкап: {status} - {command} ({stamp} UTC)"
+    return f"[{PROJECT_NAME}] Бэкап: {status} - {command} ({stamp} МСК)"
 
 
 def database_section_context(db: dict[str, Any]) -> dict[str, Any]:
@@ -284,7 +284,7 @@ def run_with_report(command: str, label: str, operation: Callable[[], dict[str, 
         operation (Callable[[], dict[str, Any]]): Выполняемая операция;
             словарь с ключами "db" и "media" и данными разделов отчета.
     """
-    started = datetime.now(timezone.utc)
+    started = now_local()
     monotonic_start = time.monotonic()
     failure: str | None = None
     result: dict[str, Any] = {}
@@ -304,7 +304,7 @@ def run_with_report(command: str, label: str, operation: Callable[[], dict[str, 
         "status": status,
         "label": label,
         "hostname": socket.gethostname(),
-        "started_text": f"{started.strftime('%Y-%m-%d %H:%M:%S')} UTC",
+        "started_text": f"{started.strftime('%Y-%m-%d %H:%M:%S')} МСК",
         "duration_text": format_duration(duration),
         "db": database_section_context(result["db"]) if result.get("db") else None,
         "media": media_section_context(result["media"]) if result.get("media") else None,

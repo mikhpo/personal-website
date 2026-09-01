@@ -31,7 +31,7 @@ psql … -c "SELECT version();"           # версия сервера
 
 ## Соглашение об имени файла
 
-`<база>_<дата>_<время>.dump`, где дата в формате ISO (`YYYY-MM-DD`), время - UTC в формате `HHMM`. Суффикс даты и времени обеспечивает лексикографическую сортировку от старых к новым. Пример: `personal_website_2026-08-25_1357.dump`.
+`<база>_<дата>_<время>.dump`, где дата в формате ISO (`YYYY-MM-DD`), время - МСК в формате `HHMM`. Суффикс даты и времени обеспечивает лексикографическую сортировку от старых к новым. Пример: `personal_website_2026-08-25_1657.dump`.
 
 Регулярные дампы системы бэкапов пишутся в `${BACKUP_ROOT}/db/` и копируются в `db/` каждой настроенной цели (см. [docs/deployment/backups.md](../../../docs/deployment/backups.md)); для разовых операций соглашение то же.
 
@@ -68,7 +68,7 @@ PGPASSWORD='<пароль>' bash scripts/pg-dump.sh \
 export PGPASSWORD='<пароль>'
 pg_dump -h <хост> -p <порт> -U <пользователь> -d <база> \
     -Fc --no-privileges --no-subscriptions --no-publications \
-    -f personal_website_$(date -u +%F_%H%M).dump
+    -f personal_website_$(date +%F_%H%M).dump
 ```
 
 ## Проверка дампа

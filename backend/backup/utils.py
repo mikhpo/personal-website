@@ -7,7 +7,8 @@
 """
 
 import shutil
-from datetime import datetime, timezone
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from django.conf import settings
 from django.core.management.base import CommandError
@@ -123,8 +124,13 @@ def mc_executable() -> str:
     return path
 
 
+def now_local() -> datetime:
+    """Текущее время в таймзоне проекта (settings.TIME_ZONE, Europe/Moscow)."""
+    return datetime.now(ZoneInfo(settings.TIME_ZONE))
+
+
 def dump_filename(db_name: str) -> str:
-    """Имя дампа: <база>_<дата>_<время>.dump в UTC.
+    """Имя дампа: <база>_<дата>_<время>.dump в МСК (Europe/Moscow).
 
     Дата и время в имени обеспечивают лексикографическую сортировку
     от старых к новым, на которую опирается latest_dump.
@@ -137,9 +143,9 @@ def dump_filename(db_name: str) -> str:
 
     Example:
         >>> dump_filename("personal_website")
-        'personal_website_2026-08-25_1357.dump'
+        'personal_website_2026-08-25_1657.dump'
     """
-    stamp = datetime.now(timezone.utc).strftime("%Y-%m-%d_%H%M")
+    stamp = now_local().strftime("%Y-%m-%d_%H%M")
     return f"{db_name}_{stamp}.dump"
 
 
