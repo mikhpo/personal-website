@@ -90,6 +90,16 @@ function install_packages() {
 }
 
 #######################################
+# Установить системную таймзону Europe/Moscow.
+# Расписание cron-задач задается в локальном времени хоста
+# (см. scripts/cronjobs.sh), поэтому таймзона должна быть
+# зафиксирована до установки cron-задач.
+#######################################
+function setup_timezone() {
+    sudo timedatectl set-timezone Europe/Moscow
+}
+
+#######################################
 # Выполнить настройку ufw (Uncomplicated Firewall).
 # Разрешить трафик через следующие порты:
 # - SSH
@@ -225,6 +235,7 @@ function main() {
     confirm_dotenv
     load_dotenv
     install_packages
+    setup_timezone
     enable_ufw
     install_docker
     login_docker

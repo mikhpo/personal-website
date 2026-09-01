@@ -155,6 +155,16 @@ function setup_locale() {
 }
 
 #######################################
+# Установить системную таймзону Europe/Moscow.
+# Расписание cron-задач задается в локальном времени хоста
+# (см. scripts/cronjobs.sh), поэтому таймзона должна быть
+# зафиксирована до установки cron-задач.
+#######################################
+function setup_timezone() {
+    sudo timedatectl set-timezone Europe/Moscow
+}
+
+#######################################
 # Создать каталоги данных из .env, если они заданы абсолютными путями.
 # Каталоги и их содержимое передаются сервис-пользователю: при переходе
 # с контейнерного запуска внутри могут остаться файлы, созданные
@@ -304,6 +314,7 @@ function main() {
     install_node
     install_minio
     setup_locale
+    setup_timezone
     create_data_directories
     install_project_dependencies
     fetch_postgres_cert

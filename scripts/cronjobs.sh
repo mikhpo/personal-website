@@ -36,6 +36,8 @@ else
 fi
 
 # Массив задач на добавление.
+# Время задач интерпретируется cron в системной таймзоне хоста;
+# setup-скрипты фиксируют ее значением Europe/Moscow.
 cron_jobs=(
     "1 23 * * * $bash $scripts/backup.sh backup >> $logs/backup.log 2>&1"
     "17 4 * * * $bash $scripts/docker/renew-cert.sh >> $logs/cert-renew.log 2>&1"

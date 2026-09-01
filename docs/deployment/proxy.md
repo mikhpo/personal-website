@@ -217,7 +217,7 @@ nginx не меняется никогда.
 
 Продление работает через webroot: запущенный nginx отвечает на проверки
 ACME из каталога nginx/acme-webroot, общий с certbot. Основной механизм -
-cron хоста (добавляется scripts/cronjobs.sh): ежедневно в 04:17
+cron хоста (добавляется scripts/cronjobs.sh): ежедневно в 04:17 МСК
 запускается [scripts/docker/renew-cert.sh](../../scripts/docker/renew-cert.sh) -
 `docker compose run --rm certbot renew --webroot -w /var/www/certbot`
 с последующей перезагрузкой конфигурации nginx; при неактивном профиле

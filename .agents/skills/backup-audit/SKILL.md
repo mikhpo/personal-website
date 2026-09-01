@@ -49,7 +49,7 @@ bash scripts/backup.sh backup --verify
 ### 3. Расписание и логи
 
 - расписание существует: `crontab -l` (строка scripts/cronjobs.sh,
-  запуск `backup` в 23:01) либо `systemctl list-timers` (юнит
+  запуск `backup` в 23:01 МСК) либо `systemctl list-timers` (юнит
   personal-website-backup.timer); одновременно оба механизма не ведут;
 - лог `${LOGS_ROOT}/backup.log` (cron) или `journalctl -u
   personal-website-backup.service` (timer): запуски происходят по

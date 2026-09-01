@@ -157,13 +157,16 @@ bash scripts/backup.sh restore_media OFFSITE           # медиа из storage
 
 Основной механизм - cron хоста через
 [scripts/cronjobs.sh](../../scripts/cronjobs.sh) (добавляется
-установщиками): ежедневный запуск `backup` в 23:01, вывод - в
-`${LOGS_ROOT}/backup.log`. Добавление идемпотентно: повторный запуск
-не дублирует задачу в crontab.
+установщиками): ежедневный запуск `backup` в 23:01 МСК, вывод - в
+`${LOGS_ROOT}/backup.log`. Время в crontab интерпретируется в системной
+таймзоне хоста - установщики фиксируют ее значением Europe/Moscow
+(scripts/server/setup.sh, scripts/docker/setup.sh). Добавление
+идемпотентно: повторный запуск не дублирует задачу в crontab.
 
 Альтернатива - systemd timer: он догоняет пропущенные при выключенном
 сервере запуски и пишет логи в journal. Механизмы равноправны,
 в scripts/ дублируется только cron. Юниты создаются вручную.
+Время OnCalendar, как и у cron, задается в системной таймзоне хоста.
 
 `/etc/systemd/system/personal-website-backup.service`:
 
