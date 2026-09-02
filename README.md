@@ -275,4 +275,4 @@ React компоненты рендерятся в Django шаблонах че�
 * [Способы развертывания и инструкции](./docs/deployment/matrix.md)
 * [Руководство по разработке](./docs/CONTRIBUTING.md)
 * [История изменений](./docs/CHANGELOG.md)
-* [Зеркала репозитория](./docs/CONTRIBUTING.md#cicd): GitHub и SourceCraft синхронизируются автоматически (main и теги)
+* [Зеркала репозитория](./docs/CONTRIBUTING.md): GitHub и SourceCraft синхронизируются автоматически (main и теги)
