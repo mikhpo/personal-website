@@ -39,6 +39,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="tools/sync_mirrors.py",
         description="Синхронизация ветки и тегов между зеркалами репозитория.",
+        add_help=True,
     )
     parser.add_argument("branch", nargs="?", default="main", help="имя ветки (по умолчанию main)")
     return parser
