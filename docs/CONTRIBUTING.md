@@ -183,7 +183,7 @@ Workflows SourceCraft ([.sourcecraft/ci.yaml](../.sourcecraft/ci.yaml)):
 3. build-workflow - сборка и тестирование образа приложения, при pull request
 4. release-workflow - релиз Docker-образа, при пуше в основную ветку
 5. deploy-workflow - деплой приложения на сервер, запускается вручную
-6. trunk-workflow - синхронизация зеркал, при пуше в основную ветку и тегов и по расписанию
+6. trunk-workflow - синхронизация зеркал, при пуше в основную ветку и тегов
 
 Workflows GitHub Actions ([.github/workflows/](../.github/workflows/)): test.yml - тестирование кода и контейнера, release.yml - публикация образа в реестрах, deploy.yml - деплой на сервер, trunk.yml - синхронизация зеркал.
 
