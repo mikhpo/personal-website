@@ -2,17 +2,22 @@
 """Синхронизация ветки и тегов между зеркалами репозитория (GitHub и SourceCraft).
 
 Скрипт сравнивает состояния ветки и тегов всех зеркал списка PEERS и доставляет
-отстающим только fast-forward push. Имя ветки - опциональный первый аргумент,
-по умолчанию main; теги синхронизируются при каждом запуске. Неосновные ветки
-синхронизируются ручными прогонами; в CI скрипт вызывается без аргумента
-(только main). Состояния получаются fetch-ем в служебные namespaced-рефы
-refs/sync/ текущего репозитория и удаляются при завершении; временные файлы
-и каталоги не создаются. При расхождении ветки или конфликте тегов завершается
-с кодом 1 и диагностикой, ничего не меняя; ошибка git или сети - код 2; полная
-синхронность или выполненная доставка - код 0. Аутентификация (SSH)
-настраивается в окружении вызова.
+отстающим только fast-forward push. Неосновные ветки синхронизируются ручными
+прогонами; в CI скрипт вызывается без имени ветки (только main). Состояния
+получаются fetch-ем в служебные namespaced-рефы refs/sync/ текущего репозитория
+и удаляются при завершении; временные файлы и каталоги не создаются. При
+расхождении ветки или конфликте тегов завершается с кодом 1 и диагностикой,
+ничего не меняя; ошибка вызова, git или сети - код 2; полная синхронность или
+выполненная доставка - код 0. Аутентификация (SSH) настраивается в окружении вызова.
+
+Примеры вызова:
+
+    tools/sync_mirrors.py              # синхронизировать main и теги
+    tools/sync_mirrors.py dev          # синхронизировать ветку dev и теги
+    tools/sync_mirrors.py -h           # справка по вызову
 """
 
+import argparse
 import shutil
 import subprocess
 import sys
@@ -28,8 +33,15 @@ EXIT_OK = 0
 EXIT_DIVERGED = 1
 EXIT_ERROR = 2
 
-USAGE = "Использование: sync_mirrors.py [имя-ветки]"
-MAX_ARG_COUNT = 2  # имя скрипта + опциональное имя ветки
+
+def build_parser() -> argparse.ArgumentParser:
+    """Собрать парсер аргументов: опциональное имя ветки и штатная справка -h/--help."""
+    parser = argparse.ArgumentParser(
+        prog="tools/sync_mirrors.py",
+        description="Синхронизация ветки и тегов между зеркалами репозитория.",
+    )
+    parser.add_argument("branch", nargs="?", default="main", help="имя ветки (по умолчанию main)")
+    return parser
 
 
 def log(message: str) -> None:
@@ -38,16 +50,9 @@ def log(message: str) -> None:
 
 
 def fail_operational(message: str) -> NoReturn:
-    """Сообщить об ошибке вызова, git или сети и завершить скрипт с кодом 2."""
+    """Сообщить об ошибке git или сети и завершить скрипт с кодом 2."""
     sys.stderr.write(f"Ошибка: {message}\n")
     sys.exit(EXIT_ERROR)
-
-
-def read_branch() -> str:
-    """Вернуть имя ветки из первого опционального аргумента; лишние аргументы запрещены."""
-    if len(sys.argv) > MAX_ARG_COUNT:
-        fail_operational(f"принимается не более одного аргумента. {USAGE}")
-    return sys.argv[1] if len(sys.argv) == MAX_ARG_COUNT else "main"
 
 
 def git_binary() -> str:
@@ -224,7 +229,9 @@ def sync_tags() -> None:
 
 def main() -> int:
     """Выполнить синхронизацию зеркал и вернуть код завершения."""
-    branch = read_branch()
+    parser = build_parser()
+    args = parser.parse_args()
+    branch = args.branch
     try:
         names = ", ".join(name for name, _ in PEERS)
         log(f"Синхронизация ветки {branch} и тегов зеркал: {names}")
