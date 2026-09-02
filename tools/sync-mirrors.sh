@@ -2,11 +2,13 @@
 #
 # Синхронизировать main и теги между зеркалами репозитория (GitHub и SourceCraft).
 #
-# Скрипт сравнивает состояния main и тегов всех зеркал списка PEERS во временном
-# bare-репозитории и доставляет отстающим только fast-forward push. При расхождении
-# main или конфликте тегов завершается с кодом 1 и диагностикой, ничего не меняя;
-# ошибка git или сети - код 2; полная синхронность или выполненная доставка - код 0.
-# Аргументов и флагов нет; аутентификация (SSH) настраивается в окружении вызова.
+# Скрипт сравнивает состояния main и тегов всех зеркал списка PEERS и доставляет
+# отстающим только fast-forward push. Состояния получаются fetch-ем в служебные
+# namespaced-рефы refs/sync/ текущего репозитория и удаляются при завершении;
+# временные файлы и каталоги не создаются. При расхождении main или конфликте тегов
+# завершается с кодом 1 и диагностикой, ничего не меняя; ошибка git или сети - код 2;
+# полная синхронность или выполненная доставка - код 0. Аргументов и флагов нет;
+# аутентификация (SSH) настраивается в окружении вызова.
 
 set -euo pipefail
 
@@ -26,32 +28,43 @@ die() {
     exit "$1"
 }
 
-# Выполнить git в репозитории $1; падение команды - операционная ошибка с кодом 2.
+# Выполнить git в текущем репозитории; падение команды - операционная ошибка с кодом 2.
 run_git() {
-    local dir=$1
-    shift
-    if ! git -C "$dir" "$@"; then
+    if ! git "$@"; then
         die 2 "команда git $* завершилась с ошибкой"
     fi
 }
 
-# Получить main и теги зеркала в namespaced-рефы временного репозитория.
+# Удалить служебные refs/sync/* текущего репозитория; выполняется при любом завершении.
+cleanup_refs() {
+    local ref
+    while IFS= read -r ref; do
+        if [ -z "$ref" ]; then
+            continue
+        fi
+        if ! git update-ref -d "$ref" 2>/dev/null; then
+            log "Не удалось удалить служебный ref $ref при очистке."
+        fi
+    done < <(git for-each-ref --format='%(refname)' refs/sync)
+}
+trap cleanup_refs EXIT
+
+# Получить main и теги зеркала в namespaced-рефы текущего репозитория.
 fetch_peer() {
-    local dir=$1 name=$2 url=$3
+    local name=$1 url=$2
     log "Получение main и тегов зеркала $name..."
-    run_git "$dir" fetch --no-tags --quiet "$url" \
+    run_git fetch --no-tags --quiet "$url" \
         "+refs/heads/main:refs/sync/$name/main" \
         "+refs/tags/*:refs/sync/$name/tags/*"
 }
 
 # Синхронизировать main: доставить отстающим зеркалам вершину, потомка всех остальных состояний.
 sync_main() {
-    local dir=$1
     local -a names=() urls=() shas=()
     local entry name url sha tip="" tip_sha="" found rc i j pushed=0
     for entry in "${PEERS[@]}"; do
         IFS='|' read -r name url <<< "$entry"
-        if ! sha=$(git -C "$dir" rev-parse --verify "refs/sync/$name/main"); then
+        if ! sha=$(git rev-parse --verify "refs/sync/$name/main"); then
             die 2 "не получено состояние main зеркала $name"
         fi
         names+=("$name")
@@ -65,7 +78,7 @@ sync_main() {
                 continue
             fi
             rc=0
-            git -C "$dir" merge-base --is-ancestor "${shas[j]}" "${shas[i]}" || rc=$?
+            git merge-base --is-ancestor "${shas[j]}" "${shas[i]}" || rc=$?
             if [ "$rc" -gt 1 ]; then
                 die 2 "сравнение состояний main зеркал ${names[j]} и ${names[i]} завершилось с ошибкой"
             fi
@@ -93,7 +106,7 @@ sync_main() {
             continue
         fi
         log "Зеркало ${names[i]} отстает по main; отправка ${tip_sha}..."
-        run_git "$dir" push --quiet "${urls[i]}" "${tip_sha}:refs/heads/main"
+        run_git push --quiet "${urls[i]}" "${tip_sha}:refs/heads/main"
         pushed=1
     done
     if [ "$pushed" -eq 1 ]; then
@@ -105,9 +118,8 @@ sync_main() {
 
 # Синхронизировать теги: доставить отсутствующим зеркалам; разные состояния одного тега - конфликт.
 sync_tags() {
-    local dir=$1
     local norm tag lines count src entry name url pushed=0
-    norm=$(git -C "$dir" for-each-ref --format='%(refname) %(objectname)' 'refs/sync/*/tags/*' \
+    norm=$(git for-each-ref --format='%(refname) %(objectname)' 'refs/sync/*/tags/*' \
         | awk '{ n=split($1, p, "/"); t=""; for (k=5; k<=n; k++) t=t (k>5 ? "/" : "") p[k]; print p[3], t, $2 }')
     while IFS= read -r tag; do
         if [ -z "$tag" ]; then
@@ -128,7 +140,7 @@ sync_tags() {
                 continue
             fi
             log "Тег $tag отсутствует на зеркале $name; отправка..."
-            run_git "$dir" push --quiet "$url" "refs/sync/$src/tags/$tag:refs/tags/$tag"
+            run_git push --quiet "$url" "refs/sync/$src/tags/$tag:refs/tags/$tag"
             pushed=1
         done
     done < <(printf '%s\n' "$norm" | awk 'NF {print $2}' | sort -u)
@@ -139,17 +151,12 @@ sync_tags() {
     fi
 }
 
-work=$(mktemp -d)
-trap 'rm -rf "$work"' EXIT
-repo="$work/repo.git"
-run_git "$work" -c init.defaultBranch=main init --bare --quiet repo.git
-
 names_list=$(printf '%s, ' "${PEERS[@]%%|*}")
 log "Синхронизация main и тегов зеркал: ${names_list%, }"
 for entry in "${PEERS[@]}"; do
     IFS='|' read -r name url <<< "$entry"
-    fetch_peer "$repo" "$name" "$url"
+    fetch_peer "$name" "$url"
 done
-sync_main "$repo"
-sync_tags "$repo"
+sync_main
+sync_tags
 log "Синхронизация завершена."

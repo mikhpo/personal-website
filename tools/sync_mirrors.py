@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 """Синхронизация main и тегов между зеркалами репозитория (GitHub и SourceCraft).
 
-Скрипт сравнивает состояния main и тегов всех зеркал списка PEERS во временном
-bare-репозитории и доставляет отстающим только fast-forward push. При расхождении
-main или конфликте тегов завершается с кодом 1 и диагностикой, ничего не меняя;
-ошибка git или сети - код 2; полная синхронность или выполненная доставка - код 0.
-Аргументов и флагов нет; аутентификация (SSH) настраивается в окружении вызова.
+Скрипт сравнивает состояния main и тегов всех зеркал списка PEERS и доставляет
+отстающим только fast-forward push. Состояния получаются fetch-ем в служебные
+namespaced-рефы refs/sync/ текущего репозитория и удаляются при завершении;
+временные файлы и каталоги не создаются. При расхождении main или конфликте тегов
+завершается с кодом 1 и диагностикой, ничего не меняя; ошибка git или сети - код 2;
+полная синхронность или выполненная доставка - код 0. Аргументов и флагов нет;
+аутентификация (SSH) настраивается в окружении вызова.
 """
 
 import shutil
 import subprocess
 import sys
-import tempfile
-from pathlib import Path
 from typing import NoReturn
 
 # Зеркала как пары «метка - URL»; добавление платформы - новая запись в списке.
@@ -45,19 +45,32 @@ def git_binary() -> str:
     return git
 
 
-def run_git(repo: Path, *args: str) -> subprocess.CompletedProcess[str]:
-    """Выполнить git в репозитории; падение команды завершает скрипт с кодом 2."""
-    result = subprocess.run([git_binary(), "-C", str(repo), *args], capture_output=True, text=True, check=False)
+def run_git(*args: str) -> subprocess.CompletedProcess[str]:
+    """Выполнить git в текущем репозитории; падение команды завершает скрипт с кодом 2."""
+    result = subprocess.run([git_binary(), *args], capture_output=True, text=True, check=False)
     if result.returncode != 0:
         fail_operational(f"git {' '.join(args)}: {result.stderr.strip()}")
     return result
 
 
-def fetch_peer(repo: Path, name: str, url: str) -> None:
-    """Получить main и теги зеркала в namespaced-рефы временного репозитория."""
+def cleanup_sync_refs() -> None:
+    """Удалить служебные refs/sync/* текущего репозитория; выполняется при любом завершении."""
+    refs = run_git("for-each-ref", "--format=%(refname)", "refs/sync").stdout.splitlines()
+    for ref in refs:
+        deleted = subprocess.run(
+            [git_binary(), "update-ref", "-d", ref],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if deleted.returncode != 0:
+            log(f"Не удалось удалить служебный ref {ref} при очистке: {deleted.stderr.strip()}")
+
+
+def fetch_peer(name: str, url: str) -> None:
+    """Получить main и теги зеркала в namespaced-рефы текущего репозитория."""
     log(f"Получение main и тегов зеркала {name}...")
     run_git(
-        repo,
         "fetch",
         "--no-tags",
         "--quiet",
@@ -67,10 +80,10 @@ def fetch_peer(repo: Path, name: str, url: str) -> None:
     )
 
 
-def is_ancestor(repo: Path, older: str, younger: str) -> bool:
+def is_ancestor(older: str, younger: str) -> bool:
     """Проверить, является ли состояние older предком younger; ошибка git завершает скрипт."""
     result = subprocess.run(
-        [git_binary(), "-C", str(repo), "merge-base", "--is-ancestor", older, younger],
+        [git_binary(), "merge-base", "--is-ancestor", older, younger],
         capture_output=True,
         text=True,
         check=False,
@@ -80,11 +93,11 @@ def is_ancestor(repo: Path, older: str, younger: str) -> bool:
     return result.returncode == 0
 
 
-def find_tip(repo: Path, shas: dict[str, str]) -> str | None:
+def find_tip(shas: dict[str, str]) -> str | None:
     """Вернуть метку зеркала, состояние которого является потомком всех остальных, или None."""
     for candidate, candidate_sha in shas.items():
         others = (sha for name, sha in shas.items() if name != candidate)
-        if all(is_ancestor(repo, other, candidate_sha) for other in others):
+        if all(is_ancestor(other, candidate_sha) for other in others):
             return candidate
     return None
 
@@ -101,13 +114,13 @@ def fail_main_divergence(shas: dict[str, str]) -> NoReturn:
     sys.exit(EXIT_DIVERGED)
 
 
-def sync_main(repo: Path) -> None:
+def sync_main() -> None:
     """Синхронизировать main: доставить отстающим зеркалам вершину, потомка всех остальных состояний."""
     shas = {}
     for name, _ in PEERS:
-        result = run_git(repo, "rev-parse", "--verify", f"refs/sync/{name}/main")
+        result = run_git("rev-parse", "--verify", f"refs/sync/{name}/main")
         shas[name] = result.stdout.strip()
-    tip = find_tip(repo, shas)
+    tip = find_tip(shas)
     if tip is None:
         fail_main_divergence(shas)
     tip_sha = shas[tip]
@@ -116,7 +129,7 @@ def sync_main(repo: Path) -> None:
         if name == tip or shas[name] == tip_sha:
             continue
         log(f"Зеркало {name} отстает по main; отправка {tip_sha}...")
-        run_git(repo, "push", "--quiet", url, f"{tip_sha}:refs/heads/main")
+        run_git("push", "--quiet", url, f"{tip_sha}:refs/heads/main")
         pushed = True
     log("main синхронизирован fast-forward push-ем." if pushed else "main у всех зеркал совпадает.")
 
@@ -130,9 +143,9 @@ def fail_tag_conflict(tag: str, states: dict[str, str]) -> NoReturn:
     sys.exit(EXIT_DIVERGED)
 
 
-def collect_tag_states(repo: Path) -> dict[str, dict[str, str]]:
+def collect_tag_states() -> dict[str, dict[str, str]]:
     """Вернуть состояния тегов: имя тега -> метка зеркала -> SHA."""
-    result = run_git(repo, "for-each-ref", "--format=%(refname) %(objectname)", "refs/sync/*/tags/*")
+    result = run_git("for-each-ref", "--format=%(refname) %(objectname)", "refs/sync/*/tags/*")
     states: dict[str, dict[str, str]] = {}
     for line in result.stdout.splitlines():
         refname, sha = line.split(" ")
@@ -141,9 +154,9 @@ def collect_tag_states(repo: Path) -> dict[str, dict[str, str]]:
     return states
 
 
-def sync_tags(repo: Path) -> None:
+def sync_tags() -> None:
     """Синхронизировать теги: доставить отсутствующим зеркалам; разные состояния одного тега - конфликт."""
-    states_by_tag = collect_tag_states(repo)
+    states_by_tag = collect_tag_states()
     pushed = False
     for tag in sorted(states_by_tag):
         states = states_by_tag[tag]
@@ -154,23 +167,22 @@ def sync_tags(repo: Path) -> None:
             if name in states:
                 continue
             log(f"Тег {tag} отсутствует на зеркале {name}; отправка...")
-            run_git(repo, "push", "--quiet", url, f"refs/sync/{source}/tags/{tag}:refs/tags/{tag}")
+            run_git("push", "--quiet", url, f"refs/sync/{source}/tags/{tag}:refs/tags/{tag}")
             pushed = True
     log("Теги синхронизированы." if pushed else "Теги у всех зеркал совпадают.")
 
 
 def main() -> int:
     """Выполнить синхронизацию зеркал и вернуть код завершения."""
-    names = ", ".join(name for name, _ in PEERS)
-    log(f"Синхронизация main и тегов зеркал: {names}")
-    with tempfile.TemporaryDirectory(prefix="sync-mirrors-") as tmp:
-        base = Path(tmp)
-        run_git(base, "-c", "init.defaultBranch=main", "init", "--bare", "--quiet", "repo.git")
-        repo = base / "repo.git"
+    try:
+        names = ", ".join(name for name, _ in PEERS)
+        log(f"Синхронизация main и тегов зеркал: {names}")
         for name, url in PEERS:
-            fetch_peer(repo, name, url)
-        sync_main(repo)
-        sync_tags(repo)
+            fetch_peer(name, url)
+        sync_main()
+        sync_tags()
+    finally:
+        cleanup_sync_refs()
     log("Синхронизация завершена.")
     return EXIT_OK
 
