@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
-"""Синхронизация main и тегов между зеркалами репозитория (GitHub и SourceCraft).
+"""Синхронизация ветки и тегов между зеркалами репозитория (GitHub и SourceCraft).
 
-Скрипт сравнивает состояния main и тегов всех зеркал списка PEERS и доставляет
-отстающим только fast-forward push. Состояния получаются fetch-ем в служебные
-namespaced-рефы refs/sync/ текущего репозитория и удаляются при завершении;
-временные файлы и каталоги не создаются. При расхождении main или конфликте тегов
-завершается с кодом 1 и диагностикой, ничего не меняя; ошибка git или сети - код 2;
-полная синхронность или выполненная доставка - код 0. Аргументов и флагов нет;
-аутентификация (SSH) настраивается в окружении вызова.
+Скрипт сравнивает состояния ветки и тегов всех зеркал списка PEERS и доставляет
+отстающим только fast-forward push. Имя ветки - опциональный первый аргумент,
+по умолчанию main; теги синхронизируются при каждом запуске. Неосновные ветки
+синхронизируются ручными прогонами; в CI скрипт вызывается без аргумента
+(только main). Состояния получаются fetch-ем в служебные namespaced-рефы
+refs/sync/ текущего репозитория и удаляются при завершении; временные файлы
+и каталоги не создаются. При расхождении ветки или конфликте тегов завершается
+с кодом 1 и диагностикой, ничего не меняя; ошибка git или сети - код 2; полная
+синхронность или выполненная доставка - код 0. Аутентификация (SSH)
+настраивается в окружении вызова.
 """
 
 import shutil
@@ -25,6 +28,9 @@ EXIT_OK = 0
 EXIT_DIVERGED = 1
 EXIT_ERROR = 2
 
+USAGE = "Использование: sync_mirrors.py [имя-ветки]"
+MAX_ARG_COUNT = 2  # имя скрипта + опциональное имя ветки
+
 
 def log(message: str) -> None:
     """Напечатать сообщение прогресса."""
@@ -32,9 +38,16 @@ def log(message: str) -> None:
 
 
 def fail_operational(message: str) -> NoReturn:
-    """Сообщить об операционной ошибке git или сети и завершить скрипт с кодом 2."""
+    """Сообщить об ошибке вызова, git или сети и завершить скрипт с кодом 2."""
     sys.stderr.write(f"Ошибка: {message}\n")
     sys.exit(EXIT_ERROR)
+
+
+def read_branch() -> str:
+    """Вернуть имя ветки из первого опционального аргумента; лишние аргументы запрещены."""
+    if len(sys.argv) > MAX_ARG_COUNT:
+        fail_operational(f"принимается не более одного аргумента. {USAGE}")
+    return sys.argv[1] if len(sys.argv) == MAX_ARG_COUNT else "main"
 
 
 def git_binary() -> str:
@@ -67,17 +80,37 @@ def cleanup_sync_refs() -> None:
             log(f"Не удалось удалить служебный ref {ref} при очистке: {deleted.stderr.strip()}")
 
 
-def fetch_peer(name: str, url: str) -> None:
-    """Получить main и теги зеркала в namespaced-рефы текущего репозитория."""
-    log(f"Получение main и тегов зеркала {name}...")
-    run_git(
-        "fetch",
-        "--no-tags",
-        "--quiet",
-        url,
-        f"+refs/heads/main:refs/sync/{name}/main",
-        f"+refs/tags/*:refs/sync/{name}/tags/*",
+def fetch_peer(name: str, url: str, branch: str) -> None:
+    """Получить ветку и теги зеркала в namespaced-рефы текущего репозитория.
+
+    Ветка может существовать не на всех зеркалах, а fetch по refspec отсутствующей
+    ветки падает целиком, поэтому наличие проверяется ls-remote; у зеркала без ветки
+    получаются только теги.
+    """
+    listing = run_git("ls-remote", "--heads", url, f"refs/heads/{branch}")
+    has_branch = bool(listing.stdout.split())
+    if has_branch:
+        log(f"Получение ветки {branch} и тегов зеркала {name}...")
+        refspecs = [f"+refs/heads/{branch}:refs/sync/{name}/{branch}"]
+    else:
+        log(f"Ветки {branch} нет на зеркале {name}; получение тегов.")
+        refspecs = []
+    run_git("fetch", "--no-tags", "--quiet", url, *refspecs, f"+refs/tags/*:refs/sync/{name}/tags/*")
+
+
+def ref_sha(ref: str) -> str | None:
+    """Вернуть SHA рефа текущего репозитория или None, если рефа нет; ошибка git завершает скрипт."""
+    result = subprocess.run(
+        [git_binary(), "rev-parse", "--verify", "--quiet", ref],
+        capture_output=True,
+        text=True,
+        check=False,
     )
+    if result.returncode == 0:
+        return result.stdout.strip()
+    if result.returncode == 1:
+        return None
+    fail_operational(f"git rev-parse --verify {ref}: {result.stderr.strip()}")
 
 
 def is_ancestor(older: str, younger: str) -> bool:
@@ -102,9 +135,9 @@ def find_tip(shas: dict[str, str]) -> str | None:
     return None
 
 
-def fail_main_divergence(shas: dict[str, str]) -> NoReturn:
-    """Напечатать диагностику расхождения main и завершить скрипт с кодом 1."""
-    log("Расхождение main между зеркалами; синхронизация не выполнена:")
+def fail_main_divergence(branch: str, shas: dict[str, str]) -> NoReturn:
+    """Напечатать диагностику расхождения ветки и завершить скрипт с кодом 1."""
+    log(f"Расхождение ветки {branch} между зеркалами; синхронизация не выполнена:")
     for name, sha in shas.items():
         log(f"  {name} - {sha}")
     log(
@@ -114,24 +147,39 @@ def fail_main_divergence(shas: dict[str, str]) -> NoReturn:
     sys.exit(EXIT_DIVERGED)
 
 
-def sync_main() -> None:
-    """Синхронизировать main: доставить отстающим зеркалам вершину, потомка всех остальных состояний."""
-    shas = {}
+def sync_main(branch: str) -> None:
+    """Синхронизировать ветку: доставить отстающим и не имеющим ее зеркалам вершину, потомка остальных.
+
+    Отсутствие ветки на зеркале - крайний случай отставания: ветка доставляется созданием
+    (без force, удалений нет). Если ветки нет ни на одном зеркале, синхронизация ветки
+    пропускается.
+    """
+    shas: dict[str, str] = {}
     for name, _ in PEERS:
-        result = run_git("rev-parse", "--verify", f"refs/sync/{name}/main")
-        shas[name] = result.stdout.strip()
+        sha = ref_sha(f"refs/sync/{name}/{branch}")
+        if sha is not None:
+            shas[name] = sha
+    if not shas:
+        log(f"Ветки {branch} нет ни на одном зеркале; синхронизация ветки пропущена.")
+        return
     tip = find_tip(shas)
     if tip is None:
-        fail_main_divergence(shas)
+        fail_main_divergence(branch, shas)
     tip_sha = shas[tip]
     pushed = False
     for name, url in PEERS:
-        if name == tip or shas[name] == tip_sha:
+        if shas.get(name) == tip_sha:
             continue
-        log(f"Зеркало {name} отстает по main; отправка {tip_sha}...")
-        run_git("push", "--quiet", url, f"{tip_sha}:refs/heads/main")
+        if name in shas:
+            log(f"Зеркало {name} отстает по ветке {branch}; отправка {tip_sha}...")
+        else:
+            log(f"Ветки {branch} нет на зеркале {name}; отправка...")
+        run_git("push", "--quiet", url, f"{tip_sha}:refs/heads/{branch}")
         pushed = True
-    log("main синхронизирован fast-forward push-ем." if pushed else "main у всех зеркал совпадает.")
+    if pushed:
+        log(f"Ветка {branch} синхронизирована fast-forward push-ем.")
+    else:
+        log(f"Ветка {branch} у всех зеркал совпадает.")
 
 
 def fail_tag_conflict(tag: str, states: dict[str, str]) -> NoReturn:
@@ -145,11 +193,13 @@ def fail_tag_conflict(tag: str, states: dict[str, str]) -> NoReturn:
 
 def collect_tag_states() -> dict[str, dict[str, str]]:
     """Вернуть состояния тегов: имя тега -> метка зеркала -> SHA."""
-    result = run_git("for-each-ref", "--format=%(refname) %(objectname)", "refs/sync/*/tags/*")
+    result = run_git("for-each-ref", "--format=%(refname) %(objectname)", "refs/sync")
     states: dict[str, dict[str, str]] = {}
     for line in result.stdout.splitlines():
         refname, sha = line.split(" ")
         parts = refname.split("/")
+        if parts[3] != "tags":
+            continue
         states.setdefault("/".join(parts[4:]), {})[parts[2]] = sha
     return states
 
@@ -174,12 +224,13 @@ def sync_tags() -> None:
 
 def main() -> int:
     """Выполнить синхронизацию зеркал и вернуть код завершения."""
+    branch = read_branch()
     try:
         names = ", ".join(name for name, _ in PEERS)
-        log(f"Синхронизация main и тегов зеркал: {names}")
+        log(f"Синхронизация ветки {branch} и тегов зеркал: {names}")
         for name, url in PEERS:
-            fetch_peer(name, url)
-        sync_main()
+            fetch_peer(name, url, branch)
+        sync_main(branch)
         sync_tags()
     finally:
         cleanup_sync_refs()
