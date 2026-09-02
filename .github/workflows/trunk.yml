@@ -1,0 +1,41 @@
+name: Trunk sync
+
+on:
+  push:
+    branches: [main]
+    tags: ['**']
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: trunk-sync
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  sync-repositories:
+    name: Sync repositories
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Sync repositories
+        id: sync
+        continue-on-error: true
+        env:
+          SYNC_SOURCECRAFT_SSH_KEY: ${{ secrets.SYNC_SOURCECRAFT_SSH_KEY }}
+        run: |
+          ssh-add - <<< "$SYNC_SOURCECRAFT_SSH_KEY"
+          export GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=accept-new"
+          python tools/sync_mirrors.py
+
+      - name: Sync failure notice
+        if: steps.sync.outcome == 'failure'
+        run: |
+          echo "::warning::Синхронизация зеркал завершилась с ошибкой - работа конвейера не прервана. Подробности в логе шага Sync repositories."

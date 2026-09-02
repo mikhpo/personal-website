@@ -174,7 +174,7 @@ Poetry сконфигурирован таким образом, чтобы ви
 
 ## CI/CD
 
-Проект использует две системы автоматизации: SourceCraft CI (тестирование, сборка, релиз и деплой) и GitHub Actions (зеркало для проверки кода и сборки образов). Развертывание на сервере выполняет deploy-workflow SourceCraft вызовом `scripts/deploy.sh` в каталоге из секрета PROJECT_DIR; значение задается секретами обеих платформ и должно совпадать с путем рабочей копии репозитория на сервере.
+Проект использует две системы автоматизации: SourceCraft CI (тестирование, сборка, релиз и деплой) и GitHub Actions (зеркало для проверки кода, сборки образов и синхронизации). Развертывание на сервере выполняет deploy-workflow SourceCraft вызовом `scripts/deploy.sh` в каталоге из секрета PROJECT_DIR; значение задается секретами обеих платформ и должно совпадать с путем рабочей копии репозитория на сервере.
 
 Workflows SourceCraft ([.sourcecraft/ci.yaml](../.sourcecraft/ci.yaml)):
 
@@ -183,10 +183,13 @@ Workflows SourceCraft ([.sourcecraft/ci.yaml](../.sourcecraft/ci.yaml)):
 3. build-workflow - сборка и тестирование образа приложения, при pull request
 4. release-workflow - релиз Docker-образа, при пуше в основную ветку
 5. deploy-workflow - деплой приложения на сервер, запускается вручную
+6. trunk-workflow - синхронизация зеркал, при пуше в основную ветку и тегов и по расписанию
 
-Workflows GitHub Actions ([.github/workflows/](../.github/workflows/)): test.yml - тестирование кода и контейнера, release.yml - публикация образа в реестры, deploy.yml - деплой на сервер.
+Workflows GitHub Actions ([.github/workflows/](../.github/workflows/)): test.yml - тестирование кода и контейнера, release.yml - публикация образа в реестрах, deploy.yml - деплой на сервер, trunk.yml - синхронизация зеркал.
 
 Состав задач и требуемые секреты перечислены в комментариях файлов конфигурации соответствующих workflow.
+
+Зеркала GitHub и SourceCraft синхронизируются автоматически для основной ветки и тегов скриптом `tools/sync_mirrors.py`: SourceCraft CI пушит в GitHub по деплой-ключу (секрет SYNC_GITHUB_SSH_KEY), GitHub Actions - в SourceCraft (секрет SYNC_SOURCECRAFT_SSH_KEY). Обе обертки доставляют ключ в ssh-agent через stdin и не создают файлов с ключами; проверка хостов выполняется с параметром StrictHostKeyChecking=accept-new. Повторный запуск безопасен: при совпадении платформ скрипт не выполняет действий, поэтому синхронизация не зацикливается. Сбой синхронизации не прерывает конвейер - в лог пишется предупреждение.
 
 ## Хуки в Git
 
