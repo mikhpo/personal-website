@@ -35,6 +35,9 @@ EXIT_OK = 0
 EXIT_DIVERGED = 1
 EXIT_ERROR = 2
 
+# Минимальное число сегментов ссылки тега: refs/sync/<зеркало>/tags/<тег>.
+MIN_TAG_REF_PARTS = 5
+
 
 def build_parser() -> argparse.ArgumentParser:
     """Собрать парсер аргументов: опциональное имя ветки и штатная справка -h/--help."""
@@ -66,9 +69,14 @@ def git_binary() -> str:
     return git
 
 
+def try_git(*args: str) -> subprocess.CompletedProcess[str]:
+    """Выполнить команду git и вернуть результат независимо от кода возврата."""
+    return subprocess.run([git_binary(), *args], capture_output=True, text=True, check=False)
+
+
 def run_git(*args: str) -> subprocess.CompletedProcess[str]:
     """Выполнить команду git в текущем репозитории. Падение команды завершает скрипт с кодом 2."""
-    result = subprocess.run([git_binary(), *args], capture_output=True, text=True, check=False)
+    result = try_git(*args)
     if result.returncode != 0:
         fail_operational(f"git {' '.join(args)}: {result.stderr.strip()}")
     return result
@@ -78,16 +86,12 @@ def cleanup_sync_refs() -> None:
     """Удалить служебные ссылки refs/sync из текущего репозитория.
 
     Эти ссылки временно хранят загруженные состояния зеркал. Очистка выполняется
-    при любом завершении скрипта, в том числе после ошибок.
+    при любом завершении скрипта, в том числе после ошибок, и обязана быть
+    терпимой к неудаче: неудачное удаление не должно завершать скрипт с ошибкой.
     """
     refs = run_git("for-each-ref", "--format=%(refname)", "refs/sync").stdout.splitlines()
     for ref in refs:
-        deleted = subprocess.run(
-            [git_binary(), "update-ref", "-d", ref],
-            capture_output=True,
-            text=True,
-            check=False,
-        )
+        deleted = try_git("update-ref", "-d", ref)
         if deleted.returncode != 0:
             log(f"Не удалось удалить служебный ref {ref} при очистке: {deleted.stderr.strip()}")
 
@@ -112,12 +116,7 @@ def fetch_peer(name: str, url: str, branch: str) -> None:
 
 def ref_sha(ref: str) -> str | None:
     """Вернуть SHA ссылки текущего репозитория или None, если ссылки нет. Ошибка git завершает скрипт с кодом 2."""
-    result = subprocess.run(
-        [git_binary(), "rev-parse", "--verify", "--quiet", ref],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
+    result = try_git("rev-parse", "--verify", "--quiet", ref)
     if result.returncode == 0:
         return result.stdout.strip()
     if result.returncode == 1:
@@ -130,12 +129,7 @@ def is_ancestor(older: str, younger: str) -> bool:
 
     Ошибка git завершает скрипт с кодом 2.
     """
-    result = subprocess.run(
-        [git_binary(), "merge-base", "--is-ancestor", older, younger],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
+    result = try_git("merge-base", "--is-ancestor", older, younger)
     if result.returncode > 1:
         fail_operational(f"git merge-base --is-ancestor {older} {younger}: {result.stderr.strip()}")
     return result.returncode == 0
@@ -215,7 +209,7 @@ def collect_tag_states() -> dict[str, dict[str, str]]:
     for line in result.stdout.splitlines():
         refname, sha = line.split(" ")
         parts = refname.split("/")
-        if parts[3] != "tags":
+        if len(parts) < MIN_TAG_REF_PARTS or parts[3] != "tags":
             continue
         states.setdefault("/".join(parts[4:]), {})[parts[2]] = sha
     return states
