@@ -374,15 +374,15 @@ tasks:
     cmds:
       - git branch | grep -v "main" | xargs git branch -D
 
-  sync-branch:
-    desc: Синхронизировать ветку между репозиториями github и sourcecraft
+  sync-mirrors:
+    desc: Синхронизировать ветку и теги между зеркалами github и sourcecraft
     summary: |
-      Синхронизирует ветку между репозиториями github и sourcecraft.
+      Синхронизирует ветку и теги между зеркалами github и sourcecraft.
       Если имя ветки не передано, то будет использована ветка main.
-      Пример использования с аргументом: `task sync-branch -- "branch-name"`
-      Пример использования без аргумента: `task sync-branch`
+      Пример использования с аргументом: `task sync-mirrors -- "branch-name"`
+      Пример использования без аргумента: `task sync-mirrors`
     cmds:
-      - bash ./tools/sync-branch.sh {{.CLI_ARGS}}
+      - poetry run python tools/sync_mirrors.py {{.CLI_ARGS}}
 
   graph-models:
     desc: Экспортировать диаграммы моделей проекта
