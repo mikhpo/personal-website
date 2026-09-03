@@ -21,6 +21,16 @@ on:
       filter:
         branches: ["main", "master"]
 
+    # Синхронизация зеркал при пуше в основную ветку
+    - workflows: [trunk-workflow]
+      filter:
+        branches: ["main", "master"]
+
+    # Синхронизация зеркал при пуше тегов (фильтр tags не сочетается с branches)
+    - workflows: [trunk-workflow]
+      filter:
+        tags: ["**"]
+
 # Определение рабочих процессов
 workflows:
   # Статический анализ и линтинг
@@ -286,6 +296,30 @@ workflows:
                 echo "Удаление старого тега 'tested' из Yandex Cloud Container Registry"
                 docker rmi \
                   cr.yandex/$YC_CONTAINER_REGISTRY_ID/$PROJECT_NAME:$TESTED_TAG
+
+  # Синхронизация зеркал GitHub и SourceCraft
+  # python:3.13-bookworm содержит git и openssh-client; повторный запуск безопасен -
+  # при совпадении платформ скрипт завершается без действий
+  trunk-workflow:
+    # Приватный ключ деплой-ключа GitHub: доставляется в ssh-agent по stdin,
+    # файлы с ключами в кубе не создаются
+    env:
+      SYNC_GITHUB_SSH_KEY: ${{ secrets.SYNC_GITHUB_SSH_KEY }}
+    tasks:
+      - name: "sync-repositories"
+        cubes:
+          - name: "sync-mirrors"
+            image: docker.io/library/python:3.13-bookworm
+            script:
+              - echo "Синхронизация зеркал репозитория"
+              - eval "$(ssh-agent -s)"
+              - echo "$SYNC_GITHUB_SSH_KEY" | ssh-add -
+              # Полная история нужна для merge-base; автозагрузка кода кубом может быть поверхностной
+              - git fetch --unshallow > /dev/null 2>&1 || true
+              # Сбой синхронизации не прерывает конвейер - сообщение об ошибке в лог куба
+              - |
+                GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=accept-new" python tools/sync_mirrors.py \
+                  || echo "Синхронизация зеркал завершилась с ошибкой - работа конвейера не прервана. Подробности выше."
 
   # Делой на VPS по SSH
   deploy-workflow:
