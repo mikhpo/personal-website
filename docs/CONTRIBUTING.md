@@ -192,19 +192,17 @@ Workflows:
 Требуемые секреты SourceCraft:
 
 | Секрет                     | Описание                              |
-|----------------------------|---------------------------------------|
+| -------------------------- | ------------------------------------- |
 | `SECRET_KEY`               | Секретный ключ Django                 |
-| `EMAIL_HOST_USER`          | Email для отправки уведомлений        |
-| `EMAIL_HOST_PASSWORD`      | Пароль email сервиса                  |
-| `DOMAIN_NAME`              | Доменное имя сайта                    |
 | `DOCKER_USERNAME`          | Имя пользователя Docker Hub           |
-| `DOCKER_PASSWORD`          | Токен доступа Docker Hub              |
-| `GHCR_DELETE_TOKEN`        | Токен для удаления тегов из GHCR      |
-| `SERVER_HOST`              | IP-адрес или домен VPS сервера        |
-| `SERVER_USER`              | Имя пользователя на VPS               |
+| `DOCKER_PASSWORD`          | Пароль доступа Docker Hub             |
+| `YC_OAUTH_TOKEN`           | OAuth-токен Yandex Cloud              |
+| `YC_CONTAINER_REGISTRY_ID` | ID реестра Yandex Container Registry  |
+| `SERVER_HOST`              | IP-адрес или домен сервера            |
+| `SERVER_USER`              | Имя пользователя на сервере           |
 | `DEPLOY_SSH_KEY`           | SSH-ключ для деплоя                   |
 | `PROJECT_DIR`              | Каталог рабочей копии на сервере      |
-| `SYNC_SOURCECRAFT_SSH_KEY` | Приватный ключ для пуша в SourceCraft |
+| `SYNC_GITHUB_SSH_KEY`      | Приватный ключ деплой-ключа GitHub    |
 
 #### 1. lint-workflow - статический анализ и линтинг
 
