@@ -86,6 +86,17 @@ class TestBlogIndexPage(TestCase):
         response = self.client.get(ARTICLE_LIST_URL)
         self.assertContains(response, "Михаил Поляков - Блог")
 
+    def test_article_list_search_parameter(self) -> None:
+        """Тестирование передачи поискового запроса в React компоненты страницы."""
+        response = self.client.get(ARTICLE_LIST_URL, {"search": "react"})
+
+        # Поисковый запрос попадает в пропсы ArticleList и SearchForm
+        self.assertContains(response, '"search": "react"')
+
+        # Форма поиска смонтирована с targetUrl страницы результатов
+        self.assertContains(response, 'data-component-name="Search/SearchForm"')
+        self.assertContains(response, '"targetUrl": "/blog/"')
+
 
 class TestArticleDetailPage(TestCase):
     """Тесты детального просмотра статей."""

@@ -292,4 +292,52 @@ describe('ArticleList', () => {
       );
     });
   });
+
+  /**
+   * Проверяет передачу поискового запроса в параметры запроса.
+   * Проп search должен попадать в параметры blogService.getArticles.
+   */
+  test('передаёт поисковый запрос в параметры запроса', async () => {
+    blogService.getArticles.mockResolvedValue(mockEmptyApiResponse);
+
+    render(<ArticleList search="react" />);
+
+    await waitFor(() => {
+      expect(blogService.getArticles).toHaveBeenCalledWith(
+        expect.objectContaining({ search: 'react' }),
+      );
+    });
+  });
+
+  /**
+   * Проверяет сообщение о пустом результате при активном поиске.
+   * Сообщение должно включать поисковый запрос пользователя.
+   */
+  test('отображает сообщение с запросом при пустом результате поиска', async () => {
+    blogService.getArticles.mockResolvedValue(mockEmptyApiResponse);
+
+    render(<ArticleList search="react" />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('alert-list')).toBeInTheDocument();
+    });
+
+    expect(screen.getByText('По запросу «react» ничего не найдено')).toBeInTheDocument();
+  });
+
+  /**
+   * Проверяет обычное сообщение при пустом списке без поискового запроса.
+   * Прежнее поведение не должно измениться.
+   */
+  test('отображает обычное сообщение при пустом списке без поиска', async () => {
+    blogService.getArticles.mockResolvedValue(mockEmptyApiResponse);
+
+    render(<ArticleList />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('alert-list')).toBeInTheDocument();
+    });
+
+    expect(screen.getByText('Статьи не найдены')).toBeInTheDocument();
+  });
 });
