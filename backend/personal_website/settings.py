@@ -83,6 +83,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.sites",
     "django.contrib.sitemaps",
+    "django.contrib.postgres",
     "whitenoise.runserver_nostatic",
     "crispy_forms",
     "crispy_bootstrap5",

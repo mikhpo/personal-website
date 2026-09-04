@@ -7,6 +7,7 @@ from rest_framework import filters, viewsets
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
 from api.permissions import IsAuthorOrReadOnly, IsPublicOrAuthor
+from api.search import DatabaseSearchFilter
 from blog.models import Article, Category, Comment, Series, Topic
 from blog.serializers import (
     ArticleSerializer,
@@ -83,7 +84,9 @@ class ArticleViewSet(viewsets.ModelViewSet):
     serializer_class = ArticleSerializer
     permission_classes: ClassVar[list] = [IsPublicOrAuthor]
     lookup_field = "pk"
-    filter_backends: ClassVar[list] = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    # DatabaseSearchFilter после OrderingFilter: сортировка по релевантности
+    # (-rank) не должна перезаписываться дефолтным ordering вьюхи.
+    filter_backends: ClassVar[list] = [DjangoFilterBackend, filters.OrderingFilter, DatabaseSearchFilter]
     filterset_fields: ClassVar[list] = ["categories__slug", "topics__slug", "series__slug"]
     search_fields: ClassVar[list] = ["title", "description", "content"]
     ordering_fields: ClassVar[list] = ["published_at", "modified_at", "title"]
