@@ -12,15 +12,16 @@
 Полная синхронность или выполненная доставка дают код 0. Аутентификация (SSH)
 настраивается в окружении вызова.
 
-Переменная окружения SYNC_SELF задает метку зеркала, чье состояние берется из
-текущего репозитория вместо обращения по SSH: CI-обертка выполняется в копии
-своего репозитория, и дублирующий ключ для доступа к нему самому не требуется.
+Переменная окружения не требуется: платформа CI сообщается штатными переменными
+(GITHUB_ACTIONS у GitHub, SOURCECRAFT_CI у SourceCraft), и состояние своего зеркала
+берется из текущего репозитория без обращения по SSH - ключ для доступа к зеркалу
+самому себе не нужен. При локальном запуске ни одна из переменных не задана и оба
+зеркала опрашиваются по SSH.
 
 Примеры вызова:
 
     tools/sync_mirrors.py              # синхронизировать main и теги
     tools/sync_mirrors.py dev          # синхронизировать ветку dev и теги
-    SYNC_SELF=sourcraft tools/sync_mirrors.py   # состояние sourcraft - текущий репозиторий
     tools/sync_mirrors.py -h           # справка по вызову
 """
 
@@ -45,18 +46,17 @@ EXIT_ERROR = 2
 MIN_TAG_REF_PARTS = 5
 
 
-def self_peer() -> str | None:
-    """Вернуть метку зеркала из SYNC_SELF или None.
+def ci_mirror() -> str | None:
+    """Вернуть метку платформы, в CI которой выполняется скрипт, или None при локальном запуске.
 
-    Метка обязана совпадать с одной из записей PEERS: опечатка в конфигурации
-    обертки иначе осталась бы незаметной - скрипт молча ходил бы по SSH.
+    Платформы сообщают о себе штатными переменными окружения, поэтому отдельной
+    настройки обертки не требуется. Локальный запуск не задает ни одну из них.
     """
-    name = os.environ.get("SYNC_SELF")
-    if name is None:
-        return None
-    if name not in (peer for peer, _ in PEERS):
-        fail_operational(f"SYNC_SELF={name} не совпадает ни с одной меткой зеркал")
-    return name
+    if os.environ.get("GITHUB_ACTIONS") == "true":
+        return "github"
+    if os.environ.get("SOURCECRAFT_CI"):
+        return "sourcraft"
+    return None
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -75,7 +75,7 @@ def log(message: str) -> None:
     sys.stdout.write(f"{message}\n")
 
 
-def fail_operational(message: str) -> NoReturn:
+def fail_run(message: str) -> NoReturn:
     """Сообщить об ошибке git или сети и завершить скрипт с кодом 2."""
     sys.stderr.write(f"Ошибка: {message}\n")
     sys.exit(EXIT_ERROR)
@@ -85,7 +85,7 @@ def git_binary() -> str:
     """Вернуть путь до исполняемого git. Отсутствие утилиты завершает скрипт с кодом 2."""
     git = shutil.which("git")
     if git is None:
-        fail_operational("git не найден в PATH")
+        fail_run("git не найден в PATH")
     return git
 
 
@@ -98,7 +98,7 @@ def run_git(*args: str) -> subprocess.CompletedProcess[str]:
     """Выполнить команду git в текущем репозитории. Падение команды завершает скрипт с кодом 2."""
     result = try_git(*args)
     if result.returncode != 0:
-        fail_operational(f"git {' '.join(args)}: {result.stderr.strip()}")
+        fail_run(f"git {' '.join(args)}: {result.stderr.strip()}")
     return result
 
 
@@ -126,8 +126,8 @@ def fetch_peer(name: str, url: str, branch: str) -> None:
     завершается ошибкой целиком, вместе с тегами. Поэтому наличие ветки проверяется
     отдельным запросом списка веток зеркала, и у зеркала без ветки получаются только теги.
     """
-    if name == self_peer():
-        copy_local_state(name, branch)
+    if name == ci_mirror():
+        fetch_local_state(name, branch)
         return
     listing = run_git("ls-remote", "--heads", url, f"refs/heads/{branch}")
     has_branch = bool(listing.stdout.split())
@@ -140,7 +140,7 @@ def fetch_peer(name: str, url: str, branch: str) -> None:
     run_git("fetch", "--no-tags", "--quiet", url, *refspecs, f"+refs/tags/*:refs/sync/{name}/tags/*")
 
 
-def copy_local_state(name: str, branch: str) -> None:
+def fetch_local_state(name: str, branch: str) -> None:
     """Скопировать состояние ветки и тегов текущего репозитория в служебные ссылки зеркала name.
 
     Ветка берется по имени, а при его отсутствии - HEAD: рабочая копия CI-обертки
@@ -166,7 +166,7 @@ def ref_sha(ref: str) -> str | None:
         return result.stdout.strip()
     if result.returncode == 1:
         return None
-    fail_operational(f"git rev-parse --verify {ref}: {result.stderr.strip()}")
+    fail_run(f"git rev-parse --verify {ref}: {result.stderr.strip()}")
 
 
 def is_ancestor(older: str, younger: str) -> bool:
@@ -176,11 +176,11 @@ def is_ancestor(older: str, younger: str) -> bool:
     """
     result = try_git("merge-base", "--is-ancestor", older, younger)
     if result.returncode > 1:
-        fail_operational(f"git merge-base --is-ancestor {older} {younger}: {result.stderr.strip()}")
+        fail_run(f"git merge-base --is-ancestor {older} {younger}: {result.stderr.strip()}")
     return result.returncode == 0
 
 
-def find_tip(shas: dict[str, str]) -> str | None:
+def find_leading_mirror(shas: dict[str, str]) -> str | None:
     """Вернуть метку зеркала, состояние которого содержит состояния всех остальных, или None."""
     for candidate, candidate_sha in shas.items():
         others = (sha for name, sha in shas.items() if name != candidate)
@@ -189,7 +189,7 @@ def find_tip(shas: dict[str, str]) -> str | None:
     return None
 
 
-def fail_main_divergence(branch: str, shas: dict[str, str]) -> NoReturn:
+def fail_branch_divergence(branch: str, shas: dict[str, str]) -> NoReturn:
     """Напечатать диагностику расхождения ветки и завершить скрипт с кодом 1."""
     log(f"Расхождение ветки {branch} между зеркалами; синхронизация не выполнена:")
     for name, sha in shas.items():
@@ -201,7 +201,7 @@ def fail_main_divergence(branch: str, shas: dict[str, str]) -> NoReturn:
     sys.exit(EXIT_DIVERGED)
 
 
-def sync_main(branch: str) -> None:
+def sync_branch(branch: str) -> None:
     """Синхронизировать ветку между зеркалами.
 
     Находится состояние ветки, в истории которого содержатся состояния всех остальных
@@ -218,9 +218,9 @@ def sync_main(branch: str) -> None:
     if not shas:
         log(f"Ветки {branch} нет ни на одном зеркале; синхронизация ветки пропущена.")
         return
-    tip = find_tip(shas)
+    tip = find_leading_mirror(shas)
     if tip is None:
-        fail_main_divergence(branch, shas)
+        fail_branch_divergence(branch, shas)
     tip_sha = shas[tip]
     pushed = False
     for name, url in PEERS:
@@ -288,7 +288,7 @@ def main() -> int:
         log(f"Синхронизация ветки {branch} и тегов зеркал: {names}")
         for name, url in PEERS:
             fetch_peer(name, url, branch)
-        sync_main(branch)
+        sync_branch(branch)
         sync_tags()
     finally:
         cleanup_sync_refs()

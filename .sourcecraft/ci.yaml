@@ -301,10 +301,10 @@ workflows:
   # python:3.13-bookworm содержит git и openssh-client; повторный запуск безопасен -
   # при совпадении платформ скрипт завершается без действий
   trunk-workflow:
-    # SYNC_SELF: состояние SourceCraft берется из рабочей копии куба - ключ для
-    # доступа к зеркалу самому себе не требуется
+    # Приватный ключ деплой-ключа GitHub: доставляется в ssh-agent по stdin,
+    # файлы с ключами в кубе не создаются. Состояние SourceCraft берется из
+    # рабочей копии куба - платформа определяется переменной SOURCECRAFT_CI
     env:
-      SYNC_SELF: sourcraft
       SYNC_GITHUB_SSH_KEY: ${{ secrets.SYNC_GITHUB_SSH_KEY }}
     tasks:
       - name: "sync-repositories"
