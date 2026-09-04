@@ -6,8 +6,8 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, viewsets
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
+from api.filters import DatabaseSearchFilter
 from api.permissions import IsAuthorOrReadOnly, IsPublicOrAuthor
-from api.search import DatabaseSearchFilter
 from blog.models import Article, Category, Comment, Series, Topic
 from blog.serializers import (
     ArticleSerializer,
