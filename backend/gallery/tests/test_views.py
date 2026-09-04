@@ -216,6 +216,17 @@ class TestPhotoListView(TestCase):
             tags = Tag.objects.all()
             self.assertEqual(tags.count(), len(context["tags"]))
 
+    def test_photo_list_search_parameter(self) -> None:
+        """Тестирование передачи поискового запроса в React компоненты страницы."""
+        response = self.client.get(PHOTO_LIST_URL, {"search": "sunset"})
+
+        # Поисковый запрос попадает в пропсы PhotoList и SearchForm
+        self.assertContains(response, '"search": "sunset"')
+
+        # Форма поиска смонтирована с targetUrl страницы результатов
+        self.assertContains(response, 'data-component-name="Search/SearchForm"')
+        self.assertContains(response, '"targetUrl": "/gallery/photos/"')
+
 
 class TestPhotoDetailView(TestCase):
     """Тесты представления детального просмотра фотографии."""
@@ -392,6 +403,17 @@ class TestAlbumListView(TestCase):
             context = response.context
             tags = Tag.objects.all()
             self.assertEqual(tags.count(), len(context["tags"]))
+
+    def test_album_list_search_parameter(self) -> None:
+        """Тестирование передачи поискового запроса в React компоненты страницы."""
+        response = self.client.get(ALBUM_LIST_URL, {"search": "mountains"})
+
+        # Поисковый запрос попадает в пропсы AlbumList и SearchForm
+        self.assertContains(response, '"search": "mountains"')
+
+        # Форма поиска смонтирована с targetUrl страницы результатов
+        self.assertContains(response, 'data-component-name="Search/SearchForm"')
+        self.assertContains(response, '"targetUrl": "/gallery/albums/"')
 
 
 class TestAlbumDetailView(TestCase):

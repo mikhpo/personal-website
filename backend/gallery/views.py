@@ -44,9 +44,10 @@ class AlbumListView(ListView):
     queryset = Album.published.all()
 
     def get_context_data(self, **kwargs) -> dict[str, Any]:
-        """Добавить все тэги в контекст ответа."""
+        """Добавить все тэги и поисковый запрос в контекст ответа."""
         context = super().get_context_data(**kwargs)
         context["tags"] = Tag.objects.all()
+        context["search"] = self.request.GET.get("search", "")
         return context
 
 
@@ -85,9 +86,10 @@ class PhotoListView(ListView):
         return Photo.published.all().order_by("-taken_at")
 
     def get_context_data(self, **kwargs) -> dict[str, Any]:
-        """Добавить в контекст набор всех тэгов фотографии."""
+        """Добавить в контекст набор всех тэгов и поисковый запрос фотографии."""
         context = super().get_context_data(**kwargs)
         context["tags"] = Tag.objects.all()
+        context["search"] = self.request.GET.get("search", "")
         return context
 
 

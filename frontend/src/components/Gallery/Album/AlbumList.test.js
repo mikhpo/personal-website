@@ -257,6 +257,42 @@ describe("AlbumList", () => {
   });
 
   /**
+   * Проверить передачу поискового запроса в URL выборки.
+   * При передаче search фронтенд должен собрать URL с параметром search.
+   */
+  test("передаёт поисковый запрос в URL выборки", async () => {
+    global.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ results: [] }),
+    });
+
+    render(<AlbumList search="sunset" />);
+
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining("search=sunset"),
+      );
+    });
+  });
+
+  /**
+   * Проверить сообщение о пустом результате при активном поиске.
+   * Сообщение должно включать поисковый запрос пользователя.
+   */
+  test("отображает сообщение с запросом при пустом результате поиска", async () => {
+    global.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ results: [] }),
+    });
+
+    render(<AlbumList search="sunset" />);
+
+    await waitFor(() => {
+      expect(screen.getByText("По запросу «sunset» ничего не найдено")).toBeInTheDocument();
+    });
+  });
+
+  /**
    * Проверить правильную структуру сетки.
    * Компонент должен использовать правильные CSS классы для сетки Bootstrap.
    */

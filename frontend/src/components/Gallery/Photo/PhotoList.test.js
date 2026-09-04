@@ -64,6 +64,36 @@ describe('PhotoList', () => {
   });
 
   /**
+   * Проверяет передачу поискового запроса в URL выборки
+   */
+  test('передаёт поисковый запрос в URL выборки', async () => {
+    global.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ results: mockPhotos }),
+    });
+    render(<PhotoList search="sunset" />);
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('search=sunset'),
+      );
+    });
+  });
+
+  /**
+   * Проверяет сообщение о пустом результате при активном поиске
+   */
+  test('отображает сообщение с запросом при пустом результате поиска', async () => {
+    global.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ results: [] }),
+    });
+    render(<PhotoList search="sunset" />);
+    await waitFor(() => {
+      expect(screen.getByText('По запросу «sunset» ничего не найдено')).toBeInTheDocument();
+    });
+  });
+
+  /**
    * Проверяет отображение индикатора загрузки
    */
   test('отображает индикатор загрузки', () => {

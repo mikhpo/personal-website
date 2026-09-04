@@ -18,6 +18,7 @@ import { buildApiUrl } from "@utils/apiUrl";
  * @param {Object} props - Пропсы компонента
  * @param {string} [props.apiUrl="/api/gallery/albums/"] - Базовый URL endpoint альбомов
  * @param {string} [props.tagSlug] - Слаг тега для фильтрации (tags__slug); URL фильтра строится во фронтенде
+ * @param {string} [props.search] - Поисковый запрос для фильтрации (search)
  * @return {JSX.Element} Компонент списка альбомов
  *
  * @example
@@ -28,6 +29,10 @@ import { buildApiUrl } from "@utils/apiUrl";
  * // Использование с кастомным URL
  * <AlbumList apiUrl="/api/custom/albums/" />
  *
+ * @example
+ * // Результаты поиска
+ * <AlbumList search="горы" />
+ *
  * @description
  * Компонент выполняет следующие функции:
  * 1. Загружает данные альбомов через fetch API с пагинацией
@@ -36,7 +41,7 @@ import { buildApiUrl } from "@utils/apiUrl";
  * 4. Предоставляет возможность повторной загрузки при ошибке
  * 5. Поддерживает пагинацию с навигацией по страницам
  */
-const AlbumList = ({ apiUrl = "/api/gallery/albums/", tagSlug }) => {
+const AlbumList = ({ apiUrl = "/api/gallery/albums/", tagSlug, search }) => {
   const [albums, setAlbums] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -62,7 +67,7 @@ const AlbumList = ({ apiUrl = "/api/gallery/albums/", tagSlug }) => {
    */
   const fetchAlbumsRequest = useCallback(
     async (page = 1) => {
-      const url = buildApiUrl(apiUrl, { tags__slug: tagSlug, page });
+      const url = buildApiUrl(apiUrl, { tags__slug: tagSlug, search, page });
 
       const response = await fetch(url);
 
@@ -72,7 +77,7 @@ const AlbumList = ({ apiUrl = "/api/gallery/albums/", tagSlug }) => {
 
       return response.json();
     },
-    [apiUrl, tagSlug],
+    [apiUrl, tagSlug, search],
   );
 
   /**
@@ -131,9 +136,12 @@ const AlbumList = ({ apiUrl = "/api/gallery/albums/", tagSlug }) => {
   }
 
   if (albums.length === 0) {
+    const emptyMessage = search
+      ? `По запросу «${search}» ничего не найдено`
+      : "Нет доступных альбомов";
     return (
       <AlertList
-        messages={[{ message: "Нет доступных альбомов", level: "info" }]}
+        messages={[{ message: emptyMessage, level: "info" }]}
       />
     );
   }
@@ -166,6 +174,7 @@ const AlbumList = ({ apiUrl = "/api/gallery/albums/", tagSlug }) => {
 AlbumList.propTypes = {
   apiUrl: PropTypes.string,
   tagSlug: PropTypes.string,
+  search: PropTypes.string,
 };
 
 export default AlbumList;
