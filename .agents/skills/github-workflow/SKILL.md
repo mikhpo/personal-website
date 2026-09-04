@@ -113,7 +113,7 @@ gh pr merge <N> --merge --delete-branch
 
 - `Test code` - на открытие и обновление PR: линтеры, тесты, сборка Docker-образа
 - `Release image` - на merge PR в main или вручную: публикация образа latest в GHCR и Docker Hub
-- `Deploy to VPS` - автоматически после успешного `Release image`; вручную не запускается
+- `Deploy to VPS` - вручную (workflow_dispatch): `gh workflow run deploy.yml --ref main`; автоматический запуск после `Release image` отключен
 
 ### Просмотр runs
 
@@ -166,4 +166,4 @@ gh run watch <id> --exit-status --compact
 6. (Опционально) Разобрать комментарии ревью: см. «Обработка комментариев ревью (опционально)»
 7. Смержить (только после явного подтверждения пользователя): `gh pr merge <N> --merge --delete-branch`; задача закроется сама
 8. Дождаться `Release image` (auto на merge в main): `gh run list --workflow "Release image"` -> `gh run watch <id> --exit-status`
-9. Дождаться `Deploy to VPS` (auto после Release): найти run и отслеживать так же
+9. При готовности доставить изменения запустить деплой вручную: `gh workflow run deploy.yml --ref main` -> найти run: `gh run list --workflow "Deploy to VPS" --limit 1` -> `gh run watch <id> --exit-status --compact`

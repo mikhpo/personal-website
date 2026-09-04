@@ -1,18 +1,20 @@
-# Workflow для автоматического деплоя приложения на VPS сервер
-# Запускается после успешного выполнения workflow "Release image"
+# Workflow для деплоя приложения на VPS сервер
+# Запускается вручную из вкладки Actions (workflow_dispatch)
 name: Deploy to VPS
 
-# Триггер запуска workflow - после завершения workflow "Release image"
+# Автоматический запуск после "Release image" отключен: промежуточные
+# этапы работы выделяются в отдельные PR, и их автоматическая доставка
+# в прод может сломать прод до выполнения общей цели
 on:
-  workflow_run:
-    workflows: ["Release image"]
-    types:
-      - completed
+  workflow_dispatch:
+
+# Параллельные ручные запуски выстраиваются в очередь
+concurrency:
+  group: deploy
+  cancel-in-progress: false
 
 jobs:
  deploy:
-    # Выполняется только если предыдущий workflow завершился успешно
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
       # Выполнение удаленного скрипта деплоя на сервере
