@@ -29,6 +29,7 @@ jobs:
         env:
           SYNC_SOURCECRAFT_SSH_KEY: ${{ secrets.SYNC_SOURCECRAFT_SSH_KEY }}
         run: |
+          eval "$(ssh-agent -s)"
           ssh-add - <<< "$SYNC_SOURCECRAFT_SSH_KEY"
           export GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=accept-new"
           python tools/sync_mirrors.py
