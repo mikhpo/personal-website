@@ -20,6 +20,7 @@ import { buildApiUrl } from '@utils/apiUrl';
  * @param {Object} props - Пропсы компонента
  * @param {string} [props.apiUrl="/api/gallery/photos/"] - Базовый URL API; на странице альбома переопределяется endpoint альбома
  * @param {string} [props.tagSlug] - Слаг тега для фильтрации (tags__slug); URL фильтра строится во фронтенде
+ * @param {string} [props.search] - Поисковый запрос для фильтрации (search)
  * @return {JSX.Element} Компонент списка фотографий
  *
  * @example
@@ -29,8 +30,12 @@ import { buildApiUrl } from '@utils/apiUrl';
  * @example
  * // Использование с пользовательским URL
  * <PhotoList apiUrl="/api/gallery/album/1/photos/" />
+ *
+ * @example
+ * // Результаты поиска
+ * <PhotoList search="закат" />
  */
-const PhotoList = ({ apiUrl = '/api/gallery/photos/', tagSlug }) => {
+const PhotoList = ({ apiUrl = '/api/gallery/photos/', tagSlug, search }) => {
   /**
    * Состояние фотографий
    * @type {[Array, function]}
@@ -92,7 +97,7 @@ const PhotoList = ({ apiUrl = '/api/gallery/photos/', tagSlug }) => {
       setError(null);
 
       try {
-        const data = await fetchUrl(buildApiUrl(apiUrl, { tags__slug: tagSlug }));
+        const data = await fetchUrl(buildApiUrl(apiUrl, { tags__slug: tagSlug, search }));
         const photosList = data.photos || data.results || data;
         setPhotos(Array.isArray(photosList) ? photosList : []);
 
@@ -113,7 +118,7 @@ const PhotoList = ({ apiUrl = '/api/gallery/photos/', tagSlug }) => {
     };
 
     loadPhotos();
-  }, [apiUrl, tagSlug]);
+  }, [apiUrl, tagSlug, search]);
 
   /**
    * Обработчик изменения страницы пагинации
@@ -132,7 +137,7 @@ const PhotoList = ({ apiUrl = '/api/gallery/photos/', tagSlug }) => {
 
     try {
       // Построить URL с параметром страницы
-      const url = buildApiUrl(apiUrl, { tags__slug: tagSlug, page });
+      const url = buildApiUrl(apiUrl, { tags__slug: tagSlug, search, page });
 
       const data = await fetchUrl(url);
       const photosList = data.results || data;
@@ -248,7 +253,7 @@ const PhotoList = ({ apiUrl = '/api/gallery/photos/', tagSlug }) => {
       setError(null);
 
       try {
-        const data = await fetchUrl(buildApiUrl(apiUrl, { tags__slug: tagSlug }));
+        const data = await fetchUrl(buildApiUrl(apiUrl, { tags__slug: tagSlug, search }));
         const photosList = data.photos || data.results || data;
         setPhotos(Array.isArray(photosList) ? photosList : []);
 
@@ -298,9 +303,13 @@ const PhotoList = ({ apiUrl = '/api/gallery/photos/', tagSlug }) => {
     );
   }
 
-  // Отображение сообщения о пустом списке фотографий
+  // Отображение сообщения о пустом списке фотографий;
+  // при активном поиске сообщение включает запрос пользователя
   if (photos.length === 0) {
-    return <AlertList messages={[{ message: "Нет доступных фотографий", level: "info" }]} />;
+    const emptyMessage = search
+      ? `По запросу «${search}» ничего не найдено`
+      : 'Нет доступных фотографий';
+    return <AlertList messages={[{ message: emptyMessage, level: 'info' }]} />;
   }
 
   // Отображение списка фотографий с пагинацией
@@ -329,6 +338,7 @@ const PhotoList = ({ apiUrl = '/api/gallery/photos/', tagSlug }) => {
 PhotoList.propTypes = {
   apiUrl: PropTypes.string,
   tagSlug: PropTypes.string,
+  search: PropTypes.string,
 };
 
 export default PhotoList;
