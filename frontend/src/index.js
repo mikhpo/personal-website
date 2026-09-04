@@ -36,7 +36,7 @@ import SeriesCard from '@components/Main/SeriesCard';
 import SeriesGrid from '@components/Main/SeriesGrid';
 
 // Импорт общих компонентов
-import SearchForm from '@components/SearchForm/SearchForm';
+import SearchForm from '@components/Search/SearchForm';
 
 /**
  * Реестр зарегистрированных компонентов
@@ -80,7 +80,7 @@ const componentRegistry = {
   'Main/SeriesGrid': SeriesGrid,
 
   // Общие компоненты
-  'SearchForm/SearchForm': SearchForm,
+  'Search/SearchForm': SearchForm,
 };
 
 /**

@@ -94,7 +94,7 @@ class TestBlogIndexPage(TestCase):
         self.assertContains(response, '"search": "react"')
 
         # Форма поиска смонтирована с targetUrl страницы результатов
-        self.assertContains(response, 'data-component-name="SearchForm/SearchForm"')
+        self.assertContains(response, 'data-component-name="Search/SearchForm"')
         self.assertContains(response, '"targetUrl": "/blog/"')
 
 
