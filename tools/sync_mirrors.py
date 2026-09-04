@@ -46,7 +46,7 @@ EXIT_ERROR = 2
 MIN_TAG_REF_PARTS = 5
 
 
-def ci_mirror() -> str | None:
+def detect_ci_mirror() -> str | None:
     """Вернуть метку платформы, в CI которой выполняется скрипт, или None при локальном запуске.
 
     Платформы сообщают о себе штатными переменными окружения, поэтому отдельной
@@ -70,35 +70,35 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def log(message: str) -> None:
+def log_progress(message: str) -> None:
     """Напечатать сообщение прогресса."""
     sys.stdout.write(f"{message}\n")
 
 
-def fail_run(message: str) -> NoReturn:
+def exit_with_error(message: str) -> NoReturn:
     """Сообщить об ошибке git или сети и завершить скрипт с кодом 2."""
     sys.stderr.write(f"Ошибка: {message}\n")
     sys.exit(EXIT_ERROR)
 
 
-def git_binary() -> str:
+def require_git() -> str:
     """Вернуть путь до исполняемого git. Отсутствие утилиты завершает скрипт с кодом 2."""
     git = shutil.which("git")
     if git is None:
-        fail_run("git не найден в PATH")
+        exit_with_error("git не найден в PATH")
     return git
 
 
 def try_git(*args: str) -> subprocess.CompletedProcess[str]:
     """Выполнить команду git и вернуть результат независимо от кода возврата."""
-    return subprocess.run([git_binary(), *args], capture_output=True, text=True, check=False)
+    return subprocess.run([require_git(), *args], capture_output=True, text=True, check=False)
 
 
 def run_git(*args: str) -> subprocess.CompletedProcess[str]:
     """Выполнить команду git в текущем репозитории. Падение команды завершает скрипт с кодом 2."""
     result = try_git(*args)
     if result.returncode != 0:
-        fail_run(f"git {' '.join(args)}: {result.stderr.strip()}")
+        exit_with_error(f"git {' '.join(args)}: {result.stderr.strip()}")
     return result
 
 
@@ -113,7 +113,7 @@ def cleanup_sync_refs() -> None:
     for ref in refs:
         deleted = try_git("update-ref", "-d", ref)
         if deleted.returncode != 0:
-            log(f"Не удалось удалить служебный ref {ref} при очистке: {deleted.stderr.strip()}")
+            log_progress(f"Не удалось удалить служебный ref {ref} при очистке: {deleted.stderr.strip()}")
 
 
 def fetch_peer(name: str, url: str, branch: str) -> None:
@@ -126,16 +126,16 @@ def fetch_peer(name: str, url: str, branch: str) -> None:
     завершается ошибкой целиком, вместе с тегами. Поэтому наличие ветки проверяется
     отдельным запросом списка веток зеркала, и у зеркала без ветки получаются только теги.
     """
-    if name == ci_mirror():
+    if name == detect_ci_mirror():
         fetch_local_state(name, branch)
         return
     listing = run_git("ls-remote", "--heads", url, f"refs/heads/{branch}")
     has_branch = bool(listing.stdout.split())
     if has_branch:
-        log(f"Получение ветки {branch} и тегов зеркала {name}...")
+        log_progress(f"Получение ветки {branch} и тегов зеркала {name}...")
         refspecs = [f"+refs/heads/{branch}:refs/sync/{name}/{branch}"]
     else:
-        log(f"Ветки {branch} нет на зеркале {name}; получение тегов.")
+        log_progress(f"Ветки {branch} нет на зеркале {name}; получение тегов.")
         refspecs = []
     run_git("fetch", "--no-tags", "--quiet", url, *refspecs, f"+refs/tags/*:refs/sync/{name}/tags/*")
 
@@ -147,36 +147,36 @@ def fetch_local_state(name: str, branch: str) -> None:
     выполняет checkout и detached-состояние, и ветку. Отсутствие локальных тегов
     означает отсутствие тегов на зеркале; отдельной проверки подлинности не требуется.
     """
-    sha = ref_sha(f"refs/heads/{branch}") or ref_sha("HEAD")
+    sha = resolve_sha(f"refs/heads/{branch}") or resolve_sha("HEAD")
     if sha is not None:
-        log(f"Зеркало {name} - текущий репозиторий; ветка {branch}: {sha[:12]}.")
+        log_progress(f"Зеркало {name} - текущий репозиторий; ветка {branch}: {sha[:12]}.")
         run_git("update-ref", f"refs/sync/{name}/{branch}", sha)
     else:
-        log(f"Ветки {branch} нет в текущем репозитории (зеркало {name}).")
+        log_progress(f"Ветки {branch} нет в текущем репозитории (зеркало {name}).")
     listing = run_git("for-each-ref", "--format=%(objectname) %(refname)", "refs/tags")
     for line in listing.stdout.splitlines():
         sha, refname = line.split(" ")
         run_git("update-ref", f"refs/sync/{name}/tags/{refname.removeprefix('refs/tags/')}", sha)
 
 
-def ref_sha(ref: str) -> str | None:
+def resolve_sha(ref: str) -> str | None:
     """Вернуть SHA ссылки текущего репозитория или None, если ссылки нет. Ошибка git завершает скрипт с кодом 2."""
     result = try_git("rev-parse", "--verify", "--quiet", ref)
     if result.returncode == 0:
         return result.stdout.strip()
     if result.returncode == 1:
         return None
-    fail_run(f"git rev-parse --verify {ref}: {result.stderr.strip()}")
+    exit_with_error(f"git rev-parse --verify {ref}: {result.stderr.strip()}")
 
 
-def is_ancestor(older: str, younger: str) -> bool:
+def precedes(older: str, younger: str) -> bool:
     """Проверить, что первое из состояний предшествует второму, то есть вся история первого входит в историю второго.
 
     Ошибка git завершает скрипт с кодом 2.
     """
     result = try_git("merge-base", "--is-ancestor", older, younger)
     if result.returncode > 1:
-        fail_run(f"git merge-base --is-ancestor {older} {younger}: {result.stderr.strip()}")
+        exit_with_error(f"git merge-base --is-ancestor {older} {younger}: {result.stderr.strip()}")
     return result.returncode == 0
 
 
@@ -184,17 +184,17 @@ def find_leading_mirror(shas: dict[str, str]) -> str | None:
     """Вернуть метку зеркала, состояние которого содержит состояния всех остальных, или None."""
     for candidate, candidate_sha in shas.items():
         others = (sha for name, sha in shas.items() if name != candidate)
-        if all(is_ancestor(other, candidate_sha) for other in others):
+        if all(precedes(other, candidate_sha) for other in others):
             return candidate
     return None
 
 
 def fail_branch_divergence(branch: str, shas: dict[str, str]) -> NoReturn:
     """Напечатать диагностику расхождения ветки и завершить скрипт с кодом 1."""
-    log(f"Расхождение ветки {branch} между зеркалами; синхронизация не выполнена:")
+    log_progress(f"Расхождение ветки {branch} между зеркалами; синхронизация не выполнена:")
     for name, sha in shas.items():
-        log(f"  {name} - {sha}")
-    log(
+        log_progress(f"  {name} - {sha}")
+    log_progress(
         "Расхождение разрешается локально: git merge-base <sha1> <sha2>, merge одной стороны в другую, "
         "затем повторный запуск.",
     )
@@ -212,11 +212,11 @@ def sync_branch(branch: str) -> None:
     """
     shas: dict[str, str] = {}
     for name, _ in PEERS:
-        sha = ref_sha(f"refs/sync/{name}/{branch}")
+        sha = resolve_sha(f"refs/sync/{name}/{branch}")
         if sha is not None:
             shas[name] = sha
     if not shas:
-        log(f"Ветки {branch} нет ни на одном зеркале; синхронизация ветки пропущена.")
+        log_progress(f"Ветки {branch} нет ни на одном зеркале; синхронизация ветки пропущена.")
         return
     tip = find_leading_mirror(shas)
     if tip is None:
@@ -227,23 +227,23 @@ def sync_branch(branch: str) -> None:
         if shas.get(name) == tip_sha:
             continue
         if name in shas:
-            log(f"Зеркало {name} отстает по ветке {branch}; отправка {tip_sha}...")
+            log_progress(f"Зеркало {name} отстает по ветке {branch}; отправка {tip_sha}...")
         else:
-            log(f"Ветки {branch} нет на зеркале {name}; отправка...")
+            log_progress(f"Ветки {branch} нет на зеркале {name}; отправка...")
         run_git("push", "--quiet", url, f"{tip_sha}:refs/heads/{branch}")
         pushed = True
     if pushed:
-        log(f"Ветка {branch} синхронизирована fast-forward push-ем.")
+        log_progress(f"Ветка {branch} синхронизирована fast-forward push-ем.")
     else:
-        log(f"Ветка {branch} у всех зеркал совпадает.")
+        log_progress(f"Ветка {branch} у всех зеркал совпадает.")
 
 
 def fail_tag_conflict(tag: str, states: dict[str, str]) -> NoReturn:
     """Напечатать диагностику конфликта тега и завершить скрипт с кодом 1."""
-    log(f"Конфликт тега {tag}: разные состояния на зеркалах; синхронизация не выполнена:")
+    log_progress(f"Конфликт тега {tag}: разные состояния на зеркалах; синхронизация не выполнена:")
     for name, sha in states.items():
-        log(f"  {name} - {sha}")
-    log("Тег приводится к одному состоянию вручную на обеих платформах, затем запускается повторная синхронизация.")
+        log_progress(f"  {name} - {sha}")
+    log_progress("Тег вручную приводится к одному состоянию, затем запускается повторная синхронизация.")
     sys.exit(EXIT_DIVERGED)
 
 
@@ -272,10 +272,10 @@ def sync_tags() -> None:
         for name, url in PEERS:
             if name in states:
                 continue
-            log(f"Тег {tag} отсутствует на зеркале {name}; отправка...")
+            log_progress(f"Тег {tag} отсутствует на зеркале {name}; отправка...")
             run_git("push", "--quiet", url, f"refs/sync/{source}/tags/{tag}:refs/tags/{tag}")
             pushed = True
-    log("Теги синхронизированы." if pushed else "Теги у всех зеркал совпадают.")
+    log_progress("Теги синхронизированы." if pushed else "Теги у всех зеркал совпадают.")
 
 
 def main() -> int:
@@ -285,14 +285,14 @@ def main() -> int:
     branch = args.branch
     try:
         names = ", ".join(name for name, _ in PEERS)
-        log(f"Синхронизация ветки {branch} и тегов зеркал: {names}")
+        log_progress(f"Синхронизация ветки {branch} и тегов зеркал: {names}")
         for name, url in PEERS:
             fetch_peer(name, url, branch)
         sync_branch(branch)
         sync_tags()
     finally:
         cleanup_sync_refs()
-    log("Синхронизация завершена.")
+    log_progress("Синхронизация завершена.")
     return EXIT_OK
 
 
