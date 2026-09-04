@@ -39,8 +39,9 @@ def blog(request: HttpRequest) -> HttpResponse:
     """
     Функция, определяющая порядок отображения статей на главной странице блога.
     Отображаются только те статьи, для которых не была установлена невидимость (черновики).
+    Поисковый запрос из GET-параметров передается в React компоненты страницы.
     """
-    return render(request, "blog/article_list.html", {})
+    return render(request, "blog/article_list.html", {"search": request.GET.get("search", "")})
 
 
 def category(request: HttpRequest, slug: str) -> HttpResponse:

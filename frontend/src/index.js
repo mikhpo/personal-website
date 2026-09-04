@@ -35,6 +35,9 @@ import CategoryGrid from '@components/Main/CategoryGrid';
 import SeriesCard from '@components/Main/SeriesCard';
 import SeriesGrid from '@components/Main/SeriesGrid';
 
+// Импорт общих компонентов
+import SearchForm from '@components/SearchForm/SearchForm';
+
 /**
  * Реестр зарегистрированных компонентов
  *
@@ -75,6 +78,9 @@ const componentRegistry = {
   'Main/CategoryGrid': CategoryGrid,
   'Main/SeriesCard': SeriesCard,
   'Main/SeriesGrid': SeriesGrid,
+
+  // Общие компоненты
+  'SearchForm/SearchForm': SearchForm,
 };
 
 /**

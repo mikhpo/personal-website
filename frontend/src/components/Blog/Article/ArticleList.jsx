@@ -19,6 +19,7 @@ import { blogService } from '@services';
  * @param {string} [props.categorySlug] - Слаг категории для фильтрации (categories__slug)
  * @param {string} [props.seriesSlug] - Слаг серии для фильтрации (series__slug)
  * @param {string} [props.topicSlug] - Слаг темы для фильтрации (topics__slug)
+ * @param {string} [props.search] - Поисковый запрос для фильтрации (search)
  * @return {JSX.Element} Компонент списка статей
  *
  * @example
@@ -28,8 +29,12 @@ import { blogService } from '@services';
  * @example
  * // Статьи категории
  * <ArticleList categorySlug="react" />
+ *
+ * @example
+ * // Результаты поиска
+ * <ArticleList search="django" />
  */
-const ArticleList = ({ categorySlug, seriesSlug, topicSlug }) => {
+const ArticleList = ({ categorySlug, seriesSlug, topicSlug, search }) => {
   /**
    * Состояние статей
    * @type {[Array, function]}
@@ -79,9 +84,9 @@ const ArticleList = ({ categorySlug, seriesSlug, topicSlug }) => {
   const [retryCount, setRetryCount] = useState(0);
 
   /**
-   * Запрашивает статьи с фильтрами по слагам и указанной страницей.
+   * Запрашивает статьи с фильтрами по слагам, поисковым запросом и указанной страницей.
    *
-   * Слаги передаются как данные; пустые значения пропускаются при сборке URL
+   * Слаги и запрос передаются как данные; пустые значения пропускаются при сборке URL
    * (blogService.getArticles использует buildApiUrl).
    *
    * @function fetchArticles
@@ -93,9 +98,10 @@ const ArticleList = ({ categorySlug, seriesSlug, topicSlug }) => {
       categories__slug: categorySlug,
       series__slug: seriesSlug,
       topics__slug: topicSlug,
+      search,
       page,
     });
-  }, [categorySlug, seriesSlug, topicSlug]);
+  }, [categorySlug, seriesSlug, topicSlug, search]);
 
   /**
    * Эффект для загрузки статей при монтировании, изменении фильтра/страницы или повторной попытке
@@ -171,9 +177,13 @@ const ArticleList = ({ categorySlug, seriesSlug, topicSlug }) => {
     );
   }
 
-  // Отображение сообщения о пустом списке статей
+  // Отображение сообщения о пустом списке статей;
+  // при активном поиске сообщение включает запрос пользователя
   if (articles.length === 0) {
-    return <AlertList messages={[{ message: "Статьи не найдены", level: "info" }]} />;
+    const emptyMessage = search
+      ? `По запросу «${search}» ничего не найдено`
+      : 'Статьи не найдены';
+    return <AlertList messages={[{ message: emptyMessage, level: 'info' }]} />;
   }
 
   // Отображение списка статей
@@ -200,6 +210,7 @@ ArticleList.propTypes = {
   categorySlug: PropTypes.string,
   seriesSlug: PropTypes.string,
   topicSlug: PropTypes.string,
+  search: PropTypes.string,
 };
 
 export default ArticleList;
