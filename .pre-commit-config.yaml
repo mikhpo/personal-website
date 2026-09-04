@@ -45,6 +45,13 @@ repos:
         entry: python3 tools/fix_typography.py
         language: system
         types: [text]
+      - id: unwrap-markdown
+        name: unwrap-markdown
+        description: Развертывание жестких переносов строк в Markdown (абзац - одна строка)
+        entry: python3 tools/unwrap_markdown.py
+        language: system
+        types: [file]
+        files: \.(md|markdown)$
       - id: eslint
         name: eslint
         description: Статический анализ кода JavaScript при помощи ESLint
