@@ -27,6 +27,7 @@ jobs:
         id: sync
         continue-on-error: true
         env:
+          SYNC_SELF: github
           SYNC_SOURCECRAFT_SSH_KEY: ${{ secrets.SYNC_SOURCECRAFT_SSH_KEY }}
         run: |
           ssh-add - <<< "$SYNC_SOURCECRAFT_SSH_KEY"

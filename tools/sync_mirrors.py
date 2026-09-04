@@ -12,14 +12,20 @@
 Полная синхронность или выполненная доставка дают код 0. Аутентификация (SSH)
 настраивается в окружении вызова.
 
+Переменная окружения SYNC_SELF задает метку зеркала, чье состояние берется из
+текущего репозитория вместо обращения по SSH: CI-обертка выполняется в копии
+своего репозитория, и дублирующий ключ для доступа к нему самому не требуется.
+
 Примеры вызова:
 
     tools/sync_mirrors.py              # синхронизировать main и теги
     tools/sync_mirrors.py dev          # синхронизировать ветку dev и теги
+    SYNC_SELF=sourcraft tools/sync_mirrors.py   # состояние sourcraft - текущий репозиторий
     tools/sync_mirrors.py -h           # справка по вызову
 """
 
 import argparse
+import os
 import shutil
 import subprocess
 import sys
@@ -37,6 +43,20 @@ EXIT_ERROR = 2
 
 # Минимальное число сегментов ссылки тега: refs/sync/<зеркало>/tags/<тег>.
 MIN_TAG_REF_PARTS = 5
+
+
+def self_peer() -> str | None:
+    """Вернуть метку зеркала из SYNC_SELF или None.
+
+    Метка обязана совпадать с одной из записей PEERS: опечатка в конфигурации
+    обертки иначе осталась бы незаметной - скрипт молча ходил бы по SSH.
+    """
+    name = os.environ.get("SYNC_SELF")
+    if name is None:
+        return None
+    if name not in (peer for peer, _ in PEERS):
+        fail_operational(f"SYNC_SELF={name} не совпадает ни с одной меткой зеркал")
+    return name
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -99,10 +119,16 @@ def cleanup_sync_refs() -> None:
 def fetch_peer(name: str, url: str, branch: str) -> None:
     """Получить ветку и теги зеркала в служебные ссылки текущего репозитория.
 
+    Состояние зеркала из SYNC_SELF копируется из текущего репозитория без
+    обращения по SSH: CI-обертка выполняется в копии этого зеркала.
+
     Ветка может существовать не на всех зеркалах, а загрузка отсутствующей ветки
     завершается ошибкой целиком, вместе с тегами. Поэтому наличие ветки проверяется
     отдельным запросом списка веток зеркала, и у зеркала без ветки получаются только теги.
     """
+    if name == self_peer():
+        copy_local_state(name, branch)
+        return
     listing = run_git("ls-remote", "--heads", url, f"refs/heads/{branch}")
     has_branch = bool(listing.stdout.split())
     if has_branch:
@@ -112,6 +138,25 @@ def fetch_peer(name: str, url: str, branch: str) -> None:
         log(f"Ветки {branch} нет на зеркале {name}; получение тегов.")
         refspecs = []
     run_git("fetch", "--no-tags", "--quiet", url, *refspecs, f"+refs/tags/*:refs/sync/{name}/tags/*")
+
+
+def copy_local_state(name: str, branch: str) -> None:
+    """Скопировать состояние ветки и тегов текущего репозитория в служебные ссылки зеркала name.
+
+    Ветка берется по имени, а при его отсутствии - HEAD: рабочая копия CI-обертки
+    выполняет checkout и detached-состояние, и ветку. Отсутствие локальных тегов
+    означает отсутствие тегов на зеркале; отдельной проверки подлинности не требуется.
+    """
+    sha = ref_sha(f"refs/heads/{branch}") or ref_sha("HEAD")
+    if sha is not None:
+        log(f"Зеркало {name} - текущий репозиторий; ветка {branch}: {sha[:12]}.")
+        run_git("update-ref", f"refs/sync/{name}/{branch}", sha)
+    else:
+        log(f"Ветки {branch} нет в текущем репозитории (зеркало {name}).")
+    listing = run_git("for-each-ref", "--format=%(objectname) %(refname)", "refs/tags")
+    for line in listing.stdout.splitlines():
+        sha, refname = line.split(" ")
+        run_git("update-ref", f"refs/sync/{name}/tags/{refname.removeprefix('refs/tags/')}", sha)
 
 
 def ref_sha(ref: str) -> str | None:
