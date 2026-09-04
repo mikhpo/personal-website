@@ -13,8 +13,8 @@ from rest_framework.views import APIView
 if TYPE_CHECKING:
     from django.db.models import QuerySet
 
+# Веса полей поиска по позиции: первое поле в search_fields важнее последующих.
 SEARCH_WEIGHTS: tuple[str, ...] = ("A", "B", "C", "D")
-"""Веса полей поиска по позиции: первое поле в search_fields важнее последующих."""
 
 
 class DatabaseSearchFilter(filters.SearchFilter):
