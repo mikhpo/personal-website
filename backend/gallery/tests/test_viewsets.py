@@ -2,8 +2,10 @@
 
 from io import BytesIO
 
+import pytest
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.db import connection
 from PIL import Image
 from rest_framework.test import APITestCase
 
@@ -155,12 +157,22 @@ class TestPhotoViewSet(APITestCase):
         self.assertEqual(response.data["name"], "Ночной город")
 
     def test_search_photos(self) -> None:
-        """Поиск фотографий по названию, описанию и тегам."""
+        """Поиск фотографий по названию и описанию."""
         url = "/api/gallery/photos/"
         response = self.client.get(url, {"search": "закат"})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["count"], 1)
         self.assertEqual(response.data["results"][0]["name"], "Закат в горах")
+
+    def test_search_photos_ignores_tags(self) -> None:
+        """Поиск не сопоставляет фотографии по имени тега: теги вне search_fields."""
+        photo = PhotoFactory(name="Опушка леса", description="Тихое утро в лесу", album=self.album1, public=True)
+        photo.tags.add(self.tag1)
+        url = "/api/gallery/photos/"
+        response = self.client.get(url, {"search": self.tag1.name})
+        self.assertEqual(response.status_code, 200)
+        names = [item["name"] for item in response.data["results"]]
+        self.assertNotIn(photo.name, names)
 
     def test_filter_photos_by_tag_slug(self) -> None:
         """Фильтрация фотографий по слагу тега."""
@@ -310,6 +322,41 @@ class TestAlbumViewSet(APITestCase):
         self.assertEqual(response.data["name"], "Личные фото")
         # Вложенные фото тоже фильтруются по public
         self.assertIsInstance(response.data["photos"], list)
+
+
+@pytest.mark.skipif(connection.vendor != "postgresql", reason="Полнотекстовый поиск работает только на PostgreSQL")
+class TestGalleryFullTextSearch(APITestCase):
+    """Полнотекстовый поиск галереи: морфология и релевантность на PostgreSQL."""
+
+    def test_album_morphology_finds_word_forms(self) -> None:
+        """Запрос "путешествие" находит альбом со словом "Путешествия"."""
+        album = AlbumFactory(name="Дальние края", description="Путешествия по миру", public=True)
+        url = "/api/gallery/albums/"
+        response = self.client.get(url, {"search": "путешествие"})
+        self.assertEqual(response.status_code, 200)
+        names = [item["name"] for item in response.data["results"]]
+        self.assertIn(album.name, names)
+
+    def test_photo_morphology_finds_word_forms(self) -> None:
+        """Запрос "гора" находит фотографию со словом "Горы"."""
+        album = AlbumFactory(name="Кавказ", public=True)
+        photo = PhotoFactory(name="Горы Кавказа", description="Виды с перевалов", album=album, public=True)
+        url = "/api/gallery/photos/"
+        response = self.client.get(url, {"search": "гора"})
+        self.assertEqual(response.status_code, 200)
+        names = [item["name"] for item in response.data["results"]]
+        self.assertIn(photo.name, names)
+
+    def test_photo_relevance_name_above_description(self) -> None:
+        """Фотография с совпадением в названии ранжируется выше совпадения в описании."""
+        album = AlbumFactory(name="Прогулки", public=True)
+        name_match = PhotoFactory(name="Велосипед", description="Прогулка по аллее", album=album, public=True)
+        description_match = PhotoFactory(name="Аллея", description="Велосипед у входа", album=album, public=True)
+        url = "/api/gallery/photos/"
+        response = self.client.get(url, {"search": "велосипед"})
+        self.assertEqual(response.status_code, 200)
+        names = [item["name"] for item in response.data["results"]]
+        self.assertEqual(names, [name_match.name, description_match.name])
 
 
 class TestUploadViewSet(APITestCase):

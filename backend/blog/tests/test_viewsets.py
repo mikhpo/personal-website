@@ -1,6 +1,8 @@
 """Тесты API представлений блога."""
 
+import pytest
 from django.contrib.auth import get_user_model
+from django.db import connection
 from rest_framework.test import APITestCase
 
 from blog.factories import ArticleFactory, CategoryFactory, CommentFactory, SeriesFactory, TopicFactory
@@ -329,6 +331,54 @@ class TestArticleViewSet(APITestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["title"], self.article3.title)
+
+
+@pytest.mark.skipif(connection.vendor != "postgresql", reason="Полнотекстовый поиск работает только на PostgreSQL")
+class TestArticleFullTextSearch(APITestCase):
+    """Полнотекстовый поиск статей: морфология и релевантность на PostgreSQL."""
+
+    @classmethod
+    def setUpTestData(cls) -> None:
+        """Подготовка тестовых данных."""
+        cls.user = User.objects.create_user(username="ftsuser", password="testpass123")
+        super().setUpTestData()
+
+    def test_morphology_finds_word_forms(self) -> None:
+        """Запрос "статья" находит статью со словоформой "статьи"."""
+        article = ArticleFactory(
+            title="Путевые заметки",
+            description="Статьи о путешествиях",
+            content="Контент без ключевого слова",
+            public=True,
+            author=self.user,
+        )
+        url = "/api/blog/articles/"
+        response = self.client.get(url, {"search": "статья"})
+        self.assertEqual(response.status_code, 200)
+        slugs = [item["slug"] for item in response.data["results"]]
+        self.assertIn(article.slug, slugs)
+
+    def test_relevance_title_above_content(self) -> None:
+        """Статья с совпадением в заголовке ранжируется выше совпадения только в контенте."""
+        title_match = ArticleFactory(
+            title="Велосипед",
+            description="Описание прогулки",
+            content="Текст о прогулке",
+            public=True,
+            author=self.user,
+        )
+        content_match = ArticleFactory(
+            title="Прогулка по парку",
+            description="Заметки о парке",
+            content="Вдалеке проехал велосипед",
+            public=True,
+            author=self.user,
+        )
+        url = "/api/blog/articles/"
+        response = self.client.get(url, {"search": "велосипед"})
+        self.assertEqual(response.status_code, 200)
+        slugs = [item["slug"] for item in response.data["results"]]
+        self.assertEqual(slugs, [title_match.slug, content_match.slug])
 
 
 class TestCommentViewSet(APITestCase):
