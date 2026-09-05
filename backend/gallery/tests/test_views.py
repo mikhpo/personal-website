@@ -121,6 +121,23 @@ class TestGalleryHomeView(TestCase):
             tags = Tag.objects.all()
             self.assertEqual(tags.count(), len(context["tags"]))
 
+    def test_gallery_home_search_parameter(self) -> None:
+        """Тестирование передачи поискового запроса в React компоненты страницы."""
+        response = self.client.get(GALLERY_URL, {"search": "sunset"})
+
+        # Поисковый запрос попадает в пропы AlbumList и SearchForm
+        self.assertContains(response, '"search": "sunset"')
+
+        # Форма поиска смонтирована с targetUrl страницы результатов
+        self.assertContains(response, 'data-component-name="Search/SearchForm"')
+
+    def test_gallery_home_search_does_not_filter_tags(self) -> None:
+        """Поисковый запрос не фильтрует набор тэгов на странице галереи."""
+        response = self.client.get(GALLERY_URL, {"search": "sunset"})
+        context = response.context
+        tags = Tag.objects.all()
+        self.assertEqual(tags.count(), len(context["tags"]))
+
 
 class TestPhotoListView(TestCase):
     """Тесты представления списка фотографий."""

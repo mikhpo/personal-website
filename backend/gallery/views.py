@@ -29,8 +29,14 @@ class GalleryHomeView(TemplateView):
     template_name = "gallery/gallery_home.html"
 
     def get_context_data(self, **kwargs) -> dict:
-        """Добавить альбомы и тэги в контекст."""
+        """Добавить поисковый запрос, альбомы и тэги в контекст.
+
+        Поисковый запрос попадает в пропы SearchForm и AlbumList; набор
+        альбомов фильтруется на клиенте через API (?search=), тэги
+        не фильтруются.
+        """
         context = super().get_context_data(**kwargs)
+        context["search"] = self.request.GET.get("search", "")
         context["albums"] = Album.published.all()
         context["tags"] = Tag.objects.all()
         return context
