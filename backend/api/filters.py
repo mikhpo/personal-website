@@ -62,9 +62,11 @@ class DatabaseSearchFilter(filters.SearchFilter):
                 for field, weight in zip(search_fields, SEARCH_WEIGHTS, strict=False)
             ),
         )
+
         # Запрос строится с той же конфигурацией, что и вектор: слова
         # приводятся к начальным формам, поэтому "статья" находит "статьи".
         query = SearchQuery(" ".join(search_terms), config=self.search_config)
+
         # annotate вычисляет rank (релевантность) для каждой строки, filter
         # оставляет строки с полнотекстовым совпадением вектора и запроса,
         # "-rank" сортирует по убыванию релевантности, ordering вьюхи служит
