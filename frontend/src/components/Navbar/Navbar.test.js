@@ -2,6 +2,10 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import Navbar from '@components/Navbar/Navbar';
 import UserAuthSection from './UserAuthSection';
+import { navigateTo } from '../../utils/navigate';
+
+// Переход подменяется моком: jsdom не реализует навигацию
+jest.mock('../../utils/navigate');
 
 /**
  * Тесты для компонента навигационной панели
@@ -130,6 +134,44 @@ describe('Navbar', () => {
     render(<Navbar {...props} />);
 
     expect(screen.getByText('Администрирование')).toBeInTheDocument();
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  /**
+   * Тест проверяет, что между ссылками навигации и секцией авторизации
+   * присутствует форма общего поиска с подсказкой "Поиск по сайту..."
+   *
+   * @function
+   * @name renders-site-search-form
+   */
+  test('содержит форму общего поиска', () => {
+    render(<Navbar {...defaultProps} />);
+
+    expect(screen.getByPlaceholderText('Поиск по сайту...')).toBeInTheDocument();
+    const submitButton = screen.getByText('Найти');
+    expect(submitButton).toBeInTheDocument();
+    expect(submitButton).toHaveClass('btn-outline-secondary');
+  });
+
+  /**
+   * Тест проверяет, что отправка формы поиска выполняет переход
+   * на страницу общего поиска с query-параметром search
+   *
+   * @function
+   * @name submits-search-form-to-search-page
+   */
+  test('отправляет форму поиска на страницу /main/search/', () => {
+    const { container } = render(<Navbar {...defaultProps} />);
+
+    fireEvent.change(screen.getByPlaceholderText('Поиск по сайту...'), {
+      target: { value: 'react' },
+    });
+    fireEvent.submit(container.querySelector('form[role="search"]'));
+
+    expect(navigateTo).toHaveBeenCalledWith('/main/search/?search=react');
   });
 
   /**

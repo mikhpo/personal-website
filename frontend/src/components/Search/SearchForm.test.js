@@ -93,4 +93,17 @@ describe('SearchForm', () => {
     expect(screen.getByPlaceholderText('Поиск по сайту...')).toBeInTheDocument();
     expect(screen.getByText('Искать')).toBeInTheDocument();
   });
+
+  /**
+   * Проверяет применение варианта Bootstrap-кнопки: по умолчанию
+   * кнопка outline-secondary, проп buttonVariant переопределяет вариант.
+   */
+  test('применяет вариант кнопки из пропсов и по умолчанию', () => {
+    const fallback = render(<SearchForm targetUrl="/blog/" />);
+    expect(fallback.container.querySelector('button')).toHaveClass('btn-outline-secondary');
+    fallback.unmount();
+
+    const custom = render(<SearchForm targetUrl="/blog/" buttonVariant="outline-primary" />);
+    expect(custom.container.querySelector('button')).toHaveClass('btn-outline-primary');
+  });
 });

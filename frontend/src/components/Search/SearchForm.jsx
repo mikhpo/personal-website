@@ -17,6 +17,7 @@ import { navigateTo } from '../../utils/navigate';
  * @param {string} [props.search] - Начальное значение поискового запроса (текущий запрос для уточнения)
  * @param {string} [props.placeholder] - Подсказка в поле ввода
  * @param {string} [props.submitLabel] - Текст кнопки отправки
+ * @param {string} [props.buttonVariant] - Вариант Bootstrap кнопки отправки (по умолчанию outline-secondary)
  * @return {JSX.Element} Элемент формы поиска
  *
  * @example
@@ -27,7 +28,7 @@ import { navigateTo } from '../../utils/navigate';
  * // Форма с текущим запросом и нестандартной кнопкой
  * <SearchForm targetUrl="/gallery/photos/" search="закат" submitLabel="Искать" />
  */
-const SearchForm = ({ targetUrl, search, placeholder, submitLabel }) => {
+const SearchForm = ({ targetUrl, search, placeholder, submitLabel, buttonVariant }) => {
   /**
    * Текущее значение поискового запроса
    * @type {[string, function]}
@@ -64,7 +65,7 @@ const SearchForm = ({ targetUrl, search, placeholder, submitLabel }) => {
         value={query}
         onChange={(event) => setQuery(event.target.value)}
       />
-      <Button variant="outline-primary" type="submit">
+      <Button variant={buttonVariant} type="submit">
         {submitLabel}
       </Button>
     </Form>
@@ -76,12 +77,14 @@ SearchForm.propTypes = {
   search: PropTypes.string,
   placeholder: PropTypes.string,
   submitLabel: PropTypes.string,
+  buttonVariant: PropTypes.string,
 };
 
 SearchForm.defaultProps = {
   search: '',
   placeholder: 'Поиск...',
   submitLabel: 'Найти',
+  buttonVariant: 'outline-secondary',
 };
 
 export default SearchForm;

@@ -37,6 +37,7 @@ import SeriesGrid from '@components/Main/SeriesGrid';
 
 // Импорт общих компонентов
 import SearchForm from '@components/Search/SearchForm';
+import SearchResults from '@components/Search/SearchResults';
 
 /**
  * Реестр зарегистрированных компонентов
@@ -81,6 +82,7 @@ const componentRegistry = {
 
   // Общие компоненты
   'Search/SearchForm': SearchForm,
+  'Search/SearchResults': SearchResults,
 };
 
 /**

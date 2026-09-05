@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% load react_tags %}
+<!--
+    Страница общего поиска по сайту.
+    Форма поиска и результаты (статьи и альбомы)
+    рендерятся React компонентами.
+-->
+{% block content %}
+    <div class="container-fluid">
+        <h1 class="mb-3">Поиск по сайту</h1>
+        <div class="mb-3">
+            {% react_component "Search/SearchForm" search=search targetUrl="/main/search/" placeholder="Поиск по сайту..." %}
+        </div>
+        {% react_component "Search/SearchResults" search=search %}
+    </div>
+{% endblock content %}
