@@ -80,7 +80,6 @@ class TestSearchPage(TestCase):
         response = self.client.get(self.search_url)
         self.assertContains(response, 'data-component-name="Search/SearchForm"')
         self.assertContains(response, '"targetUrl": "/main/search/"')
-        self.assertContains(response, '"buttonVariant": "outline-secondary"')
         self.assertContains(response, 'data-component-name="Search/SearchResults"')
 
     def test_search_page_search_parameter(self) -> None:

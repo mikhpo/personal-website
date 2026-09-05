@@ -71,7 +71,7 @@ const Navbar = ({ brandName, brandUrl, links, userAuthenticated, userName, userI
           </Nav>
           {/* Класс navbar-search задает отступ до секции авторизации, равный зазору внутри нее (navbar.css) */}
           <div className="navbar-search my-2 my-lg-0">
-            <SearchForm targetUrl="/main/search/" placeholder="Поиск по сайту..." buttonVariant="outline-secondary" />
+            <SearchForm targetUrl="/main/search/" placeholder="Поиск по сайту..." />
           </div>
           <UserAuthSection
             userAuthenticated={userAuthenticated}

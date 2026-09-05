@@ -17,7 +17,7 @@ import { navigateTo } from '../../utils/navigate';
  * @param {string} [props.search] - Начальное значение поискового запроса (текущий запрос для уточнения)
  * @param {string} [props.placeholder] - Подсказка в поле ввода
  * @param {string} [props.submitLabel] - Текст кнопки отправки
- * @param {string} [props.buttonVariant] - Вариант Bootstrap кнопки отправки (outline-secondary, outline-dark и другие)
+ * @param {string} [props.buttonVariant] - Вариант Bootstrap кнопки отправки (по умолчанию outline-secondary)
  * @return {JSX.Element} Элемент формы поиска
  *
  * @example
@@ -84,7 +84,7 @@ SearchForm.defaultProps = {
   search: '',
   placeholder: 'Поиск...',
   submitLabel: 'Найти',
-  buttonVariant: 'outline-primary',
+  buttonVariant: 'outline-secondary',
 };
 
 export default SearchForm;
