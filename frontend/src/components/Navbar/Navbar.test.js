@@ -151,7 +151,9 @@ describe('Navbar', () => {
     render(<Navbar {...defaultProps} />);
 
     expect(screen.getByPlaceholderText('Поиск по сайту...')).toBeInTheDocument();
-    expect(screen.getByText('Найти')).toBeInTheDocument();
+    const submitButton = screen.getByText('Найти');
+    expect(submitButton).toBeInTheDocument();
+    expect(submitButton).toHaveClass('btn-outline-secondary');
   });
 
   /**

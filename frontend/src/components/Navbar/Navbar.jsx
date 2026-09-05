@@ -69,9 +69,9 @@ const Navbar = ({ brandName, brandUrl, links, userAuthenticated, userName, userI
           <Nav className="me-auto">
             <NavItems links={links} userIsStaff={userIsStaff} />
           </Nav>
-          {/* Отступ me-lg-3 отделяет кнопку поиска от секции авторизации, my-2/my-lg-0 - интервалы в гамбургер-меню */}
-          <div className="me-lg-3 my-2 my-lg-0">
-            <SearchForm targetUrl="/main/search/" placeholder="Поиск по сайту..." />
+          {/* Класс navbar-search задает отступ до секции авторизации, равный зазору внутри нее (navbar.css) */}
+          <div className="navbar-search my-2 my-lg-0">
+            <SearchForm targetUrl="/main/search/" placeholder="Поиск по сайту..." buttonVariant="outline-secondary" />
           </div>
           <UserAuthSection
             userAuthenticated={userAuthenticated}

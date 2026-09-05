@@ -10,3 +10,10 @@
 .navbar-text {
     margin-right: 10px
 }
+
+/* Отступ формы поиска до секции авторизации - равен зазору внутри секции */
+@media (min-width: 992px) {
+    .navbar-search {
+        margin-right: 10px
+    }
+}
