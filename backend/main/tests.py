@@ -58,7 +58,7 @@ class TestMainPage(TestCase):
 class TestSearchPage(TestCase):
     """Тесты страницы общего поиска по сайту."""
 
-    search_url = "/search/"
+    search_url = "/main/search/"
     template = "main/search.html"
     base_template = "base.html"
 
@@ -79,7 +79,7 @@ class TestSearchPage(TestCase):
         """Проверяет монтирование формы поиска и компонента результатов."""
         response = self.client.get(self.search_url)
         self.assertContains(response, 'data-component-name="Search/SearchForm"')
-        self.assertContains(response, '"targetUrl": "/search/"')
+        self.assertContains(response, '"targetUrl": "/main/search/"')
         self.assertContains(response, 'data-component-name="Search/SearchResults"')
 
     def test_search_page_search_parameter(self) -> None:

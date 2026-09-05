@@ -9,7 +9,7 @@ import SearchForm from '@components/Search/SearchForm';
  * Компонент навигационной панели
  * Повторяет функциональность templates/navbar.html
  * Между ссылками навигации и секцией авторизации содержит
- * форму общего поиска, ведущую на /search/
+ * форму общего поиска, ведущую на /main/search/
  *
  * @param {Object} props - Свойства компонента
  * @param {string} props.brandName - Название бренда, отображаемое в левой части навигационной панели
@@ -69,7 +69,10 @@ const Navbar = ({ brandName, brandUrl, links, userAuthenticated, userName, userI
           <Nav className="me-auto">
             <NavItems links={links} userIsStaff={userIsStaff} />
           </Nav>
-          <SearchForm targetUrl="/search/" placeholder="Поиск по сайту..." />
+          {/* Отступ me-lg-3 отделяет кнопку поиска от секции авторизации, my-2/my-lg-0 - интервалы в гамбургер-меню */}
+          <div className="me-lg-3 my-2 my-lg-0">
+            <SearchForm targetUrl="/main/search/" placeholder="Поиск по сайту..." />
+          </div>
           <UserAuthSection
             userAuthenticated={userAuthenticated}
             userName={userName}

@@ -10,7 +10,6 @@ from django.views.generic import RedirectView
 
 from blog.sitemaps import ArticleSitemap, CategorySitemap, SeriesSitemap, TopicSitemap
 from gallery.sitemaps import AlbumSitemap, PhotoSitemap, TagSitemap
-from main.views import search
 from personal_website.views import HealthView, StaticRedirectView
 
 sitemaps = {
@@ -43,7 +42,6 @@ urlpatterns = [
     path("main/", include("main.urls")),
     path("blog/", include("blog.urls")),
     path("gallery/", include("gallery.urls")),
-    path("search/", search, name="search"),
     path("api/", include("api.urls")),
     path(
         "sitemap.xml",

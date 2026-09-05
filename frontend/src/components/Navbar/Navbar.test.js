@@ -161,7 +161,7 @@ describe('Navbar', () => {
    * @function
    * @name submits-search-form-to-search-page
    */
-  test('отправляет форму поиска на страницу /search/', () => {
+  test('отправляет форму поиска на страницу /main/search/', () => {
     const { container } = render(<Navbar {...defaultProps} />);
 
     fireEvent.change(screen.getByPlaceholderText('Поиск по сайту...'), {
@@ -169,7 +169,7 @@ describe('Navbar', () => {
     });
     fireEvent.submit(container.querySelector('form[role="search"]'));
 
-    expect(navigateTo).toHaveBeenCalledWith('/search/?search=react');
+    expect(navigateTo).toHaveBeenCalledWith('/main/search/?search=react');
   });
 
   /**

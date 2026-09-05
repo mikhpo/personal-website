@@ -33,7 +33,7 @@ const ALBUMS_PAGE_SIZE = 6;
  * @return {JSX.Element} Компонент результатов поиска
  *
  * @example
- * // Результаты поиска по запросу из URL страницы /search/
+ * // Результаты поиска по запросу из URL страницы /main/search/
  * <SearchResults search="django" />
  */
 const SearchResults = ({ search }) => {
