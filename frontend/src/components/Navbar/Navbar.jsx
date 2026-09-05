@@ -3,10 +3,13 @@ import PropTypes from 'prop-types';
 import { Navbar as BSNavbar, Nav, Container } from 'react-bootstrap';
 import NavItems from '@components/Navbar/NavItems';
 import UserAuthSection from '@components/Navbar/UserAuthSection';
+import SearchForm from '@components/Search/SearchForm';
 
 /**
  * Компонент навигационной панели
  * Повторяет функциональность templates/navbar.html
+ * Между ссылками навигации и секцией авторизации содержит
+ * форму общего поиска, ведущую на /search/
  *
  * @param {Object} props - Свойства компонента
  * @param {string} props.brandName - Название бренда, отображаемое в левой части навигационной панели
@@ -66,6 +69,7 @@ const Navbar = ({ brandName, brandUrl, links, userAuthenticated, userName, userI
           <Nav className="me-auto">
             <NavItems links={links} userIsStaff={userIsStaff} />
           </Nav>
+          <SearchForm targetUrl="/search/" placeholder="Поиск по сайту..." />
           <UserAuthSection
             userAuthenticated={userAuthenticated}
             userName={userName}

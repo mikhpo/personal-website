@@ -10,3 +10,12 @@ def main(request: HttpRequest) -> HttpResponse:
     Данные загружаются через API в React компонентах.
     """
     return render(request, "main/main.html")
+
+
+def search(request: HttpRequest) -> HttpResponse:
+    """Показ страницы общего поиска по сайту.
+
+    Поисковый запрос передается в React компоненты формы и результатов
+    через пропсы, смонтированные шаблоном.
+    """
+    return render(request, "main/search.html", {"search": request.GET.get("search", "")})
