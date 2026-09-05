@@ -9,4 +9,5 @@
 
 export { blogService } from './blogService';
 export { galleryService } from './galleryService';
+export { navigateTo } from './navigation';
 export { default as api, ApiError } from './api';

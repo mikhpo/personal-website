@@ -1,11 +1,13 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import PhotoDetail from './PhotoDetail';
 
 jest.mock('@hooks/usePhotoData');
+jest.mock('@services/navigation');
 
 import { usePhotoData } from '@hooks';
+import { navigateTo } from '@services';
 
 /**
  * Набор тестов для компонента PhotoDetail.
@@ -41,6 +43,7 @@ describe('PhotoDetail', () => {
       loading: false,
       error: null,
     });
+    navigateTo.mockClear();
   });
 
   afterEach(() => {
@@ -204,5 +207,110 @@ describe('PhotoDetail', () => {
     });
     render(<PhotoDetail photoId={2} />);
     expect(screen.queryByRole('img')).not.toBeInTheDocument();
+  });
+
+  /**
+   * Проверяет переключение фотографий клавиатурой и свайпами.
+   * Навигация выполняется полной загрузкой страницы через сервис navigateTo.
+   */
+  describe('навигация клавиатурой и свайпами', () => {
+    /**
+     * Проверяет, что клавиша ArrowRight переключает
+     * на следующую фотографию альбома.
+     */
+    test('ArrowRight переходит к следующей фотографии', () => {
+      render(<PhotoDetail photoId={2} previousPhotoId={mockPreviousPhotoId} nextPhotoId={mockNextPhotoId} />);
+
+      fireEvent.keyDown(document, { key: 'ArrowRight' });
+
+      expect(navigateTo).toHaveBeenCalledTimes(1);
+      expect(navigateTo).toHaveBeenCalledWith('/gallery/photo/3/');
+    });
+
+    /**
+     * Проверяет, что клавиша ArrowLeft переключает
+     * на предыдущую фотографию альбома.
+     */
+    test('ArrowLeft переходит к предыдущей фотографии', () => {
+      render(<PhotoDetail photoId={2} previousPhotoId={mockPreviousPhotoId} nextPhotoId={mockNextPhotoId} />);
+
+      fireEvent.keyDown(document, { key: 'ArrowLeft' });
+
+      expect(navigateTo).toHaveBeenCalledTimes(1);
+      expect(navigateTo).toHaveBeenCalledWith('/gallery/photo/1/');
+    });
+
+    /**
+     * Проверяет, что свайп влево переключает на следующую фотографию.
+     */
+    test('свайп влево переходит к следующей фотографии', () => {
+      render(<PhotoDetail photoId={2} previousPhotoId={mockPreviousPhotoId} nextPhotoId={mockNextPhotoId} />);
+
+      fireEvent.touchStart(document, { touches: [{ clientX: 200, clientY: 100 }] });
+      fireEvent.touchEnd(document, { changedTouches: [{ clientX: 100, clientY: 100 }] });
+
+      expect(navigateTo).toHaveBeenCalledTimes(1);
+      expect(navigateTo).toHaveBeenCalledWith('/gallery/photo/3/');
+    });
+
+    /**
+     * Проверяет, что свайп вправо переключает на предыдущую фотографию.
+     */
+    test('свайп вправо переходит к предыдущей фотографии', () => {
+      render(<PhotoDetail photoId={2} previousPhotoId={mockPreviousPhotoId} nextPhotoId={mockNextPhotoId} />);
+
+      fireEvent.touchStart(document, { touches: [{ clientX: 100, clientY: 100 }] });
+      fireEvent.touchEnd(document, { changedTouches: [{ clientX: 220, clientY: 100 }] });
+
+      expect(navigateTo).toHaveBeenCalledTimes(1);
+      expect(navigateTo).toHaveBeenCalledWith('/gallery/photo/1/');
+    });
+
+    /**
+     * Проверяет, что при открытом модальном окне EXIF
+     * клавиатурная навигация отключена.
+     */
+    test('стрелки игнорируются при открытом модальном окне EXIF', async () => {
+      const user = userEvent.setup();
+      render(<PhotoDetail photoId={2} previousPhotoId={mockPreviousPhotoId} nextPhotoId={mockNextPhotoId} />);
+
+      await user.click(screen.getByText('О фото'));
+      expect(await screen.findByText('EXIF')).toBeInTheDocument();
+
+      fireEvent.keyDown(document, { key: 'ArrowLeft' });
+      fireEvent.keyDown(document, { key: 'ArrowRight' });
+
+      expect(navigateTo).not.toHaveBeenCalled();
+
+      await user.click(await screen.findByText('Закрыть'));
+
+      // После закрытия окна навигация снова работает.
+      fireEvent.keyDown(document, { key: 'ArrowRight' });
+      expect(navigateTo).toHaveBeenCalledWith('/gallery/photo/3/');
+    });
+
+    /**
+     * Проверяет, что без предыдущей фотографии клавиша ArrowLeft
+     * не выполняет переход.
+     */
+    test('ArrowLeft игнорируется без предыдущей фотографии', () => {
+      render(<PhotoDetail photoId={2} previousPhotoId={null} nextPhotoId={mockNextPhotoId} />);
+
+      fireEvent.keyDown(document, { key: 'ArrowLeft' });
+
+      expect(navigateTo).not.toHaveBeenCalled();
+    });
+
+    /**
+     * Проверяет, что без следующей фотографии клавиша ArrowRight
+     * не выполняет переход.
+     */
+    test('ArrowRight игнорируется без следующей фотографии', () => {
+      render(<PhotoDetail photoId={2} previousPhotoId={mockPreviousPhotoId} nextPhotoId={null} />);
+
+      fireEvent.keyDown(document, { key: 'ArrowRight' });
+
+      expect(navigateTo).not.toHaveBeenCalled();
+    });
   });
 });
