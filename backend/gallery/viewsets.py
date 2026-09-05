@@ -10,6 +10,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAdminUser, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 
+from api.filters import DatabaseSearchFilter
 from api.pagination import GalleryPhotoPagination
 from api.permissions import IsPublicOrAuthor
 from gallery.models import Album, Photo, Tag
@@ -30,7 +31,9 @@ class AlbumViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = AlbumListSerializer
     permission_classes: ClassVar[list] = [IsPublicOrAuthor]
     lookup_field = "pk"
-    filter_backends: ClassVar[list] = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    # DatabaseSearchFilter после OrderingFilter: сортировка по релевантности
+    # (-rank) не должна перезаписываться дефолтным ordering вьюхи.
+    filter_backends: ClassVar[list] = [DjangoFilterBackend, filters.OrderingFilter, DatabaseSearchFilter]
     filterset_fields: ClassVar[list] = ["tags__slug"]
     search_fields: ClassVar[list] = ["name", "description"]
     ordering_fields: ClassVar[list] = ["created_at", "name", "order"]
@@ -65,9 +68,12 @@ class PhotoViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes: ClassVar[list] = [IsPublicOrAuthor]
     pagination_class = GalleryPhotoPagination
     lookup_field = "pk"
-    filter_backends: ClassVar[list] = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    # DatabaseSearchFilter после OrderingFilter: сортировка по релевантности
+    # (-rank) не должна перезаписываться дефолтным ordering вьюхи.
+    # Теги не входят в search_fields: M2M-связь не ложится на SearchVector.
+    filter_backends: ClassVar[list] = [DjangoFilterBackend, filters.OrderingFilter, DatabaseSearchFilter]
     filterset_fields: ClassVar[list] = ["tags__slug"]
-    search_fields: ClassVar[list] = ["name", "description", "tags__name"]
+    search_fields: ClassVar[list] = ["name", "description"]
     ordering_fields: ClassVar[list] = ["taken_at", "uploaded_at", "name"]
     ordering: ClassVar[list] = ["-taken_at"]
 
