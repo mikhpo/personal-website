@@ -3,9 +3,13 @@
     Главная страница раздела галереи.
     Показывает список альбомов и тэгов.
 -->
+{% load react_tags %}
 {% block content %}
     {% block gallery %}
         <div class="container-fluid">
+            <div class="mb-3">
+                {% react_component "Search/SearchForm" search=search targetUrl="/gallery/" placeholder="Поиск по галерее..." %}
+            </div>
             {% if albums %}
                 {% include "gallery/albums.html" %}
             {% endif %}
