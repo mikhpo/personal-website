@@ -78,15 +78,14 @@ describe('SeriesCard', () => {
   });
 
   /**
-   * Проверяет, что ссылка на название серии оформлена как элемент карточки.
-   * Подчеркивание ссылки задается стилями Bootstrap и cards.css, поэтому
-   * в компоненте достаточно класса text-dark без отключения подчеркивания.
+   * Проверяет, что ссылка на название серии не выглядит как ссылка.
+   * Название кликабельно, но подчеркивание отключено классом text-decoration-none:
+   * карточка выглядит как цельный блок, а не как набор ссылок.
    */
-  test('ссылка на название имеет класс text-dark', () => {
+  test('ссылка на название не имеет подчёркивания', () => {
     const renderResult = render(<SeriesCard series={fullSeries} />);
     const titleLink = renderResult.container.querySelector('.card-title a');
-    expect(titleLink).toHaveClass('text-dark');
-    expect(titleLink).not.toHaveClass('text-decoration-none');
+    expect(titleLink).toHaveClass('text-decoration-none', 'text-dark');
   });
 
   /**

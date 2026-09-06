@@ -42,7 +42,7 @@ const SeriesCard = ({ series }) => {
       )}
       <Card.Body className="d-flex flex-column">
         <Card.Title className="mt-auto fs-6" as="h3">
-          <a href={seriesUrl} className="text-dark">
+          <a href={seriesUrl} className="text-decoration-none text-dark">
             {series.name}
           </a>
         </Card.Title>

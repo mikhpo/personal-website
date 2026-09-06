@@ -97,24 +97,23 @@ describe('AlbumCard', () => {
   });
 
   /**
-   * Проверяет оформление ссылки на название альбома.
+   * Проверяет, что ссылка на название альбома не выглядит как ссылка.
    * В компоненте есть две ссылки с одинаковым текстом "Тестовый альбом":
    * 1. Ссылка на обложку (изображение) - без дополнительных CSS классов
-   * 2. Ссылка на название альбома - с классом text-dark
-   * Подчеркивание ссылки задается стилями Bootstrap и cards.css,
-   * поэтому класс text-decoration-none не используется.
+   * 2. Ссылка на название альбома - с классами text-decoration-none и text-dark:
+   * название кликабельно, но подчеркивание отключено, карточка выглядит
+   * как цельный блок, а не как набор ссылок.
    */
-  test('ссылка на название имеет класс text-dark', () => {
+  test('ссылка на название не имеет подчёркивания', () => {
     render(<AlbumCard album={fullAlbum} />);
     // Получаем все ссылки с текстом "Тестовый альбом"
     const titleLinks = screen.getAllByRole('link', { name: 'Тестовый альбом' });
-    // Найдем ссылку с классом text-dark (это ссылка на название, а не на изображение)
+    // Найдем ссылку с нужными классами (это ссылка на название, а не на изображение)
     const titleLink = Array.from(titleLinks).find(link =>
-      link.classList.contains('text-dark')
+      link.classList.contains('text-decoration-none') && link.classList.contains('text-dark')
     );
     expect(titleLink).toBeInTheDocument();
-    expect(titleLink).toHaveClass('text-dark');
-    expect(titleLink).not.toHaveClass('text-decoration-none');
+    expect(titleLink).toHaveClass('text-decoration-none', 'text-dark');
   });
 
   /**

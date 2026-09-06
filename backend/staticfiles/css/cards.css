@@ -3,9 +3,10 @@
     text-align: center;
 }
 
+/* Ссылки в названиях карточек не подчеркиваются: карточка выглядит как цельный блок, а не как набор ссылок */
 .card-title a {
     color: black;
-    text-decoration: underline;
+    text-decoration: none;
 }
 
 .card-body {

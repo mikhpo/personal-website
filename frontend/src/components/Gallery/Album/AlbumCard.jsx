@@ -42,7 +42,7 @@ const AlbumCard = ({ album }) => {
       </div>
       <div className="card-body d-flex flex-column">
         <h3 className="card-title mt-auto fs-5">
-          <a href={albumUrl} className="text-dark">
+          <a href={albumUrl} className="text-decoration-none text-dark">
             {album.name}
           </a>
         </h3>
