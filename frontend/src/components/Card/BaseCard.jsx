@@ -69,7 +69,12 @@ const BaseCard = ({
           </a>
         </Card.Title>
         {description && (
-          <Card.Text>{description}</Card.Text>
+          <Card.Text>
+            {/* Описание кликабельно, как и название, но без подчеркивания - карточка не должна выглядеть как набор ссылок */}
+            <a href={url} className="text-decoration-none text-dark">
+              {description}
+            </a>
+          </Card.Text>
         )}
       </Card.Body>
     </Card>

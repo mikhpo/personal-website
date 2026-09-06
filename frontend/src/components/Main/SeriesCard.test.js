@@ -90,16 +90,15 @@ describe('SeriesCard', () => {
   });
 
   /**
-   * Проверяет, что описание выводится обычным текстом без ссылки.
-   * Переход к серии выполняется по названию и изображению, как в CategoryCard:
-   * ссылка-абзац выделяется подчеркиванием на всю ширину текста и дублирует
-   * смежные ссылки на тот же адрес.
+   * Проверяет, что описание кликабельно, но не выглядит как ссылка.
+   * Как и название, описание ведет к серии, при этом подчеркивание отключено
+   * классом text-decoration-none - карточка не выглядит как набор ссылок.
    */
-  test('описание является обычным текстом без ссылки', () => {
+  test('описание является ссылкой без подчеркивания', () => {
     render(<SeriesCard series={fullSeries} />);
-
-    expect(screen.getByText('Поход в Непале')).toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: 'Поход в Непале' })).not.toBeInTheDocument();
+    const descriptionLink = screen.getByRole('link', { name: 'Поход в Непале' });
+    expect(descriptionLink).toHaveAttribute('href', '/blog/series/langtang-trek/');
+    expect(descriptionLink).toHaveClass('text-decoration-none', 'text-dark');
   });
 
   /**

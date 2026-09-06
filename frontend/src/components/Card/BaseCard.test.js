@@ -94,6 +94,13 @@ describe('BaseCard', () => {
         expect(link).toHaveAttribute('href', '/test/page/');
       });
     });
+
+    test('описание является ссылкой без подчеркивания', () => {
+      render(<BaseCard {...defaultProps} description="Тестовое описание" />);
+      const descriptionLink = screen.getByRole('link', { name: 'Тестовое описание' });
+      expect(descriptionLink).toHaveAttribute('href', '/test/page/');
+      expect(descriptionLink).toHaveClass('text-decoration-none', 'text-dark');
+    });
   });
 
   /**

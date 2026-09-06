@@ -47,7 +47,12 @@ const SeriesCard = ({ series }) => {
           </a>
         </Card.Title>
         {series.description && (
-          <Card.Text>{series.description}</Card.Text>
+          <Card.Text>
+            {/* Описание кликабельно, как и название, но без подчеркивания - карточка не должна выглядеть как набор ссылок */}
+            <a href={seriesUrl} className="text-decoration-none text-dark">
+              {series.description}
+            </a>
+          </Card.Text>
         )}
       </Card.Body>
     </Card>
