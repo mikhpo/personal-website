@@ -63,7 +63,7 @@ describe('UserAuthSection', () => {
    *
    * Проверяет наличие:
    * - Текста с именем пользователя
-   * - Ссылки для выхода
+   * - Формы с кнопкой для выхода
    * - Отсутствие ссылок для регистрации и входа
    */
   test('рендерит элементы для аутентифицированного пользователя', () => {
@@ -72,9 +72,12 @@ describe('UserAuthSection', () => {
     // Проверяем отображение имени пользователя
     expect(screen.getByText('Вы вошли как Тестовый Пользователь')).toBeInTheDocument();
 
-    // Проверяем наличие ссылки для выхода
-    expect(screen.getByText('Выйти')).toBeInTheDocument();
-    expect(screen.getByText('Выйти')).toHaveAttribute('href', '/accounts/logout/');
+    // Проверяем форму выхода: выход в Django выполняется запросом POST
+    const logoutButton = screen.getByText('Выйти');
+    expect(logoutButton).toBeInTheDocument();
+    expect(logoutButton.closest('form')).toHaveAttribute('action', '/accounts/logout/');
+    expect(logoutButton.closest('form')).toHaveAttribute('method', 'post');
+    expect(logoutButton).toHaveAttribute('type', 'submit');
 
     // Проверяем отсутствие ссылок для регистрации и входа
     expect(screen.queryByText('Регистрация')).not.toBeInTheDocument();

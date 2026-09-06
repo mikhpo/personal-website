@@ -41,11 +41,11 @@ const AlbumCard = ({ album }) => {
         <span className="text-muted">Нет обложки</span>
       </div>
       <div className="card-body d-flex flex-column">
-        <h5 className="card-title mt-auto">
-          <a href={albumUrl} className="text-decoration-none text-dark">
+        <h3 className="card-title mt-auto fs-5">
+          <a href={albumUrl} className="text-dark">
             {album.name}
           </a>
-        </h5>
+        </h3>
         {album.description && (
           <p className="card-text">{album.description}</p>
         )}

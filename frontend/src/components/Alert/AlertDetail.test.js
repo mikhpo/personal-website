@@ -156,7 +156,7 @@ describe('Alert', () => {
     const actions = (
       <div>
         <button className="btn btn-primary me-2">Действие 1</button>
-        <a href="#" className="btn btn-secondary">Действие 2</a>
+        <a href="/actions/" className="btn btn-secondary">Действие 2</a>
       </div>
     );
 

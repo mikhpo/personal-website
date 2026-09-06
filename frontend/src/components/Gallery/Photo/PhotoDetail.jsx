@@ -70,12 +70,13 @@ const PhotoDetail = ({ photoId, previousPhotoId, nextPhotoId, apiUrl = '/api/gal
           />
         )}
         <div className="card-footer" align="center">
-          <div className="btn-group" role="group" aria-label="Photo navigation buttons">
+          <div className="btn-group" role="group" aria-label="Навигация по фотографиям">
             {previousUrl && (
               <a
                 href={previousUrl}
                 className="btn btn-outline-dark"
                 id="previous-photo-link"
+                aria-label="Предыдущая фотография"
               >
                 {"<"}
               </a>
@@ -91,6 +92,7 @@ const PhotoDetail = ({ photoId, previousPhotoId, nextPhotoId, apiUrl = '/api/gal
                 href={nextUrl}
                 className="btn btn-outline-dark"
                 id="next-photo-link"
+                aria-label="Следующая фотография"
               >
                 {">"}
               </a>
@@ -99,7 +101,11 @@ const PhotoDetail = ({ photoId, previousPhotoId, nextPhotoId, apiUrl = '/api/gal
         </div>
       </div>
 
-      <Modal show={showExifModal} onHide={() => setShowExifModal(false)}>
+      <Modal
+        show={showExifModal}
+        onHide={() => setShowExifModal(false)}
+        aria-labelledby="exifModalLabel"
+      >
         <Modal.Header closeButton>
           <Modal.Title id="exifModalLabel">EXIF</Modal.Title>
         </Modal.Header>

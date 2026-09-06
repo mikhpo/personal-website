@@ -5,7 +5,7 @@
 
 .card-title a {
     color: black;
-    text-decoration: none;
+    text-decoration: underline;
 }
 
 .card-body {

@@ -41,14 +41,14 @@ const SeriesCard = ({ series }) => {
         </a>
       )}
       <Card.Body className="d-flex flex-column">
-        <Card.Title className="mt-auto" as="h6">
-          <a href={seriesUrl} className="text-decoration-none text-dark">
+        <Card.Title className="mt-auto fs-6" as="h3">
+          <a href={seriesUrl} className="text-dark">
             {series.name}
           </a>
         </Card.Title>
         {series.description && (
           <Card.Text>
-            <a href={seriesUrl} className="text-decoration-none text-dark">
+            <a href={seriesUrl} className="text-dark">
               {series.description}
             </a>
           </Card.Text>

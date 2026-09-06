@@ -88,9 +88,7 @@ const CategoryGrid = () => {
 
   return (
     <Container data-testid="category-grid-container">
-      <h4>
-        <p className="text-center">Выберите категорию</p>
-      </h4>
+      <h2 className="fs-4 text-center">Выберите категорию</h2>
       <Row
         xs={1} // 1 колонка на мобильных устройствах
         md={3} // 3 колонки на планшетах и десктопах (>=768px)

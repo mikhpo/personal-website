@@ -16,8 +16,7 @@
                     {% for tag in tags %}
                         {% if tag.name %}
                             <a class="btn btn-outline-dark"
-                               href="{{ tag.get_absolute_url }}"
-                               role="button">{{ tag.name }}</a>
+                               href="{{ tag.get_absolute_url }}">{{ tag.name }}</a>
                         {% endif %}
                     {% endfor %}
                 </div>

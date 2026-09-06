@@ -63,8 +63,8 @@ const BaseCard = ({
         </a>
       )}
       <Card.Body className="d-flex flex-column">
-        <Card.Title className={isCentered ? 'mt-auto' : ''}>
-          <a href={url} className="text-decoration-none text-dark">
+        <Card.Title as="h3" className={`fs-5 ${isCentered ? 'mt-auto' : ''}`}>
+          <a href={url} className="text-dark">
             {title}
           </a>
         </Card.Title>

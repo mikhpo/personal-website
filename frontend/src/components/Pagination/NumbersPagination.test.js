@@ -30,6 +30,16 @@ describe('NumbersPagination', () => {
     expect(activePage).toBeNull();
   });
 
+  test('активная страница помечена aria-current="page"', () => {
+    render(<NumbersPagination currentPage={3} totalPages={5} baseUrl="/blog/" />);
+
+    const activePageItem = screen.getByText('3').closest('.page-item');
+    expect(activePageItem).toHaveClass('active');
+
+    const activePageLink = activePageItem.querySelector('.page-link');
+    expect(activePageLink).toHaveAttribute('aria-current', 'page');
+  });
+
   test('неактивные страницы являются ссылками', () => {
     render(<NumbersPagination currentPage={3} totalPages={5} baseUrl="/blog/" />);
 

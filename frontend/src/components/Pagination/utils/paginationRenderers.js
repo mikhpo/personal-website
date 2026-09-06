@@ -35,6 +35,7 @@ export const renderPaginationItem = (elementType, page, currentPage, totalPages,
           key={page}
           active={page === currentPage}
           href={page === currentPage ? undefined : getPageUrl(baseUrl, page)}
+          aria-current={page === currentPage ? 'page' : undefined}
         >
           {page}
         </BSPagination.Item>
@@ -70,10 +71,7 @@ export const renderNavigationButton = (type, currentPage, totalPages, baseUrl, o
   const href = getButtonHref(type, currentPage, totalPages, baseUrl);
   const text = getButtonText(type);
 
-  let finalClassName = getButtonClassName(type);
-  if (disabled) {
-    finalClassName = finalClassName + ' disabled';
-  }
+  const finalClassName = getButtonClassName(type);
 
   // Если передан onPageChange, используем кнопку с обработчиком
   if (onPageChange) {
@@ -92,13 +90,12 @@ export const renderNavigationButton = (type, currentPage, totalPages, baseUrl, o
 
   if (disabled) {
     return (
-      <a
+      <button
         className={finalClassName}
-        aria-disabled={true}
-        tabIndex={-1}
+        disabled
       >
         {text}
-      </a>
+      </button>
     );
   }
 

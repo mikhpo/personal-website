@@ -9,7 +9,7 @@
 {% endblock meta %}
 {% block content %}
     <div class="container">
-        <h2>{{ category.name }}</h2>
+        <h1 class="fs-2">{{ category.name }}</h1>
         {% if category.description %}<p>{{ category.description }}</p>{% endif %}
         {% react_component "Blog/ArticleList" categorySlug=category.slug %}
     </div>
