@@ -24,8 +24,9 @@ const UserAuthSection = ({ userAuthenticated, userName, userIsStaff }) => {
           {userIsStaff && (
             <a href="/admin/" className="navbar-text text-nowrap">Администрирование</a>
           )}
-          {/* Выход в Django выполняется только запросом POST, поэтому оформлен формой с кнопкой */}
-          <form method="post" action="/accounts/logout/" className="ms-lg-2">
+          {/* Выход в Django выполняется только запросом POST, поэтому оформлен формой с кнопкой.
+              Отступ слева задает margin-right соседнего элемента с классом navbar-text (navbar.css) */}
+          <form method="post" action="/accounts/logout/">
             <input type="hidden" name="csrfmiddlewaretoken" value={getCsrfToken()} />
             <button type="submit" className="btn btn-outline-dark text-nowrap">Выйти</button>
           </form>
