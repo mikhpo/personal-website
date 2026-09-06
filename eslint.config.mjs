@@ -1,5 +1,6 @@
 import reactX from 'eslint-plugin-react-x';
 import reactRefresh from 'eslint-plugin-react-refresh';
+import jsxA11y from 'eslint-plugin-jsx-a11y';
 
 export default [
   {
@@ -51,9 +52,11 @@ export default [
     plugins: {
       'react-x': reactX,
       'react-refresh': reactRefresh,
+      'jsx-a11y': jsxA11y,
     },
     rules: {
       ...reactX.configs['recommended-typescript'].rules,
+      ...jsxA11y.flatConfigs.recommended.rules,
       'react-refresh/only-export-components': 'warn',
       'no-unused-vars': ['error', { varsIgnorePattern: '^React$' }],
     },
