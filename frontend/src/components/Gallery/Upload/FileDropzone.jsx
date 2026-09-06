@@ -139,6 +139,22 @@ const FileDropzone = ({ onFilesSelect, accept = 'image/*', multiple = true, file
   };
 
   /**
+   * Обработчик нажатий клавиш на зоне dropzone.
+   *
+   * Активирует выбор файлов клавишами Enter и Space, зона доступна с клавиатуры.
+   *
+   * @function
+   * @param {KeyboardEvent} e - Событие нажатия клавиши
+   * @return {void}
+   */
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      inputRef.current?.click();
+    }
+  };
+
+  /**
    * Удаляет файл из списка выбранных по индексу.
    *
    * Обновляет состояние и вызывает обработчик onFilesSelect с обновленным списком.
@@ -170,6 +186,10 @@ const FileDropzone = ({ onFilesSelect, accept = 'image/*', multiple = true, file
         onDragOver={handleDrag}
         onDrop={handleDrop}
         onClick={handleClick}
+        onKeyDown={handleKeyDown}
+        role="button"
+        tabIndex={0}
+        aria-label="Выбрать файлы для загрузки"
       >
         <Card.Body>
           <p className="mb-2">
@@ -192,7 +212,7 @@ const FileDropzone = ({ onFilesSelect, accept = 'image/*', multiple = true, file
       />
       {displayFiles.length > 0 && (
         <div className="mt-3">
-          <h6>Выбранные файлы:</h6>
+          <h2 className="fs-6">Выбранные файлы:</h2>
           <ul className="list-group">
             {displayFiles.map((file) => (
               <li

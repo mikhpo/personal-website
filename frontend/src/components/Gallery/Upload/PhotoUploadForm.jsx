@@ -170,7 +170,7 @@ const PhotoUploadForm = () => {
   return (
     <Card className="shadow-sm p-3 mb-5 bg-white rounded">
       <Card.Body>
-        <Card.Title>Загрузка фотографий</Card.Title>
+        <Card.Title as="h1" className="fs-4">Загрузка фотографий</Card.Title>
 
         <AlbumSelector
           albums={albums}
@@ -188,7 +188,7 @@ const PhotoUploadForm = () => {
 
         {Object.keys(uploadProgress).length > 0 && (
           <div className="mt-4">
-            <h6>Прогресс загрузки:</h6>
+            <h2 className="fs-6">Прогресс загрузки:</h2>
             {Object.entries(uploadProgress).map(([fileName, progress]) => (
               <UploadProgress
                 key={fileName}
@@ -202,7 +202,7 @@ const PhotoUploadForm = () => {
 
         {errors.length > 0 && (
           <Alert variant="danger" className="mt-3">
-            <Alert.Heading>Ошибки загрузки</Alert.Heading>
+            <Alert.Heading as="h2" className="fs-4">Ошибки загрузки</Alert.Heading>
             <ul className="mb-0">
               {errors.map((error) => (
                 <li key={error}>{error}</li>

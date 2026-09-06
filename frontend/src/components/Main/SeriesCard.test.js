@@ -78,8 +78,9 @@ describe('SeriesCard', () => {
   });
 
   /**
-   * Проверяет, что ссылка на название серии не имеет подчеркивания.
-   * В компоненте ссылка на название должна иметь классы text-decoration-none и text-dark.
+   * Проверяет, что ссылка на название серии не выглядит как ссылка.
+   * Название кликабельно, но подчеркивание отключено классом text-decoration-none:
+   * карточка выглядит как цельный блок, а не как набор ссылок.
    */
   test('ссылка на название не имеет подчёркивания', () => {
     const renderResult = render(<SeriesCard series={fullSeries} />);
@@ -88,14 +89,15 @@ describe('SeriesCard', () => {
   });
 
   /**
-   * Проверяет, что описание является ссылкой.
-   * В отличие от CategoryCard, описание в SeriesCard также является ссылкой.
+   * Проверяет, что описание кликабельно, но не выглядит как ссылка.
+   * Как и название, описание ведет к серии, при этом подчеркивание отключено
+   * классом text-decoration-none - карточка не выглядит как набор ссылок.
    */
-  test('описание является ссылкой', () => {
+  test('описание является ссылкой без подчеркивания', () => {
     render(<SeriesCard series={fullSeries} />);
     const descriptionLink = screen.getByRole('link', { name: 'Поход в Непале' });
-    expect(descriptionLink).toBeInTheDocument();
     expect(descriptionLink).toHaveAttribute('href', '/blog/series/langtang-trek/');
+    expect(descriptionLink).toHaveClass('text-decoration-none', 'text-dark');
   });
 
   /**

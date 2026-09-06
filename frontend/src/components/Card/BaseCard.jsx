@@ -63,13 +63,18 @@ const BaseCard = ({
         </a>
       )}
       <Card.Body className="d-flex flex-column">
-        <Card.Title className={isCentered ? 'mt-auto' : ''}>
+        <Card.Title as="h3" className={`fs-5 ${isCentered ? 'mt-auto' : ''}`}>
           <a href={url} className="text-decoration-none text-dark">
             {title}
           </a>
         </Card.Title>
         {description && (
-          <Card.Text>{description}</Card.Text>
+          <Card.Text>
+            {/* Описание кликабельно, как и название, но без подчеркивания - карточка не должна выглядеть как набор ссылок */}
+            <a href={url} className="text-decoration-none text-dark">
+              {description}
+            </a>
+          </Card.Text>
         )}
       </Card.Body>
     </Card>

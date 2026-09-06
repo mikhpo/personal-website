@@ -87,6 +87,48 @@ describe('FileDropzone', () => {
     expect(clickSpy).toHaveBeenCalled();
   });
 
+  // Проверяет доступность зоны с клавиатуры: роль кнопки и фокус
+  test('доступна с клавиатуры: role="button" и tabindex', () => {
+    const { container } = render(<FileDropzone onFilesSelect={jest.fn()} />);
+
+    const dropzone = container.querySelector('.card');
+
+    expect(dropzone).toHaveAttribute('role', 'button');
+    expect(dropzone).toHaveAttribute('tabindex', '0');
+  });
+
+  // Проверяет открытие диалога выбора файлов с клавиатуры (Enter)
+  test('вызывает клик на input при нажатии Enter', async () => {
+    const user = userEvent.setup();
+    const { container } = render(<FileDropzone onFilesSelect={jest.fn()} />);
+
+    const dropzone = container.querySelector('.card');
+    const input = container.querySelector('input[type="file"]');
+
+    const clickSpy = jest.spyOn(input, 'click');
+
+    dropzone.focus();
+    await user.keyboard('{Enter}');
+
+    expect(clickSpy).toHaveBeenCalled();
+  });
+
+  // Проверяет открытие диалога выбора файлов с клавиатуры (Space)
+  test('вызывает клик на input при нажатии Space', async () => {
+    const user = userEvent.setup();
+    const { container } = render(<FileDropzone onFilesSelect={jest.fn()} />);
+
+    const dropzone = container.querySelector('.card');
+    const input = container.querySelector('input[type="file"]');
+
+    const clickSpy = jest.spyOn(input, 'click');
+
+    dropzone.focus();
+    await user.keyboard(' ');
+
+    expect(clickSpy).toHaveBeenCalled();
+  });
+
   // Проверяет выбор файлов через стандартный диалог
   test('обрабатывает выбор файлов через input', () => {
     const handleFilesSelect = jest.fn();

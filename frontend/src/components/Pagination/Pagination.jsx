@@ -37,7 +37,7 @@ const Pagination = ({
   const PaginationComponent = type === 'numbers' ? NumbersPagination : NavigationPagination;
 
   return (
-    <div className="container mt-4">
+    <nav className="container mt-4" aria-label="Навигация по страницам">
       <div className="pagination">
         <PaginationComponent
           currentPage={currentPage}
@@ -50,7 +50,7 @@ const Pagination = ({
           baseUrl={baseUrl}
         />
       </div>
-    </div>
+    </nav>
   );
 };
 

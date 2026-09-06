@@ -8,5 +8,7 @@
     Рендерится через React компонент HomePage.
 -->
 {% block content %}
+    <!-- На главной странице нет текста заголовка, поэтому h1 скрыт визуально и предназначен для скринридеров -->
+    <h1 class="visually-hidden">Главная</h1>
     {% react_component "Main/HomePage" %}
 {% endblock content %}

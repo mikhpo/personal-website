@@ -65,5 +65,12 @@ describe('Pagination', () => {
       expect(container.querySelector('.container')).toBeInTheDocument();
       expect(container.querySelector('.pagination')).toBeInTheDocument();
     });
+
+    test('обернута в элемент nav с доступным именем', () => {
+      render(<Pagination currentPage={3} totalPages={5} baseUrl="/blog/" />);
+
+      const nav = screen.getByRole('navigation', { name: 'Навигация по страницам' });
+      expect(nav).toBeInTheDocument();
+    });
   });
 });

@@ -162,6 +162,17 @@ describe('PhotoDetail', () => {
   });
 
   /**
+   * Проверяет доступные имена кнопок навигации для скринридеров:
+   * стрелки "<" и ">" сами по себе неинформативны.
+   */
+  test('кнопки навигации имеют aria-label', () => {
+    render(<PhotoDetail photoId={2} previousPhotoId={mockPreviousPhotoId} nextPhotoId={mockNextPhotoId} />);
+
+    expect(screen.getByLabelText('Предыдущая фотография')).toHaveAttribute('href', '/gallery/photo/1/');
+    expect(screen.getByLabelText('Следующая фотография')).toHaveAttribute('href', '/gallery/photo/3/');
+  });
+
+  /**
    * Проверяет, что при нажатии на кнопку "О фото" открывается
    * модальное окно с EXIF-данными: заголовок "EXIF", поле "Камера"
    * и значение "Canon EOS 5D".

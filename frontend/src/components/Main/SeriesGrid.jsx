@@ -88,9 +88,7 @@ const SeriesGrid = () => {
 
   return (
     <Container data-testid="series-grid-container">
-      <h4>
-        <p className="text-center">Или серию</p>
-      </h4>
+      <h2 className="fs-4 text-center">Или серию</h2>
       <Row
         xs={1} // 1 колонка на мобильных устройствах
         md={3} // 3 колонки на планшетах и десктопах (>=768px)

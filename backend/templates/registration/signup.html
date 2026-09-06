@@ -8,6 +8,7 @@
     {% if user.is_authenticated %}
         Вы уже зарегистрированы.
     {% else %}
+        <h1 class="card-title fs-4" align="center">Регистрация</h1>
         <form action="" method="post">
             {% csrf_token %}
             {{ form|crispy }}

@@ -41,13 +41,14 @@ const SeriesCard = ({ series }) => {
         </a>
       )}
       <Card.Body className="d-flex flex-column">
-        <Card.Title className="mt-auto" as="h6">
+        <Card.Title className="mt-auto fs-6" as="h3">
           <a href={seriesUrl} className="text-decoration-none text-dark">
             {series.name}
           </a>
         </Card.Title>
         {series.description && (
           <Card.Text>
+            {/* Описание кликабельно, как и название, но без подчеркивания - карточка не должна выглядеть как набор ссылок */}
             <a href={seriesUrl} className="text-decoration-none text-dark">
               {series.description}
             </a>

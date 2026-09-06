@@ -5,7 +5,7 @@
 <div class="container-fluid">
     {% if tag_not_found %}
         <div class="alert alert-warning" role="alert">
-            <h4>Тэг не найден</h4>
+            <h1 class="fs-4 alert-heading">Тэг не найден</h1>
             <p>Тэг с названием "{{ tag_slug }}" не существует.</p>
             {% if tags %}
                 <p>Доступные тэги:</p>
@@ -19,15 +19,15 @@
             {% endif %}
         </div>
     {% else %}
-        <h4>Тэг: {{ tag.name }}</h4>
+        <h1 class="fs-4">Тэг: {{ tag.name }}</h1>
         {% if tag.description %}
             <p>{{ tag.description }}</p>
         {% endif %}
 
-        <h5>Альбомы с этим тэгом:</h5>
+        <h2 class="fs-5">Альбомы с этим тэгом:</h2>
         {% react_component "Gallery/AlbumList" tagSlug=tag.slug %}
 
-        <h5>Фотографии с этим тэгом:</h5>
+        <h2 class="fs-5">Фотографии с этим тэгом:</h2>
         {% react_component "Gallery/PhotoList" tagSlug=tag.slug %}
     {% endif %}
 </div>

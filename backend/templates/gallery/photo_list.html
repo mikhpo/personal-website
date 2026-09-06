@@ -3,6 +3,7 @@
 {% load react_tags %}
 {% block gallery %}
 <div class="container-fluid">
+    <h1 class="mb-3">Фотографии</h1>
     <div class="mb-3">
         {% react_component "Search/SearchForm" search=search targetUrl="/gallery/photos/" placeholder="Поиск по фотографиям..." %}
     </div>

@@ -28,3 +28,19 @@ table:not(.center) td {
 .pagination {
     justify-content: center
 }
+
+/* Крупные цели нажатия на сенсорных экранах: рекомендуемый минимум - 44px */
+@media (pointer: coarse) {
+    .btn-sm,
+    .btn-group-sm > .btn {
+        display: inline-flex;
+        align-items: center;
+        min-height: 44px;
+    }
+
+    .page-link {
+        min-height: 44px;
+        padding-top: 10px;
+        padding-bottom: 10px;
+    }
+}

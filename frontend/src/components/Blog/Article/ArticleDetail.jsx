@@ -166,7 +166,7 @@ const ArticleDetail = ({ articleId, isAuthenticated, loginUrl }) => {
     <div className="container mb-3 pb-3">
       <Card className="shadow bg-white rounded justify-content">
         <Card.Body>
-          <h4 className="card-title">{article.title}</h4>
+          <h1 className="card-title fs-4">{article.title}</h1>
           <p
             className="card-text"
             dangerouslySetInnerHTML={{ __html: article.content }}
