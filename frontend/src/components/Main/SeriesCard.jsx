@@ -47,11 +47,7 @@ const SeriesCard = ({ series }) => {
           </a>
         </Card.Title>
         {series.description && (
-          <Card.Text>
-            <a href={seriesUrl} className="text-dark">
-              {series.description}
-            </a>
-          </Card.Text>
+          <Card.Text>{series.description}</Card.Text>
         )}
       </Card.Body>
     </Card>
