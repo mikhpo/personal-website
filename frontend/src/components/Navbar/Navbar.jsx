@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import { Navbar as BSNavbar, Nav, Container } from 'react-bootstrap';
 import NavItems from '@components/Navbar/NavItems';
 import UserAuthSection from '@components/Navbar/UserAuthSection';
+import ThemeToggle from '@components/Navbar/ThemeToggle';
 import SearchForm from '@components/Search/SearchForm';
 
 /**
@@ -61,7 +62,9 @@ import SearchForm from '@components/Search/SearchForm';
  */
 const Navbar = ({ brandName, brandUrl, links, userAuthenticated, userName, userIsStaff }) => {
   return (
-    <BSNavbar bg="light" variant="light" expand="lg" className="shadow mb-5">
+    // Без variant: цвета ссылок и фона задаются CSS-переменными Bootstrap
+    // и автоматически адаптируются к активной теме (data-bs-theme на <html>)
+    <BSNavbar bg="body-tertiary" expand="lg" className="shadow mb-5">
       <Container fluid>
         <BSNavbar.Brand href={brandUrl}>{brandName}</BSNavbar.Brand>
         <BSNavbar.Toggle aria-controls="basic-navbar-nav" />
@@ -73,6 +76,7 @@ const Navbar = ({ brandName, brandUrl, links, userAuthenticated, userName, userI
           <div className="navbar-search my-2 my-lg-0">
             <SearchForm targetUrl="/main/search/" placeholder="Поиск по сайту..." />
           </div>
+          <ThemeToggle />
           <UserAuthSection
             userAuthenticated={userAuthenticated}
             userName={userName}

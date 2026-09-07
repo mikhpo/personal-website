@@ -33,16 +33,16 @@ const AlbumCard = ({ album }) => {
 
   // Если обложки нет, отображаем плейсхолдер
   return (
-    <div className="card shadow bg-white rounded text-center h-100">
+    <div className="card shadow rounded text-center h-100">
       <div
-        className="card-img-top bg-light d-flex align-items-center justify-content-center"
+        className="card-img-top bg-body-tertiary d-flex align-items-center justify-content-center"
         style={{ height: '200px' }}
       >
         <span className="text-muted">Нет обложки</span>
       </div>
       <div className="card-body d-flex flex-column">
         <h3 className="card-title mt-auto fs-5">
-          <a href={albumUrl} className="text-decoration-none text-dark">
+          <a href={albumUrl} className="text-decoration-none text-body">
             {album.name}
           </a>
         </h3>

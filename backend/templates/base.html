@@ -3,11 +3,14 @@
 {% load webpack_loader %}
 {% load react_props %}
 <!-- Основной шаблон сайта, от которого наследуют все другие шаблоны. -->
-<html lang="ru">
+<html lang="ru" data-bs-theme="light">
   <head>
     <meta charset="utf-8">
     <!-- Без user-scalable=no и maximum-scale: масштабирование жестами нужно слабовидящим пользователям -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- data-bs-theme задает светлую тему по умолчанию: скрипт theme.js заменяет ее
+         до первой отрисовки на сохраненный выбор пользователя или системную тему -->
+    <script src="{% static "js/theme.js" %}"></script>
     <meta name="description" content="Mikhail Polyakov personal website">
     <meta name="keywords" content="Python, Django">
     <meta name="author" content="Mikhail Polyakov">
@@ -20,6 +23,8 @@
       </title>
       <link rel="stylesheet"
             href="{% static "bootstrap/dist/css/bootstrap.min.css" %}">
+      <link rel="stylesheet"
+            href="{% static "bootstrap-icons/font/bootstrap-icons.min.css" %}">
       <link rel="stylesheet" href="{% static "css/base.css" %}">
       <link rel="stylesheet" href="{% static "css/navbar.css" %}">
       <link rel="stylesheet" href="{% static "css/cards.css" %}">

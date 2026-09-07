@@ -93,14 +93,14 @@ describe('AlbumCard', () => {
   test('применяет правильные CSS классы к Card', () => {
     const renderResult = render(<AlbumCard album={fullAlbum} />);
     const card = renderResult.container.querySelector('.card');
-    expect(card).toHaveClass('shadow', 'bg-white', 'rounded', 'text-center', 'h-100');
+    expect(card).toHaveClass('shadow', 'rounded', 'text-center', 'h-100');
   });
 
   /**
    * Проверяет, что ссылка на название альбома не выглядит как ссылка.
    * В компоненте есть две ссылки с одинаковым текстом "Тестовый альбом":
    * 1. Ссылка на обложку (изображение) - без дополнительных CSS классов
-   * 2. Ссылка на название альбома - с классами text-decoration-none и text-dark:
+   * 2. Ссылка на название альбома - с классами text-decoration-none и text-body:
    * название кликабельно, но подчеркивание отключено, карточка выглядит
    * как цельный блок, а не как набор ссылок.
    */
@@ -110,10 +110,10 @@ describe('AlbumCard', () => {
     const titleLinks = screen.getAllByRole('link', { name: 'Тестовый альбом' });
     // Найдем ссылку с нужными классами (это ссылка на название, а не на изображение)
     const titleLink = Array.from(titleLinks).find(link =>
-      link.classList.contains('text-decoration-none') && link.classList.contains('text-dark')
+      link.classList.contains('text-decoration-none') && link.classList.contains('text-body')
     );
     expect(titleLink).toBeInTheDocument();
-    expect(titleLink).toHaveClass('text-decoration-none', 'text-dark');
+    expect(titleLink).toHaveClass('text-decoration-none', 'text-body');
   });
 
   /**

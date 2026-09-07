@@ -85,7 +85,7 @@ describe('SeriesCard', () => {
   test('ссылка на название не имеет подчёркивания', () => {
     const renderResult = render(<SeriesCard series={fullSeries} />);
     const titleLink = renderResult.container.querySelector('.card-title a');
-    expect(titleLink).toHaveClass('text-decoration-none', 'text-dark');
+    expect(titleLink).toHaveClass('text-decoration-none', 'text-body');
   });
 
   /**
@@ -97,7 +97,7 @@ describe('SeriesCard', () => {
     render(<SeriesCard series={fullSeries} />);
     const descriptionLink = screen.getByRole('link', { name: 'Поход в Непале' });
     expect(descriptionLink).toHaveAttribute('href', '/blog/series/langtang-trek/');
-    expect(descriptionLink).toHaveClass('text-decoration-none', 'text-dark');
+    expect(descriptionLink).toHaveClass('text-decoration-none', 'text-body');
   });
 
   /**

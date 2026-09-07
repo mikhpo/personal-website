@@ -23,7 +23,7 @@ const PhotoCardComponent = ({ photo }) => {
 
   return (
     <a href={photoUrl} className="text-decoration-none">
-      <Card className="shadow bg-white rounded text-center">
+      <Card className="shadow rounded text-center">
         {photo.thumbnail_url && (
           <Card.Img
             className="card-img"

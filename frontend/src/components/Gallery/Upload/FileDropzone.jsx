@@ -179,7 +179,7 @@ const FileDropzone = ({ onFilesSelect, accept = 'image/*', multiple = true, file
   return (
     <div>
       <Card
-        className={`p-5 text-center ${dragActive ? 'border-primary bg-light' : 'border-secondary'}`}
+        className={`p-5 text-center ${dragActive ? 'border-primary bg-body-tertiary' : 'border-secondary'}`}
         style={{ cursor: 'pointer', borderStyle: 'dashed', borderWidth: '2px' }}
         onDragEnter={handleDrag}
         onDragLeave={handleDrag}

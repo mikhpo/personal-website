@@ -60,7 +60,7 @@ const PhotoDetail = ({ photoId, previousPhotoId, nextPhotoId, apiUrl = '/api/gal
 
   return (
     <div className="container" style={{ overflowY: 'auto', maxHeight: '100vh' }}>
-      <div className="card shadow bg-white rounded justify-content">
+      <div className="card shadow rounded justify-content">
         {photo.image_url && (
           <img
             className="card-img"

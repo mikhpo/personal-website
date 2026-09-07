@@ -46,7 +46,7 @@ const ArticleCard = ({ article }) => {
 
   return (
     <div className="container mb-3 pb-3">
-      <Card className="shadow mb-4 bg-white rounded justify-content">
+      <Card className="shadow mb-4 rounded justify-content">
         <Card.Body>
           <h2 className="card-title fs-4">
             <a href={articleUrl}>{article.title}</a>

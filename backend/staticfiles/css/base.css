@@ -1,7 +1,7 @@
 @charset 'UTF-8';
 
 html body {
-    background-color: whitesmoke;
+    background-color: var(--bs-tertiary-bg);
 }
 
 .center {
@@ -22,7 +22,7 @@ img {
 }
 
 table:not(.center) td {
-    border: 1px solid black;
+    border: 1px solid var(--bs-border-color);
 }
 
 .pagination {

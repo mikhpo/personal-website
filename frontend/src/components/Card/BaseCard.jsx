@@ -47,7 +47,7 @@ const BaseCard = ({
   cardImgProps = {},
 }) => {
   const isCentered = variant === 'centered';
-  const cardClassName = `shadow bg-white rounded ${isCentered ? 'text-center' : ''} h-100 ${className}`;
+  const cardClassName = `shadow rounded ${isCentered ? 'text-center' : ''} h-100 ${className}`;
 
   return (
     <Card className={cardClassName}>
@@ -64,14 +64,14 @@ const BaseCard = ({
       )}
       <Card.Body className="d-flex flex-column">
         <Card.Title as="h3" className={`fs-5 ${isCentered ? 'mt-auto' : ''}`}>
-          <a href={url} className="text-decoration-none text-dark">
+          <a href={url} className="text-decoration-none text-body">
             {title}
           </a>
         </Card.Title>
         {description && (
           <Card.Text>
             {/* Описание кликабельно, как и название, но без подчеркивания - карточка не должна выглядеть как набор ссылок */}
-            <a href={url} className="text-decoration-none text-dark">
+            <a href={url} className="text-decoration-none text-body">
               {description}
             </a>
           </Card.Text>

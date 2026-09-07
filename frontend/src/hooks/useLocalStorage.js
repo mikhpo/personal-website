@@ -5,12 +5,14 @@ import { useState, useEffect, useCallback } from 'react';
  *
  * Позволяет сохранять и считывать состояние в/из localStorage браузера.
  * Поддерживает сериализацию JSON и автоматическую синхронизацию при изменениях.
+ * Запись null или undefined удаляет ключ из localStorage.
  *
  * @param {string} key - Ключ для хранения в localStorage
  * @param {any} initialValue - Начальное значение (если в localStorage ничего нет)
  * @return {Array} Массив [value, setValue]
  * @property {any} value - Текущее значение из localStorage
- * @property {Function} setValue - Функция для обновления значения (с сохранением в localStorage)
+ * @property {Function} setValue - Функция для обновления значения (с сохранением в localStorage);
+ * null и undefined удаляют ключ
  *
  * @example
  * // Хранение настроек
@@ -47,8 +49,9 @@ const useLocalStorage = (key, initialValue) => {
   /**
    * Функция для обновления значения.
    * Сохраняет новое значение в localStorage и обновляет состояние.
+   * Значения null и undefined удаляют ключ из localStorage.
    * @function
-   * @param {any} value - Новое значение
+   * @param {any} value - Новое значение (null или undefined удаляют ключ)
    * @return {void}
    */
   const setValue = useCallback((value) => {
@@ -57,7 +60,11 @@ const useLocalStorage = (key, initialValue) => {
       setStoredValue(valueToStore);
 
       if (typeof window !== 'undefined') {
-        window.localStorage.setItem(key, JSON.stringify(valueToStore));
+        if (valueToStore === null || valueToStore === undefined) {
+          window.localStorage.removeItem(key);
+        } else {
+          window.localStorage.setItem(key, JSON.stringify(valueToStore));
+        }
       }
     } catch (error) {
       console.warn(`Ошибка записи в localStorage ключа "${key}":`, error);
