@@ -2,11 +2,13 @@
 
 from typing import TYPE_CHECKING, ClassVar
 
+from auditlog.context import set_actor
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, viewsets
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
 from api.filters import DatabaseSearchFilter
+from api.mixins import AuditlogActorMixin
 from api.permissions import IsAuthorOrReadOnly, IsPublicOrAuthor
 from blog.models import Article, Category, Comment, Series, Topic
 from blog.serializers import (
@@ -21,7 +23,7 @@ if TYPE_CHECKING:
     from django.db.models.query import QuerySet
 
 
-class CategoryViewSet(viewsets.ModelViewSet):
+class CategoryViewSet(AuditlogActorMixin, viewsets.ModelViewSet):
     """Набор представлений для работы с категориями (полный CRUD)."""
 
     serializer_class = CategorySerializer
@@ -40,7 +42,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
         return queryset
 
 
-class TopicViewSet(viewsets.ModelViewSet):
+class TopicViewSet(AuditlogActorMixin, viewsets.ModelViewSet):
     """Набор представлений для работы с темами (полный CRUD)."""
 
     serializer_class = TopicSerializer
@@ -59,7 +61,7 @@ class TopicViewSet(viewsets.ModelViewSet):
         return queryset
 
 
-class SeriesViewSet(viewsets.ModelViewSet):
+class SeriesViewSet(AuditlogActorMixin, viewsets.ModelViewSet):
     """Набор представлений для работы с сериями (полный CRUD)."""
 
     serializer_class = SeriesSerializer
@@ -78,7 +80,7 @@ class SeriesViewSet(viewsets.ModelViewSet):
         return queryset
 
 
-class ArticleViewSet(viewsets.ModelViewSet):
+class ArticleViewSet(AuditlogActorMixin, viewsets.ModelViewSet):
     """Набор представлений для работы со статьями (полный CRUD)."""
 
     serializer_class = ArticleSerializer
@@ -109,7 +111,7 @@ class ArticleViewSet(viewsets.ModelViewSet):
         return queryset
 
 
-class CommentViewSet(viewsets.ModelViewSet):
+class CommentViewSet(AuditlogActorMixin, viewsets.ModelViewSet):
     """Набор представлений для работы с комментариями (полный CRUD)."""
 
     serializer_class = CommentSerializer
@@ -132,5 +134,6 @@ class CommentViewSet(viewsets.ModelViewSet):
         return [permission() for permission in self.permission_classes]
 
     def perform_create(self, serializer) -> None:  # noqa: ANN001
-        """Автоматически устанавливает автора комментария."""
-        serializer.save(author=self.request.user)
+        """Автоматически устанавливает автора комментария и фиксирует его в аудите."""
+        with set_actor(self.request.user, remote_addr=self.request.META.get("HTTP_X_REAL_IP")):
+            serializer.save(author=self.request.user)

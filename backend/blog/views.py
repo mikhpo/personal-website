@@ -3,6 +3,7 @@
 import logging
 from typing import TYPE_CHECKING
 
+from django.conf import settings
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.views.generic.detail import DetailView
@@ -12,7 +13,7 @@ from blog.models import Article, Category, Series, Topic
 if TYPE_CHECKING:
     from django.db.models.query import QuerySet
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(settings.PROJECT_NAME)
 
 
 class ArticleDetailView(DetailView):

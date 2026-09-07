@@ -3,9 +3,10 @@
 from django.urls import include, path
 from django.views.generic import RedirectView
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView, TokenVerifyView
+from rest_framework_simplejwt.views import TokenRefreshView, TokenVerifyView
 
 from accounts.urls import router as accounts_router
+from accounts.views import TokenObtainPairLoggingView
 from blog.urls import router as blog_router
 from gallery.urls import router as gallery_router
 
@@ -17,7 +18,7 @@ urlpatterns = [
     path("docs/", RedirectView.as_view(url="/api/docs/swagger/", permanent=False), name="docs"),
     path("docs/swagger/", SpectacularSwaggerView.as_view(url_name="api:schema"), name="swagger"),
     path("docs/redoc/", SpectacularRedocView.as_view(url_name="api:schema"), name="redoc"),
-    path("auth/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
+    path("auth/token/", TokenObtainPairLoggingView.as_view(), name="token_obtain_pair"),
     path("auth/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("auth/token/verify/", TokenVerifyView.as_view(), name="token_verify"),
     path("accounts/", include(accounts_router.urls)),

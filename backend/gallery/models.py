@@ -29,7 +29,7 @@ resize_quality: int = settings.GALLERY_RESIZE_QUALITY
 
 current_timezone = get_current_timezone()
 storage: StorageType = select_storage()
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(settings.PROJECT_NAME)
 
 
 class Tag(models.Model):

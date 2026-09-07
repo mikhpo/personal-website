@@ -33,9 +33,12 @@ def post_logout(sender: Any, request: HttpRequest, user: User, **kwargs) -> None
 
 
 @receiver(user_login_failed)
-def post_login_fail(sender: Any, credentials: dict, request: HttpRequest, **kwargs) -> None:
-    """После ошибки авторизации."""
-    if request:
-        ip = request.META.get("HTTP_X_REAL_IP")
-        username = credentials.get("username")
-        logger.warning(f"Неудачная попытка авторизации пользователя {username} с IP-адреса {ip}")
+def post_login_fail(sender: Any, credentials: dict, request: HttpRequest | None = None, **kwargs) -> None:
+    """После ошибки авторизации.
+
+    Сигнал может прийти без запроса, например при вызове authenticate()
+    из management-команды, - событие фиксируется без IP-адреса.
+    """
+    ip = request.META.get("HTTP_X_REAL_IP") if request else None
+    username = credentials.get("username")
+    logger.warning(f"Неудачная попытка авторизации пользователя {username} с IP-адреса {ip}")

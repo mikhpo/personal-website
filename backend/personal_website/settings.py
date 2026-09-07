@@ -98,6 +98,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "drf_spectacular",
     "drf_spectacular_sidecar",
+    "auditlog",
     "accounts",
     "backup",
     "gallery",
@@ -119,6 +120,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "auditlog.middleware.AuditlogMiddleware",
+    "personal_website.middleware.SecurityLogMiddleware",
 ]
 
 # WhiteNoise отключается в тестах и в S3-режиме,

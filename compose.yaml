@@ -99,7 +99,14 @@ services:
       - ./nginx/letsencrypt:/etc/letsencrypt:ro
       - ./nginx/acme-webroot:/var/www/certbot:rw
     restart: always
-    logging: *default-logging
+    # Расширенная ротация логов прокси относительно других сервисов:
+    # access log nginx - первичный источник для расследования инцидентов
+    # доступа (IP, путь, статус каждого запроса).
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
     healthcheck:
       test: ["CMD-SHELL", "wget -q --spider --no-check-certificate https://127.0.0.1/health/"]
       interval: 5s

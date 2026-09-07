@@ -677,6 +677,22 @@ files = [
 django = "*"
 
 [[package]]
+name = "django-auditlog"
+version = "3.4.1"
+description = "Audit log app for Django"
+optional = false
+python-versions = ">=3.10"
+groups = ["main"]
+files = [
+    {file = "django_auditlog-3.4.1-py3-none-any.whl", hash = "sha256:29958ecacfee00144127214f3ccef3f0c203c3659bcb6dd404a0f3d5551a10a5"},
+    {file = "django_auditlog-3.4.1.tar.gz", hash = "sha256:ad07b9db452d5fa8303822cccd78cd3fcb2c2863aeb6abe039ec45739b4d7e33"},
+]
+
+[package.dependencies]
+Django = ">=4.2"
+python-dateutil = ">=2.7.0"
+
+[[package]]
 name = "django-cleanup"
 version = "9.0.0"
 description = "Deletes old files."
@@ -3211,4 +3227,4 @@ dev = ["pytest", "setuptools"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.12"
-content-hash = "dd00273bc907743710cadce93262e97687b1de091fdf9f659a4d392ee7560059"
+content-hash = "577d9f87089c0ebcc608b6b5c58d81456bbf4265d554c2c93bdc9d8f0338fbc9"

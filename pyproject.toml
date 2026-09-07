@@ -45,6 +45,7 @@ uritemplate = "^4.2.0"
 inflection = "^0.5.1"
 jsonschema = "^4.26.0"
 drf-spectacular-sidecar = "^2026.1.1"
+django-auditlog = "^3.4.1"
 
 [tool.poetry.group.dev.dependencies]
 coverage = "^7.13.4"
@@ -167,6 +168,11 @@ omit = [
 [tool.mypy]
 exclude = ["venv", ".venv", "static"]
 disable_error_code = ["attr-defined", "var-annotated", "misc"]
+
+[[tool.mypy.overrides]]
+# Библиотека django-auditlog поставляется без аннотаций типов.
+module = ["auditlog.*"]
+ignore_missing_imports = true
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

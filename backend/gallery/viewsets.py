@@ -2,6 +2,7 @@
 
 from typing import TYPE_CHECKING, ClassVar
 
+from auditlog.context import set_actor
 from django.db.models import Prefetch
 from django_filters.rest_framework import DjangoFilterBackend
 from PIL import Image, UnidentifiedImageError
@@ -124,14 +125,16 @@ class UploadViewSet(viewsets.ViewSet):
             )
 
         results = []
+        remote_addr = request.META.get("HTTP_X_REAL_IP")
         for file in files:
             try:
                 # Валидация изображения
                 image = Image.open(file)
                 image.verify()
 
-                # Создание фотографии
-                photo = Photo.objects.create(image=file, album=album)
+                # Создание фотографии с фиксацией автора в аудите
+                with set_actor(request.user, remote_addr=remote_addr):
+                    photo = Photo.objects.create(image=file, album=album)
                 results.append(
                     {
                         "success": True,
