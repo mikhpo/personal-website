@@ -168,7 +168,7 @@ const PhotoUploadForm = () => {
   }
 
   return (
-    <Card className="shadow-sm p-3 mb-5 bg-white rounded">
+    <Card className="shadow-sm p-3 mb-5 rounded">
       <Card.Body>
         <Card.Title as="h1" className="fs-4">Загрузка фотографий</Card.Title>
 

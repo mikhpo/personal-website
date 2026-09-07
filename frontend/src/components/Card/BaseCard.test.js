@@ -99,7 +99,7 @@ describe('BaseCard', () => {
       render(<BaseCard {...defaultProps} description="Тестовое описание" />);
       const descriptionLink = screen.getByRole('link', { name: 'Тестовое описание' });
       expect(descriptionLink).toHaveAttribute('href', '/test/page/');
-      expect(descriptionLink).toHaveClass('text-decoration-none', 'text-dark');
+      expect(descriptionLink).toHaveClass('text-decoration-none', 'text-body');
     });
   });
 
@@ -137,7 +137,6 @@ describe('BaseCard', () => {
       const { container } = render(<BaseCard {...defaultProps} className="custom-class" />);
       const card = container.querySelector('.card');
       expect(card).toHaveClass('shadow');
-      expect(card).toHaveClass('bg-white');
       expect(card).toHaveClass('rounded');
       expect(card).toHaveClass('h-100');
     });

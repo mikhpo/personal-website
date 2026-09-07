@@ -54,6 +54,11 @@ class TestMainPage(TestCase):
         # Проверяем наличие data-component-name для React компонента
         self.assertContains(response, "data-component-name")
 
+    def test_main_page_theme(self) -> None:
+        """Проверяет, что страница по умолчанию отрисовывается в светлой теме."""
+        response = self.client.get(self.main_url)
+        self.assertContains(response, 'data-bs-theme="light"')
+
 
 class TestSearchPage(TestCase):
     """Тесты страницы общего поиска по сайту."""

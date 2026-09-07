@@ -18,6 +18,7 @@ const CopyWebpackPlugin = require('copy-webpack-plugin');
 // backend/staticfiles стоит раньше frontend/dist в STATICFILES_DIRS:
 // случайно оставшиеся там tinymce и bootstrap затеняют свежие файлы.
 fs.rmSync(path.resolve(__dirname, '../backend/staticfiles/bootstrap'), { recursive: true, force: true });
+fs.rmSync(path.resolve(__dirname, '../backend/staticfiles/bootstrap-icons'), { recursive: true, force: true });
 fs.rmSync(path.resolve(__dirname, '../backend/staticfiles/tinymce'), { recursive: true, force: true });
 
 module.exports = {
@@ -118,6 +119,12 @@ module.exports = {
         {
           from: path.resolve(__dirname, '../node_modules/bootstrap/dist'),
           to: path.resolve(__dirname, 'dist/bootstrap/dist'),
+        },
+        {
+          // Иконки подключаются в шаблонах как CSS с относительными ссылками на шрифты,
+          // поэтому копируется каталог font целиком (CSS и fonts рядом).
+          from: path.resolve(__dirname, '../node_modules/bootstrap-icons/font'),
+          to: path.resolve(__dirname, 'dist/bootstrap-icons/font'),
         },
       ],
     }),

@@ -79,12 +79,11 @@ describe('PhotoCard', () => {
 
   /**
    * Проверяет, что к элементу Card применены правильные CSS классы.
-   * В старой реализации: shadow bg-white rounded text-center (без h-100).
    */
   test('применяет правильные CSS классы к Card', () => {
     const { container } = render(<PhotoCard photo={fullPhoto} />);
     const card = container.querySelector('.card');
-    expect(card).toHaveClass('shadow', 'bg-white', 'rounded', 'text-center');
+    expect(card).toHaveClass('shadow', 'rounded', 'text-center');
   });
 
   /**

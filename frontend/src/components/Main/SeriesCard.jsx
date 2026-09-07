@@ -29,7 +29,7 @@ const SeriesCard = ({ series }) => {
   const seriesUrl = `/blog/series/${series.slug}/`;
 
   return (
-    <Card className="shadow bg-white rounded text-center h-100">
+    <Card className="shadow rounded text-center h-100">
       {series.image && (
         <a href={seriesUrl}>
           <Card.Img
@@ -42,14 +42,14 @@ const SeriesCard = ({ series }) => {
       )}
       <Card.Body className="d-flex flex-column">
         <Card.Title className="mt-auto fs-6" as="h3">
-          <a href={seriesUrl} className="text-decoration-none text-dark">
+          <a href={seriesUrl} className="text-decoration-none text-body">
             {series.name}
           </a>
         </Card.Title>
         {series.description && (
           <Card.Text>
             {/* Описание кликабельно, как и название, но без подчеркивания - карточка не должна выглядеть как набор ссылок */}
-            <a href={seriesUrl} className="text-decoration-none text-dark">
+            <a href={seriesUrl} className="text-decoration-none text-body">
               {series.description}
             </a>
           </Card.Text>

@@ -157,6 +157,21 @@ describe('Navbar', () => {
   });
 
   /**
+   * Тест проверяет, что навигационная панель содержит переключатель темы
+   * с доступным названием "Выбор темы"
+   *
+   * @function
+   * @name renders-theme-toggle
+   */
+  test('содержит переключатель темы', () => {
+    render(<Navbar {...defaultProps} />);
+
+    const themeToggle = screen.getByRole('button', { name: 'Выбор темы' });
+    expect(themeToggle).toBeInTheDocument();
+    expect(themeToggle).toHaveClass('btn-outline-secondary');
+  });
+
+  /**
    * Тест проверяет, что отправка формы поиска выполняет переход
    * на страницу общего поиска с query-параметром search
    *
