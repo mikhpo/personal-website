@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import PhotoDetail from './PhotoDetail';
 
@@ -13,7 +13,8 @@ import { navigateTo } from '@services';
  * Набор тестов для компонента PhotoDetail.
  *
  * Проверяет отображение фотографии, навигацию между фотографиями,
- * состояния загрузки и ошибок, а также работу модального окна EXIF.
+ * состояния загрузки и ошибок, а также работу модального окна «О фото»
+ * с альбомом, описанием и EXIF данными.
  */
 describe('PhotoDetail', () => {
   const mockPhoto = {
@@ -22,6 +23,8 @@ describe('PhotoDetail', () => {
     slug: 'test-photo',
     image_url: '/media/photo.jpg',
     album: 1,
+    album_name: 'Тестовый альбом',
+    description: 'Описание тестовой фотографии',
     camera: 'Canon EOS 5D',
     lens_model: 'Canon EF 24-70mm',
     aperture: 'f/2.8',
@@ -74,9 +77,9 @@ describe('PhotoDetail', () => {
 
   /**
    * Проверяет, что кнопка "О фото" присутствует в DOM
-   * и предназначена для открытия модального окна с EXIF-данными.
+   * и предназначена для открытия модального окна с информацией о фотографии.
    */
-  test('отображает кнопку "О фото" для открытия EXIF модального окна', () => {
+  test('отображает кнопку "О фото" для открытия модального окна', () => {
     render(<PhotoDetail photoId={2} previousPhotoId={mockPreviousPhotoId} nextPhotoId={mockNextPhotoId} />);
     expect(screen.getByText('О фото')).toBeInTheDocument();
   });
@@ -174,26 +177,42 @@ describe('PhotoDetail', () => {
 
   /**
    * Проверяет, что при нажатии на кнопку "О фото" открывается
-   * модальное окно с EXIF-данными: заголовок "EXIF", поле "Камера"
-   * и значение "Canon EOS 5D".
+   * модальное окно с информацией о фотографии: название альбома ссылкой,
+   * описание и EXIF-данные (поле "Камера" со значением "Canon EOS 5D").
    */
-  test('открывает модальное окно EXIF при нажатии на кнопку "О фото"', async () => {
+  test('открывает модальное окно с информацией о фотографии', async () => {
     const user = userEvent.setup();
     render(<PhotoDetail photoId={2} previousPhotoId={mockPreviousPhotoId} nextPhotoId={mockNextPhotoId} />);
 
-    const exifButton = screen.getByText('О фото');
-    await user.click(exifButton);
+    await user.click(screen.getByText('О фото'));
 
-    expect(await screen.findByText('EXIF')).toBeInTheDocument();
-    expect(await screen.findByText('Камера')).toBeInTheDocument();
-    expect(await screen.findByText('Canon EOS 5D')).toBeInTheDocument();
+    const dialog = await screen.findByRole('dialog', { name: 'О фото' });
+    expect(within(dialog).getByText('Тестовый альбом')).toBeInTheDocument();
+    expect(within(dialog).getByText('Описание тестовой фотографии')).toBeInTheDocument();
+    expect(within(dialog).getByText('Камера')).toBeInTheDocument();
+    expect(within(dialog).getByText('Canon EOS 5D')).toBeInTheDocument();
   });
 
   /**
-   * Проверяет, что модальное окно EXIF закрывается при нажатии
-   * на кнопку "Закрыть" - заголовок "EXIF" исчезает из DOM.
+   * Проверяет, что в модальном окне название альбома является ссылкой
+   * на страницу детального просмотра альбома.
    */
-  test('закрывает модальное окно EXIF при нажатии на кнопку закрытия', async () => {
+  test('отображает в модальном окне ссылку на альбом', async () => {
+    const user = userEvent.setup();
+    render(<PhotoDetail photoId={2} previousPhotoId={mockPreviousPhotoId} nextPhotoId={mockNextPhotoId} />);
+
+    await user.click(screen.getByText('О фото'));
+
+    const dialog = await screen.findByRole('dialog', { name: 'О фото' });
+    const albumLink = within(dialog).getByText('Тестовый альбом');
+    expect(albumLink).toHaveAttribute('href', '/gallery/album/1/');
+  });
+
+  /**
+   * Проверяет, что модальное окно закрывается при нажатии
+   * на кнопку "Закрыть" - диалог исчезает из DOM.
+   */
+  test('закрывает модальное окно при нажатии на кнопку закрытия', async () => {
     const user = userEvent.setup();
     render(<PhotoDetail photoId={2} previousPhotoId={mockPreviousPhotoId} nextPhotoId={mockNextPhotoId} />);
 
@@ -203,7 +222,7 @@ describe('PhotoDetail', () => {
     const closeButton = await screen.findByText('Закрыть');
     await user.click(closeButton);
 
-    expect(screen.queryByText('EXIF')).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
   /**
@@ -278,15 +297,15 @@ describe('PhotoDetail', () => {
     });
 
     /**
-     * Проверяет, что при открытом модальном окне EXIF
+     * Проверяет, что при открытом модальном окне «О фото»
      * клавиатурная навигация отключена.
      */
-    test('стрелки игнорируются при открытом модальном окне EXIF', async () => {
+    test('стрелки игнорируются при открытом модальном окне', async () => {
       const user = userEvent.setup();
       render(<PhotoDetail photoId={2} previousPhotoId={mockPreviousPhotoId} nextPhotoId={mockNextPhotoId} />);
 
       await user.click(screen.getByText('О фото'));
-      expect(await screen.findByText('EXIF')).toBeInTheDocument();
+      expect(await screen.findByRole('dialog', { name: 'О фото' })).toBeInTheDocument();
 
       fireEvent.keyDown(document, { key: 'ArrowLeft' });
       fireEvent.keyDown(document, { key: 'ArrowRight' });

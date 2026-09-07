@@ -3,7 +3,24 @@
 from django.test import TestCase
 
 from gallery.factories import AlbumFactory, PhotoFactory
-from gallery.serializers import AlbumDetailSerializer
+from gallery.serializers import AlbumDetailSerializer, PhotoSerializer
+
+
+class TestPhotoSerializer(TestCase):
+    """Тесты для PhotoSerializer."""
+
+    @classmethod
+    def setUpTestData(cls) -> None:
+        """Подготовка тестовых данных."""
+        cls.album = AlbumFactory()
+        cls.photo = PhotoFactory(album=cls.album, public=True)
+        super().setUpTestData()
+
+    def test_photo_serializer_contains_album_name(self) -> None:
+        """Сериализатор фотографии возвращает название альбома."""
+        data = PhotoSerializer(self.photo).data
+        self.assertEqual(data["album"], self.album.pk)
+        self.assertEqual(data["album_name"], self.album.name)
 
 
 class TestAlbumDetailSerializer(TestCase):

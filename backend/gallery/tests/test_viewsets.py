@@ -130,6 +130,7 @@ class TestPhotoViewSet(APITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["name"], "Закат в горах")
         self.assertEqual(response.data["album"], self.album1.pk)
+        self.assertEqual(response.data["album_name"], self.album1.name)
         self.assertIn("thumbnail_url", response.data)
         self.assertIn("preview_url", response.data)
         self.assertIn("image_url", response.data)

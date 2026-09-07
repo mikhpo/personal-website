@@ -19,6 +19,7 @@ class PhotoSerializer(serializers.ModelSerializer):
     """Сериализатор для модели фотографии."""
 
     tags = TagSerializer(many=True, read_only=True)
+    album_name = serializers.CharField(source="album.name", read_only=True)
     thumbnail_url = serializers.SerializerMethodField()
     preview_url = serializers.SerializerMethodField()
     image_url = serializers.SerializerMethodField()
