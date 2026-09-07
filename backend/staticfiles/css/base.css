@@ -29,6 +29,24 @@ table:not(.center) td {
     justify-content: center
 }
 
+/* Bootstrap 5.3 фиксирует для btn-outline-dark литеральные темные цвета -
+   в темной теме кнопки невидимы. Переопределение через адаптивную
+   --bs-emphasis-color (черная в светлой теме, белая в темной)
+   возвращает контраст в обеих темах. */
+.btn-outline-dark {
+    --bs-btn-color: var(--bs-emphasis-color);
+    --bs-btn-border-color: var(--bs-emphasis-color);
+    --bs-btn-hover-color: var(--bs-body-bg);
+    --bs-btn-hover-bg: var(--bs-emphasis-color);
+    --bs-btn-hover-border-color: var(--bs-emphasis-color);
+    --bs-btn-focus-shadow-rgb: var(--bs-emphasis-color-rgb);
+    --bs-btn-active-color: var(--bs-body-bg);
+    --bs-btn-active-bg: var(--bs-emphasis-color);
+    --bs-btn-active-border-color: var(--bs-emphasis-color);
+    --bs-btn-disabled-color: var(--bs-emphasis-color);
+    --bs-btn-disabled-border-color: var(--bs-emphasis-color);
+}
+
 /* Крупные цели нажатия на сенсорных экранах: рекомендуемый минимум - 44px */
 @media (pointer: coarse) {
     .btn-sm,
