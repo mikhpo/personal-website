@@ -12,8 +12,6 @@ import PropTypes from 'prop-types';
  * @component
  * @param {Object} props - Свойства компонента
  * @param {Object} props.photo - Объект фотографии с EXIF данными
- * @param {number} [props.photo.album] - ID альбома, в котором размещена фотография
- * @param {string} [props.photo.album_name] - Название альбома (ссылка на страницу альбома)
  * @param {string} [props.photo.camera] - Название камеры (производитель и модель)
  * @param {string} [props.photo.lens_model] - Модель объектива
  * @param {string} [props.photo.aperture] - Диафрагма (например, f/2.8)
@@ -58,10 +56,6 @@ const ExifData = ({ photo }) => {
   };
 
   const exifFields = [
-    {
-      label: 'Альбом',
-      value: photo.album_name ? <a href={`/gallery/album/${photo.album}/`}>{photo.album_name}</a> : null,
-    },
     { label: 'Камера', value: photo.camera },
     { label: 'Объектив', value: photo.lens_model },
     { label: 'Диафрагма', value: photo.aperture },
@@ -95,8 +89,6 @@ const ExifData = ({ photo }) => {
 
 ExifData.propTypes = {
   photo: PropTypes.shape({
-    album: PropTypes.number,
-    album_name: PropTypes.string,
     camera: PropTypes.string,
     lens_model: PropTypes.string,
     aperture: PropTypes.string,

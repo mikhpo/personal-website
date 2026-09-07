@@ -1,17 +1,18 @@
 import React, { useState } from 'react';
 import { Modal, Button } from 'react-bootstrap';
 import PropTypes from 'prop-types';
-import ExifData from '@components/Gallery/Photo/ExifData';
+import AboutPhoto from '@components/Gallery/Photo/AboutPhoto';
 import { usePhotoData, usePhotoNavigation } from '@hooks';
 
 /**
  * Компонент детального просмотра фотографии.
  *
- * Отображает фотографию с кнопками навигации и модальным окном для EXIF данных.
+ * Отображает фотографию с кнопками навигации и модальным окном
+ * с информацией о фотографии (альбом, описание, EXIF данные).
  * Соответствует старой Django реализации.
  * Поддерживает переключение фотографий клавишами ArrowLeft/ArrowRight
  * и горизонтальными свайпами на сенсорных экранах (см. usePhotoNavigation);
- * при открытом модальном окне EXIF навигация отключена.
+ * при открытом модальном окне навигация отключена.
  *
  * @param {Object} props - Пропсы компонента
  * @param {number} props.photoId - ID фотографии
@@ -23,7 +24,7 @@ import { usePhotoData, usePhotoNavigation } from '@hooks';
 const PhotoDetail = ({ photoId, previousPhotoId, nextPhotoId, apiUrl = '/api/gallery/photos/' }) => {
   const { photo, loading, error } = usePhotoData(photoId, apiUrl);
 
-  const [showExifModal, setShowExifModal] = useState(false);
+  const [showAboutModal, setShowAboutModal] = useState(false);
 
   const previousUrl = previousPhotoId ? `/gallery/photo/${previousPhotoId}/` : null;
   const nextUrl = nextPhotoId ? `/gallery/photo/${nextPhotoId}/` : null;
@@ -31,7 +32,7 @@ const PhotoDetail = ({ photoId, previousPhotoId, nextPhotoId, apiUrl = '/api/gal
   usePhotoNavigation({
     previousUrl,
     nextUrl,
-    enabled: !showExifModal,
+    enabled: !showAboutModal,
   });
 
   if (loading) {
@@ -83,7 +84,7 @@ const PhotoDetail = ({ photoId, previousPhotoId, nextPhotoId, apiUrl = '/api/gal
             )}
             <Button
               variant="outline-dark"
-              onClick={() => setShowExifModal(true)}
+              onClick={() => setShowAboutModal(true)}
             >
               О фото
             </Button>
@@ -102,18 +103,18 @@ const PhotoDetail = ({ photoId, previousPhotoId, nextPhotoId, apiUrl = '/api/gal
       </div>
 
       <Modal
-        show={showExifModal}
-        onHide={() => setShowExifModal(false)}
-        aria-labelledby="exifModalLabel"
+        show={showAboutModal}
+        onHide={() => setShowAboutModal(false)}
+        aria-labelledby="aboutPhotoModalLabel"
       >
         <Modal.Header closeButton>
-          <Modal.Title id="exifModalLabel">EXIF</Modal.Title>
+          <Modal.Title id="aboutPhotoModalLabel">О фото</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <ExifData photo={photo} />
+          <AboutPhoto photo={photo} />
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="outline-dark" onClick={() => setShowExifModal(false)}>
+          <Button variant="outline-dark" onClick={() => setShowAboutModal(false)}>
             Закрыть
           </Button>
         </Modal.Footer>
