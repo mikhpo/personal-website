@@ -12,6 +12,8 @@ describe('ExifData', () => {
   const emptyPhoto = {};
 
   const fullPhoto = {
+    album: 3,
+    album_name: 'Путешествия',
     camera: 'Canon EOS 5D Mark IV',
     lens_model: 'Canon EF 24-70mm f/2.8L II USM',
     aperture: 'f/2.8',
@@ -34,6 +36,7 @@ describe('ExifData', () => {
    */
   test('рендерит таблицу с полными EXIF данными', () => {
     render(<ExifData photo={fullPhoto} />);
+    expect(screen.getByText('Альбом')).toBeInTheDocument();
     expect(screen.getByText('Камера')).toBeInTheDocument();
     expect(screen.getByText('Canon EOS 5D Mark IV')).toBeInTheDocument();
     expect(screen.getByText('Объектив')).toBeInTheDocument();
@@ -73,6 +76,26 @@ describe('ExifData', () => {
     const photoWithExposure = { exposure: '1/1000' };
     render(<ExifData photo={photoWithExposure} />);
     expect(screen.getByText('1/1000 с')).toBeInTheDocument();
+  });
+
+  /**
+   * Проверяет, что строка "Альбом" отображается ссылкой
+   * на страницу детального просмотра альбома
+   */
+  test('рендерит строку альбома ссылкой на страницу альбома', () => {
+    render(<ExifData photo={fullPhoto} />);
+    const albumLink = screen.getByText('Путешествия');
+    expect(albumLink).toHaveAttribute('href', '/gallery/album/3/');
+    expect(albumLink.tagName).toBe('A');
+  });
+
+  /**
+   * Проверяет, что строка "Альбом" не отображается, если album_name отсутствует
+   */
+  test('не рендерит строку альбома без album_name', () => {
+    const photoWithoutAlbum = { camera: 'Nikon D850' };
+    render(<ExifData photo={photoWithoutAlbum} />);
+    expect(screen.queryByText('Альбом')).not.toBeInTheDocument();
   });
 
   /**
@@ -119,7 +142,7 @@ describe('ExifData', () => {
     const { container } = render(<ExifData photo={fullPhoto} />);
 
     const rows = container.querySelectorAll('tbody tr');
-    expect(rows).toHaveLength(7);
+    expect(rows).toHaveLength(8);
   });
 
   /**

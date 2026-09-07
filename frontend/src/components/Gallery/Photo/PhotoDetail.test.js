@@ -22,6 +22,7 @@ describe('PhotoDetail', () => {
     slug: 'test-photo',
     image_url: '/media/photo.jpg',
     album: 1,
+    album_name: 'Тестовый альбом',
     camera: 'Canon EOS 5D',
     lens_model: 'Canon EF 24-70mm',
     aperture: 'f/2.8',
@@ -187,6 +188,20 @@ describe('PhotoDetail', () => {
     expect(await screen.findByText('EXIF')).toBeInTheDocument();
     expect(await screen.findByText('Камера')).toBeInTheDocument();
     expect(await screen.findByText('Canon EOS 5D')).toBeInTheDocument();
+  });
+
+  /**
+   * Проверяет, что в модальном окне EXIF название альбома является ссылкой
+   * на страницу детального просмотра альбома.
+   */
+  test('открывает модальное окно EXIF со ссылкой на альбом', async () => {
+    const user = userEvent.setup();
+    render(<PhotoDetail photoId={2} previousPhotoId={mockPreviousPhotoId} nextPhotoId={mockNextPhotoId} />);
+
+    await user.click(screen.getByText('О фото'));
+
+    const albumLink = await screen.findByText('Тестовый альбом');
+    expect(albumLink).toHaveAttribute('href', '/gallery/album/1/');
   });
 
   /**
