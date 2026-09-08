@@ -132,22 +132,24 @@ def fetch_peer(name: str, url: str, branch: str) -> None:
 
 
 def fetch_local_state(name: str, branch: str) -> None:
-    """Скопировать состояние ветки и тегов текущего репозитория в служебные ссылки зеркала name.
+    """Получить ветку и теги CI-зеркала в служебные ссылки текущего репозитория.
 
-    Ветка берется по имени, а при его отсутствии - HEAD: рабочая копия CI-обертки
-    выполняет checkout и detached-состояние, и ветку. Отсутствие локальных тегов
-    означает отсутствие тегов на зеркале; отдельной проверки подлинности не требуется.
+    Рабочая копия CI не обязана отражать состояние ветки зеркала: при запуске
+    по пушу тега или неосновной ветки checkout указывает на тег или иную
+    вершину, и HEAD не отвечает за main. Поэтому состояние берется из
+    origin рабочей копии - того же удаленного репозитория, который обслуживает
+    платформа. Отсутствие ветки на origin трактуется как отсутствие ветки
+    на зеркале; теги при отсутствии ветки получаются полностью.
     """
-    sha = resolve_sha(f"refs/heads/{branch}") or resolve_sha("HEAD")
-    if sha is not None:
-        log(f"Зеркало {name} - текущий репозиторий; ветка {branch}: {sha[:12]}.")
-        run_git("update-ref", f"refs/sync/{name}/{branch}", sha)
+    listing = run_git("ls-remote", "--heads", "origin", f"refs/heads/{branch}")
+    has_branch = bool(listing.stdout.split())
+    if has_branch:
+        log(f"Зеркало {name} - текущий репозиторий; получение ветки {branch} из origin...")
+        refspecs = [f"+refs/heads/{branch}:refs/sync/{name}/{branch}"]
     else:
-        log(f"Ветки {branch} нет в текущем репозитории (зеркало {name}).")
-    listing = run_git("for-each-ref", "--format=%(objectname) %(refname)", "refs/tags")
-    for line in listing.stdout.splitlines():
-        sha, refname = line.split(" ")
-        run_git("update-ref", f"refs/sync/{name}/tags/{refname.removeprefix('refs/tags/')}", sha)
+        log(f"Ветки {branch} нет на зеркале {name}; получение тегов.")
+        refspecs = []
+    run_git("fetch", "--no-tags", "--quiet", "origin", *refspecs, f"+refs/tags/*:refs/sync/{name}/tags/*")
 
 
 def resolve_sha(ref: str) -> str | None:
