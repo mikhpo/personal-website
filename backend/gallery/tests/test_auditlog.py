@@ -19,8 +19,8 @@ if TYPE_CHECKING:
 User = get_user_model()
 
 
-class TestAlbumCascadeAuditLog(APITestCase):
-    """Тесты аудита каскадного удаления альбома с фотографиями."""
+class TestAlbumAuditLog(APITestCase):
+    """Тесты аудита удаления альбома с каскадным удалением фотографий."""
 
     @classmethod
     def setUpTestData(cls) -> None:
