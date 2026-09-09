@@ -71,7 +71,8 @@ function check_deploy_mode() {
 # Установить системные пакеты.
 # rclone требуется для целей бэкапов вне S3 (локальные каталоги,
 # облачные диски); mc - для S3-целей (установка отдельной функцией);
-# gettext-base - утилита envsubst для рендеринга шаблонов конфигураций.
+# gettext - компиляция каталогов переводов (msgfmt) и envsubst
+# для рендеринга шаблонов конфигураций.
 #######################################
 function install_packages() {
     sudo apt-get update
@@ -84,7 +85,7 @@ function install_packages() {
         ca-certificates \
         ufw \
         locales \
-        gettext-base \
+        gettext \
         python3 \
         python3-venv \
         pipx \

@@ -56,6 +56,7 @@ function build_project() {
     npm install
     npm run build
     poetry install
+    (cd backend && poetry run python manage.py compilemessages)
 }
 
 #######################################
