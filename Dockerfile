@@ -34,6 +34,7 @@ RUN apt-get update && \
     apt-get install -y \
     curl \
     gnupg \
+    gettext \
     locales \
     ca-certificates \
     postgresql-client-${POSTGRES_VERSION} \
@@ -70,6 +71,9 @@ COPY . .
 # Копирование собранного React бандла
 COPY --from=node-builder /app/frontend/dist $WORK_DIR/frontend/dist
 COPY --from=node-builder /app/frontend/webpack-stats.json $WORK_DIR/frontend/webpack-stats.json
+
+# Компиляция каталогов переводов проекта (backend/locale).
+RUN cd backend && poetry run python manage.py compilemessages
 
 # Выполнить скрипт, запускающий сервер.
 ENV PYTHONPATH=.

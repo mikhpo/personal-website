@@ -34,3 +34,6 @@ issue[-_]description.md
 /tmp/
 frontend/webpack-stats.json
 frontend/dist/
+
+# Скомпилированные каталоги переводов - артефакт сборки
+*.mo

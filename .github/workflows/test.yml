@@ -288,6 +288,10 @@ jobs:
       - name: Check Django migrations
         run: poetry run python backend/manage.py makemigrations --dry-run --check
 
+      - name: Compile translations
+        working-directory: backend
+        run: poetry run python manage.py compilemessages
+
       - name: Collect static files
         run: poetry run python backend/manage.py collectstatic --noinput
 
