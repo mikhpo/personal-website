@@ -12,6 +12,7 @@ System_Boundary(server, "Сервер") {
     Container(gunicorn, "WSGI-сервер", "Gunicorn", "Запускает Django-приложение")
     Container(backend, "Бэкенд", "Django + DRF", "API, бизнес-логика, резервное копирование")
     Container(frontend, "Фронтенд", "React + Webpack", "Пользовательский интерфейс")
+    Container(worker, "Воркер фоновых задач", "huey", "Генерация миниатюр и превью фотографий вне web-запросов")
 }
 
 System_Ext(db, "База данных", "PostgreSQL")
@@ -25,9 +26,11 @@ Rel(proxy, gunicorn, "Проксирует запросы", "HTTP")
 Rel(gunicorn, backend, "Запускает Django-приложение", "WSGI")
 Rel(backend, frontend, "Рендерит шаблоны", "django-webpack-loader")
 Rel(frontend, backend, "Запрашивает данные", "HTTP/REST")
-Rel(backend, db, "Читает и записывает", "SQL")
+Rel(backend, db, "Читает и записывает, ставит задачи в очередь", "SQL")
 Rel(backend, s3, "Хранит медиа и статику", "S3 API / файловая система")
 Rel(backend, smtp, "Отправляет письма", "SMTP")
+Rel(worker, db, "Потребляет очередь фоновых задач", "SQL")
+Rel(worker, s3, "Записывает кэш миниатюр", "S3 API / файловая система")
 Rel(smtp, user, "Доставка почты")
 Rel(proxy, le, "Получает сертификаты", "ACME")
 

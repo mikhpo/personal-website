@@ -78,6 +78,37 @@ services:
         - action: rebuild
           path: .
 
+  # Потребитель фоновых задач huey.
+  # Запускается тем же образом и скриптом entrypoint.sh: переменная
+  # RUN_MODE=worker переключает старт с веб-сервера на run_huey
+  # после общих шагов - ожидания инфраструктуры, миграций и создания
+  # таблиц очереди. HTTP воркер не обслуживает, поэтому порты
+  # и healthcheck не нужны, супервизию выполняет restart.
+  worker:
+    image: ${DOCKER_REGISTRY:-docker.io}/mikhpo/personal_website:latest
+    platform: "linux/amd64"
+    environment:
+      - RUN_MODE=worker
+      - STORAGE_ROOT=/srv/website/storage
+      - STATIC_ROOT=/srv/website/static
+      - LOGS_ROOT=/srv/website/logs
+      - TEMP_ROOT=/srv/website/temp
+    env_file: .env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      # Кэш миниатюр ImageKit пишется в то же хранилище, что и медиа.
+      - ${STORAGE_ROOT:-./storage/}:/srv/website/storage:rw
+      - ${LOGS_ROOT:-./logs/}:/srv/website/logs:rw
+      - ${TEMP_ROOT:-./temp/}:/srv/website/temp:rw
+      # SSL-сертификат PostgreSQL (см. сервис application).
+      - type: bind
+        source: ${POSTGRES_SSL_CERT_HOST_PATH:-${POSTGRES_SSL_ROOT_CERT_PATH:-/root/.postgresql/root.crt}}
+        target: ${POSTGRES_SSL_ROOT_CERT_PATH:-/root/.postgresql/root.crt}
+        read_only: true
+    restart: always
+    logging: *default-logging
+
   # Обратный прокси nginx: HTTPS, проксирование приложения
   # и раздача медиа filesystem-хранилища напрямую с диска (location /media/,
   # каталог хранилища монтируется в прокси read-only - запросы медиа

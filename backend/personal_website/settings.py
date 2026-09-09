@@ -4,7 +4,9 @@ import os
 import sys
 from datetime import timedelta
 from pathlib import Path
+from typing import Any
 
+import peewee
 from botocore.config import Config  # type: ignore[import-untyped]
 from dotenv import load_dotenv
 
@@ -99,6 +101,7 @@ INSTALLED_APPS = [
     "drf_spectacular",
     "drf_spectacular_sidecar",
     "auditlog",
+    "huey.contrib.djhuey",
     "accounts",
     "backup",
     "gallery",
@@ -106,6 +109,13 @@ INSTALLED_APPS = [
     "main",
     "api",
 ]
+
+# Приложение статистики huey (дашборд очереди в админке) нужно только
+# в продуктиве: рекордер удерживает соединение с базой в каждом процессе
+# с самого старта, поэтому в тестах и при локальной разработке
+# оно не включается вовсе.
+if not TEST and not DEBUG:
+    INSTALLED_APPS.append("huey.contrib.djhuey.stats")
 
 WHITENOISE_MIDDLEWARE = "whitenoise.middleware.WhiteNoiseMiddleware"
 
@@ -286,9 +296,6 @@ STORAGES = {
     },
 }
 
-# Настройки ImageKit для работы с S3
-IMAGEKIT_SPEC_CACHEFILE_STRATEGY = "imagekit.cachefiles.strategies.Optimistic"
-
 # Адрес, на который будет перенаправлен пользователь после авторизации.
 LOGIN_REDIRECT_URL = "/"
 
@@ -337,6 +344,74 @@ else:
             "OPTIONS": db_options,
         },
     }
+
+    # Статистика очереди для админ-дашборда huey пишется в PostgreSQL
+    # рядом с данными приложения через peewee-адаптер поверх DATABASES.
+    # В CI база SQLite и дашборд не используется, поэтому настройка
+    # не задается: приложение статистики исключено из INSTALLED_APPS
+    # в тестах, а дефолтный sqlite-файл в этом окружении не создается.
+    db: dict[str, Any] = dict(DATABASES["default"])
+    HUEY_STATS = {
+        "database": peewee.PostgresqlDatabase(
+            db["NAME"],
+            user=db.get("USER"),
+            password=db.get("PASSWORD"),
+            host=db.get("HOST"),
+            port=db.get("PORT"),
+            **db.get("OPTIONS", {}),
+        ),
+    }
+
+# Фоновые задачи на фреймворке django.tasks. В тестах используется
+# встроенный ImmediateBackend: задачи выполняются инлайн, без воркера
+# и очереди. В остальных окружениях задачи ставятся в очередь huey
+# в PostgreSQL. ENQUEUE_ON_COMMIT откладывает постановку задачи
+# до коммита транзакции, чтобы воркер не увидел незакоммиченный ряд.
+TASKS: dict[str, dict[str, object]] = (
+    {
+        "default": {
+            "BACKEND": "django.tasks.backends.immediate.ImmediateBackend",
+        },
+    }
+    if TEST
+    else {
+        "default": {
+            "BACKEND": "huey.contrib.djhuey.tasks_backend.HueyBackend",
+            "ENQUEUE_ON_COMMIT": True,
+        },
+    }
+)
+
+
+# Очередь фоновых задач huey в существующем кластере PostgreSQL.
+# Соединение с базой открывается лениво: при импорте настроек
+# (тесты, CI) подключение к PostgreSQL не требуется. Huey включает
+# на своем соединении autocommit и держит его открытым для LISTEN,
+# поэтому django.db.connection не используется: параметры соединения
+# (включая OPTIONS с настройками SSL) пробрасываются напрямую
+# в psycopg.connect. Таблицы очереди создаются командой
+# create_huey_tables на старте контейнеров, поэтому автосоздание
+# при инициализации хранилища отключено. Число воркеров и их тип
+# определяются переменными окружения: обработка фотографий
+# нагружает процессор, поэтому по умолчанию два процесса.
+huey_db: dict[str, Any] = dict(DATABASES["default"])
+HUEY = {
+    "huey_class": "huey.PostgresHuey",
+    "name": "personal_website",
+    "create_tables": False,
+    "connection": {
+        "dbname": huey_db["NAME"],
+        "user": huey_db.get("USER") or None,
+        "password": huey_db.get("PASSWORD") or None,
+        "host": huey_db.get("HOST") or None,
+        "port": huey_db.get("PORT") or None,
+        **huey_db.get("OPTIONS", {}),
+    },
+    "consumer": {
+        "workers": int(os.getenv("HUEY_WORKERS", default="2")),
+        "worker_type": os.getenv("HUEY_WORKER_TYPE", default="process"),
+    },
+}
 
 # Настройки используемого шаблонизатора. Здесь также указан относительный путь до папки с шаблонами проекта.
 TEMPLATES = [

@@ -1,0 +1,18 @@
+[Unit]
+Description=personal-website worker (Django, huey)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=${SERVICE_USER}
+Group=www-data
+WorkingDirectory=${WORK_DIR}
+EnvironmentFile=${WORK_DIR}/.env
+ExecStartPre=${WORK_DIR}/.venv/bin/python backend/manage.py migrate --noinput
+ExecStartPre=${WORK_DIR}/.venv/bin/python backend/manage.py create_huey_tables
+ExecStart=${WORK_DIR}/.venv/bin/python backend/manage.py run_huey
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target

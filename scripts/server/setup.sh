@@ -14,11 +14,13 @@ set -e
 project_root="$(dirname "$(dirname "$(dirname "$(readlink -f "$0")")")")"
 readonly dotenv="$project_root/.env"
 readonly systemd_template="$project_root/scripts/server/systemd/personal-website.service.template"
+readonly worker_systemd_template="$project_root/scripts/server/systemd/personal-website-worker.service.template"
 readonly nginx_template="$project_root/scripts/server/nginx/personal-website.conf.template"
 readonly nginx_bootstrap_template="$project_root/scripts/server/nginx/acme-bootstrap.conf.template"
 # Определение параметров установки.
 readonly WEBSITE_NAME="personal-website"
 readonly service_file="/etc/systemd/system/${WEBSITE_NAME}.service"
+readonly worker_service_file="/etc/systemd/system/${WEBSITE_NAME}-worker.service"
 readonly sites_available="/etc/nginx/sites-available/$WEBSITE_NAME"
 readonly sites_enabled="/etc/nginx/sites-enabled/$WEBSITE_NAME"
 readonly certbot_webroot="/var/www/certbot"
@@ -207,16 +209,18 @@ function fetch_postgres_cert() {
 }
 
 #######################################
-# Установить systemd-юнит приложения из шаблона
-# (рецепт - docs/deployment/application.md).
+# Установить systemd-юниты приложения и воркера
+# фоновых задач из шаблонов
+# (рецепт - docs/deployment/application.md и worker.md).
 #######################################
 function install_systemd_unit() {
     local user="${SUDO_USER:-$(id -un)}"
     export WORK_DIR="$project_root"
     export SERVICE_USER="$user"
     envsubst "\$WORK_DIR \$SERVICE_USER" <"$systemd_template" | sudo tee "$service_file" >/dev/null
+    envsubst "\$WORK_DIR \$SERVICE_USER" <"$worker_systemd_template" | sudo tee "$worker_service_file" >/dev/null
     sudo systemctl daemon-reload
-    sudo systemctl enable personal-website.service
+    sudo systemctl enable personal-website.service personal-website-worker.service
 }
 
 #######################################
@@ -289,7 +293,7 @@ function install_nginx_site() {
 # бэкапа на расписание в cron.
 #######################################
 function start_services() {
-    sudo systemctl restart personal-website.service
+    sudo systemctl restart personal-website.service personal-website-worker.service
     bash "$project_root/scripts/cronjobs.sh"
 }
 
@@ -299,7 +303,7 @@ function start_services() {
 # (аналог docker compose ps контейнерного развертывания).
 #######################################
 function show_services_status() {
-    sudo systemctl status personal-website.service nginx.service certbot.timer --no-pager || true
+    sudo systemctl status personal-website.service personal-website-worker.service nginx.service certbot.timer --no-pager || true
 }
 
 #######################################
