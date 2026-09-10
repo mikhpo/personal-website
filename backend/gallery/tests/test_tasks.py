@@ -7,7 +7,7 @@ from django.db import transaction
 from django.tasks import Task, TaskResult, task_backends
 from django.tasks.backends.base import BaseTaskBackend
 from django.tasks.signals import task_enqueued
-from django.test import TestCase, TransactionTestCase, override_settings
+from django.test import TransactionTestCase, override_settings
 from imagekit.cachefiles import ImageCacheFile
 from PIL import Image as pImage
 
@@ -17,12 +17,15 @@ from gallery.tasks import generate_photo_images
 from personal_website import settings
 
 
-class TestPhotoImageGeneration(TestCase):
-    """Генерация миниатюры и превью ставится задачей после сохранения фотографии.
+class TestGeneratePhotoImages(TransactionTestCase):
+    """Тесты задачи генерации миниатюр и превью фотографии.
 
-    В тестах задачи выполняются инлайн через ImmediateBackend, поэтому
-    после сохранения фотографии кэш-файлы уже присутствуют в хранилище.
-    Существование кэш-файлов проверяется через storage.exists: обращение
+    Задача ставится в очередь сигналом post_save при создании фотографии,
+    замене изображения и смене альбома; частичные сохранения прочих полей,
+    например EXIF и taken_at, задачу не порождают. В тестовом окружении
+    задачи выполняются инлайн через ImmediateBackend сразу после коммита
+    транзакции, поэтому проверки идут по факту исполнения: существование
+    и содержимое кэш-файлов проверяется через storage.exists - обращение
     к bool, url или path кэш-файла запускает генерацию на месте
     (стратегия JustInTime) и маскирует сломанную задачу.
     """
@@ -36,6 +39,17 @@ class TestPhotoImageGeneration(TestCase):
         self.enqueued: list[TaskResult] = []
         task_enqueued.connect(self._record_task, dispatch_uid="test-task-enqueued", weak=False)
         self.addCleanup(task_enqueued.disconnect, dispatch_uid="test-task-enqueued")
+
+    def tearDown(self) -> None:
+        """Вернуть обработчику задач исходную конфигурацию."""
+        self._reset_handler()
+        super().tearDown()
+
+    @staticmethod
+    def _reset_handler() -> None:
+        """Сбросить кэш конфигурации обработчика задач."""
+        task_backends._settings = None  # noqa: SLF001
+        task_backends.__dict__.pop("settings", None)
 
     def _record_task(self, sender: type[Photo], task_result: TaskResult, **kwargs) -> None:  # noqa: ARG002
         """Запомнить постановку задачи генерации изображений."""
@@ -57,9 +71,7 @@ class TestPhotoImageGeneration(TestCase):
 
     def test_images_generated_on_create(self) -> None:
         """Создание фотографии порождает задачу: миниатюра и превью существуют."""
-        with self.captureOnCommitCallbacks(execute=True) as callbacks:
-            photo = Photo.objects.get(pk=PhotoFactory().pk)
-        self.assertEqual(len(callbacks), 1)
+        photo = Photo.objects.get(pk=PhotoFactory().pk)
         self.assertEqual(len(self.enqueued), 1)
         self.assertTrue(self._cache_exists(photo.image_thumbnail))
         self.assertTrue(self._cache_exists(photo.image_preview))
@@ -90,18 +102,16 @@ class TestPhotoImageGeneration(TestCase):
         """Полное сохранение фотографии порождает задачу."""
         photo = Photo.objects.get(pk=PhotoFactory().pk)
         self.enqueued.clear()
-        with self.captureOnCommitCallbacks(execute=True):
-            photo.name = "Измененное название"
-            photo.save()
+        photo.name = "Измененное название"
+        photo.save()
         self.assertEqual(len(self.enqueued), 1)
 
     def test_image_replacement_enqueues(self) -> None:
         """Замена изображения порождает задачу и перегенерирует кэш-файлы."""
         photo = Photo.objects.get(pk=PhotoFactory().pk)
         self.enqueued.clear()
-        with self.captureOnCommitCallbacks(execute=True):
-            photo.image = generate_image_with_exif()
-            photo.save()
+        photo.image = generate_image_with_exif()
+        photo.save()
         self.assertEqual(len(self.enqueued), 1)
         self.assertTrue(self._cache_exists(photo.image_thumbnail))
         self.assertTrue(self._cache_exists(photo.image_preview))
@@ -111,22 +121,11 @@ class TestPhotoImageGeneration(TestCase):
         photo = Photo.objects.get(pk=PhotoFactory().pk)
         target_album = Album.objects.create(name="Целевой альбом")
         self.enqueued.clear()
-        with self.captureOnCommitCallbacks(execute=True):
-            photo.album = target_album
-            photo.save()
+        photo.album = target_album
+        photo.save()
         self.assertEqual(len(self.enqueued), 1)
         self.assertTrue(self._cache_exists(photo.image_thumbnail))
         self.assertTrue(self._cache_exists(photo.image_preview))
-
-    def test_task_skips_missing_photo(self) -> None:
-        """Задача для несуществующей фотографии завершается успехом."""
-        deleted_pk = Photo.objects.get(pk=PhotoFactory().pk).pk + 100500
-        result = generate_photo_images.enqueue(deleted_pk)
-        self.assertEqual(result.status, "SUCCESSFUL")
-
-
-class TestCacheFreshness(TransactionTestCase):
-    """Актуальный кэш не перегенерируется, отсутствующий - создается заново."""
 
     def test_task_skips_fresh_cache(self) -> None:
         """Свежий кэш-файл задача не перезаписывает: время изменения сохраняется."""
@@ -140,7 +139,7 @@ class TestCacheFreshness(TransactionTestCase):
         self.assertEqual(mtime_after, mtime_before)
 
     def test_task_regenerates_missing_cache(self) -> None:
-        """Отсутствующий кэш-файл задача создает заново."""
+        """Отсутствующий кэш-файл задача создает зановo."""
         photo = Photo.objects.get(pk=PhotoFactory().pk)
         cachefile = photo.image_thumbnail
         cachefile.storage.delete(cachefile.name)
@@ -150,30 +149,19 @@ class TestCacheFreshness(TransactionTestCase):
 
         self.assertTrue(cachefile.storage.exists(cachefile.name))
 
-
-class TestSignalSurvivesQueueFailure(TransactionTestCase):
-    """Отказ постановки задачи не прерывает сохранение фотографии.
-
-    Заглушка-бэкенд имитирует недоступную очередь: постановка задачи
-    завершается ошибкой на границе сигнала. Постановка отложена
-    до коммита транзакции (transaction.on_commit в приемнике), поэтому
-    сценарий проверяется и внутри явной транзакции (ошибка в callback
-    после коммита - реальный кейс Django Admin), и в autocommit.
-    """
-
-    def tearDown(self) -> None:
-        """Вернуть обработчику задач исходную конфигурацию."""
-        self._reset_handler()
-        super().tearDown()
-
-    @staticmethod
-    def _reset_handler() -> None:
-        """Сбросить кэш конфигурации обработчика задач."""
-        task_backends._settings = None  # noqa: SLF001
-        task_backends.__dict__.pop("settings", None)
+    def test_task_skips_missing_photo(self) -> None:
+        """Задача для несуществующей фотографии завершается успехом."""
+        deleted_pk = Photo.objects.get(pk=PhotoFactory().pk).pk + 100500
+        result = generate_photo_images.enqueue(deleted_pk)
+        self.assertEqual(result.status, "SUCCESSFUL")
 
     def test_save_inside_atomic_succeeds_when_queue_fails_after_commit(self) -> None:
-        """Ошибка постановки в callback после коммита не влияет на фотографию."""
+        """Ошибка постановки в callback после коммита не влияет на фотографию.
+
+        Сохранение выполняется внутри явной транзакции - реальный кейс
+        Django Admin: постановка задачи откладывается до коммита,
+        и ошибка записи в очередь возникает в callback после него.
+        """
         self._reset_handler()
         self.addCleanup(self._reset_handler)
         with (
