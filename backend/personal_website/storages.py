@@ -1,7 +1,9 @@
 """Определение параметров хранения загружаемых файлов."""
 
+import os
 import re
 import shutil
+import tempfile
 import uuid
 from collections.abc import Callable
 from io import BytesIO
@@ -150,12 +152,45 @@ class CustomFileSystemStorage(BaseStorageMixin, FileSystemStorage):
         relative_name = self._get_relative_name(name)
         return str(Path(self.location).joinpath(relative_name))
 
-    def get_available_name(self, name: str, max_length: int | None = None) -> str:
-        """Переопределенный метод возвращения доступного имени файла с учетом обязательной перезаписи файла."""
-        relative_name = self._get_relative_name(name)
-        if self.exists(relative_name):
-            self.delete(relative_name)
-        return super().get_available_name(relative_name, max_length)
+    def get_available_name(self, name: str, max_length: int | None = None) -> str:  # noqa: ARG002
+        """Возвращает имя файла без изменений: существующий файл не удаляется.
+
+        Перезапись выполняется атомарно в _save: прямая раздача медиа
+        прокси-сервером не должна видеть файл удаленным или недописанным.
+        """
+        return self._get_relative_name(name)
+
+    def _save(self, name: str, content: IO[Any]) -> str:
+        """Атомарно записывает содержимое: временный файл заменяет целевой.
+
+        Временный файл с уникальным именем создается в каталоге цели
+        (mkstemp с эксклюзивным созданием исключает параллельную запись
+        в один temp-файл), затем целевой файл замещается одной операцией
+        replace. Прямая раздача медиа прокси-сервером не видит файл
+        в промежуточном состоянии.
+        """
+        full_path = Path(self.path(name))
+        full_path.parent.mkdir(parents=True, exist_ok=True)
+        fd, tmp_name = tempfile.mkstemp(
+            dir=full_path.parent,
+            prefix=f".{full_path.name}.",
+            suffix=".part",
+        )
+        tmp_path = Path(tmp_name)
+        try:
+            with os.fdopen(fd, "wb") as out:
+                if hasattr(content, "chunks"):
+                    out.writelines(content.chunks())
+                else:
+                    shutil.copyfileobj(content, out)
+                out.flush()
+                os.fsync(out.fileno())
+            tmp_path.chmod(self.file_permissions_mode or 0o644)
+            tmp_path.replace(full_path)
+        except OSError:
+            tmp_path.unlink(missing_ok=True)
+            raise
+        return name
 
     def delete(self, name: str, missing_ok: bool = True) -> None:  # noqa: FBT001, FBT002
         """Удалить файл."""

@@ -22,15 +22,15 @@
 Удаленный кластер провайдера (Yandex Cloud Managed PostgreSQL и совместимые). Особенности подключения:
 
 - публичный доступ требует SSL с проверкой сертификата CA: `POSTGRES_SSL_MODE='verify-full'`;
-- порт подключения указывается в параметрах кластера; у части провайдеров он отличается от стандартного 5432 (например, 6432 у Yandex Cloud);
-- сертификат CA скачивается pgcert.sh по `POSTGRES_SSL_CERT_URL` (у Yandex Cloud - `https://storage.yandexcloud.net/cloud-certs/CA.pem`); пример разовой загрузки с явным URL: `POSTGRES_SSL_CERT_URL='https://storage.yandexcloud.net/cloud-certs/CA.pem' bash scripts/pgcert.sh --force` (значение из .env имеет приоритет над переменной окружения);
+- порт подключения указывается в параметрах кластера. У части провайдеров он отличается от стандартного 5432 (например, 6432 у Yandex Cloud);
+- сертификат CA скачивается pgcert.sh по `POSTGRES_SSL_CERT_URL` (у Yandex Cloud - `https://storage.yandexcloud.net/cloud-certs/CA.pem`), пример разовой загрузки с явным URL: `POSTGRES_SSL_CERT_URL='https://storage.yandexcloud.net/cloud-certs/CA.pem' bash scripts/pgcert.sh --force` (значение из .env имеет приоритет над переменной окружения);
 - автоматические бэкапы провайдера не заменяют собственные: данные покидают инфраструктуру провайдера только системой бэкапов проекта ([backups.md](./backups.md)).
 
-Смена провайдера сводится к обновлению переменных подключения в .env и сертификата (`pgcert.sh --force`); перенос данных выполняется дампом и восстановлением (скиллы postgresql-dump / postgresql-restore).
+Смена провайдера сводится к обновлению переменных подключения в .env и сертификата (`pgcert.sh --force`), перенос данных выполняется дампом и восстановлением (скиллы postgresql-dump / postgresql-restore).
 
 ## 3. Контейнер compose
 
-Сервис postgres подключается профилем postgres (`COMPOSE_PROFILES=postgres` или `docker compose up -d postgres`). База, пользователь и пароль создаются образом автоматически из `POSTGRES_USER/POSTGRES_PASSWORD/POSTGRES_DB`. Имя хоста для соседних сервисов compose - `postgres`; порт публикуется только на 127.0.0.1 хоста, внешний доступ к базе не предусмотрен.
+Сервис postgres подключается профилем postgres (`COMPOSE_PROFILES=postgres` или `docker compose up -d postgres`). База, пользователь и пароль создаются образом автоматически из `POSTGRES_USER/POSTGRES_PASSWORD/POSTGRES_DB`. Имя хоста для соседних сервисов compose - `postgres`. Порт публикуется только на 127.0.0.1 хоста, внешний доступ к базе не предусмотрен.
 
 Данные живут в именованном томе postgres-data: `docker compose down` том сохраняет, `docker compose down -v` - удаляет (вместе с данными minio-data). Смена мажорной версии образа тома не переживает - см. раздел 5.
 
@@ -61,7 +61,7 @@ listen_addresses = 'localhost, 172.17.0.1'
 password_encryption = scram-sha-256
 ```
 
-`/etc/postgresql/17/main/pg_hba.conf` (адрес подсети - вывод `ip addr show docker0`; при нескольких compose-проектах добавить запись для каждой подсети):
+`/etc/postgresql/17/main/pg_hba.conf` (адрес подсети - вывод `ip addr show docker0`, при нескольких compose-проектах добавить запись для каждой подсети):
 
 ```text
 host  all  all  172.17.0.0/16  scram-sha-256
@@ -83,9 +83,9 @@ sudo -u postgres psql -c "CREATE DATABASE personal_website OWNER website ENCODIN
 Формат каталога данных не совместим между мажорными версиями PostgreSQL: том или каталог данных версии N не поднимется образом или пакетом версии N+1. Поэтому апгрейд выполняется через dump/restore, а не сменой версии на живых данных:
 
 1. Снять дамп работающей версии (скилл postgresql-dump или `bash scripts/backup.sh backup_db` - свежий дамп появится в `${BACKUP_ROOT}/db` и в целях).
-2. Подготовить пустую базу новой версии: в compose - остановить стек, удалить том `postgres-data` (`docker compose down postgres` и `docker volume rm`), обновить тег образа postgres в compose.yaml и поднять стек снова (база создается заново из переменных окружения); в systemd - установить новую версию и создать пустой кластер `pg_createcluster`.
+2. Подготовить пустую базу новой версии: в compose - остановить стек, удалить том `postgres-data` (`docker compose down postgres` и `docker volume rm`), обновить тег образа postgres в compose.yaml и поднять стек снова (база создается заново из переменных окружения), в systemd - установить новую версию и создать пустой кластер `pg_createcluster`.
 3. Восстановить дамп в новую базу (скилл postgresql-restore или `bash scripts/backup.sh restore_db <путь>`). Правило совместимости: pg_restore не ниже версии сервера-источника.
-4. Проверить счетчики таблиц и примененные миграции `django_migrations`; работоспособность приложения подтвердить эндпоинтом `/health/`.
+4. Проверить счетчики таблиц и примененные миграции `django_migrations`. Работоспособность приложения подтвердить эндпоинтом `/health/`.
 
 ## 6. Резервное копирование
 

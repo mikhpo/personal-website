@@ -51,6 +51,25 @@ tasks:
       - poetry run python ./backend/manage.py collectstatic --noinput
       - poetry run python ./backend/manage.py runserver
 
+  worker:
+    desc: Запустить потребитель фоновых задач huey
+    summary: |
+      Запускает потребителя фоновых задач huey для генерации миниатюр
+      и превью после загрузки фотографий. Альтернатива команде
+      `python manage.py run_huey`. При DEBUG=True в задачах нет нужды:
+      они выполняются синхронно в процессе сервера разработки.
+      Сервер PostgreSQL запускается в контейнере через Docker Compose.
+    preconditions:
+      - test -f compose.yaml
+      - test -f .env
+    env:
+      POSTGRES_HOST: localhost
+    cmds:
+      - "{{.COMPOSE_CMD}} up -d postgres"
+      - "{{.COMPOSE_CMD}} ps"
+      - poetry run python ./backend/manage.py create_huey_tables
+      - poetry run python ./backend/manage.py run_huey
+
   migrate:
     desc: Подготовить и выполнить миграции, экспортировать новые диаграммы моделей
     summary: |

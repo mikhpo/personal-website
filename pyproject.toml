@@ -46,6 +46,7 @@ inflection = "^0.5.1"
 jsonschema = "^4.26.0"
 drf-spectacular-sidecar = "^2026.1.1"
 django-auditlog = "^3.4.1"
+huey = {extras = ["postgres", "stats"], version = "^3.4.0"}
 
 [tool.poetry.group.dev.dependencies]
 coverage = "^7.13.4"
@@ -170,8 +171,13 @@ exclude = ["venv", ".venv", "static"]
 disable_error_code = ["attr-defined", "var-annotated", "misc"]
 
 [[tool.mypy.overrides]]
-# Библиотека django-auditlog поставляется без аннотаций типов.
-module = ["auditlog.*"]
+# Сторонние библиотеки, используемые проектом напрямую и поставляемые
+# без аннотаций типов.
+module = [
+    "auditlog.*",
+    "django.tasks.*",
+    "imagekit.*",
+]
 ignore_missing_imports = true
 
 [build-system]

@@ -16,8 +16,10 @@ set -e
 project_root="$(dirname "$(dirname "$(dirname "$(readlink -f "$0")")")")"
 readonly dotenv="$project_root/.env"
 readonly systemd_template="$project_root/scripts/server/systemd/personal-website.service.template"
+readonly worker_systemd_template="$project_root/scripts/server/systemd/personal-website-worker.service.template"
 readonly nginx_template="$project_root/scripts/server/nginx/personal-website.conf.template"
 readonly service_file="/etc/systemd/system/personal-website.service"
+readonly worker_service_file="/etc/systemd/system/personal-website-worker.service"
 readonly sites_available="/etc/nginx/sites-available/personal-website"
 cd "$project_root" || exit
 
@@ -72,8 +74,9 @@ function install_configs() {
     export DJANGO_PORT="${DJANGO_PORT:-8000}"
     export STORAGE_ROOT="${STORAGE_ROOT:-$project_root/storage}"
     envsubst "\$WORK_DIR \$SERVICE_USER" <"$systemd_template" | sudo tee "$service_file" >/dev/null
+    envsubst "\$WORK_DIR \$SERVICE_USER" <"$worker_systemd_template" | sudo tee "$worker_service_file" >/dev/null
     envsubst "\$DOMAIN_NAME \$DJANGO_PORT \$STORAGE_ROOT" <"$nginx_template" | sudo tee "$sites_available" >/dev/null
-    sudo systemctl enable personal-website.service
+    sudo systemctl enable personal-website.service personal-website-worker.service
     sudo systemctl daemon-reload
 }
 

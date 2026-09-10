@@ -1,6 +1,6 @@
 ---
 name: github-workflow
-description: Работа с GitHub через CLI gh - создание и закрытие задач (issues) и pull request'ов, запуск и мониторинг CI/CD workflows
+description: Работа с GitHub через CLI gh - создание и закрытие задач (issues) и pull request'ов, прикрепление скриншотов и вложений к задачам и PR, запуск и мониторинг CI/CD workflows
 ---
 
 ## Предназначение
@@ -63,6 +63,32 @@ EOF
 Пользователя сразу указывать исполнителем: `--assignee @me` в каждом создаваемом PR.
 
 Ключевое слово `Closes #N` (также `Fixes #N`, `Resolves #N`) в теле PR автоматически закрывает задачу при merge - отдельный шаг закрытия не нужен.
+
+### Прикрепить скриншоты к PR или задаче
+
+Кадры загружаются недокументированным эндпоинтом, эквивалентным drag-and-drop в веб-интерфейсе: GitHub хранит вложение постоянно (user-attachments), загрузка и правки комментариев не триггерят workflows, релизы не затрагиваются.
+
+```bash
+REPOSITORY=OWNER/REPO
+TOKEN=$(gh auth token)
+RID=$(gh api repos/$REPOSITORY --jq .id)
+
+curl -s "https://uploads.github.com/user-attachments/assets?name=<file>.png&content_type=image/png&repository_id=$RID" \
+  -X POST -H "Authorization: Bearer $TOKEN" -H "Accept: application/json" \
+  --data-binary "@<file>.png"
+```
+
+Ответ - JSON с постоянной ссылкой: `{"url": "https://github.com/user-attachments/assets/<uuid>"}`. Извлечь `url` из того же ответа: каждый POST создает новый экземпляр вложения, поэтому повторная загрузка файла ради парсинга ответа оставляет невидимые дубликаты.
+
+Встроить ссылку в комментарий или описание:
+
+```bash
+gh pr comment <N> --body "Заголовок
+
+![Подпись](<URL из ответа>)"
+```
+
+Правка последнего собственного комментария: `gh pr comment <N> --edit-last --body "..."`.
 
 ### Проверить статус CI
 

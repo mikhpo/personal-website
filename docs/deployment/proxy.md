@@ -130,7 +130,7 @@ sudo certbot certonly --dns-cloudflare \
 
 ## 3. Рецепт nginx + certbot в Docker Compose
 
-Прокси подключается профилем nginx (`COMPOSE_PROFILES=nginx` или `docker compose --profile nginx up`). Сервис использует официальный образ nginx; конфигурация рендерится из шаблона [nginx/personal-website.conf.template](../../nginx/personal-website.conf.template) самим образом (envsubst по переменным окружения DOMAIN_NAME и DJANGO_PORT). Она повторяет конфигурацию хостового варианта: редирект HTTP -> HTTPS, webroot для проверок ACME, `location /media/` с alias на примонтированный каталог хранилища (`STORAGE_ROOT` подключается в прокси read-only) и proxy_pass на сервис application. Каталог nginx/letsencrypt с журналами и сертификатами - bind mount, переживает `docker compose down -v`.
+Прокси подключается профилем nginx (`COMPOSE_PROFILES=nginx` или `docker compose --profile nginx up`). Сервис использует официальный образ nginx. Конфигурация рендерится из шаблона [nginx/personal-website.conf.template](../../nginx/personal-website.conf.template) самим образом (envsubst по переменным окружения DOMAIN_NAME и DJANGO_PORT). Она повторяет конфигурацию хостового варианта: редирект HTTP -> HTTPS, webroot для проверок ACME, `location /media/` с alias на примонтированный каталог хранилища (`STORAGE_ROOT` подключается в прокси read-only) и proxy_pass на сервис application. Каталог nginx/letsencrypt с журналами и сертификатами - bind mount, переживает `docker compose down -v`.
 
 До первого выпуска сертификата nginx не стартует: директива ssl_certificate указывает на файл, которого еще нет. Поэтому первичный выпуск выполняется standalone-методом до подъема стека - certbot поднимает собственный HTTP-сервер на порту 80:
 
@@ -140,9 +140,9 @@ docker compose run --rm -p 80:80 certbot certonly --standalone \
     --email admin@example.com --agree-tos --no-eff-mail
 ```
 
-Эту команду выполняет scripts/docker/setup.sh при активном профиле nginx (идемпотентно: существующий сертификат пропускается; тестовые среды добавляют --staging при CERTBOT_STAGING=True). После выпуска конфигурация nginx не меняется никогда.
+Эту команду выполняет scripts/docker/setup.sh при активном профиле nginx (идемпотентно: существующий сертификат пропускается, тестовые среды добавляют --staging при CERTBOT_STAGING=True). После выпуска конфигурация nginx не меняется никогда.
 
-Продление работает через webroot: запущенный nginx отвечает на проверки ACME из каталога nginx/acme-webroot, общий с certbot. Основной механизм - cron хоста (добавляется scripts/cronjobs.sh): ежедневно в 04:17 МСК запускается [scripts/docker/renew-cert.sh](../../scripts/docker/renew-cert.sh) - `docker compose run --rm certbot renew --webroot -w /var/www/certbot` с последующей перезагрузкой конфигурации nginx; при неактивном профиле nginx скрипт ничего не делает. Логи - `${LOGS_ROOT}/cert-renew.log`.
+Продление работает через webroot: запущенный nginx отвечает на проверки ACME из каталога nginx/acme-webroot, общий с certbot. Основной механизм - cron хоста (добавляется scripts/cronjobs.sh): ежедневно в 04:17 МСК запускается [scripts/docker/renew-cert.sh](../../scripts/docker/renew-cert.sh) - `docker compose run --rm certbot renew --webroot -w /var/www/certbot` с последующей перезагрузкой конфигурации nginx. При неактивном профиле nginx скрипт ничего не делает. Логи - `${LOGS_ROOT}/cert-renew.log`.
 
 Альтернатива для сред без хостового планировщика - контейнер certbot с циклом продления и docker.sock для сигнала перезагрузки nginx:
 

@@ -1219,6 +1219,29 @@ testing = ["coverage", "eventlet (>=0.40.3)", "gevent (>=24.10.1)", "h2 (>=4.1.0
 tornado = ["tornado (>=6.5.0)"]
 
 [[package]]
+name = "huey"
+version = "3.4.0"
+description = "a little task queue"
+optional = false
+python-versions = "*"
+groups = ["main"]
+files = [
+    {file = "huey-3.4.0-py3-none-any.whl", hash = "sha256:d0580762397744026f83baae5f2b97a62474a62b8565ac75bbafefe72f9c784f"},
+    {file = "huey-3.4.0.tar.gz", hash = "sha256:ac9b02e741f13da4092ea19bcaafc73669e97d3153914d2fed2868df144f6dfa"},
+]
+
+[package.dependencies]
+peewee = {version = ">=3.17", optional = true, markers = "extra == \"stats\""}
+psycopg = {version = ">=3.2", optional = true, markers = "extra == \"postgres\""}
+
+[package.extras]
+backends = ["redis (>=3.0.0)"]
+cysqlite = ["cysqlite (>=0.3.5)"]
+postgres = ["psycopg (>=3.2)"]
+redis = ["redis (>=3.0.0)"]
+stats = ["peewee (>=3.17)"]
+
+[[package]]
 name = "identify"
 version = "2.6.16"
 description = "File identification library for Python"
@@ -1617,6 +1640,27 @@ hyperscan = ["hyperscan (>=0.7)"]
 optional = ["typing-extensions (>=4)"]
 re2 = ["google-re2 (>=1.1)"]
 tests = ["pytest (>=9)", "typing-extensions (>=4.15)"]
+
+[[package]]
+name = "peewee"
+version = "4.5.1"
+description = "a little orm"
+optional = false
+python-versions = ">=3.8"
+groups = ["main"]
+files = [
+    {file = "peewee-4.5.1-py3-none-any.whl", hash = "sha256:dbbdc93e9be08d1df49ceed48dc5d609bfeda6112848086f1f6c1f1debe70975"},
+    {file = "peewee-4.5.1.tar.gz", hash = "sha256:8005cb45c54e1a282a2f24ddd583f0f7a80cd5d9c635d50d63f57c11d88c392a"},
+]
+
+[package.extras]
+aiomysql = ["aiomysql", "greenlet"]
+aiosqlite = ["aiosqlite", "greenlet"]
+asyncpg = ["asyncpg", "greenlet"]
+cysqlite = ["cysqlite (>=0.3.5)"]
+mysql = ["pymysql"]
+postgres = ["psycopg2-binary"]
+psycopg3 = ["psycopg[binary]"]
 
 [[package]]
 name = "pilkit"
@@ -3227,4 +3271,4 @@ dev = ["pytest", "setuptools"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.12"
-content-hash = "577d9f87089c0ebcc608b6b5c58d81456bbf4265d554c2c93bdc9d8f0338fbc9"
+content-hash = "1545c252ea06e0ef1a170f65b52d64d5c13df956df434b857d8223eee771e11b"

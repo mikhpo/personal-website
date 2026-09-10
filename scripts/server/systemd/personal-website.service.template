@@ -9,6 +9,7 @@ Group=www-data
 WorkingDirectory=${WORK_DIR}
 EnvironmentFile=${WORK_DIR}/.env
 ExecStartPre=${WORK_DIR}/.venv/bin/python backend/manage.py migrate --noinput
+ExecStartPre=${WORK_DIR}/.venv/bin/python backend/manage.py create_huey_tables
 ExecStartPre=${WORK_DIR}/.venv/bin/python backend/manage.py collectstatic --noinput
 ExecStart=:/bin/bash -c 'exec ${WORK_DIR}/.venv/bin/gunicorn \
     --bind=127.0.0.1:${DJANGO_PORT:-8000} \

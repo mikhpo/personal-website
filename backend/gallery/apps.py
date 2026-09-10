@@ -9,7 +9,7 @@ class GalleryConfig(AppConfig):  # noqa: D101
     default_auto_field = "django.db.models.BigAutoField"
 
     def ready(self) -> None:
-        """При инициации приложения включить аудит изменений моделей."""
+        """При инициации приложения включить аудит и сигналы моделей."""
         # Импорт внутри ready обязателен: реестр моделей доступен
         # только после загрузки приложений
         from auditlog.registry import auditlog  # noqa: PLC0415
@@ -19,3 +19,8 @@ class GalleryConfig(AppConfig):  # noqa: D101
         auditlog.register(Album, m2m_fields={"tags"})
         auditlog.register(Photo, m2m_fields={"tags"})
         auditlog.register(Tag)
+
+        # Импорт задач делает их видимыми дашборду huey в web-процессе,
+        # который, в отличие от воркера, не выполняет автодискавери tasks.py.
+        # Импорт signals подключает приемники post_save.
+        from gallery import signals, tasks  # noqa: F401, PLC0415
