@@ -1,7 +1,7 @@
 """Тесты файловых хранилищ."""
 
-import threading
 import unittest
+from concurrent.futures import ThreadPoolExecutor
 from io import BytesIO
 from pathlib import Path
 
@@ -131,25 +131,26 @@ class TestCustomFileSystemStorage(SimpleTestCase):
     def test_concurrent_saves_same_name_keep_content_intact(self) -> None:
         """Параллельная запись в одно имя не смешивает содержимое.
 
-        Каждый поток пишет блок с уникальным байтом; замещение выполняется
-        одной операцией replace над уникальным временным файлом потока,
+        Каждый воркер пишет блок с уникальным байтом; замещение выполняется
+        одной операцией replace над уникальным временным файлом воркера,
         поэтому итоговое содержимое обязано совпадать с одним из блоков.
+        Исключения воркеров собираются через future.result(): потерянный
+        сбой записи не должен оставаться незамеченным.
         """
         filename = "atomic/concurrent.bin"
-        thread_count = 8
+        worker_count = 8
         iterations = 25
         block_size = 65536
-        markers = [bytes([0x10 + i]) * block_size for i in range(thread_count)]
+        markers = [bytes([0x10 + i]) * block_size for i in range(worker_count)]
 
         def writer(marker: bytes) -> None:
             for _ in range(iterations):
                 self.storage.save(filename, ContentFile(marker))
 
-        threads = [threading.Thread(target=writer, args=(marker,)) for marker in markers]
-        for thread in threads:
-            thread.start()
-        for thread in threads:
-            thread.join()
+        with ThreadPoolExecutor(max_workers=worker_count) as executor:
+            futures = [executor.submit(writer, marker) for marker in markers]
+            for future in futures:
+                future.result()
 
         data = self.storage.read_bytes(filename)
         self.assertEqual(len(data), block_size)
