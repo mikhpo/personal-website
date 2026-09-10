@@ -171,18 +171,13 @@ exclude = ["venv", ".venv", "static"]
 disable_error_code = ["attr-defined", "var-annotated", "misc"]
 
 [[tool.mypy.overrides]]
-# Библиотека django-auditlog поставляется без аннотаций типов.
-module = ["auditlog.*"]
-ignore_missing_imports = true
-
-[[tool.mypy.overrides]]
-# Фреймворк django.tasks поставляется без аннотаций типов.
-module = ["django.tasks.*"]
-ignore_missing_imports = true
-
-[[tool.mypy.overrides]]
-# Библиотека django-imagekit поставляется без аннотаций типов.
-module = ["imagekit.*"]
+# Сторонние библиотеки, используемые проектом напрямую и поставляемые
+# без аннотаций типов.
+module = [
+    "auditlog.*",
+    "django.tasks.*",
+    "imagekit.*",
+]
 ignore_missing_imports = true
 
 [build-system]
