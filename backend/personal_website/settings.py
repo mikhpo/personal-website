@@ -365,8 +365,10 @@ else:
 # Фоновые задачи на фреймворке django.tasks. В тестах используется
 # встроенный ImmediateBackend: задачи выполняются инлайн, без воркера
 # и очереди. В остальных окружениях задачи ставятся в очередь huey
-# в PostgreSQL. ENQUEUE_ON_COMMIT откладывает постановку задачи
-# до коммита транзакции, чтобы воркер не увидел незакоммиченный ряд.
+# в PostgreSQL. Отложенная постановка до коммита транзакции реализована
+# в приемнике сигнала (transaction.on_commit в gallery/signals.py),
+# чтобы воркер не увидел незакоммиченный ряд, а отказ записи в очередь
+# не прерывал выполняющийся запрос.
 TASKS: dict[str, dict[str, object]] = (
     {
         "default": {
@@ -377,7 +379,6 @@ TASKS: dict[str, dict[str, object]] = (
     else {
         "default": {
             "BACKEND": "huey.contrib.djhuey.tasks_backend.HueyBackend",
-            "ENQUEUE_ON_COMMIT": True,
         },
     }
 )

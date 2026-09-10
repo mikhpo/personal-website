@@ -3,6 +3,7 @@
 import io
 from typing import Any
 
+from django.db import transaction
 from django.tasks import Task, TaskResult, task_backends
 from django.tasks.backends.base import BaseTaskBackend
 from django.tasks.signals import task_enqueued
@@ -56,7 +57,9 @@ class TestPhotoImageGeneration(TestCase):
 
     def test_images_generated_on_create(self) -> None:
         """Создание фотографии порождает задачу: миниатюра и превью существуют."""
-        photo = Photo.objects.get(pk=PhotoFactory().pk)
+        with self.captureOnCommitCallbacks(execute=True) as callbacks:
+            photo = Photo.objects.get(pk=PhotoFactory().pk)
+        self.assertEqual(len(callbacks), 1)
         self.assertEqual(len(self.enqueued), 1)
         self.assertTrue(self._cache_exists(photo.image_thumbnail))
         self.assertTrue(self._cache_exists(photo.image_preview))
@@ -87,16 +90,18 @@ class TestPhotoImageGeneration(TestCase):
         """Полное сохранение фотографии порождает задачу."""
         photo = Photo.objects.get(pk=PhotoFactory().pk)
         self.enqueued.clear()
-        photo.name = "Измененное название"
-        photo.save()
+        with self.captureOnCommitCallbacks(execute=True):
+            photo.name = "Измененное название"
+            photo.save()
         self.assertEqual(len(self.enqueued), 1)
 
     def test_image_replacement_enqueues(self) -> None:
         """Замена изображения порождает задачу и перегенерирует кэш-файлы."""
         photo = Photo.objects.get(pk=PhotoFactory().pk)
         self.enqueued.clear()
-        photo.image = generate_image_with_exif()
-        photo.save()
+        with self.captureOnCommitCallbacks(execute=True):
+            photo.image = generate_image_with_exif()
+            photo.save()
         self.assertEqual(len(self.enqueued), 1)
         self.assertTrue(self._cache_exists(photo.image_thumbnail))
         self.assertTrue(self._cache_exists(photo.image_preview))
@@ -106,8 +111,9 @@ class TestPhotoImageGeneration(TestCase):
         photo = Photo.objects.get(pk=PhotoFactory().pk)
         target_album = Album.objects.create(name="Целевой альбом")
         self.enqueued.clear()
-        photo.album = target_album
-        photo.save()
+        with self.captureOnCommitCallbacks(execute=True):
+            photo.album = target_album
+            photo.save()
         self.assertEqual(len(self.enqueued), 1)
         self.assertTrue(self._cache_exists(photo.image_thumbnail))
         self.assertTrue(self._cache_exists(photo.image_preview))
@@ -145,12 +151,14 @@ class TestCacheFreshness(TransactionTestCase):
         self.assertTrue(cachefile.storage.exists(cachefile.name))
 
 
-class TestSignalSurvivesQueueFailure(TestCase):
+class TestSignalSurvivesQueueFailure(TransactionTestCase):
     """Отказ постановки задачи не прерывает сохранение фотографии.
 
     Заглушка-бэкенд имитирует недоступную очередь: постановка задачи
-    завершается ошибкой на границе сигнала, а сохранение фотографии
-    и извлечение EXIF должны завершиться успешно.
+    завершается ошибкой на границе сигнала. Постановка отложена
+    до коммита транзакции (transaction.on_commit в приемнике), поэтому
+    сценарий проверяется и внутри явной транзакции (ошибка в callback
+    после коммита - реальный кейс Django Admin), и в autocommit.
     """
 
     def tearDown(self) -> None:
@@ -164,8 +172,22 @@ class TestSignalSurvivesQueueFailure(TestCase):
         task_backends._settings = None  # noqa: SLF001
         task_backends.__dict__.pop("settings", None)
 
-    def test_save_succeeds_when_queue_unavailable(self) -> None:
-        """Сохранение фотографии переживает ошибку постановки задачи."""
+    def test_save_inside_atomic_succeeds_when_queue_fails_after_commit(self) -> None:
+        """Ошибка постановки в callback после коммита не влияет на фотографию."""
+        self._reset_handler()
+        self.addCleanup(self._reset_handler)
+        with (
+            override_settings(TASKS={"default": {"BACKEND": "gallery.tests.test_tasks.FailingTaskBackend"}}),
+            self.assertLogs("gallery.signals", level="ERROR") as logs,
+            transaction.atomic(),
+        ):
+            photo = Photo.objects.get(pk=PhotoFactory().pk)
+
+        self.assertTrue(Photo.objects.filter(pk=photo.pk).exists())
+        self.assertTrue(any("Постановка задачи генерации" in message for message in logs.output))
+
+    def test_save_in_autocommit_succeeds_when_queue_fails(self) -> None:
+        """Ошибка немедленной постановки (autocommit) не влияет на фотографию."""
         self._reset_handler()
         self.addCleanup(self._reset_handler)
         with (

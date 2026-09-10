@@ -3,6 +3,7 @@
 import os
 import re
 import shutil
+import tempfile
 import uuid
 from collections.abc import Callable
 from io import BytesIO
@@ -162,24 +163,29 @@ class CustomFileSystemStorage(BaseStorageMixin, FileSystemStorage):
     def _save(self, name: str, content: IO[Any]) -> str:
         """Атомарно записывает содержимое: временный файл заменяет целевой.
 
-        Запись ведется в соседний временный файл в том же каталоге
-        (replace атомарен в границах одной файловой системы), затем
-        целевой файл замещается одной операцией. Прямая раздача медиа
-        прокси-сервером не видит файл в промежуточном состоянии.
+        Временный файл с уникальным именем создается в каталоге цели
+        (mkstemp с эксклюзивным созданием исключает параллельную запись
+        в один temp-файл), затем целевой файл замещается одной операцией
+        replace. Прямая раздача медиа прокси-сервером не видит файл
+        в промежуточном состоянии.
         """
         full_path = Path(self.path(name))
         full_path.parent.mkdir(parents=True, exist_ok=True)
-        tmp_path = full_path.with_name(f".{full_path.name}.part")
+        fd, tmp_name = tempfile.mkstemp(
+            dir=full_path.parent,
+            prefix=f".{full_path.name}.",
+            suffix=".part",
+        )
+        tmp_path = Path(tmp_name)
         try:
-            with tmp_path.open("wb") as out:
+            with os.fdopen(fd, "wb") as out:
                 if hasattr(content, "chunks"):
                     out.writelines(content.chunks())
                 else:
                     shutil.copyfileobj(content, out)
                 out.flush()
                 os.fsync(out.fileno())
-            if self.file_permissions_mode:
-                tmp_path.chmod(self.file_permissions_mode)
+            tmp_path.chmod(self.file_permissions_mode or 0o644)
             tmp_path.replace(full_path)
         except OSError:
             tmp_path.unlink(missing_ok=True)

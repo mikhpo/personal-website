@@ -1,5 +1,6 @@
 """Тесты файловых хранилищ."""
 
+import threading
 import unittest
 from io import BytesIO
 from pathlib import Path
@@ -118,6 +119,45 @@ class TestCustomFileSystemStorage(SimpleTestCase):
         # Удалить файл
         self.storage.delete(saved_name)
         self.assertFalse(self.storage.exists(saved_name))
+
+    def test_atomic_save_leaves_no_temp_files(self) -> None:
+        """Атомарная запись не оставляет временных файлов."""
+        saved_name = self.storage.save("atomic/target.txt", ContentFile(b"content"))
+
+        files, _ = self.storage.listdir("atomic")
+        self.assertEqual(files, ["target.txt"])
+        self.storage.delete(saved_name)
+
+    def test_concurrent_saves_same_name_keep_content_intact(self) -> None:
+        """Параллельная запись в одно имя не смешивает содержимое.
+
+        Каждый поток пишет блок с уникальным байтом; замещение выполняется
+        одной операцией replace над уникальным временным файлом потока,
+        поэтому итоговое содержимое обязано совпадать с одним из блоков.
+        """
+        filename = "atomic/concurrent.bin"
+        thread_count = 8
+        iterations = 25
+        block_size = 65536
+        markers = [bytes([0x10 + i]) * block_size for i in range(thread_count)]
+
+        def writer(marker: bytes) -> None:
+            for _ in range(iterations):
+                self.storage.save(filename, ContentFile(marker))
+
+        threads = [threading.Thread(target=writer, args=(marker,)) for marker in markers]
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join()
+
+        data = self.storage.read_bytes(filename)
+        self.assertEqual(len(data), block_size)
+        self.assertIn(data, markers)
+
+        files, _ = self.storage.listdir("atomic")
+        self.assertEqual(files, ["concurrent.bin"])
+        self.storage.delete(filename)
 
 
 @unittest.skipUnless(S3_AVAILABLE, "S3 storage is not available")
