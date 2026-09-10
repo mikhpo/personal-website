@@ -80,13 +80,17 @@ services:
 
   # Потребитель фоновых задач huey.
   # Запускается тем же образом и скриптом entrypoint.sh: переменная
-  # RUN_MODE=worker переключает старт с веб-сервера на run_huey
-  # после общих шагов - ожидания инфраструктуры, миграций и создания
-  # таблиц очереди. HTTP воркер не обслуживает, поэтому порты
-  # и healthcheck не нужны, супервизию выполняет restart.
+  # RUN_MODE=worker переключает старт с веб-сервера на run_huey.
+  # Схему базы данных и таблицы очереди создает сервис application,
+  # поэтому воркер стартует только после его готовности (healthcheck).
+  # HTTP воркер не обслуживает, поэтому порты и healthcheck не нужны,
+  # супервизию выполняет restart.
   worker:
     image: ${DOCKER_REGISTRY:-docker.io}/mikhpo/personal_website:latest
     platform: "linux/amd64"
+    depends_on:
+      application:
+        condition: service_healthy
     environment:
       - RUN_MODE=worker
       - STORAGE_ROOT=/srv/website/storage

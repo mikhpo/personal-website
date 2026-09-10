@@ -1,10 +1,12 @@
 """Тесты фоновой генерации миниатюр и превью фотографий."""
 
 import io
+from typing import Any
 
-from django.tasks import TaskResult, task_backends
+from django.tasks import Task, TaskResult, task_backends
+from django.tasks.backends.base import BaseTaskBackend
 from django.tasks.signals import task_enqueued
-from django.test import TestCase
+from django.test import TestCase, TransactionTestCase, override_settings
 from imagekit.cachefiles import ImageCacheFile
 from PIL import Image as pImage
 
@@ -19,6 +21,9 @@ class TestPhotoImageGeneration(TestCase):
 
     В тестах задачи выполняются инлайн через ImmediateBackend, поэтому
     после сохранения фотографии кэш-файлы уже присутствуют в хранилище.
+    Существование кэш-файлов проверяется через storage.exists: обращение
+    к bool, url или path кэш-файла запускает генерацию на месте
+    (стратегия JustInTime) и маскирует сломанную задачу.
     """
 
     def setUp(self) -> None:
@@ -36,6 +41,10 @@ class TestPhotoImageGeneration(TestCase):
         if task_result.task.module_path == generate_photo_images.module_path:
             self.enqueued.append(task_result)
 
+    def _cache_exists(self, cachefile: ImageCacheFile) -> bool:
+        """Проверить существование кэш-файла в хранилище без генерации."""
+        return cachefile.storage.exists(cachefile.name)
+
     def _read_generated_image(self, cachefile: ImageCacheFile) -> pImage.Image:
         """Прочитать сгенерированный кэш-файл из хранилища как изображение."""
         data = cachefile.storage.read_bytes(cachefile.name)
@@ -49,8 +58,8 @@ class TestPhotoImageGeneration(TestCase):
         """Создание фотографии порождает задачу: миниатюра и превью существуют."""
         photo = Photo.objects.get(pk=PhotoFactory().pk)
         self.assertEqual(len(self.enqueued), 1)
-        self.assertTrue(photo.image_thumbnail)
-        self.assertTrue(photo.image_preview)
+        self.assertTrue(self._cache_exists(photo.image_thumbnail))
+        self.assertTrue(self._cache_exists(photo.image_preview))
 
         thumbnail = self._read_generated_image(photo.image_thumbnail)
         self.assertEqual(thumbnail.format, "JPEG")
@@ -89,8 +98,8 @@ class TestPhotoImageGeneration(TestCase):
         photo.image = generate_image_with_exif()
         photo.save()
         self.assertEqual(len(self.enqueued), 1)
-        self.assertTrue(photo.image_thumbnail)
-        self.assertTrue(photo.image_preview)
+        self.assertTrue(self._cache_exists(photo.image_thumbnail))
+        self.assertTrue(self._cache_exists(photo.image_preview))
 
     def test_album_change_enqueues(self) -> None:
         """Смена альбома с перемещением файла порождает задачу."""
@@ -100,11 +109,79 @@ class TestPhotoImageGeneration(TestCase):
         photo.album = target_album
         photo.save()
         self.assertEqual(len(self.enqueued), 1)
-        self.assertTrue(photo.image_thumbnail)
-        self.assertTrue(photo.image_preview)
+        self.assertTrue(self._cache_exists(photo.image_thumbnail))
+        self.assertTrue(self._cache_exists(photo.image_preview))
 
     def test_task_skips_missing_photo(self) -> None:
         """Задача для несуществующей фотографии завершается успехом."""
         deleted_pk = Photo.objects.get(pk=PhotoFactory().pk).pk + 100500
         result = generate_photo_images.enqueue(deleted_pk)
         self.assertEqual(result.status, "SUCCESSFUL")
+
+
+class TestCacheFreshness(TransactionTestCase):
+    """Актуальный кэш не перегенерируется, отсутствующий - создается заново."""
+
+    def test_task_skips_fresh_cache(self) -> None:
+        """Свежий кэш-файл задача не перезаписывает: время изменения сохраняется."""
+        photo = Photo.objects.get(pk=PhotoFactory().pk)
+        cachefile = photo.image_thumbnail
+        mtime_before = cachefile.storage.get_modified_time(cachefile.name)
+
+        generate_photo_images.enqueue(photo.pk)
+
+        mtime_after = cachefile.storage.get_modified_time(cachefile.name)
+        self.assertEqual(mtime_after, mtime_before)
+
+    def test_task_regenerates_missing_cache(self) -> None:
+        """Отсутствующий кэш-файл задача создает заново."""
+        photo = Photo.objects.get(pk=PhotoFactory().pk)
+        cachefile = photo.image_thumbnail
+        cachefile.storage.delete(cachefile.name)
+        self.assertFalse(cachefile.storage.exists(cachefile.name))
+
+        generate_photo_images.enqueue(photo.pk)
+
+        self.assertTrue(cachefile.storage.exists(cachefile.name))
+
+
+class TestSignalSurvivesQueueFailure(TestCase):
+    """Отказ постановки задачи не прерывает сохранение фотографии.
+
+    Заглушка-бэкенд имитирует недоступную очередь: постановка задачи
+    завершается ошибкой на границе сигнала, а сохранение фотографии
+    и извлечение EXIF должны завершиться успешно.
+    """
+
+    def tearDown(self) -> None:
+        """Вернуть обработчику задач исходную конфигурацию."""
+        self._reset_handler()
+        super().tearDown()
+
+    @staticmethod
+    def _reset_handler() -> None:
+        """Сбросить кэш конфигурации обработчика задач."""
+        task_backends._settings = None  # noqa: SLF001
+        task_backends.__dict__.pop("settings", None)
+
+    def test_save_succeeds_when_queue_unavailable(self) -> None:
+        """Сохранение фотографии переживает ошибку постановки задачи."""
+        self._reset_handler()
+        self.addCleanup(self._reset_handler)
+        with (
+            override_settings(TASKS={"default": {"BACKEND": "gallery.tests.test_tasks.FailingTaskBackend"}}),
+            self.assertLogs("gallery.signals", level="ERROR") as logs,
+        ):
+            photo = Photo.objects.get(pk=PhotoFactory().pk)
+
+        self.assertTrue(Photo.objects.filter(pk=photo.pk).exists())
+        self.assertTrue(any("Постановка задачи генерации" in message for message in logs.output))
+
+
+class FailingTaskBackend(BaseTaskBackend):
+    """Бэкенд, имитирующий недоступную очередь: постановка всегда отказывает."""
+
+    def enqueue(self, task: Task, args: list[Any], kwargs: dict[str, Any]) -> TaskResult:  # noqa: ARG002
+        """Отказать в постановке задачи."""
+        msg = "Очередь фоновых задач недоступна"
+        raise RuntimeError(msg)

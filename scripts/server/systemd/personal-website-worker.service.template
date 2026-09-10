@@ -1,6 +1,8 @@
 [Unit]
 Description=personal-website worker (Django, huey)
-After=network-online.target
+# Схему базы данных и таблицы очереди создает веб-юнит в ExecStartPre,
+# поэтому воркер стартует после него.
+After=network-online.target personal-website.service
 Wants=network-online.target
 
 [Service]
@@ -8,8 +10,6 @@ User=${SERVICE_USER}
 Group=www-data
 WorkingDirectory=${WORK_DIR}
 EnvironmentFile=${WORK_DIR}/.env
-ExecStartPre=${WORK_DIR}/.venv/bin/python backend/manage.py migrate --noinput
-ExecStartPre=${WORK_DIR}/.venv/bin/python backend/manage.py create_huey_tables
 ExecStart=${WORK_DIR}/.venv/bin/python backend/manage.py run_huey
 Restart=on-failure
 RestartSec=5s
