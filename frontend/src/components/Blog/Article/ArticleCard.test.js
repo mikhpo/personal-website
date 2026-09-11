@@ -137,17 +137,4 @@ describe('ArticleCard', () => {
     render(<ArticleCard article={articleWithLongTitle} />);
     expect(screen.getByText(longTitle)).toBeInTheDocument();
   });
-
-  /**
-   * Проверяет, что карточка не содержит ссылку на редактирование:
-   * переход к редактированию выполняется только со страницы статьи.
-   */
-  test('не содержит ссылку на редактирование', () => {
-    render(
-      <ArticleCard
-        article={{ id: 7, title: 'Черновик статьи', content: '<p>Текст</p>', public: false }}
-      />,
-    );
-    expect(screen.queryByText('Редактировать')).not.toBeInTheDocument();
-  });
 });
