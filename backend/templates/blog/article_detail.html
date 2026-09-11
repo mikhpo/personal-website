@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load react_tags %}
+{% load static %}
 <!-- Шаблон для статьи и комментариев, наследует от базового шаблона. -->
 {% block title %}
     {{ article.title }}
@@ -11,7 +12,8 @@
     {{ comment_form.media }}
 {% endblock extra_header %}
 {% block content %}
+    {% static "tinymce/tinymce.min.js" as tinymce_script %}
     <div class="container">
-        {% react_component "Blog/ArticleDetail" articleId=article.pk isAuthenticated=user.is_authenticated loginUrl=login_url isStaff=user.is_staff %}
+        {% react_component "Blog/ArticleDetail" articleId=article.pk isAuthenticated=user.is_authenticated loginUrl=login_url isStaff=user.is_staff tinymceScriptSrc=tinymce_script %}
     </div>
 {% endblock content %}

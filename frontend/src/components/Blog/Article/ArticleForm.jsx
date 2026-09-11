@@ -88,11 +88,12 @@ const canSave = (state) => Boolean(state.title.trim()) && Boolean(stripHtml(stat
  * публикации меняют только явные кнопки, набор которых зависит от статуса
  * статьи: у черновика - "Сохранить черновик" и "Опубликовать", у опубликованной -
  * "Сохранить" и "Снять с публикации". Редактор TinyMCE следует теме сайта.
- * Ресурсы TinyMCE загружаются локально, без CDN и API-ключа.
+ * URL скрипта TinyMCE передается из шаблона (STATIC_URL хранилища статики).
  *
  * @component
  * @param {Object} props - Пропсы компонента
  * @param {number|null} [props.articleId=null] - ID редактируемой статьи (null для новой)
+ * @param {string} [props.tinymceScriptSrc='/static/tinymce/tinymce.min.js'] - URL скрипта TinyMCE
  * @return {JSX.Element} Компонент формы статьи
  *
  * @example
@@ -103,7 +104,7 @@ const canSave = (state) => Boolean(state.title.trim()) && Boolean(stripHtml(stat
  * // Редактирование существующей статьи
  * <ArticleForm articleId={5} />
  */
-const ArticleForm = ({ articleId = null }) => {
+const ArticleForm = ({ articleId = null, tinymceScriptSrc = '/static/tinymce/tinymce.min.js' }) => {
   /**
    * Действующая тема сайта для перекраски редактора
    * @type {[string, function]}
@@ -566,7 +567,7 @@ const ArticleForm = ({ articleId = null }) => {
               <Form.Label>Содержание</Form.Label>
               <Editor
                 key={htmlTheme}
-                tinymceScriptSrc="/static/tinymce/tinymce.min.js"
+                tinymceScriptSrc={tinymceScriptSrc}
                 value={form.content}
                 onEditorChange={(value) => updateForm({ content: value })}
                 disabled={submitting}
@@ -684,6 +685,7 @@ const ArticleForm = ({ articleId = null }) => {
 
 ArticleForm.propTypes = {
   articleId: PropTypes.number,
+  tinymceScriptSrc: PropTypes.string,
 };
 
 export default ArticleForm;
