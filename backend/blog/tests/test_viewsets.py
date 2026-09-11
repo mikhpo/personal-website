@@ -67,14 +67,14 @@ class TestCategoryViewSet(APITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["count"], 2)  # Только публичные
 
-    def test_list_categories_staff_same_as_anonymous(self) -> None:
-        """Список категорий для staff совпадает с анонимным (только public)."""
+    def test_list_categories_staff_sees_all(self) -> None:
+        """В списке категорий для staff видны и публичные, и непубличные."""
         staff_user = User.objects.create_user(username="staffuser", password="testpass123", is_staff=True)
         self.client.force_authenticate(user=staff_user)
         url = "/api/blog/categories/"
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data["count"], 2)  # Только публичные
+        self.assertEqual(response.data["count"], 3)  # Публичные и непубличная
 
     def test_retrieve_private_category_accessible_by_link(self) -> None:
         """Приватная категория доступна по прямой ссылке."""
@@ -131,14 +131,14 @@ class TestTopicViewSet(APITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["count"], 2)
 
-    def test_list_topics_staff_same_as_anonymous(self) -> None:
-        """Список тем для staff совпадает с анонимным (только public)."""
+    def test_list_topics_staff_sees_all(self) -> None:
+        """В списке тем для staff видны и публичные, и непубличные."""
         staff_user = User.objects.create_user(username="staffuser", password="testpass123", is_staff=True)
         self.client.force_authenticate(user=staff_user)
         url = "/api/blog/topics/"
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data["count"], 2)
+        self.assertEqual(response.data["count"], 3)
 
     def test_retrieve_private_topic_accessible_by_link(self) -> None:
         """Приватная тема доступна по прямой ссылке."""
@@ -188,14 +188,14 @@ class TestSeriesViewSet(APITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["count"], 2)
 
-    def test_list_series_staff_same_as_anonymous(self) -> None:
-        """Список серий для staff совпадает с анонимным (только public)."""
+    def test_list_series_staff_sees_all(self) -> None:
+        """В списке серий для staff видны и публичные, и непубличные."""
         staff_user = User.objects.create_user(username="staffuser", password="testpass123", is_staff=True)
         self.client.force_authenticate(user=staff_user)
         url = "/api/blog/series/"
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data["count"], 2)
+        self.assertEqual(response.data["count"], 3)
 
     def test_retrieve_private_series_accessible_by_link(self) -> None:
         """Приватная серия доступна по прямой ссылке."""

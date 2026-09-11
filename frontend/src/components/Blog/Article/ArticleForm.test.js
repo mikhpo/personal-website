@@ -141,6 +141,20 @@ describe('ArticleForm', () => {
     });
 
     /**
+     * Проверяет прохождение всех страниц пагинации справочника.
+     */
+    test('загружает все страницы справочника', async () => {
+      blogService.getCategories
+        .mockResolvedValueOnce({ results: [taxonomies.categories[0]], next: '/api/blog/categories/?page=2' })
+        .mockResolvedValueOnce({ results: [taxonomies.categories[1]], next: null });
+      await renderForm();
+      expect(blogService.getCategories).toHaveBeenCalledTimes(2);
+      expect(blogService.getCategories).toHaveBeenLastCalledWith({ page: 2 });
+      expect(screen.getByText('Разработка')).toBeInTheDocument();
+      expect(screen.getByText('Путешествия')).toBeInTheDocument();
+    });
+
+    /**
      * Проверяет валидацию: публикация с пустым заголовком блокируется.
      */
     test('блокирует публикацию с пустым заголовком', async () => {
@@ -471,6 +485,53 @@ describe('ArticleForm', () => {
       await advanceAutosave();
       expect(blogService.updateArticle).not.toHaveBeenCalled();
       expect(screen.queryByText(/Автосохранено в/)).not.toBeInTheDocument();
+    });
+
+    /**
+     * Проверяет, что публикация дожидается выполняемого автосохранения:
+     * запросы не пересекаются и не дублируются, статья остается опубликованной.
+     */
+    test('публикация дожидается автосохранения', async () => {
+      let resolveCreate;
+      blogService.createArticle.mockImplementation(
+        () => new Promise((resolve) => {
+          resolveCreate = resolve;
+        }),
+      );
+      blogService.updateArticle.mockResolvedValue(createdArticle);
+      await renderForm();
+      fillRequiredFields();
+      await advanceAutosave();
+      fireEvent.click(screen.getByRole('button', { name: /опубликовать/i }));
+      await act(async () => {});
+      expect(blogService.updateArticle).not.toHaveBeenCalled();
+      await act(async () => {
+        resolveCreate(createdArticle);
+      });
+      await act(async () => {});
+      expect(blogService.createArticle).toHaveBeenCalledTimes(1);
+      expect(blogService.updateArticle).toHaveBeenCalledTimes(1);
+      const formData = blogService.updateArticle.mock.calls[0][1];
+      expect(formData.get('public')).toBe('true');
+      expect(navigateTo).toHaveBeenCalledWith('/blog/article/test/');
+    });
+
+    /**
+     * Проверяет, что при ошибке автосохранения явное сохранение все равно выполняется.
+     */
+    test('публикация выполняется после ошибки автосохранения', async () => {
+      blogService.createArticle
+        .mockRejectedValueOnce(new Error('Ошибка сети'))
+        .mockResolvedValueOnce(createdArticle);
+      await renderForm();
+      fillRequiredFields();
+      await advanceAutosave();
+      expect(screen.getByText('Не удалось автосохранить')).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: /опубликовать/i }));
+      await act(async () => {});
+      expect(blogService.updateArticle).not.toHaveBeenCalled();
+      expect(blogService.createArticle).toHaveBeenCalledTimes(2);
+      expect(navigateTo).toHaveBeenCalledWith('/blog/article/test/');
     });
 
     /**

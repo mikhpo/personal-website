@@ -25,6 +25,11 @@ export const getEditorInit = (isDark) => ({
   promotion: false,
   skin: isDark ? 'oxide-dark' : 'oxide',
   content_css: isDark ? 'dark' : 'default',
+  // Контент рендерится на страницах другой глубины, чем страница редактора:
+  // относительные адреса разрешались бы в другие места. Адреса сохраняются
+  // от корня сайта, без хоста
+  relative_urls: false,
+  remove_script_host: true,
   plugins: [
     'link', 'image', 'media', 'preview', 'codesample',
     'table', 'code', 'lists', 'fullscreen', 'insertdatetime', 'nonbreaking',

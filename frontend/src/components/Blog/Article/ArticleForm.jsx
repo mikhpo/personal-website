@@ -189,6 +189,25 @@ const ArticleForm = ({ articleId = null }) => {
   const snapshotRef = useRef(null);
 
   /**
+   * Зеркало ID статьи: сохранение читает его без зависимости от момента рендера
+   * @type {Object} Ref
+   */
+  const savedArticleIdRef = useRef(articleId);
+
+  /**
+   * Зеркало состояния формы: явное сохранение после ожидания автосохранения
+   * строит данные по свежему состоянию
+   * @type {Object} Ref
+   */
+  const formRef = useRef(EMPTY_FORM);
+
+  /**
+   * Промис выполняемого автосохранения: явное сохранение дожидается его завершения
+   * @type {Object} Ref
+   */
+  const autosaveInFlightRef = useRef(null);
+
+  /**
    * Признак выполняемого запроса для блокировки автосохранения
    * @type {Object} Ref
    */
@@ -215,6 +234,26 @@ const ArticleForm = ({ articleId = null }) => {
   const updateForm = (patch) => setForm((prev) => ({ ...prev, ...patch }));
 
   /**
+   * Загружает справочник целиком, проходя все страницы пагинации
+   * @async
+   * @function fetchTaxonomy
+   * @param {Function} fetchPage - Метод blogService для загрузки страницы справочника
+   * @return {Promise<Array>} Полный список объектов справочника
+   */
+  const fetchTaxonomy = async (fetchPage) => {
+    const items = [];
+    // Ограничение итераций защищает от зацикливания при некорректном API
+    for (let page = 1; page <= 100; page += 1) {
+      const data = await fetchPage({ page });
+      items.push(...(data.results || data));
+      if (!data.next) {
+        return items;
+      }
+    }
+    return items;
+  };
+
+  /**
    * Эффект загрузки справочников и данных статьи при монтировании
    */
   useEffect(() => {
@@ -229,14 +268,14 @@ const ArticleForm = ({ articleId = null }) => {
       setLoadError(null);
       try {
         const [categoriesData, seriesData, topicsData] = await Promise.all([
-          blogService.getCategories(),
-          blogService.getSeries(),
-          blogService.getTopics(),
+          fetchTaxonomy(blogService.getCategories),
+          fetchTaxonomy(blogService.getSeries),
+          fetchTaxonomy(blogService.getTopics),
         ]);
         setTaxonomies({
-          categories: categoriesData.results || categoriesData,
-          series: seriesData.results || seriesData,
-          topics: topicsData.results || topicsData,
+          categories: categoriesData,
+          series: seriesData,
+          topics: topicsData,
         });
         if (articleId) {
           const article = await blogService.getArticle(articleId);
@@ -252,6 +291,7 @@ const ArticleForm = ({ articleId = null }) => {
             isPublished: article.public,
           });
           setCurrentImage(article.image || null);
+          savedArticleIdRef.current = article.id;
           setSavedArticleId(article.id);
         }
       } catch (err) {
@@ -263,6 +303,13 @@ const ArticleForm = ({ articleId = null }) => {
 
     load();
   }, [articleId, retryCount]);
+
+  /**
+   * Эффект синхронизации зеркала состояния формы
+   */
+  useEffect(() => {
+    formRef.current = form;
+  });
 
   /**
    * Фиксирует отпечаток исходного состояния формы после загрузки
@@ -310,11 +357,13 @@ const ArticleForm = ({ articleId = null }) => {
    * @return {Promise<Object>} Сохраненная статья в полном представлении
    */
   const saveArticle = async (state) => {
+    const id = savedArticleIdRef.current;
     const formData = buildFormData(state);
-    const response = savedArticleId
-      ? await blogService.updateArticle(savedArticleId, formData)
+    const response = id
+      ? await blogService.updateArticle(id, formData)
       : await blogService.createArticle(formData);
-    if (!savedArticleId && response.id) {
+    if (!id && response.id) {
+      savedArticleIdRef.current = response.id;
       setSavedArticleId(response.id);
     }
     snapshotRef.current = buildSnapshot(state);
@@ -333,22 +382,27 @@ const ArticleForm = ({ articleId = null }) => {
     }
     // Опубликованная статья обновляется только явной кнопкой "Сохранить":
     // черновик с правками читатели видеть не должны
-    if (savedArticleId && form.isPublished) {
+    if (savedArticleIdRef.current && form.isPublished) {
       return;
     }
     if (snapshotRef.current === buildSnapshot(form)) {
       return;
     }
     submittingRef.current = true;
-    try {
-      await saveArticle(form);
-      setAutosaveError(false);
-      setAutosaveStatus(`Автосохранено в ${formatTime(new Date())}`);
-    } catch {
-      setAutosaveError(true);
-    } finally {
-      submittingRef.current = false;
-    }
+    const savePromise = (async () => {
+      try {
+        await saveArticle(form);
+        setAutosaveError(false);
+        setAutosaveStatus(`Автосохранено в ${formatTime(new Date())}`);
+      } catch {
+        setAutosaveError(true);
+      } finally {
+        submittingRef.current = false;
+        autosaveInFlightRef.current = null;
+      }
+    })();
+    autosaveInFlightRef.current = savePromise;
+    await savePromise;
   };
 
   /**
@@ -386,7 +440,13 @@ const ArticleForm = ({ articleId = null }) => {
     setSubmitting(true);
     submittingRef.current = true;
     try {
-      const response = await saveArticle({ ...form, isPublished });
+      // Дождаться выполняемого автосохранения: параллельные запросы с разным
+      // public перезаписали бы результат друг друга
+      if (autosaveInFlightRef.current) {
+        await autosaveInFlightRef.current;
+        submittingRef.current = true;
+      }
+      const response = await saveArticle({ ...formRef.current, isPublished });
       setTimerKey((key) => key + 1);
       navigateTo(response.url || `/blog/article/${response.slug}/`);
     } catch (err) {

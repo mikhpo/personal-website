@@ -133,8 +133,8 @@ export const blogService = {
    * @example
    * const categories = await blogService.getCategories();
    */
-  async getCategories() {
-    return api.get(`${BASE_URL}/categories/`);
+  async getCategories(params = {}) {
+    return api.get(buildApiUrl(`${BASE_URL}/categories/`, params));
   },
 
   /**
@@ -160,8 +160,8 @@ export const blogService = {
    * @example
    * const series = await blogService.getSeries();
    */
-  async getSeries() {
-    return api.get(`${BASE_URL}/series/`);
+  async getSeries(params = {}) {
+    return api.get(buildApiUrl(`${BASE_URL}/series/`, params));
   },
 
   /**
@@ -187,8 +187,8 @@ export const blogService = {
    * @example
    * const topics = await blogService.getTopics();
    */
-  async getTopics() {
-    return api.get(`${BASE_URL}/topics/`);
+  async getTopics(params = {}) {
+    return api.get(buildApiUrl(`${BASE_URL}/topics/`, params));
   },
 
   /**

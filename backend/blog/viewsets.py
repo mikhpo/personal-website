@@ -37,9 +37,16 @@ class CategoryViewSet(AuditlogActorMixin, viewsets.ModelViewSet):
     ordering: ClassVar[list] = ["name"]
 
     def get_queryset(self) -> "QuerySet[Category]":
-        """В list отдаёт только public=True, в retrieve - любую категорию."""
+        """В list отдаёт публичные категории, а администратору - все.
+
+        Полный справочник нужен staff в форме статьи: привязанные
+        к статье непубличные категории не должны пропадать из селектора.
+        """
         queryset = Category.objects.all()
         if self.action == "list":
+            user = self.request.user
+            if isinstance(user, AbstractBaseUser) and user.is_staff:
+                return queryset
             return queryset.filter(public=True)
         return queryset
 
@@ -56,9 +63,12 @@ class TopicViewSet(AuditlogActorMixin, viewsets.ModelViewSet):
     ordering: ClassVar[list] = ["name"]
 
     def get_queryset(self) -> "QuerySet[Topic]":
-        """В list отдаёт только public=True, в retrieve - любую тему."""
+        """В list отдаёт публичные темы, а администратору - все."""
         queryset = Topic.objects.all()
         if self.action == "list":
+            user = self.request.user
+            if isinstance(user, AbstractBaseUser) and user.is_staff:
+                return queryset
             return queryset.filter(public=True)
         return queryset
 
@@ -75,9 +85,12 @@ class SeriesViewSet(AuditlogActorMixin, viewsets.ModelViewSet):
     ordering: ClassVar[list] = ["name"]
 
     def get_queryset(self) -> "QuerySet[Series]":
-        """В list отдаёт только public=True, в retrieve - любую серию."""
+        """В list отдаёт публичные серии, а администратору - все."""
         queryset = Series.objects.all()
         if self.action == "list":
+            user = self.request.user
+            if isinstance(user, AbstractBaseUser) and user.is_staff:
+                return queryset
             return queryset.filter(public=True)
         return queryset
 
