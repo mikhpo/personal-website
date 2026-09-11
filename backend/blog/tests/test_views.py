@@ -186,6 +186,8 @@ class TestArticleDetailPage(TestCase):
         # Проверяем наличие React компонента Blog/ArticleDetail
         self.assertContains(response, 'data-component-name="Blog/ArticleDetail"')
         self.assertContains(response, "articleId")
+        # URL скрипта редактора передается пропом из STATIC_URL хранилища статики
+        self.assertContains(response, '"tinymceScriptSrc": "/static/tinymce/tinymce.min.js"')
 
     def test_article_page_content(self) -> None:
         """Тестирование соответствия содержания статьи контексту, переданному в шаблон."""
@@ -296,6 +298,8 @@ class TestArticleCreateView(TestCase):
         self.assertTemplateUsed(response, ARTICLE_FORM_TEMPLATE)
         self.assertTemplateUsed(response, BASE_TEMPLATE)
         self.assertContains(response, 'data-component-name="Blog/ArticleForm"')
+        # URL скрипта редактора передается пропом из STATIC_URL хранилища статики
+        self.assertContains(response, '"tinymceScriptSrc": "/static/tinymce/tinymce.min.js"')
 
     def test_create_page_redirects_anonymous_to_login(self) -> None:
         """Анонима страница создания перенаправляет на вход с параметром next."""
@@ -345,6 +349,7 @@ class TestArticleEditView(TestCase):
         self.assertTemplateUsed(response, ARTICLE_FORM_TEMPLATE)
         self.assertContains(response, 'data-component-name="Blog/ArticleForm"')
         self.assertContains(response, f'"articleId": {self.article.pk}')
+        self.assertContains(response, '"tinymceScriptSrc": "/static/tinymce/tinymce.min.js"')
 
     def test_edit_page_redirects_anonymous_to_login(self) -> None:
         """Анонима страница редактирования перенаправляет на вход с параметром next."""

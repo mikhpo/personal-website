@@ -13,7 +13,7 @@ import { getEditorInit } from '@utils/tinymce';
  * Для авторизованных пользователей отображает форму с WYSIWYG редактором и кнопкой отправки.
  * Для неавторизованных - ссылку на страницу входа.
  * Использует сессионную аутентификацию Django (CSRF-токен из cookie).
- * Все ресурсы TinyMCE загружаются локально, без использования CDN и API-ключа;
+ * Ресурсы TinyMCE загружаются по URL из пропа (STATIC_URL хранилища статики);
  * редактор следует теме сайта.
  *
  * @component
@@ -22,6 +22,8 @@ import { getEditorInit } from '@utils/tinymce';
  * @param {boolean} props.isAuthenticated - Авторизован ли текущий пользователь
  * @param {string} props.loginUrl - URL страницы входа с параметром next
  * @param {function} [props.onSuccess] - Callback успешной отправки формы
+ * @param {string} [props.tinymceScriptSrc='/static/tinymce/tinymce.min.js'] - URL скрипта TinyMCE
+ * @param {React.ReactNode} [props.asideActions] - Дополнительные действия в ряду кнопки отправки
  * @return {JSX.Element} Компонент формы комментария
  *
  * @example
@@ -32,7 +34,14 @@ import { getEditorInit } from '@utils/tinymce';
  * // Неавторизованный пользователь
  * <CommentForm articleId={1} isAuthenticated={false} loginUrl="/accounts/login/?next=/blog/slug/" />
  */
-const CommentForm = ({ articleId, isAuthenticated, loginUrl, onSuccess }) => {
+const CommentForm = ({
+  articleId,
+  isAuthenticated,
+  loginUrl,
+  onSuccess,
+  tinymceScriptSrc = '/static/tinymce/tinymce.min.js',
+  asideActions = null,
+}) => {
   /**
    * Действующая тема сайта для перекраски редактора
    * @type {[string, function]}
@@ -109,21 +118,24 @@ const CommentForm = ({ articleId, isAuthenticated, loginUrl, onSuccess }) => {
       <div className="form-group">
         <Editor
           key={htmlTheme}
-          tinymceScriptSrc="/static/tinymce/tinymce.min.js"
+          tinymceScriptSrc={tinymceScriptSrc}
           value={content}
           onEditorChange={(newValue) => setContent(newValue)}
           disabled={submitting}
           init={getEditorInit(htmlTheme === 'dark')}
         />
         <br />
-        <Button
-          type="submit"
-          variant="outline-dark"
-          disabled={submitting}
-        >
-          {submitting ? 'Отправка...' : 'Добавить комментарий'}
-          {!submitting && <i className="fas fa-comments ms-1" />}
-        </Button>
+        <div className="d-flex align-items-center">
+          <Button
+            type="submit"
+            variant="outline-dark"
+            disabled={submitting}
+          >
+            {submitting ? 'Отправка...' : 'Добавить комментарий'}
+            {!submitting && <i className="fas fa-comments ms-1" />}
+          </Button>
+          {asideActions && <div className="ms-auto">{asideActions}</div>}
+        </div>
       </div>
     </form>
   );
@@ -134,6 +146,8 @@ CommentForm.propTypes = {
   isAuthenticated: PropTypes.bool.isRequired,
   loginUrl: PropTypes.string.isRequired,
   onSuccess: PropTypes.func,
+  tinymceScriptSrc: PropTypes.string,
+  asideActions: PropTypes.node,
 };
 
 export default CommentForm;

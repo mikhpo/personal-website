@@ -11,7 +11,8 @@ import AlertList from '@components/Alert/AlertList';
  *
  * Отображает полный текст статьи, даты публикации и обновления, а также секцию комментариев.
  * Форма добавления комментария отображается только для авторизованных пользователей.
- * Для администраторов отображается кнопка перехода к редактированию.
+ * Для администраторов отображается кнопка перехода к редактированию в ряду
+ * кнопки добавления комментария.
  *
  * @component
  * @param {Object} props - Пропсы компонента
@@ -19,6 +20,7 @@ import AlertList from '@components/Alert/AlertList';
  * @param {boolean} props.isAuthenticated - Авторизован ли текущий пользователь
  * @param {string} props.loginUrl - URL страницы входа с параметром next
  * @param {boolean} [props.isStaff=false] - Является ли текущий пользователь администратором
+ * @param {string} [props.tinymceScriptSrc='/static/tinymce/tinymce.min.js'] - URL скрипта TinyMCE
  * @return {JSX.Element} Компонент детального просмотра статьи
  *
  * @example
@@ -29,7 +31,13 @@ import AlertList from '@components/Alert/AlertList';
  *   loginUrl="/accounts/login/?next=/blog/1/"
  * />
  */
-const ArticleDetail = ({ articleId, isAuthenticated, loginUrl, isStaff = false }) => {
+const ArticleDetail = ({
+  articleId,
+  isAuthenticated,
+  loginUrl,
+  isStaff = false,
+  tinymceScriptSrc = '/static/tinymce/tinymce.min.js',
+}) => {
   /**
    * Состояние статьи
    * @type {[Object|null, function]}
@@ -169,12 +177,6 @@ const ArticleDetail = ({ articleId, isAuthenticated, loginUrl, isStaff = false }
       <Card className="shadow rounded justify-content">
         <Card.Body>
           <h1 className="card-title fs-4">{article.title}</h1>
-          {isStaff && (
-            <a className="btn btn-outline-dark btn-sm mb-2" href={`${article.url}edit/`}>
-              <i className="fas fa-edit me-1" />
-              Редактировать
-            </a>
-          )}
           <p
             className="card-text"
             dangerouslySetInnerHTML={{ __html: article.content }}
@@ -192,6 +194,13 @@ const ArticleDetail = ({ articleId, isAuthenticated, loginUrl, isStaff = false }
             isAuthenticated={isAuthenticated}
             loginUrl={loginUrl}
             onSuccess={handleCommentSuccess}
+            tinymceScriptSrc={tinymceScriptSrc}
+            asideActions={isStaff ? (
+              <a className="btn btn-outline-dark btn-sm" href={`${article.url}edit/`}>
+                <i className="fas fa-edit me-1" />
+                Редактировать
+              </a>
+            ) : null}
           />
           {article.comments && article.comments.length > 0 && (
             <>
@@ -210,6 +219,7 @@ ArticleDetail.propTypes = {
   isAuthenticated: PropTypes.bool.isRequired,
   loginUrl: PropTypes.string.isRequired,
   isStaff: PropTypes.bool,
+  tinymceScriptSrc: PropTypes.string,
 };
 
 export default ArticleDetail;

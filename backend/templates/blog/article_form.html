@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load react_tags %}
+{% load static %}
 <!-- Шаблон формы создания и редактирования статьи, рендерит React компонент ArticleForm. -->
 {% block meta %}
     <meta name="robots" content="noindex">
@@ -8,11 +9,12 @@
     {% if article %}Редактирование - {{ article.title }}{% else %}Новая статья{% endif %}
 {% endblock title %}
 {% block content %}
+    {% static "tinymce/tinymce.min.js" as tinymce_script %}
     <div class="container">
         {% if article %}
-            {% react_component "Blog/ArticleForm" articleId=article.pk %}
+            {% react_component "Blog/ArticleForm" articleId=article.pk tinymceScriptSrc=tinymce_script %}
         {% else %}
-            {% react_component "Blog/ArticleForm" %}
+            {% react_component "Blog/ArticleForm" tinymceScriptSrc=tinymce_script %}
         {% endif %}
     </div>
 {% endblock content %}

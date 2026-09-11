@@ -24,11 +24,12 @@ jest.mock('@components/Blog/Comment/CommentList', () => {
 
 // Мок для компонента CommentForm
 jest.mock('@components/Blog/Comment/CommentForm', () => {
-  return function MockCommentForm({ articleId, isAuthenticated }) {
+  return function MockCommentForm({ articleId, isAuthenticated, asideActions }) {
     return (
       <div data-testid="comment-form">
         <span>Form for article {articleId}</span>
         <span>Auth: {isAuthenticated ? 'yes' : 'no'}</span>
+        {asideActions}
       </div>
     );
   };
