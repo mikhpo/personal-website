@@ -72,7 +72,7 @@ class TestBackupMediaReport(MediaTestCaseMixin):
     """Команда backup_media отправляет отчет об успешной синхронизации."""
 
     def test_sends_success_report_with_media_section(self) -> None:
-        """В письме - тема с командой и статусом, раздел «Медиа» и цель."""
+        """В письме - тема с командой и статусом, раздел "Медиа" и цель."""
         with self.media_settings():
             call_command("backup_media", stdout=StringIO())
         self.assertEqual(len(mail.outbox), 1)
@@ -140,7 +140,7 @@ class TestBackupMediaErrorReport(MediaTestCaseMixin):
 @override_settings(**NOTIFY_SETTINGS)
 @skipUnless(pg_client_compatible(), "локальный клиент PostgreSQL несовместим с сервером")
 class TestBackupDbReport(SimpleTestCase):
-    """Команда backup_db отправляет отчет с разделом «База данных»."""
+    """Команда backup_db отправляет отчет с разделом "База данных"."""
 
     def setUp(self) -> None:
         """Создать каталоги бэкапа и цели."""

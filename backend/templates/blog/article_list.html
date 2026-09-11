@@ -3,10 +3,15 @@
 <!-- Шаблон корневой страницы блога, наследует от базового шаблона. -->
 {% block content %}
     <div class="container-fluid">
-        <h1 class="mb-3">Блог</h1>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h1 class="mb-0">Блог</h1>
+            {% if user.is_staff %}
+                <a class="btn btn-outline-dark" href="{% url "blog:article-create" %}">Написать статью</a>
+            {% endif %}
+        </div>
         <div class="mb-3">
             {% react_component "Search/SearchForm" search=search targetUrl="/blog/" placeholder="Поиск по статьям..." %}
         </div>
-        {% react_component "Blog/ArticleList" apiUrl="/api/blog/articles/" search=search %}
+        {% react_component "Blog/ArticleList" apiUrl="/api/blog/articles/" search=search isStaff=user.is_staff %}
     </div>
 {% endblock content %}

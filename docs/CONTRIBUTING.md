@@ -170,7 +170,7 @@ Poetry сконфигурирован таким образом, чтобы ви
 
 ### Прокси-сервер nginx
 
-Прокси-сервер nginx обслуживает HTTPS: сертификаты Let's Encrypt выпускаются и продлеваются certbot, конфигурация сайта - из шаблона nginx/personal-website.conf.template. Настройка в Docker Compose и на хосте, включая выпуск и перенос сертификатов, описана в [docs/deployment/proxy.md](./deployment/proxy.md); проверка работы в среде разработки - в разделе «Контейнеризация» выше.
+Прокси-сервер nginx обслуживает HTTPS: сертификаты Let's Encrypt выпускаются и продлеваются certbot, конфигурация сайта - из шаблона nginx/personal-website.conf.template. Настройка в Docker Compose и на хосте, включая выпуск и перенос сертификатов, описана в [docs/deployment/proxy.md](./deployment/proxy.md); проверка работы в среде разработки - в разделе "Контейнеризация" выше.
 
 ## CI/CD
 

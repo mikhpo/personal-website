@@ -137,4 +137,32 @@ describe('ArticleCard', () => {
     render(<ArticleCard article={articleWithLongTitle} />);
     expect(screen.getByText(longTitle)).toBeInTheDocument();
   });
+
+  describe('для администратора', () => {
+    const draftArticle = {
+      id: 7,
+      title: 'Черновик статьи',
+      content: '<p>Текст черновика</p>',
+      public: false,
+      slug: 'draft-slug',
+      url: '/blog/article/draft-slug/',
+    };
+
+    /**
+     * Проверяет ссылку на редактирование по URL статьи.
+     */
+    test('показывает ссылку на редактирование', () => {
+      render(<ArticleCard article={draftArticle} isStaff />);
+      const link = screen.getByText('Редактировать');
+      expect(link.closest('a')).toHaveAttribute('href', '/blog/article/draft-slug/edit/');
+    });
+
+    /**
+     * Проверяет скрытие служебных элементов для обычного пользователя.
+     */
+    test('не показывает ссылку на редактирование обычному пользователю', () => {
+      render(<ArticleCard article={draftArticle} />);
+      expect(screen.queryByText('Редактировать')).not.toBeInTheDocument();
+    });
+  });
 });

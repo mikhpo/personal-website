@@ -111,7 +111,7 @@ describe('ThemeToggle', () => {
    * Проверяет сохранение выбранной темы.
    */
   describe('выбор темы', () => {
-    test('выбор «Тёмная» сохраняет тему и обновляет атрибут на <html>', () => {
+    test('выбор "Тёмная" сохраняет тему и обновляет атрибут на <html>', () => {
       render(<ThemeToggle />);
       openMenu();
 
@@ -122,7 +122,7 @@ describe('ThemeToggle', () => {
       expect(screen.getByRole('button', { name: 'Выбор темы' }).querySelector('i')).toHaveClass('bi-moon-stars-fill');
     });
 
-    test('выбор «Светлая» сохраняет тему и обновляет атрибут на <html>', () => {
+    test('выбор "Светлая" сохраняет тему и обновляет атрибут на <html>', () => {
       render(<ThemeToggle />);
       openMenu();
 
@@ -132,7 +132,7 @@ describe('ThemeToggle', () => {
       expect(document.documentElement).toHaveAttribute('data-bs-theme', 'light');
     });
 
-    test('выбор «Системная» удаляет явный выбор и следует системной теме', () => {
+    test('выбор "Системная" удаляет явный выбор и следует системной теме', () => {
       window.localStorage.setItem('theme', JSON.stringify('dark'));
       window.matchMedia = stubMatchMedia(false);
 

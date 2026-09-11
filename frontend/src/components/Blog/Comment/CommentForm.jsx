@@ -4,6 +4,8 @@ import { Button } from 'react-bootstrap';
 import { Editor } from '@tinymce/tinymce-react';
 import AlertList from '@components/Alert/AlertList';
 import { blogService } from '@services';
+import { useHtmlTheme } from '@hooks';
+import { getEditorInit } from '@utils/tinymce';
 
 /**
  * Компонент формы добавления комментария с WYSIWYG редактором TinyMCE.
@@ -11,7 +13,8 @@ import { blogService } from '@services';
  * Для авторизованных пользователей отображает форму с WYSIWYG редактором и кнопкой отправки.
  * Для неавторизованных - ссылку на страницу входа.
  * Использует сессионную аутентификацию Django (CSRF-токен из cookie).
- * Все ресурсы TinyMCE загружаются локально, без использования CDN и API-ключа.
+ * Все ресурсы TinyMCE загружаются локально, без использования CDN и API-ключа;
+ * редактор следует теме сайта.
  *
  * @component
  * @param {Object} props - Пропсы компонента
@@ -30,6 +33,12 @@ import { blogService } from '@services';
  * <CommentForm articleId={1} isAuthenticated={false} loginUrl="/accounts/login/?next=/blog/slug/" />
  */
 const CommentForm = ({ articleId, isAuthenticated, loginUrl, onSuccess }) => {
+  /**
+   * Действующая тема сайта для перекраски редактора
+   * @type {[string, function]}
+   */
+  const htmlTheme = useHtmlTheme();
+
   /**
    * Состояние текста комментария
    * @type {[string, function]}
@@ -99,25 +108,12 @@ const CommentForm = ({ articleId, isAuthenticated, loginUrl, onSuccess }) => {
       )}
       <div className="form-group">
         <Editor
+          key={htmlTheme}
           tinymceScriptSrc="/static/tinymce/tinymce.min.js"
           value={content}
           onEditorChange={(newValue) => setContent(newValue)}
           disabled={submitting}
-          init={{
-            license_key: 'gpl',
-            menubar: true,
-            statusbar: true,
-            branding: false,
-            promotion: false,
-            plugins: [
-              'link', 'image', 'media', 'preview', 'codesample',
-              'table', 'code', 'lists', 'fullscreen', 'insertdatetime', 'nonbreaking',
-              'directionality', 'searchreplace', 'wordcount', 'visualblocks',
-              'visualchars', 'autolink', 'charmap', 'anchor', 'pagebreak', 'autoresize',
-            ],
-            toolbar1: 'fullscreen preview bold italic underline | fontfamily fontsize | forecolor backcolor | alignleft alignright | aligncenter alignjustify | indent outdent | bullist numlist table | link image media | codesample',
-            toolbar2: 'visualblocks visualchars | charmap hr pagebreak nonbreaking anchor | code',
-          }}
+          init={getEditorInit(htmlTheme === 'dark')}
         />
         <br />
         <Button

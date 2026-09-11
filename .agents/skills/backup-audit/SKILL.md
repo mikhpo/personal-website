@@ -13,7 +13,7 @@ description: Проверка резервного копирования - ко
 
 ### 1. Корректность настройки целей
 
-В секции «Бэкапы» .env (схема - [docs/deployment/backups.md](../../../docs/deployment/backups.md)):
+В секции "Бэкапы" .env (схема - [docs/deployment/backups.md](../../../docs/deployment/backups.md)):
 
 - каждое имя из `BACKUP_DB_TARGETS` и `BACKUP_MEDIA_TARGETS` имеет запись `BACKUP_TARGET_<ИМЯ>` с известным префиксом (`mc:` / `rclone:`) и непустой спецификацией;
 - имена целей - заглавные буквы, цифры, подчеркивание;

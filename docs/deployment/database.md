@@ -4,7 +4,7 @@
 
 ## 1. Подключение и SSL
 
-Переменные .env (секция «База данных»):
+Переменные .env (секция "База данных"):
 
 - `POSTGRES_HOST` - имя хоста: `postgres` внутри compose-сети, `host.docker.internal` для PostgreSQL под systemd со стороны контейнеров (запись extra_hosts в compose.yaml уже добавлена), `localhost` для процессов хоста, FQDN managed-кластера;
 - `POSTGRES_PORT`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` - порт, пользователь, пароль, база;

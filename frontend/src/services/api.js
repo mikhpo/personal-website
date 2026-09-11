@@ -149,6 +149,7 @@ class ApiClient {
    * @param {string} url - URL для запроса
    * @param {FormData} formData - Данные формы
    * @param {Object} [options={}] - Дополнительные опции запроса
+   * @param {Object} [options.headers={}] - Дополнительные заголовки
    * @param {boolean} [options.withCsrf=true] - Добавлять ли CSRF токен
    * @return {Promise<Object>} Ответ от сервера в формате JSON
    * @throws {ApiError} При ошибке HTTP запроса
@@ -175,6 +176,45 @@ class ApiClient {
 
     if (!response.ok) {
       throw new ApiError(response.status, `Ошибка отправки: ${response.status}`);
+    }
+
+    return response.json();
+  }
+
+  /**
+   * Выполняет PUT запрос с FormData (для обновления объектов с файлами).
+   *
+   * @async
+   * @param {string} url - URL для запроса
+   * @param {FormData} formData - Данные формы
+   * @param {Object} [options={}] - Дополнительные опции запроса
+   * @param {Object} [options.headers={}] - Дополнительные заголовки
+   * @param {boolean} [options.withCsrf=true] - Добавлять ли CSRF токен
+   * @return {Promise<Object>} Ответ от сервера в формате JSON
+   * @throws {ApiError} При ошибке HTTP запроса
+   *
+   * @example
+   * const formData = new FormData();
+   * formData.append('title', 'Новый заголовок');
+   * const data = await api.putForm('/api/blog/articles/1/', formData);
+   */
+  async putForm(url, formData, options = {}) {
+    const { withCsrf = true, ...requestOptions } = options;
+    const headers = {};
+
+    if (withCsrf) {
+      headers['X-CSRFToken'] = getCsrfToken();
+    }
+
+    const response = await fetch(url, {
+      method: 'PUT',
+      headers: { ...headers, ...requestOptions.headers },
+      body: formData,
+      ...requestOptions,
+    });
+
+    if (!response.ok) {
+      throw new ApiError(response.status, `Ошибка обновления: ${response.status}`);
     }
 
     return response.json();

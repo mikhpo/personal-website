@@ -137,7 +137,7 @@ const AlbumList = ({ apiUrl = "/api/gallery/albums/", tagSlug, search }) => {
 
   if (albums.length === 0) {
     const emptyMessage = search
-      ? `По запросу «${search}» ничего не найдено`
+      ? `По запросу "${search}" ничего не найдено`
       : "Нет доступных альбомов";
     return (
       <AlertList

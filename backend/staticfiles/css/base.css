@@ -47,6 +47,26 @@ table:not(.center) td {
     --bs-btn-disabled-border-color: var(--bs-emphasis-color);
 }
 
+/* Bootstrap 5.3 фиксирует для btn-dark литеральные темные цвета -
+   в темной теме кнопка сливается с фоном. Переопределение через адаптивные
+   --bs-emphasis-color (черная в светлой теме, белая в темной) и --bs-body-bg
+   возвращает контраст в обеих темах. */
+.btn-dark {
+    --bs-btn-color: var(--bs-body-bg);
+    --bs-btn-bg: var(--bs-emphasis-color);
+    --bs-btn-border-color: var(--bs-emphasis-color);
+    --bs-btn-hover-color: var(--bs-body-bg);
+    --bs-btn-hover-bg: var(--bs-emphasis-color);
+    --bs-btn-hover-border-color: var(--bs-emphasis-color);
+    --bs-btn-focus-shadow-rgb: var(--bs-emphasis-color-rgb);
+    --bs-btn-active-color: var(--bs-body-bg);
+    --bs-btn-active-bg: var(--bs-emphasis-color);
+    --bs-btn-active-border-color: var(--bs-emphasis-color);
+    --bs-btn-disabled-color: var(--bs-body-bg);
+    --bs-btn-disabled-bg: var(--bs-emphasis-color);
+    --bs-btn-disabled-border-color: var(--bs-emphasis-color);
+}
+
 /* Крупные цели нажатия на сенсорных экранах: рекомендуемый минимум - 44px */
 @media (pointer: coarse) {
     .btn-sm,

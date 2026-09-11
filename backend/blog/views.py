@@ -6,8 +6,10 @@ from typing import TYPE_CHECKING
 from django.conf import settings
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, render
+from django.views.generic.base import TemplateView
 from django.views.generic.detail import DetailView
 
+from blog.mixins import StaffRequiredMixin
 from blog.models import Article, Category, Series, Topic
 
 if TYPE_CHECKING:
@@ -34,6 +36,20 @@ class ArticleDetailView(DetailView):
         context = super().get_context_data(**kwargs)
         context["login_url"] = f"/accounts/login/?next={self.request.path}"
         return context
+
+
+class ArticleCreateView(StaffRequiredMixin, TemplateView):
+    """Страница создания статьи - рендерит React компонент ArticleForm."""
+
+    template_name = "blog/article_form.html"
+
+
+class ArticleEditView(StaffRequiredMixin, DetailView):
+    """Страница редактирования статьи - рендерит React компонент ArticleForm."""
+
+    model = Article
+    context_object_name = "article"
+    template_name = "blog/article_form.html"
 
 
 def blog(request: HttpRequest) -> HttpResponse:

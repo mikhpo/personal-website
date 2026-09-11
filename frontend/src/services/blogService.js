@@ -61,6 +61,40 @@ export const blogService = {
   },
 
   /**
+   * Создает статью из данных формы (multipart).
+   *
+   * @async
+   * @param {FormData} formData - Данные формы статьи (заголовок, контент, связи, обложка)
+   * @return {Promise<Object>} Созданная статья в полном представлении
+   *
+   * @example
+   * const formData = new FormData();
+   * formData.append('title', 'Заголовок');
+   * formData.append('content', '<p>Текст</p>');
+   * const article = await blogService.createArticle(formData);
+   */
+  async createArticle(formData) {
+    return api.postForm(`${BASE_URL}/articles/`, formData);
+  },
+
+  /**
+   * Обновляет статью из данных формы (multipart).
+   *
+   * @async
+   * @param {number} id - ID статьи
+   * @param {FormData} formData - Данные формы статьи
+   * @return {Promise<Object>} Обновленная статья в полном представлении
+   *
+   * @example
+   * const formData = new FormData();
+   * formData.append('title', 'Обновленный заголовок');
+   * const article = await blogService.updateArticle(1, formData);
+   */
+  async updateArticle(id, formData) {
+    return api.putForm(`${BASE_URL}/articles/${id}/`, formData);
+  },
+
+  /**
    * Создает новый комментарий к статье.
    *
    * @async
@@ -73,7 +107,7 @@ export const blogService = {
    * const comment = await blogService.createComment(1, { content: 'Отличная статья!' });
    */
   async createComment(articleId, data) {
-    return api.post(`${BASE_URL}/articles/${articleId}/comments/`, data);
+    return api.post(`${BASE_URL}/comments/`, { article: articleId, ...data });
   },
 
   /**
@@ -87,7 +121,7 @@ export const blogService = {
    * const comments = await blogService.getComments(1);
    */
   async getComments(articleId) {
-    return api.get(`${BASE_URL}/articles/${articleId}/comments/`);
+    return api.get(buildApiUrl(`${BASE_URL}/comments/`, { article: articleId }));
   },
 
   /**
@@ -99,8 +133,8 @@ export const blogService = {
    * @example
    * const categories = await blogService.getCategories();
    */
-  async getCategories() {
-    return api.get(`${BASE_URL}/categories/`);
+  async getCategories(params = {}) {
+    return api.get(buildApiUrl(`${BASE_URL}/categories/`, params));
   },
 
   /**
@@ -126,8 +160,8 @@ export const blogService = {
    * @example
    * const series = await blogService.getSeries();
    */
-  async getSeries() {
-    return api.get(`${BASE_URL}/series/`);
+  async getSeries(params = {}) {
+    return api.get(buildApiUrl(`${BASE_URL}/series/`, params));
   },
 
   /**
@@ -153,8 +187,8 @@ export const blogService = {
    * @example
    * const topics = await blogService.getTopics();
    */
-  async getTopics() {
-    return api.get(`${BASE_URL}/topics/`);
+  async getTopics(params = {}) {
+    return api.get(buildApiUrl(`${BASE_URL}/topics/`, params));
   },
 
   /**

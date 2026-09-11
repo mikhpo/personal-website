@@ -340,4 +340,41 @@ describe('ArticleDetail', () => {
       expect(global.fetch).toHaveBeenCalledWith('/api/blog/articles/5/');
     });
   });
+
+  describe('для администратора', () => {
+    /**
+     * Проверяет кнопку редактирования для staff.
+     */
+    test('показывает кнопку редактирования', async () => {
+      global.fetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({ ...mockArticle, public: false, url: '/blog/article/test-slug/' }),
+      });
+
+      render(<ArticleDetail {...mockProps} isStaff={true} />);
+
+      await waitFor(() => {
+        expect(screen.getByText('Тестовая статья')).toBeInTheDocument();
+      });
+      const editLink = screen.getByText('Редактировать');
+      expect(editLink.closest('a')).toHaveAttribute('href', '/blog/article/test-slug/edit/');
+    });
+
+    /**
+     * Проверяет скрытие кнопки редактирования для обычного пользователя.
+     */
+    test('не показывает кнопку редактирования обычному пользователю', async () => {
+      global.fetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({ ...mockArticle, public: false, url: '/blog/article/test-slug/' }),
+      });
+
+      render(<ArticleDetail {...mockProps} />);
+
+      await waitFor(() => {
+        expect(screen.getByText('Тестовая статья')).toBeInTheDocument();
+      });
+      expect(screen.queryByText('Редактировать')).not.toBeInTheDocument();
+    });
+  });
 });

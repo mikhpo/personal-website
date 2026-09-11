@@ -26,7 +26,7 @@ import subprocess
 import sys
 from typing import NoReturn
 
-# Зеркала как пары «метка - URL»; добавление платформы - новая запись в списке.
+# Зеркала как пары "метка - URL"; добавление платформы - новая запись в списке.
 PEERS: list[tuple[str, str]] = [
     ("github", "git@github.com:mikhpo/personal-website.git"),
     ("sourcraft", "ssh://ssh.sourcecraft.dev/mikhpo/personal-website.git"),

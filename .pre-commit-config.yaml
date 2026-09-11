@@ -41,7 +41,7 @@ repos:
     hooks:
       - id: fix-typography
         name: fix-typography
-        description: Автозамена длинного тире (U+2014) на дефис и стрелки (U+2192) на "->"
+        description: Автозамена длинного тире (U+2014) на дефис, стрелки (U+2192) на "->" и кавычек-ёлочек (U+00AB, U+00BB) на прямые кавычки
         entry: python3 tools/fix_typography.py
         language: system
         types: [text]
