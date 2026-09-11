@@ -12,7 +12,7 @@ from faker import Faker
 from blog.apps import BlogConfig
 from blog.factories import ArticleFactory, CategoryFactory, SeriesFactory, TopicFactory
 from blog.models import Article
-from blog.views import ArticleDetailView, blog, category, series, topic
+from blog.views import ArticleCreateView, ArticleDetailView, ArticleEditView, blog, category, series, topic
 
 fake = Faker(locale="ru_RU")
 
@@ -22,6 +22,10 @@ ARTICLE_DETAIL_URL = f"/{APP_NAME}/article/"
 ARTICLE_DETAIL_URL_NAME = f"{APP_NAME}:article"
 ARTICLE_LIST_URL = f"/{APP_NAME}/"
 ARTICLE_LIST_URL_NAME = f"{APP_NAME}:{APP_NAME}"
+ARTICLE_CREATE_URL = f"/{APP_NAME}/article/create/"
+ARTICLE_CREATE_URL_NAME = f"{APP_NAME}:article-create"
+ARTICLE_EDIT_URL = f"/{APP_NAME}/article/"
+ARTICLE_EDIT_URL_NAME = f"{APP_NAME}:article-edit"
 CATEGORY_URL = f"/{APP_NAME}/category/"
 CATEGORY_URL_NAME = f"{APP_NAME}:category"
 SERIES_URL = f"/{APP_NAME}/series/"
@@ -31,6 +35,7 @@ TOPIC_URL_NAME = f"{APP_NAME}:topic"
 
 ARTICLE_DETAIL_TEMPLATE = "blog/article_detail.html"
 ARTICLE_LIST_TEMPLATE = f"{APP_NAME}/article_list.html"
+ARTICLE_FORM_TEMPLATE = f"{APP_NAME}/article_form.html"
 CATEGORY_TEMPLATE = f"{APP_NAME}/category_detail.html"
 SERIES_TEMPLATE = f"{APP_NAME}/series_detail.html"
 TOPIC_TEMPLATE = f"{APP_NAME}/topic_detail.html"
@@ -97,6 +102,41 @@ class TestBlogIndexPage(TestCase):
         self.assertContains(response, 'data-component-name="Search/SearchForm"')
         self.assertContains(response, '"targetUrl": "/blog/"')
 
+    def test_article_list_staff_flag_anonymous(self) -> None:
+        """Для анонима ArticleList монтируется с isStaff: false."""
+        response = self.client.get(ARTICLE_LIST_URL)
+        self.assertContains(response, '"isStaff": false')
+
+    def test_article_list_staff_flag_for_staff(self) -> None:
+        """Для staff ArticleList монтируется с isStaff: true."""
+        staff_user = User.objects.create_user(
+            username="staffpage",
+            email="staffpage@example.com",
+            password="12345",
+            is_staff=True,
+        )
+        self.client.force_login(staff_user)
+        response = self.client.get(ARTICLE_LIST_URL)
+        self.assertContains(response, '"isStaff": true')
+
+    def test_article_list_create_button_for_staff(self) -> None:
+        """Для staff на странице блога отображается кнопка создания статьи."""
+        staff_user = User.objects.create_user(
+            username="staffbtn",
+            email="staffbtn@example.com",
+            password="12345",
+            is_staff=True,
+        )
+        self.client.force_login(staff_user)
+        response = self.client.get(ARTICLE_LIST_URL)
+        self.assertContains(response, "Написать статью")
+        self.assertContains(response, f'href="{ARTICLE_CREATE_URL}"')
+
+    def test_article_list_no_create_button_for_anonymous(self) -> None:
+        """Для анонима кнопка создания статьи не отображается."""
+        response = self.client.get(ARTICLE_LIST_URL)
+        self.assertNotContains(response, "Написать статью")
+
 
 class TestArticleDetailPage(TestCase):
     """Тесты детального просмотра статей."""
@@ -105,6 +145,12 @@ class TestArticleDetailPage(TestCase):
     def setUpTestData(cls) -> None:
         """Подготовить тестовые данные."""
         cls.user = User.objects.create_user(username="testuser", email="testuser@example.com", password="12345")
+        cls.staff_user = User.objects.create_user(
+            username="staffuser",
+            email="staffuser@example.com",
+            password="12345",
+            is_staff=True,
+        )
         cls.article = ArticleFactory(title="Test article", slug="article-test", author=cls.user)
 
     def test_article_detail_url(self) -> None:
@@ -183,6 +229,17 @@ class TestArticleDetailPage(TestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertContains(response, "loginUrl")
 
+    def test_article_detail_staff_flag(self) -> None:
+        """Флаг isStaff передается в ArticleDetail из шаблона."""
+        url = reverse(ARTICLE_DETAIL_URL_NAME, args=(self.article.slug,))
+
+        response = self.client.get(url)
+        self.assertContains(response, '"isStaff": false')
+
+        self.client.force_login(self.staff_user)
+        response = self.client.get(url)
+        self.assertContains(response, '"isStaff": true')
+
     def test_private_article_accessible_by_link(self) -> None:
         """Приватная статья доступна по прямой ссылке."""
         private_article = ArticleFactory(title="Private article", slug="private-article", public=False)
@@ -203,6 +260,104 @@ class TestArticleDetailPage(TestCase):
         url = reverse(ARTICLE_DETAIL_URL_NAME, args=(self.article.slug,))
         response = self.client.get(url)
         self.assertNotContains(response, "noindex")
+
+
+class TestArticleCreateView(TestCase):
+    """Тесты страницы создания статьи (ArticleCreateView)."""
+
+    @classmethod
+    def setUpTestData(cls) -> None:
+        """Подготовить тестовые данные."""
+        cls.user = User.objects.create_user(username="formuser", email="formuser@example.com", password="12345")
+        cls.staff_user = User.objects.create_user(
+            username="formstaff",
+            email="formstaff@example.com",
+            password="12345",
+            is_staff=True,
+        )
+
+    def test_create_page_url(self) -> None:
+        """Тестирование ссылки на страницу создания статьи."""
+        resolver = resolve(ARTICLE_CREATE_URL)
+        self.assertEqual(resolver.func.view_class, ArticleCreateView)
+
+    def test_create_page_reverse_url(self) -> None:
+        """Тестирование именной ссылки на страницу создания статьи."""
+        url = reverse(ARTICLE_CREATE_URL_NAME)
+        self.assertEqual(url, ARTICLE_CREATE_URL)
+        resolver = resolve(url)
+        self.assertEqual(resolver.func.view_class, ArticleCreateView)
+
+    def test_create_page_available_for_staff(self) -> None:
+        """Страница создания доступна staff и рендерит React форму."""
+        self.client.force_login(self.staff_user)
+        response = self.client.get(ARTICLE_CREATE_URL)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertTemplateUsed(response, ARTICLE_FORM_TEMPLATE)
+        self.assertTemplateUsed(response, BASE_TEMPLATE)
+        self.assertContains(response, 'data-component-name="Blog/ArticleForm"')
+
+    def test_create_page_redirects_anonymous_to_login(self) -> None:
+        """Анонима страница создания перенаправляет на вход с параметром next."""
+        response = self.client.get(ARTICLE_CREATE_URL)
+        self.assertRedirects(response, f"/accounts/login/?next={ARTICLE_CREATE_URL}")
+
+    def test_create_page_forbidden_for_non_staff(self) -> None:
+        """Авторизованному не-staff страница создания возвращает 403."""
+        self.client.force_login(self.user)
+        response = self.client.get(ARTICLE_CREATE_URL)
+        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+
+
+class TestArticleEditView(TestCase):
+    """Тесты страницы редактирования статьи (ArticleEditView)."""
+
+    @classmethod
+    def setUpTestData(cls) -> None:
+        """Подготовить тестовые данные."""
+        cls.user = User.objects.create_user(username="edituser", email="edituser@example.com", password="12345")
+        cls.staff_user = User.objects.create_user(
+            username="editstaff",
+            email="editstaff@example.com",
+            password="12345",
+            is_staff=True,
+        )
+        cls.article = ArticleFactory(title="Редактируемая статья", slug="edit-me", author=cls.staff_user)
+
+    def test_edit_page_url(self) -> None:
+        """Тестирование ссылки на страницу редактирования статьи."""
+        url = ARTICLE_EDIT_URL + self.article.slug + "/edit/"
+        resolver = resolve(url)
+        self.assertEqual(resolver.func.view_class, ArticleEditView)
+
+    def test_edit_page_reverse_url(self) -> None:
+        """Тестирование именной ссылки на страницу редактирования."""
+        url = reverse(ARTICLE_EDIT_URL_NAME, args=(self.article.slug,))
+        resolver = resolve(url)
+        self.assertEqual(resolver.func.view_class, ArticleEditView)
+
+    def test_edit_page_available_for_staff(self) -> None:
+        """Страница редактирования доступна staff и получает ID статьи."""
+        self.client.force_login(self.staff_user)
+        url = reverse(ARTICLE_EDIT_URL_NAME, args=(self.article.slug,))
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertTemplateUsed(response, ARTICLE_FORM_TEMPLATE)
+        self.assertContains(response, 'data-component-name="Blog/ArticleForm"')
+        self.assertContains(response, f'"articleId": {self.article.pk}')
+
+    def test_edit_page_redirects_anonymous_to_login(self) -> None:
+        """Анонима страница редактирования перенаправляет на вход с параметром next."""
+        url = reverse(ARTICLE_EDIT_URL_NAME, args=(self.article.slug,))
+        response = self.client.get(url)
+        self.assertRedirects(response, f"/accounts/login/?next={url}")
+
+    def test_edit_page_forbidden_for_non_staff(self) -> None:
+        """Авторизованному не-staff страница редактирования возвращает 403."""
+        self.client.force_login(self.user)
+        url = reverse(ARTICLE_EDIT_URL_NAME, args=(self.article.slug,))
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
 
 
 class TestCategoryPage(TestCase):

@@ -12,6 +12,6 @@
 {% endblock extra_header %}
 {% block content %}
     <div class="container">
-        {% react_component "Blog/ArticleDetail" articleId=article.pk isAuthenticated=user.is_authenticated loginUrl=login_url %}
+        {% react_component "Blog/ArticleDetail" articleId=article.pk isAuthenticated=user.is_authenticated loginUrl=login_url isStaff=user.is_staff %}
     </div>
 {% endblock content %}

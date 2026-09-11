@@ -3,8 +3,8 @@
 from django.contrib.auth import get_user_model
 from rest_framework.test import APITestCase
 
-from blog.factories import ArticleFactory, CommentFactory
-from blog.serializers import ArticleSerializer, CommentSerializer
+from blog.factories import ArticleFactory, CategoryFactory, CommentFactory, SeriesFactory, TopicFactory
+from blog.serializers import ArticleSerializer, ArticleWriteSerializer, CommentSerializer
 
 User = get_user_model()
 
@@ -44,3 +44,62 @@ class TestArticleSerializer(APITestCase):
 
         self.assertIn("author_username", data)
         self.assertEqual(data["author_username"], "test_author")
+
+
+class TestArticleWriteSerializer(APITestCase):
+    """Тесты для ArticleWriteSerializer."""
+
+    @classmethod
+    def setUpTestData(cls) -> None:
+        """Подготовка тестовых данных."""
+        cls.user = User.objects.create_user(username="writer", password="testpass123", is_staff=True)
+        cls.category = CategoryFactory(name="Категория", public=True)
+        cls.topic = TopicFactory(name="Тема", public=True)
+        cls.series = SeriesFactory(name="Серия", public=True)
+        super().setUpTestData()
+
+    def test_m2m_writable_by_pk(self) -> None:
+        """Связи M2M записываются списками первичных ключей."""
+        serializer = ArticleWriteSerializer(
+            data={
+                "title": "Статья через запись",
+                "content": "<p>Контент</p>",
+                "public": "false",
+                "categories": [self.category.pk],
+                "topics": [self.topic.pk],
+                "series": [self.series.pk],
+            },
+        )
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        article = serializer.save(author=self.user)
+        self.assertEqual(list(article.categories.all()), [self.category])
+        self.assertEqual(list(article.topics.all()), [self.topic])
+        self.assertEqual(list(article.series.all()), [self.series])
+        self.assertFalse(article.public)
+
+    def test_server_fields_not_writable(self) -> None:
+        """Автор, слаг и даты отсутствуют среди записываемых полей."""
+        serializer = ArticleWriteSerializer()
+        for field in ("author", "slug", "published_at", "modified_at"):
+            self.assertNotIn(field, serializer.fields)
+
+    def test_to_representation_delegates_to_read_serializer(self) -> None:
+        """Представление записи совпадает с полным представлением чтения."""
+        article = ArticleFactory(title="Статья", author=self.user)
+        article.categories.add(self.category)
+
+        write_data = ArticleWriteSerializer(article).data
+        read_data = ArticleSerializer(article).data
+
+        self.assertEqual(write_data, read_data)
+        self.assertEqual(write_data["url"], article.get_absolute_url())
+
+    def test_remove_image_flag_validates(self) -> None:
+        """Флаг remove_image принимается при валидации и не мешает сохранению."""
+        serializer = ArticleWriteSerializer(
+            data={"title": "Без обложки", "content": "<p>Контент</p>", "remove_image": "true"},
+        )
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        self.assertTrue(serializer.validated_data["remove_image"])
+        article = serializer.save(author=self.user)
+        self.assertFalse(bool(article.image))

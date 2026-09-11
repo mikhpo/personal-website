@@ -13,6 +13,7 @@ export { default as usePagination } from './usePagination';
 export { default as useToggle } from './useToggle';
 export { default as useLocalStorage } from './useLocalStorage';
 export { default as useTheme } from './useTheme';
+export { default as useHtmlTheme } from './useHtmlTheme';
 
 // Специализированные хуки галереи
 export { default as usePhotoData } from './usePhotoData';

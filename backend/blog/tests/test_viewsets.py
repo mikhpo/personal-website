@@ -1,11 +1,16 @@
 """Тесты API представлений блога."""
 
+from io import BytesIO
+
 import pytest
 from django.contrib.auth import get_user_model
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import connection
+from PIL import Image
 from rest_framework.test import APITestCase
 
 from blog.factories import ArticleFactory, CategoryFactory, CommentFactory, SeriesFactory, TopicFactory
+from blog.models import Article
 
 User = get_user_model()
 
@@ -307,13 +312,13 @@ class TestArticleViewSet(APITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["count"], 2)
 
-    def test_list_articles_staff_same_as_anonymous(self) -> None:
-        """Список статей для staff совпадает с анонимным (только public)."""
+    def test_list_articles_staff_sees_drafts(self) -> None:
+        """В списке для staff видны и публичные статьи, и черновики."""
         self.client.force_authenticate(user=self.staff_user)
         url = "/api/blog/articles/"
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data["count"], 2)  # Только публичные статьи
+        self.assertEqual(response.data["count"], 3)  # Публичные статьи и черновик
 
     def test_retrieve_private_article_accessible_by_link(self) -> None:
         """Приватная статья доступна по прямой ссылке.
@@ -331,6 +336,178 @@ class TestArticleViewSet(APITestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["title"], self.article3.title)
+
+    def test_create_article_with_m2m(self) -> None:
+        """Staff создает статью со связями M2M; автор проставляется автоматически."""
+        self.client.force_authenticate(user=self.staff_user)
+        url = "/api/blog/articles/"
+        data = {
+            "title": "Новая статья",
+            "description": "Краткое описание",
+            "content": "<p>Контент статьи</p>",
+            "public": "false",
+            "categories": [self.category1.pk, self.category2.pk],
+            "topics": [self.topic1.pk],
+            "series": [self.series1.pk],
+        }
+        response = self.client.post(url, data, format="multipart")
+        self.assertEqual(response.status_code, 201)
+        article = Article.objects.get(title="Новая статья")
+        self.assertEqual(article.author, self.staff_user)
+        self.assertFalse(article.public)
+        self.assertEqual(set(article.categories.all()), {self.category1, self.category2})
+        self.assertEqual(list(article.topics.all()), [self.topic1])
+        self.assertEqual(list(article.series.all()), [self.series1])
+        self.assertTrue(article.slug)
+
+    def test_create_article_response_has_full_representation(self) -> None:
+        """Ответ создания содержит url и вложенные объекты (полное представление)."""
+        self.client.force_authenticate(user=self.staff_user)
+        url = "/api/blog/articles/"
+        data = {
+            "title": "Статья с url",
+            "content": "<p>Контент</p>",
+            "categories": [self.category1.pk],
+        }
+        response = self.client.post(url, data, format="multipart")
+        self.assertEqual(response.status_code, 201)
+        article = Article.objects.get(title="Статья с url")
+        self.assertEqual(response.data["url"], article.get_absolute_url())
+        self.assertEqual(response.data["categories"][0]["name"], self.category1.name)
+        self.assertEqual(response.data["author_username"], self.staff_user.username)
+
+    def test_create_article_multipart_requires_public_flag(self) -> None:
+        """В multipart-запросе флаг public передается явно (форма редактора всегда его отправляет)."""
+        self.client.force_authenticate(user=self.staff_user)
+        response = self.client.post(
+            "/api/blog/articles/",
+            {"title": "Явно публичная", "content": "<p>Текст</p>", "public": "true"},
+            format="multipart",
+        )
+        self.assertEqual(response.status_code, 201)
+        article = Article.objects.get(title="Явно публичная")
+        self.assertTrue(article.public)
+
+    def test_create_article_forbidden_for_non_staff(self) -> None:
+        """Не staff не может создавать статьи (403)."""
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            "/api/blog/articles/",
+            {"title": "Чужая статья", "content": "<p>Текст</p>"},
+            format="multipart",
+        )
+        self.assertEqual(response.status_code, 403)
+
+    def test_create_article_unauthorized_for_anonymous(self) -> None:
+        """Аноним не может создавать статьи (401 - требуется аутентификация)."""
+        response = self.client.post(
+            "/api/blog/articles/",
+            {"title": "Анонимная статья", "content": "<p>Текст</p>"},
+            format="multipart",
+        )
+        self.assertEqual(response.status_code, 401)
+
+    def test_create_article_with_empty_m2m_marker(self) -> None:
+        """Пустое значение ключа M2M трактуется как пустой список связей."""
+        self.client.force_authenticate(user=self.staff_user)
+        response = self.client.post(
+            "/api/blog/articles/",
+            {"title": "Статья без связей", "content": "<p>Текст</p>", "categories": "", "topics": "", "series": ""},
+            format="multipart",
+        )
+        self.assertEqual(response.status_code, 201)
+        article = Article.objects.get(title="Статья без связей")
+        self.assertEqual(article.categories.count(), 0)
+        self.assertEqual(article.topics.count(), 0)
+        self.assertEqual(article.series.count(), 0)
+
+    def test_update_article_replaces_m2m(self) -> None:
+        """Обновление заменяет связи M2M и не меняет автора."""
+        article = ArticleFactory(title="Старый заголовок", author=self.staff_user, public=True)
+        article.categories.add(self.category1)
+        self.client.force_authenticate(user=self.staff_user)
+        url = f"/api/blog/articles/{article.pk}/"
+        data = {
+            "title": "Новый заголовок",
+            "description": "Новое описание",
+            "content": "<p>Обновленный контент</p>",
+            "public": "true",
+            "categories": [self.category2.pk],
+        }
+        response = self.client.put(url, data, format="multipart")
+        self.assertEqual(response.status_code, 200)
+        article.refresh_from_db()
+        self.assertEqual(article.title, "Новый заголовок")
+        self.assertEqual(list(article.categories.all()), [self.category2])
+        self.assertEqual(article.author, self.staff_user)
+
+    def test_update_article_clears_m2m_with_empty_marker(self) -> None:
+        """Пустое значение ключа очищает связи M2M при обновлении."""
+        article = ArticleFactory(title="Статья со связями", author=self.staff_user)
+        article.categories.add(self.category1)
+        article.topics.add(self.topic1)
+        self.client.force_authenticate(user=self.staff_user)
+        url = f"/api/blog/articles/{article.pk}/"
+        data = {
+            "title": "Статья со связями",
+            "content": "<p>Текст</p>",
+            "public": "false",
+            "categories": "",
+            "topics": "",
+        }
+        response = self.client.put(url, data, format="multipart")
+        self.assertEqual(response.status_code, 200)
+        article.refresh_from_db()
+        self.assertEqual(article.categories.count(), 0)
+        self.assertEqual(article.topics.count(), 0)
+
+    def test_update_article_keeps_publication_dates(self) -> None:
+        """Обновление не меняет дату публикации (текущая семантика)."""
+        article = ArticleFactory(title="Даты", author=self.staff_user, public=True)
+        published_before = article.published_at
+        self.client.force_authenticate(user=self.staff_user)
+        url = f"/api/blog/articles/{article.pk}/"
+        data = {"title": "Даты", "content": "<p>Новый текст</p>", "public": "true"}
+        response = self.client.put(url, data, format="multipart")
+        self.assertEqual(response.status_code, 200)
+        article.refresh_from_db()
+        self.assertEqual(article.published_at, published_before)
+
+    def test_update_article_clears_image_by_flag(self) -> None:
+        """Флаг remove_image очищает обложку статьи."""
+        article = ArticleFactory(title="С обложкой", author=self.staff_user)
+        self.assertTrue(bool(article.image))
+        self.client.force_authenticate(user=self.staff_user)
+        url = f"/api/blog/articles/{article.pk}/"
+        data = {"title": "С обложкой", "content": "<p>Текст</p>", "public": "true", "remove_image": "true"}
+        response = self.client.put(url, data, format="multipart")
+        self.assertEqual(response.status_code, 200)
+        article.refresh_from_db()
+        self.assertFalse(bool(article.image))
+
+    def test_update_article_replaces_image(self) -> None:
+        """Загрузка нового файла обложки заменяет старый."""
+        article = ArticleFactory(title="Замена обложки", author=self.staff_user)
+        old_name = article.image.name
+        new_image = self._create_image("new_cover.jpg")
+        self.client.force_authenticate(user=self.staff_user)
+        url = f"/api/blog/articles/{article.pk}/"
+        response = self.client.put(
+            url,
+            {"title": "Замена обложки", "content": "<p>Текст</p>", "public": "true", "image": new_image},
+            format="multipart",
+        )
+        self.assertEqual(response.status_code, 200)
+        article.refresh_from_db()
+        self.assertNotEqual(article.image.name, old_name)
+
+    def _create_image(self, filename: str = "cover.jpg") -> SimpleUploadedFile:
+        """Создать тестовое изображение для загрузки."""
+        image_io = BytesIO()
+        test_image = Image.new("RGB", (100, 100), color="red")
+        test_image.save(image_io, format="JPEG")
+        image_io.seek(0)
+        return SimpleUploadedFile(filename, image_io.read(), content_type="image/jpeg")
 
 
 @pytest.mark.skipif(connection.vendor != "postgresql", reason="Полнотекстовый поиск работает только на PostgreSQL")

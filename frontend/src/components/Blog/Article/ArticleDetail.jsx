@@ -11,12 +11,14 @@ import AlertList from '@components/Alert/AlertList';
  *
  * Отображает полный текст статьи, даты публикации и обновления, а также секцию комментариев.
  * Форма добавления комментария отображается только для авторизованных пользователей.
+ * Для администраторов отображается кнопка перехода к редактированию.
  *
  * @component
  * @param {Object} props - Пропсы компонента
  * @param {number} props.articleId - ID статьи (первичный ключ) для URL API
  * @param {boolean} props.isAuthenticated - Авторизован ли текущий пользователь
  * @param {string} props.loginUrl - URL страницы входа с параметром next
+ * @param {boolean} [props.isStaff=false] - Является ли текущий пользователь администратором
  * @return {JSX.Element} Компонент детального просмотра статьи
  *
  * @example
@@ -27,7 +29,7 @@ import AlertList from '@components/Alert/AlertList';
  *   loginUrl="/accounts/login/?next=/blog/1/"
  * />
  */
-const ArticleDetail = ({ articleId, isAuthenticated, loginUrl }) => {
+const ArticleDetail = ({ articleId, isAuthenticated, loginUrl, isStaff = false }) => {
   /**
    * Состояние статьи
    * @type {[Object|null, function]}
@@ -167,6 +169,12 @@ const ArticleDetail = ({ articleId, isAuthenticated, loginUrl }) => {
       <Card className="shadow rounded justify-content">
         <Card.Body>
           <h1 className="card-title fs-4">{article.title}</h1>
+          {isStaff && (
+            <a className="btn btn-outline-dark btn-sm mb-2" href={`${article.url}edit/`}>
+              <i className="fas fa-edit me-1" />
+              Редактировать
+            </a>
+          )}
           <p
             className="card-text"
             dangerouslySetInnerHTML={{ __html: article.content }}
@@ -201,6 +209,7 @@ ArticleDetail.propTypes = {
   articleId: PropTypes.number.isRequired,
   isAuthenticated: PropTypes.bool.isRequired,
   loginUrl: PropTypes.string.isRequired,
+  isStaff: PropTypes.bool,
 };
 
 export default ArticleDetail;

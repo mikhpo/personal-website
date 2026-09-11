@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% load react_tags %}
+<!-- Шаблон формы создания и редактирования статьи, рендерит React компонент ArticleForm. -->
+{% block meta %}
+    <meta name="robots" content="noindex">
+{% endblock meta %}
+{% block title %}
+    {% if article %}Редактирование - {{ article.title }}{% else %}Новая статья{% endif %}
+{% endblock title %}
+{% block content %}
+    <div class="container">
+        {% if article %}
+            {% react_component "Blog/ArticleForm" articleId=article.pk %}
+        {% else %}
+            {% react_component "Blog/ArticleForm" %}
+        {% endif %}
+    </div>
+{% endblock content %}

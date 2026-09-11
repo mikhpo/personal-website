@@ -13,6 +13,8 @@ import { blogService } from '@services';
  * Загружает и отображает список статей из API блога с поддержкой пагинации.
  * Обрабатывает состояния загрузки, ошибки и пустого списка.
  * Предоставляет возможность повторной попытки загрузки при ошибке.
+ * Для администраторов карточки дополняются бейджем черновика и ссылкой
+ * на редактирование.
  *
  * @component
  * @param {Object} props - Пропсы компонента
@@ -20,6 +22,7 @@ import { blogService } from '@services';
  * @param {string} [props.seriesSlug] - Слаг серии для фильтрации (series__slug)
  * @param {string} [props.topicSlug] - Слаг темы для фильтрации (topics__slug)
  * @param {string} [props.search] - Поисковый запрос для фильтрации (search)
+ * @param {boolean} [props.isStaff=false] - Является ли текущий пользователь администратором
  * @return {JSX.Element} Компонент списка статей
  *
  * @example
@@ -34,7 +37,7 @@ import { blogService } from '@services';
  * // Результаты поиска
  * <ArticleList search="django" />
  */
-const ArticleList = ({ categorySlug, seriesSlug, topicSlug, search }) => {
+const ArticleList = ({ categorySlug, seriesSlug, topicSlug, search, isStaff = false }) => {
   /**
    * Состояние статей
    * @type {[Array, function]}
@@ -190,7 +193,7 @@ const ArticleList = ({ categorySlug, seriesSlug, topicSlug, search }) => {
   return (
     <div className="mb-3 pb-3">
       {articles.map(article => (
-        <ArticleCard key={article.id} article={article} />
+        <ArticleCard key={article.id} article={article} isStaff={isStaff} />
       ))}
       <Pagination
         currentPage={currentPage}
@@ -211,6 +214,7 @@ ArticleList.propTypes = {
   seriesSlug: PropTypes.string,
   topicSlug: PropTypes.string,
   search: PropTypes.string,
+  isStaff: PropTypes.bool,
 };
 
 export default ArticleList;

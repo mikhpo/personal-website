@@ -3,6 +3,7 @@
 from typing import TYPE_CHECKING, ClassVar
 
 from auditlog.context import set_actor
+from django.contrib.auth.base_user import AbstractBaseUser
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, viewsets
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
@@ -13,6 +14,7 @@ from api.permissions import IsAuthorOrReadOnly, IsPublicOrAuthor
 from blog.models import Article, Category, Comment, Series, Topic
 from blog.serializers import (
     ArticleSerializer,
+    ArticleWriteSerializer,
     CategorySerializer,
     CommentSerializer,
     SeriesSerializer,
@@ -94,11 +96,18 @@ class ArticleViewSet(AuditlogActorMixin, viewsets.ModelViewSet):
     ordering_fields: ClassVar[list] = ["published_at", "modified_at", "title"]
     ordering: ClassVar[list] = ["-published_at"]
 
+    def get_serializer_class(self) -> type:
+        """Для записи - сериализатор с первичными ключами M2M, для чтения - полный."""
+        if self.action in {"create", "update", "partial_update"}:
+            return ArticleWriteSerializer
+        return ArticleSerializer
+
     def get_queryset(self) -> "QuerySet[Article]":
-        """В list отдаёт только public=True, в retrieve - любую статью.
+        """В list отдаёт публичные статьи, а администраторам - все, включая черновики.
 
         select_related/prefetch_related оптимизируют сериализацию вложенных
-        объектов (автор, категории, темы, серии, комментарии).
+        объектов (автор, категории, темы, серии, комментарии). Черновики нужны
+        staff в списке, чтобы находить неопубликованные статьи для редактирования.
         """
         queryset = Article.objects.select_related("author").prefetch_related(
             "categories",
@@ -107,8 +116,16 @@ class ArticleViewSet(AuditlogActorMixin, viewsets.ModelViewSet):
             "comments__author",
         )
         if self.action == "list":
+            user = self.request.user
+            if isinstance(user, AbstractBaseUser) and user.is_staff:
+                return queryset
             return queryset.filter(public=True)
         return queryset
+
+    def perform_create(self, serializer) -> None:  # noqa: ANN001
+        """Проставить автора статьи из текущего пользователя и зафиксировать его в аудите."""
+        with set_actor(self.request.user, remote_addr=self.request.META.get("HTTP_X_REAL_IP")):
+            serializer.save(author=self.request.user)
 
 
 class CommentViewSet(AuditlogActorMixin, viewsets.ModelViewSet):
