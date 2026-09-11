@@ -201,7 +201,7 @@ def report_subject(command: str, status: str, started: datetime) -> str:
 
 
 def database_section_context(db: dict[str, Any]) -> dict[str, Any]:
-    """Данные раздела «База данных» для шаблона отчета.
+    """Данные раздела "База данных" для шаблона отчета.
 
     Args:
         db (dict[str, Any]): Результат backup_db: цели, имя и объем дампа,
@@ -220,7 +220,7 @@ def database_section_context(db: dict[str, Any]) -> dict[str, Any]:
 
 
 def media_section_context(media: dict[str, Any]) -> dict[str, Any]:
-    """Данные раздела «Медиа» для шаблона отчета.
+    """Данные раздела "Медиа" для шаблона отчета.
 
     Args:
         media (dict[str, Any]): Результат backup_media: цели, число объектов

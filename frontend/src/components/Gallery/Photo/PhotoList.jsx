@@ -307,7 +307,7 @@ const PhotoList = ({ apiUrl = '/api/gallery/photos/', tagSlug, search }) => {
   // при активном поиске сообщение включает запрос пользователя
   if (photos.length === 0) {
     const emptyMessage = search
-      ? `По запросу «${search}» ничего не найдено`
+      ? `По запросу "${search}" ничего не найдено`
       : 'Нет доступных фотографий';
     return <AlertList messages={[{ message: emptyMessage, level: 'info' }]} />;
   }

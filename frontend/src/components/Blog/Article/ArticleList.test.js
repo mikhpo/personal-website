@@ -322,7 +322,7 @@ describe('ArticleList', () => {
       expect(screen.getByTestId('alert-list')).toBeInTheDocument();
     });
 
-    expect(screen.getByText('По запросу «react» ничего не найдено')).toBeInTheDocument();
+    expect(screen.getByText('По запросу "react" ничего не найдено')).toBeInTheDocument();
   });
 
   /**

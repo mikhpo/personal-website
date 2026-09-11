@@ -273,7 +273,7 @@ describe('ArticleForm', () => {
     /**
      * Проверяет, что сохранение опубликованной статьи не меняет статус.
      */
-    test('сохраняет опубликованную статью кнопкой «Сохранить»', async () => {
+    test('сохраняет опубликованную статью кнопкой "Сохранить"', async () => {
       blogService.updateArticle.mockResolvedValue(existingArticle);
       await renderForm({ articleId: 5 });
       expect(screen.getByRole('button', { name: 'Сохранить' })).toBeInTheDocument();
@@ -293,7 +293,7 @@ describe('ArticleForm', () => {
     /**
      * Проверяет снятие статьи с публикации соответствующей кнопкой.
      */
-    test('снимает статью с публикации кнопкой «Снять с публикации»', async () => {
+    test('снимает статью с публикации кнопкой "Снять с публикации"', async () => {
       blogService.updateArticle.mockResolvedValue(existingArticle);
       await renderForm({ articleId: 5 });
       fireEvent.click(screen.getByRole('button', { name: 'Снять с публикации' }));
@@ -318,7 +318,7 @@ describe('ArticleForm', () => {
     /**
      * Проверяет порядок кнопок: сохранение в текущем статусе слева, смена статуса справа.
      */
-    test('у опубликованной статьи «Сохранить» слева от «Снять с публикации»', async () => {
+    test('у опубликованной статьи "Сохранить" слева от "Снять с публикации"', async () => {
       await renderForm({ articleId: 5 });
       const save = screen.getByRole('button', { name: 'Сохранить' });
       const unpublish = screen.getByRole('button', { name: 'Снять с публикации' });
@@ -328,7 +328,7 @@ describe('ArticleForm', () => {
     /**
      * Проверяет порядок кнопок черновика: сохранение слева, публикация справа.
      */
-    test('у черновика «Сохранить черновик» слева от «Опубликовать»', async () => {
+    test('у черновика "Сохранить черновик" слева от "Опубликовать"', async () => {
       blogService.getArticle.mockResolvedValue({ ...existingArticle, public: false });
       await renderForm({ articleId: 5 });
       const draft = screen.getByRole('button', { name: 'Сохранить черновик' });
@@ -452,7 +452,7 @@ describe('ArticleForm', () => {
 
     /**
      * Проверяет, что опубликованная статья автосохранением не обновляется:
-     * изменения сохраняются только явной кнопкой «Сохранить».
+     * изменения сохраняются только явной кнопкой "Сохранить".
      */
     test('не автосохраняет опубликованную статью', async () => {
       blogService.getArticle.mockResolvedValue({

@@ -102,7 +102,7 @@ SSH-ключ сервера и настройка подключения (клю
 - COMPOSE_PROFILES по выбранным вариантам: пусто при внешних БД и S3 с прокси на хосте; добавить nginx, если HTTPS обслуживает контейнерный nginx; postgres/minio - при локальных контейнерах.
 - `CERTBOT_STAGING=True` на тестовых средах с выпуском сертификатов (ACME staging, лимиты продакшена не расходуются); продакшен - `False`.
 - `POSTGRES_SSL_CERT_HOST_PATH=<домашний каталог>/.postgresql/root.crt` - путь на хосте для bind-mount (если пользователь не root).
-- Секция «Бэкапы» (только основной сервер): цели `BACKUP_TARGET_<ИМЯ>` (префиксы mc:/rclone:) и списки BACKUP_DB_TARGETS/BACKUP_MEDIA_TARGETS; схема и настройка алиасов mc / remotes rclone - [docs/deployment/backups.md](../../../docs/deployment/backups.md).
+- Секция "Бэкапы" (только основной сервер): цели `BACKUP_TARGET_<ИМЯ>` (префиксы mc:/rclone:) и списки BACKUP_DB_TARGETS/BACKUP_MEDIA_TARGETS; схема и настройка алиасов mc / remotes rclone - [docs/deployment/backups.md](../../../docs/deployment/backups.md).
 
 `chmod 600 .env`.
 

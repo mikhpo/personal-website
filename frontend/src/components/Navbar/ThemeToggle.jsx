@@ -16,7 +16,7 @@ const THEME_OPTIONS = [
  * Компонент переключения темы сайта (светлая, темная, системная)
  *
  * Кнопка отражает текущее состояние иконкой, выпадающее меню позволяет выбрать тему.
- * Выбор сохраняется в localStorage, режим «Системная» следует за темой браузера.
+ * Выбор сохраняется в localStorage, режим "Системная" следует за темой браузера.
  *
  * @param {Object} props - Свойства компонента
  * @param {string} [props.variant="outline-secondary"] - Вариант кнопки Bootstrap
@@ -30,7 +30,7 @@ const THEME_OPTIONS = [
 const ThemeToggle = ({ variant }) => {
   const { theme, storedTheme, setTheme } = useTheme();
 
-  // В режиме «Системная» иконка кнопки показывает автоматический режим,
+  // В режиме "Системная" иконка кнопки показывает автоматический режим,
   // иначе - действующую тему
   const toggleIcon =
     storedTheme === null ? 'bi-circle-half' : theme === 'dark' ? 'bi-moon-stars-fill' : 'bi-sun-fill';

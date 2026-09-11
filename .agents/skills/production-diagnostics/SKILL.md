@@ -17,7 +17,7 @@ description: Диагностика продакшен-сервера - пара
 - Способ запуска: DEPLOY_MODE в .env на сервере - compose (контейнеры, диагностика через docker compose) или systemd (systemctl/journalctl юнита personal-website; скилл server-setup).
 - CI-конфиг деплоя (`.sourcecraft/ci.yaml`, workflow `deploy-workflow`; зеркально `.github/workflows/deploy.yml`) - шаги деплоя и используемые секреты сервера (хост, пользователь, ключ).
 - `~/.ssh/config` - алиас подключения к серверу.
-- `.env` на сервере - актуальные переменные среды (DOMAIN_NAME, STORAGE_TYPE, DEBUG, DEPLOY_MODE, GUNICORN_WORKERS, CERTBOT_STAGING, параметры БД и хранилища; секция «Бэкапы»: BACKUP_DB_TARGETS, BACKUP_MEDIA_TARGETS, цели BACKUP_TARGET_<ИМЯ>).
+- `.env` на сервере - актуальные переменные среды (DOMAIN_NAME, STORAGE_TYPE, DEBUG, DEPLOY_MODE, GUNICORN_WORKERS, CERTBOT_STAGING, параметры БД и хранилища; секция "Бэкапы": BACKUP_DB_TARGETS, BACKUP_MEDIA_TARGETS, цели BACKUP_TARGET_<ИМЯ>).
 - Публичный адрес сайта (домен/URL) для проверки в браузере: переменная `DOMAIN_NAME` в `.env` на сервере.
 
 ## Доступ и расположение
@@ -82,7 +82,7 @@ systemctl status personal-website nginx
 
 ### Через публичный домен
 
-Основной способ - запрос по публичному домену сайта (домен брать из `DOMAIN_NAME`, см. раздел «Параметры целевой среды»). Это именно то, что видит пользователь:
+Основной способ - запрос по публичному домену сайта (домен брать из `DOMAIN_NAME`, см. раздел "Параметры целевой среды"). Это именно то, что видит пользователь:
 
 ```bash
 # внешний запрос

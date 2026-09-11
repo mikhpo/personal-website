@@ -184,7 +184,7 @@ const ArticleList = ({ categorySlug, seriesSlug, topicSlug, search, isStaff = fa
   // при активном поиске сообщение включает запрос пользователя
   if (articles.length === 0) {
     const emptyMessage = search
-      ? `По запросу «${search}» ничего не найдено`
+      ? `По запросу "${search}" ничего не найдено`
       : 'Статьи не найдены';
     return <AlertList messages={[{ message: emptyMessage, level: 'info' }]} />;
   }

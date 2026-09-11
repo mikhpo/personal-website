@@ -288,7 +288,7 @@ describe("AlbumList", () => {
     render(<AlbumList search="sunset" />);
 
     await waitFor(() => {
-      expect(screen.getByText("По запросу «sunset» ничего не найдено")).toBeInTheDocument();
+      expect(screen.getByText('По запросу "sunset" ничего не найдено')).toBeInTheDocument();
     });
   });
 
