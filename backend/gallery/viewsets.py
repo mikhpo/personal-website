@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, ClassVar
 from auditlog.context import set_actor
 from django.db.models import Prefetch
 from django_filters.rest_framework import DjangoFilterBackend
-from PIL import Image, UnidentifiedImageError
+from PIL import UnidentifiedImageError
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAdminUser, IsAuthenticatedOrReadOnly
@@ -21,6 +21,7 @@ from gallery.serializers import (
     PhotoSerializer,
     TagSerializer,
 )
+from gallery.services import upload_photos_to_album
 
 if TYPE_CHECKING:
     from django.db.models.query import QuerySet
@@ -126,36 +127,31 @@ class UploadViewSet(viewsets.ViewSet):
 
         results = []
         remote_addr = request.META.get("HTTP_X_REAL_IP")
-        for file in files:
-            try:
-                # Валидация изображения
-                image = Image.open(file)
-                image.verify()
-
-                # Создание фотографии с фиксацией автора в аудите
-                with set_actor(request.user, remote_addr=remote_addr):
-                    photo = Photo.objects.create(image=file, album=album)
+        with set_actor(request.user, remote_addr=remote_addr):
+            upload_results = upload_photos_to_album(album, files)
+        for result in upload_results:
+            if result.photo is not None:
                 results.append(
                     {
                         "success": True,
-                        "filename": file.name,
-                        "id": photo.id,
+                        "filename": result.filename,
+                        "id": result.photo.id,
                     },
                 )
-            except UnidentifiedImageError:  # noqa: PERF203
+            elif isinstance(result.error, UnidentifiedImageError):
                 results.append(
                     {
                         "success": False,
-                        "filename": file.name,
+                        "filename": result.filename,
                         "error": "Not an image",
                     },
                 )
-            except Exception as e:  # noqa: BLE001
+            else:
                 results.append(
                     {
                         "success": False,
-                        "filename": file.name,
-                        "error": str(e),
+                        "filename": result.filename,
+                        "error": str(result.error),
                     },
                 )
 

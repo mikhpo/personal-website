@@ -22,7 +22,6 @@ import { blogService } from '@services';
  * @param {string} [props.seriesSlug] - Слаг серии для фильтрации (series__slug)
  * @param {string} [props.topicSlug] - Слаг темы для фильтрации (topics__slug)
  * @param {string} [props.search] - Поисковый запрос для фильтрации (search)
- * @param {boolean} [props.isStaff=false] - Является ли текущий пользователь администратором
  * @return {JSX.Element} Компонент списка статей
  *
  * @example
@@ -37,7 +36,7 @@ import { blogService } from '@services';
  * // Результаты поиска
  * <ArticleList search="django" />
  */
-const ArticleList = ({ categorySlug, seriesSlug, topicSlug, search, isStaff = false }) => {
+const ArticleList = ({ categorySlug, seriesSlug, topicSlug, search }) => {
   /**
    * Состояние статей
    * @type {[Array, function]}
@@ -193,7 +192,7 @@ const ArticleList = ({ categorySlug, seriesSlug, topicSlug, search, isStaff = fa
   return (
     <div className="mb-3 pb-3">
       {articles.map(article => (
-        <ArticleCard key={article.id} article={article} isStaff={isStaff} />
+        <ArticleCard key={article.id} article={article} />
       ))}
       <Pagination
         currentPage={currentPage}
@@ -214,7 +213,6 @@ ArticleList.propTypes = {
   seriesSlug: PropTypes.string,
   topicSlug: PropTypes.string,
   search: PropTypes.string,
-  isStaff: PropTypes.bool,
 };
 
 export default ArticleList;

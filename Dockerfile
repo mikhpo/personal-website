@@ -49,8 +49,10 @@ RUN pip install --no-cache-dir poetry
 RUN localedef -i ru_RU -c -f UTF-8 -A /usr/share/locale/locale.alias ru_RU.UTF-8
 ENV LANG=ru_RU.utf8
 
-# Установить клиент MinIO из официального образа.
-COPY --from=minio/mc:latest /usr/bin/mc /usr/local/bin/mc
+# Установить клиент MinIO из официального образа. Источник - Quay: публичные
+# репозитории MinIO в Docker Hub недоступны для анонимной загрузки. Версия и
+# дайджест зафиксированы: воспроизводимая сборка вместо плавающего latest.
+COPY --from=quay.io/minio/mc:RELEASE.2025-08-13T08-35-41Z@sha256:a7fe349ef4bd8521fb8497f55c6042871b2ae640607cf99d9bede5e9bdf11727 /usr/bin/mc /usr/local/bin/mc
 
 # Создать каталог для проекта и перейти в него.
 ENV WORK_DIR=/srv/website

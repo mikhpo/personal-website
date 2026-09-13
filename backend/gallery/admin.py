@@ -1,13 +1,18 @@
 """Представления объектов галереи в административной панели Django."""
 
 from adminsortable2.admin import SortableAdminMixin  # type: ignore[import-untyped]
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.db import models
+from django.http import HttpRequest, HttpResponse
+from django.shortcuts import redirect
+from django.template.response import TemplateResponse
+from django.urls import URLPattern, path
 from django.utils.safestring import SafeText, mark_safe
 from tinymce.widgets import TinyMCE  # type: ignore[import-untyped]
 
-from gallery.forms import AlbumForm
+from gallery.forms import AlbumForm, UploadForm
 from gallery.models import Album, Photo, Tag
+from gallery.services import upload_error_message, upload_photos_to_album
 from personal_website.utils import format_local_datetime
 
 FORMFIELD_OVERRIDES = {models.TextField: {"widget": TinyMCE()}}
@@ -164,6 +169,50 @@ class AlbumAdmin(SortableAdminMixin, admin.ModelAdmin):
         "order",
     )
     list_filter = ("tags",)
+
+    def get_urls(self) -> list[URLPattern]:
+        """Добавить страницу пакетной загрузки фотографий к стандартным маршрутам."""
+        urls = super().get_urls()
+        upload_urls = [
+            path(
+                "upload/",
+                self.admin_site.admin_view(self.upload_photos_view),
+                name="gallery_album_upload",
+            ),
+        ]
+        return upload_urls + urls
+
+    def upload_photos_view(self, request: HttpRequest) -> HttpResponse:
+        """Страница пакетной загрузки фотографий в выбранный альбом.
+
+        Поведение идентично форме загрузки в основном интерфейсе: каждый файл
+        верифицируется и создает фотографию, ошибки не прерывают обработку
+        остальных файлов. При успешной загрузке выполняется переход на страницу
+        изменения альбома, при полном отказе - повторный показ формы.
+        """
+        if request.method == "POST":
+            form = UploadForm(request.POST, request.FILES)
+            if form.is_valid():
+                album: Album = form.cleaned_data["album"]
+                results = upload_photos_to_album(album, form.cleaned_data["photos"])
+                for result in results:
+                    if result.error is not None:
+                        messages.error(request, upload_error_message(result, album))
+                uploaded = [result for result in results if result.success]
+                if uploaded:
+                    messages.success(request, f"Загружено {len(uploaded)} фотографий в альбом {album.name}")
+                    return redirect("admin:gallery_album_change", album.pk)
+                # Ни один файл не обработан: форма показывается снова для повторной попытки.
+                form = UploadForm()
+        else:
+            form = UploadForm()
+        context = {
+            **self.admin_site.each_context(request),
+            "title": "Загрузка фотографий",
+            "form": form,
+            "opts": self.model._meta,  # noqa: SLF001 - стандартный ключ контекста админки
+        }
+        return TemplateResponse(request, "admin/gallery/album/upload.html", context)
 
     @admin.display(description="Обложка")
     def cover_thumbnail(self, obj: Album) -> SafeText | str:
