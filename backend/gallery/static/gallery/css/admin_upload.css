@@ -1,0 +1,46 @@
+/* Оформление страницы пакетной загрузки фотографий в админ-панели.
+   Цвета берутся из переменных темы django-admin, поэтому стили работают
+   в светлой и темной теме без дублирования. */
+
+.upload-hint {
+  color: var(--body-quiet-color);
+  margin: 0 0 12px;
+}
+
+.upload-form input[type="file"] {
+  display: block;
+  width: 100%;
+  min-height: 168px;
+  padding: 24px;
+  border: 2px dashed var(--hairline-color);
+  border-radius: var(--border-radius);
+  background: var(--darkened-bg);
+  color: var(--body-fg);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.upload-form input[type="file"]:hover,
+.upload-form input[type="file"]:focus {
+  border-color: var(--link-fg);
+  background: var(--body-bg);
+}
+
+.upload-form input[type="file"]::file-selector-button {
+  margin-right: 16px;
+  padding: 8px 16px;
+  border: var(--border-width) solid var(--button-border-color);
+  border-radius: var(--border-radius);
+  background: var(--button-bg);
+  color: var(--button-fg);
+  font: inherit;
+  cursor: pointer;
+}
+
+.upload-form input[type="file"]::file-selector-button:hover {
+  background: var(--button-hover-bg);
+}
+
+.upload-form select {
+  min-width: 320px;
+}
