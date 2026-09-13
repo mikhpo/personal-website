@@ -6,6 +6,7 @@ from pathlib import Path
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
+from django.urls import resolve, reverse
 
 from gallery.apps import GalleryConfig
 from gallery.factories import AlbumFactory, PhotoFactory
@@ -24,6 +25,8 @@ class GalleryAdminTests(TestCase):
     def setUpTestData(cls) -> None:
         """Подготовить тестовые данные для выполнения тестов."""
         cls.superuser: User = User.objects.create_superuser(username="testadmin", password="12345")
+        cls.user: User = User.objects.create_user(username="testuser", password="12345")
+        cls.album: Album = AlbumFactory(name="Тестовый альбом")
         test_images_dir = "gallery/photos"
         cls.image_path = list_file_paths(test_images_dir)[0]
         return super().setUpTestData()
@@ -32,6 +35,10 @@ class GalleryAdminTests(TestCase):
         """Авторизоваться под пользователем-администратором."""
         self.client.login(username="testadmin", password="12345")
         return super().setUp()
+
+    def _uploaded_image(self, filename: str) -> SimpleUploadedFile:
+        """Создать загружаемый файл из тестового изображения."""
+        return SimpleUploadedFile(name=filename, content=storage.read_bytes(self.image_path))
 
     def test_gallery_admin_page_displayed(self) -> None:
         """Проверяет, что в административной панели отображется раздел галереи."""
@@ -194,3 +201,74 @@ class GalleryAdminTests(TestCase):
             album.refresh_from_db()
             self.assertEqual(response.status_code, HTTPStatus.FOUND)
             self.assertEqual(album.slug, new_slug)
+
+    def test_album_upload_url_resolve(self) -> None:
+        """Маршрут страницы пакетной загрузки фотографий корректно разрешается и имеет имя."""
+        url = reverse("admin:gallery_album_upload")
+        self.assertEqual(url, ADMIN_URL + "gallery/album/upload/")
+        resolver_match = resolve(url)
+        self.assertEqual(resolver_match.view_name, "admin:gallery_album_upload")
+
+    def test_album_changelist_has_upload_button(self) -> None:
+        """Список альбомов содержит кнопку перехода на страницу загрузки."""
+        response = self.client.get(ADMIN_URL + "gallery/album/")
+        self.assertContains(response, reverse("admin:gallery_album_upload"))
+        self.assertContains(response, "Загрузить фотографии")
+
+    def test_album_upload_page_displayed(self) -> None:
+        """Страница пакетной загрузки доступна персоналу и содержит форму."""
+        response = self.client.get(ADMIN_URL + "gallery/album/upload/")
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertContains(response, 'name="album"')
+        self.assertContains(response, 'name="photos"')
+
+    def test_album_upload_page_not_available_for_others(self) -> None:
+        """Страница пакетной загрузки недоступна обычному пользователю и анониму."""
+        with self.subTest("Для пользователя с обычными правами"):
+            self.client.login(username="testuser", password="12345")
+            response = self.client.get(ADMIN_URL + "gallery/album/upload/")
+            self.assertEqual(response.status_code, HTTPStatus.FOUND)
+            self.assertIn("/admin/login/", response.url)
+
+        with self.subTest("Для анонимного пользователя"):
+            self.client.logout()
+            response = self.client.get(ADMIN_URL + "gallery/album/upload/")
+            self.assertEqual(response.status_code, HTTPStatus.FOUND)
+            self.assertIn("/admin/login/", response.url)
+
+    def test_album_upload_creates_photos(self) -> None:
+        """Пакетная загрузка создает фотографии в выбранном альбоме."""
+        files = [self._uploaded_image("admin_upload_1.jpg"), self._uploaded_image("admin_upload_2.jpg")]
+        data = {"album": self.album.pk, "photos": files}
+        response = self.client.post(ADMIN_URL + "gallery/album/upload/", data, follow=True)
+
+        self.assertRedirects(response, reverse("admin:gallery_album_change", args=[self.album.pk]))
+        photos = Photo.objects.filter(album=self.album, name__startswith="admin_upload")
+        self.assertEqual(photos.count(), 2)
+        for photo in photos:
+            self.assertTrue(photo.image.storage.exists(photo.image.name))
+        self.assertContains(response, "Загружено 2 фотографий в альбом Тестовый альбом")
+
+    def test_album_upload_invalid_file_shows_error(self) -> None:
+        """Невалидный файл не создает фотографию, ошибка выводится сообщением."""
+        file = SimpleUploadedFile(name="not_image.jpg", content=b"Not an image", content_type="image/jpeg")
+        data = {"album": self.album.pk, "photos": [file]}
+        response = self.client.post(ADMIN_URL + "gallery/album/upload/", data)
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertFalse(Photo.objects.filter(album=self.album, name="not_image").exists())
+        # Кавычки в сообщении экранируются шаблонизатором.
+        self.assertContains(response, "not_image.jpg")
+        self.assertContains(response, "не является изображением")
+
+    def test_album_upload_mixed_files(self) -> None:
+        """В смешанной пачке валидные файлы создаются, невалидные дают ошибку."""
+        files = [self._uploaded_image("admin_upload_1.jpg")]
+        files.append(SimpleUploadedFile(name="not_image.jpg", content=b"Not an image", content_type="image/jpeg"))
+        data = {"album": self.album.pk, "photos": files}
+        response = self.client.post(ADMIN_URL + "gallery/album/upload/", data, follow=True)
+
+        self.assertContains(response, "не является изображением")
+        self.assertContains(response, "Загружено 1 фотографий в альбом Тестовый альбом")
+        self.assertEqual(Photo.objects.filter(album=self.album, name="admin_upload_1").count(), 1)
+        self.assertFalse(Photo.objects.filter(album=self.album, name="not_image").exists())

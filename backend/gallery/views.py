@@ -1,9 +1,7 @@
 """Представления раздела галереи."""
 
-import logging
 from typing import TYPE_CHECKING, Any
 
-from django.conf import settings
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.http import HttpRequest, HttpResponse
@@ -12,15 +10,13 @@ from django.utils.decorators import method_decorator
 from django.utils.safestring import mark_safe
 from django.views.generic import DetailView, ListView, TemplateView
 from django.views.generic.edit import FormView
-from PIL import Image, UnidentifiedImageError
 
 from gallery.forms import UploadForm
 from gallery.models import Album, Photo, Tag
+from gallery.services import upload_error_message, upload_photos_to_album
 
 if TYPE_CHECKING:
     from django.db.models.query import QuerySet
-
-logger = logging.getLogger(settings.PROJECT_NAME)
 
 
 class GalleryHomeView(TemplateView):
@@ -176,40 +172,25 @@ class UploadFormView(FormView):
         """Верифицировать и создать каждую загруженную фотографию."""
         # Получение данных из отправленной формы.
         data: dict = form.cleaned_data
-        photos = data["photos"]
         album: Album = data["album"]
+        results = upload_photos_to_album(album, data["photos"])
 
-        # Цикл для каждой фотографии из отправленной формы.
-        counter = 0  # инициализация счетчика загруженных фотографий
-        for photo in photos:
-            try:
-                image = Image.open(photo)
-                image.verify()
-                Photo.objects.create(image=photo, album=album)
-                message = f"Загружена фотография {photo} в альбом {album}"
-                logger.debug(message)
-                counter += 1
-            except UnidentifiedImageError:  # noqa: PERF203
-                message = f'Загруженный файл "{photo}" не является изображением'
-                messages.add_message(self.request, messages.ERROR, message)
-                logger.exception(message)
-            except Exception as error:
-                message = f'Ошибка загрузки фотографии в альбом "{album}": "{error}"'
-                messages.add_message(self.request, messages.ERROR, message)
-                logger.exception(message)
+        # Отдельное сообщение об ошибке для каждого необработанного файла.
+        for result in results:
+            if result.error is not None:
+                messages.add_message(self.request, messages.ERROR, upload_error_message(result, album))
 
         #  Если хотя бы одна фотография заружена в альбом.
-        if counter:
+        uploaded = [result for result in results if result.success]
+        if uploaded:
             url = album.get_absolute_url()
             messages.add_message(
                 self.request,
                 messages.SUCCESS,
                 message=mark_safe(
-                    f"Загружено <b>{counter}</b> фотографий в альбом "
+                    f"Загружено <b>{len(uploaded)}</b> фотографий в альбом "
                     f'<a href="{url}" class="alert-link">{album.name}</a>',
                 ),
             )
-            message = f"Загружено {counter} фотографий в альбом {album.name}"
-            logger.info(message)
 
         return super().form_valid(form)

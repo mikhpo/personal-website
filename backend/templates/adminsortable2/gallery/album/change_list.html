@@ -1,0 +1,7 @@
+{% extends "adminsortable2/change_list.html" %}
+{% block object-tools-items %}
+  <li>
+    <a href="{% url 'admin:gallery_album_upload' %}" class="addlink">Загрузить фотографии</a>
+  </li>
+  {{ block.super }}
+{% endblock object-tools-items %}

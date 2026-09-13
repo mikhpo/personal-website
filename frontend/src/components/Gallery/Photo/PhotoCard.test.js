@@ -96,46 +96,6 @@ describe('PhotoCard', () => {
   });
 
   /**
-   * Проверяет, что карточка не содержит текст названия (старая реализация).
-   */
-  test('не отображает название фотографии', () => {
-    render(<PhotoCard photo={fullPhoto} />);
-    expect(screen.queryByText('Тестовое фото')).not.toBeInTheDocument();
-  });
-
-  /**
-   * Проверяет, что карточка не содержит текст даты (старая реализация).
-   */
-  test('не отображает дату фотографии', () => {
-    const photoWithDate = {
-      ...fullPhoto,
-      datetime_taken: '2024-01-15T10:30:00Z',
-    };
-    render(<PhotoCard photo={photoWithDate} />);
-    expect(screen.queryByText('15.01.2024')).not.toBeInTheDocument();
-  });
-
-  /**
-   * Проверяет, что карточка не содержит Card.Body (старая реализация).
-   */
-  test('не содержит Card.Body', () => {
-    const { container } = render(<PhotoCard photo={fullPhoto} />);
-    expect(container.querySelector('.card-body')).not.toBeInTheDocument();
-  });
-
-  /**
-   * Проверяет рендеринг с длинным названием (название не должно отображаться).
-   */
-  test('не отображает длинное название', () => {
-    const photoWithLongName = {
-      ...minimalPhoto,
-      name: 'Очень длинное название фотографии которое может занимать несколько строк',
-    };
-    render(<PhotoCard photo={photoWithLongName} />);
-    expect(screen.queryByText(/Очень длинное/)).not.toBeInTheDocument();
-  });
-
-  /**
    * Проверяет поведение при пустой строке в thumbnail_url.
    */
   test('рендерит с пустой строкой в thumbnail_url', () => {

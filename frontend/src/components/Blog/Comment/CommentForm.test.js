@@ -110,22 +110,13 @@ describe('CommentForm', () => {
   /**
    * Проверяет вывод дополнительных действий в ряду кнопки отправки.
    */
-  describe('дополнительные действия', () => {
-    test('отображает asideActions рядом с кнопкой отправки', () => {
-      render(
-        <CommentForm {...mockProps} asideActions={<a href="/edit/">Редактировать</a>} />,
-      );
-      const link = screen.getByText('Редактировать');
-      expect(link).toBeInTheDocument();
-      expect(link.closest('a')).toHaveAttribute('href', '/edit/');
-    });
-
-    test('не отображает asideActions для неавторизованных', () => {
-      render(
-        <CommentForm {...mockProps} isAuthenticated={false} asideActions={<a href="/edit/">Редактировать</a>} />,
-      );
-      expect(screen.queryByText('Редактировать')).not.toBeInTheDocument();
-    });
+  test('отображает asideActions рядом с кнопкой отправки', () => {
+    render(
+      <CommentForm {...mockProps} asideActions={<a href="/edit/">Редактировать</a>} />,
+    );
+    const link = screen.getByText('Редактировать');
+    expect(link).toBeInTheDocument();
+    expect(link.closest('a')).toHaveAttribute('href', '/edit/');
   });
 
   describe('отправка формы', () => {

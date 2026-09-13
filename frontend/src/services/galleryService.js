@@ -99,7 +99,7 @@ export const galleryService = {
    */
   async uploadPhotos(albumId, files, onProgress) {
     const results = [];
-    const uploadUrl = `${BASE_URL}/upload/upload/`;
+    const uploadUrl = `${BASE_URL}/upload/`;
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i];

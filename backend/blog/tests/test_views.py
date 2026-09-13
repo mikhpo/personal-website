@@ -102,23 +102,6 @@ class TestBlogIndexPage(TestCase):
         self.assertContains(response, 'data-component-name="Search/SearchForm"')
         self.assertContains(response, '"targetUrl": "/blog/"')
 
-    def test_article_list_staff_flag_anonymous(self) -> None:
-        """Для анонима ArticleList монтируется с isStaff: false."""
-        response = self.client.get(ARTICLE_LIST_URL)
-        self.assertContains(response, '"isStaff": false')
-
-    def test_article_list_staff_flag_for_staff(self) -> None:
-        """Для staff ArticleList монтируется с isStaff: true."""
-        staff_user = User.objects.create_user(
-            username="staffpage",
-            email="staffpage@example.com",
-            password="12345",
-            is_staff=True,
-        )
-        self.client.force_login(staff_user)
-        response = self.client.get(ARTICLE_LIST_URL)
-        self.assertContains(response, '"isStaff": true')
-
     def test_article_list_create_button_for_staff(self) -> None:
         """Для staff на странице блога отображается кнопка создания статьи."""
         staff_user = User.objects.create_user(

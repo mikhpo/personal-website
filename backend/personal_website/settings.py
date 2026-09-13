@@ -466,10 +466,13 @@ CRISPY_TEMPLATE_PACK = "bootstrap5"
 # В данном Django проекте он используется при создании записей в блог. (через административную панель)
 # В данном конфиге определены подключаемые плагины TinyMCE и меню редактора.
 TINYMCE_DEFAULT_CONFIG = {
+    # Лицензия GPLv2+ для самостоятельного хостинга: без ключа TinyMCE 7+ отключает редактор
+    "license_key": "gpl",
     "cleanup_on_startup": True,
     "custom_undo_redo_levels": 20,
     "selector": "textarea",
     "branding": False,
+    "promotion": False,
     "plugins": """
             textcolor save link image media preview codesample contextmenu
             table code lists fullscreen  insertdatetime  nonbreaking
