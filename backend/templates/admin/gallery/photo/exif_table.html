@@ -1,0 +1,27 @@
+{# Таблица EXIF-данных фотографии на странице фото в админке. #}
+<table>
+  <tr>
+    <td>Камера</td>
+    <td>{{ photo.camera }}</td>
+  </tr>
+  <tr>
+    <td>Объектив</td>
+    <td>{{ photo.lens_model }}</td>
+  </tr>
+  <tr>
+    <td>Фокусное расстояние</td>
+    <td>{{ photo.focal_length }} мм</td>
+  </tr>
+  <tr>
+    <td>Диафрагма</td>
+    <td>{{ photo.aperture }}</td>
+  </tr>
+  <tr>
+    <td>Выдержка</td>
+    <td>{{ photo.exposure }} с</td>
+  </tr>
+  <tr>
+    <td>Светочувствительность</td>
+    <td>ISO {{ photo.iso }}</td>
+  </tr>
+</table>

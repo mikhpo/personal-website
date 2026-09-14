@@ -1,11 +1,12 @@
 """Маршруты приложения галереи."""
 
-from django.urls import path
+from django.urls import path, re_path
 from rest_framework.routers import DefaultRouter
 
 from gallery.views import (
     AlbumDetailView,
     AlbumListView,
+    EmbedPhotoView,
     GalleryHomeView,
     PhotoDetailView,
     PhotoListView,
@@ -31,5 +32,10 @@ urlpatterns = [
     path("upload/", UploadFormView.as_view(), name="upload"),
     path("album/<int:pk>/", AlbumDetailView.as_view(), name="album-detail"),
     path("photo/<int:pk>/", PhotoDetailView.as_view(), name="photo-detail"),
+    re_path(
+        r"embed/(?P<pk>[0-9]+)/(?P<size>[0-9]+)\.(?P<ext>[A-Za-z0-9]+)",
+        EmbedPhotoView.as_view(),
+        name="photo-embed",
+    ),
     path("tag/<slug:slug>/", TagDetailView.as_view(), name="tag-detail"),
 ]

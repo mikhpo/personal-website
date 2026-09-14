@@ -1,12 +1,17 @@
 """Представления объектов галереи в административной панели Django."""
 
+from pathlib import Path
+from typing import ClassVar
+
 from adminsortable2.admin import SortableAdminMixin  # type: ignore[import-untyped]
+from django.conf import settings
 from django.contrib import admin, messages
 from django.db import models
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect
+from django.template.loader import render_to_string
 from django.template.response import TemplateResponse
-from django.urls import URLPattern, path
+from django.urls import URLPattern, path, reverse
 from django.utils.safestring import SafeText, mark_safe
 from tinymce.widgets import TinyMCE  # type: ignore[import-untyped]
 
@@ -29,6 +34,7 @@ class PhotoAdmin(admin.ModelAdmin):
         "name",
         "slug",
         "image_preview",
+        "embed_links",
         "description",
         "album",
         "public",
@@ -40,6 +46,7 @@ class PhotoAdmin(admin.ModelAdmin):
     )
     readonly_fields = (
         "image_preview",
+        "embed_links",
         "uploaded_at",
         "modified_at",
         "taken_at",
@@ -55,6 +62,12 @@ class PhotoAdmin(admin.ModelAdmin):
     list_filter = ("tags", "album")
     ordering = ("-modified_at",)
 
+    class Media:
+        """Стили и скрипты блока постоянных ссылок на превью."""
+
+        css: ClassVar[dict[str, tuple[str]]] = {"all": ("gallery/css/admin_embed_links.css",)}
+        js = ("gallery/js/admin_embed_links.js",)
+
     @admin.display(description="Миниатюра")
     def image_thumbnail(self, obj: Photo) -> SafeText | str:
         """Получить миниатюру фотографии для административной панели."""
@@ -69,6 +82,27 @@ class PhotoAdmin(admin.ModelAdmin):
             return mark_safe(f"<img src='{obj.image_preview.url}'/>")
         return ""
 
+    @admin.display(description="Постоянные ссылки на превью")
+    def embed_links(self, obj: Photo) -> SafeText | str:
+        """Блок постоянных ссылок на превью для вставки в статьи и сторонние ресурсы.
+
+        В поля выводится путь без домена: скрипт admin_embed_links.js при
+        копировании добавляет домен текущей страницы, поэтому блок работает
+        в любом окружении без настройки. Расширение в ссылке отражает формат
+        исходного изображения; превью отдается в этом же формате.
+        """
+        if not obj.pk or not obj.image:
+            return ""
+        extension = Path(obj.image.name).suffix.lstrip(".").lower() or "jpg"
+        links = [
+            {
+                "size": size,
+                "path": reverse("gallery:photo-embed", kwargs={"pk": obj.pk, "size": size, "ext": extension}),
+            }
+            for size in settings.GALLERY_EMBED_SIZES
+        ]
+        return mark_safe(render_to_string("admin/gallery/photo/embed_links.html", {"links": links}))
+
     @admin.display(description="Создана")
     def taken_at(self, obj: Photo) -> str:
         """Дата и время съемки."""
@@ -77,35 +111,7 @@ class PhotoAdmin(admin.ModelAdmin):
     @admin.display(description="EXIF")
     def exif_table(self, obj: Photo) -> SafeText | str:
         """Таблица с данными EXIF."""
-        table_html = f"""
-            <table>
-                <tr>
-                    <td>Камера</td>
-                    <td>{obj.camera}</td>
-                </tr>
-                <tr>
-                    <td>Объектив</td>
-                    <td>{obj.lens_model}</td>
-                </tr>
-                <tr>
-                    <td>Фокусное расстояние</td>
-                    <td>{obj.focal_length} мм</td>
-                </tr>
-                <tr>
-                    <td>Диафрагма</td>
-                    <td>{obj.aperture}</td>
-                </tr>
-                <tr>
-                    <td>Выдержка</td>
-                    <td>{obj.exposure} с</td>
-                </tr>
-                <tr>
-                    <td>Светочувствительность</td>
-                    <td>ISO {obj.iso}</td>
-                </tr>
-        </table>
-    """
-        return mark_safe(table_html)
+        return mark_safe(render_to_string("admin/gallery/photo/exif_table.html", {"photo": obj}))
 
 
 class PhotoInline(admin.TabularInline):

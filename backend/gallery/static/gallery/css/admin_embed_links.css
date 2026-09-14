@@ -1,0 +1,22 @@
+.embed-links {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 640px;
+}
+
+.embed-link-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.embed-link-size {
+  min-width: 70px;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.embed-link-url {
+  flex: 1;
+}

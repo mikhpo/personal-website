@@ -1,0 +1,10 @@
+{# Блок постоянных ссылок на превью на странице фотографии в админке. #}
+<div class="embed-links">
+  {% for link in links %}
+    <div class="embed-link-row">
+      <span class="embed-link-size">{{ link.size }} px</span>
+      <input type="text" class="embed-link-url" id="embed-url-{{ link.size }}" value="{{ link.path }}" readonly>
+      <button type="button" class="button embed-copy-button" data-target="embed-url-{{ link.size }}">Копировать</button>
+    </div>
+  {% endfor %}
+</div>

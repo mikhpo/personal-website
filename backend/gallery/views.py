@@ -1,22 +1,28 @@
 """Представления раздела галереи."""
 
-from typing import TYPE_CHECKING, Any
+import logging
+from typing import TYPE_CHECKING, Any, ClassVar
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
-from django.http import HttpRequest, HttpResponse
+from django.http import Http404, HttpRequest, HttpResponse
+from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 from django.utils.safestring import mark_safe
+from django.views import View
 from django.views.generic import DetailView, ListView, TemplateView
 from django.views.generic.edit import FormView
 
 from gallery.forms import UploadForm
 from gallery.models import Album, Photo, Tag
-from gallery.services import upload_error_message, upload_photos_to_album
+from gallery.services import ensure_embed_preview, upload_error_message, upload_photos_to_album
 
 if TYPE_CHECKING:
     from django.db.models.query import QuerySet
+
+logger = logging.getLogger(settings.PROJECT_NAME)
 
 
 class GalleryHomeView(TemplateView):
@@ -112,10 +118,11 @@ class PhotoDetailView(DetailView):
         return Photo.objects.all()
 
     def get_context_data(self, **kwargs) -> dict[str, Any]:
-        """Добавить ID предыдущей и следующей фотографий в контекст."""
+        """Добавить ID предыдущей и следующей фотографий и размеры превью для вставок."""
         context: dict[str, Any] = super().get_context_data(**kwargs)
         photo: Photo = self.object
         album: Album = photo.album
+        context["embed_sizes"] = list(settings.GALLERY_EMBED_SIZES)
 
         # Навигация prev/next только по публичным фотографиям альбома:
         # скрытые не предлагаются соседями ни при прямом заходе, ни из списков.
@@ -144,6 +151,37 @@ class TagDetailView(DetailView):
         context = super().get_context_data(**kwargs)
         context["tags"] = Tag.objects.all()
         return context
+
+
+class EmbedPhotoView(View):
+    """Постоянная ссылка на превью фотографии для вставки в статьи и сторонние ресурсы.
+
+    Ссылка публична и не зависит от публикации фотографии: ранее созданные
+    вставки продолжают работать после скрытия фотографии из галереи и
+    прекращают работу только после ее удаления (404). Превью отдается в
+    формате исходного изображения. Расширение в ссылке информационное:
+    при смене формата исходника ссылка продолжает работать - редирект
+    ведет к актуальному файлу превью. Ответ - редирект на файл в хранилище,
+    при первом обращении файл генерируется.
+    """
+
+    http_method_names: ClassVar[list[str]] = ["get"]
+
+    def get(self, request: HttpRequest, pk: str, size: str, ext: str) -> HttpResponse:  # noqa: ARG002
+        """Перенаправить на файл превью выбранного размера, при необходимости сгенерировать его."""
+        photo_pk = int(pk)
+        preview_size = int(size)
+        if preview_size not in settings.GALLERY_EMBED_SIZES:
+            msg = "Размер превью не поддерживается"
+            raise Http404(msg)
+        photo = get_object_or_404(Photo.objects.all(), pk=photo_pk)
+        try:
+            embed_name = ensure_embed_preview(photo, preview_size)
+        except (FileNotFoundError, OSError):
+            logger.exception("Не удалось подготовить превью для вставки фотографии %s", photo_pk)
+            msg = "Файл изображения недоступен"
+            raise Http404(msg) from None
+        return redirect(photo.image.storage.url(embed_name))
 
 
 @method_decorator(staff_member_required, "dispatch")

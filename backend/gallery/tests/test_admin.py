@@ -3,6 +3,7 @@
 from http import HTTPStatus
 from pathlib import Path
 
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
@@ -272,3 +273,24 @@ class GalleryAdminTests(TestCase):
         self.assertContains(response, "Загружено 1 фотографий в альбом Тестовый альбом")
         self.assertEqual(Photo.objects.filter(album=self.album, name="admin_upload_1").count(), 1)
         self.assertFalse(Photo.objects.filter(album=self.album, name="not_image").exists())
+
+    def test_photo_delete_confirmation_warns_about_embed_links(self) -> None:
+        """Страница подтверждения удаления фотографии предупреждает о прекращении постоянных ссылок."""
+        photo = PhotoFactory(name="Test photo", album=self.album)
+        url = ADMIN_URL + f"gallery/photo/{photo.pk}/delete/"
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertContains(response, "постоянные ссылки на её превью")
+
+    def test_photo_change_page_contains_embed_links(self) -> None:
+        """Страница изменения фотографии показывает постоянные ссылки на превью всех размеров."""
+        photo = PhotoFactory(name="Test photo", album=self.album)
+        url = ADMIN_URL + f"gallery/photo/{photo.pk}/change/"
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        extension = Path(photo.image.name).suffix.lstrip(".").lower()
+        for size in settings.GALLERY_EMBED_SIZES:
+            self.assertContains(response, f"/gallery/embed/{photo.pk}/{size}.{extension}")
+            self.assertContains(response, f"embed-url-{size}")
+        self.assertContains(response, "Копировать")
+        self.assertContains(response, "gallery/js/admin_embed_links.js")

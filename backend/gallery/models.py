@@ -18,6 +18,7 @@ from PIL import Image as pImage
 from PIL.ExifTags import TAGS
 from PIL.TiffImagePlugin import IFDRational
 
+from gallery.apps import GalleryConfig
 from gallery.managers import PublicAlbumManager, PublicPhotoManager
 from gallery.utils import compute_datetime_taken, exif_value_to_json, move_photo_image, photo_image_upload_path
 from personal_website.storages import StorageType, select_storage
@@ -253,6 +254,15 @@ class Photo(models.Model):
     def get_absolute_url(self) -> str:
         """Абсолютная ссылка на фотографию определяется первичным ключом фотографии."""
         return reverse("gallery:photo-detail", kwargs={"pk": self.pk})
+
+    def embed_preview_dir(self) -> str:
+        """Определить каталог файлов превью фотографии для вставок по постоянным ссылкам.
+
+        Каталог зависит только от первичного ключа фотографии: превью переживают
+        смену хранилища и перемещение фотографии между альбомами, а после
+        удаления фотографии превращаются в 404.
+        """
+        return f"{GalleryConfig.name}/embed/{self.pk}"
 
     def should_update_taken_at(self) -> bool:
         """Проверить, нужно ли обновить поле taken_at.
