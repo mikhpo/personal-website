@@ -1,3 +1,4 @@
+{# Страница фотографии: React-компонент просмотра получает пропы персонала и размеры превью для вставок. #}
 {% extends "gallery/gallery_home.html" %}
 {% load static %}
 {% load react_tags %}
@@ -9,6 +10,6 @@
 {% endblock meta %}
 {% block gallery %}
 <div class="container">
-    {% react_component "Gallery/PhotoDetail" photoId=photo.id previousPhotoId=previous_photo_id nextPhotoId=next_photo_id %}
+    {% react_component "Gallery/PhotoDetail" photoId=photo.id previousPhotoId=previous_photo_id nextPhotoId=next_photo_id isStaff=user.is_staff embedSizes=embed_sizes %}
 </div>
 {% endblock gallery %}

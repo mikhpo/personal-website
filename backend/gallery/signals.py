@@ -3,7 +3,7 @@
 import logging
 
 from django.db import transaction
-from django.db.models.signals import post_save
+from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
 from gallery.models import Photo
@@ -46,3 +46,17 @@ def enqueue_photo_image_generation(
     if update_fields is not None and not set(update_fields) & {"image", "album"}:
         return
     transaction.on_commit(lambda: _enqueue_photo_images(instance.pk))
+
+
+@receiver(post_delete, sender=Photo)
+def delete_photo_embed_files(sender: type[Photo], instance: Photo, **kwargs: object) -> None:
+    """Удалить файлы превью для вставок при удалении фотографии.
+
+    Файлы превью не связаны с полями модели, поэтому django-cleanup их
+    не обрабатывает. Отсутствие каталога (превью никогда не запрашивались)
+    ошибкой не считается.
+    """
+    try:
+        instance.image.storage.rmtree(instance.embed_preview_dir())
+    except OSError:
+        logger.exception("Удаление файлов превью для вставок не удалось для фотографии %s", instance.pk)

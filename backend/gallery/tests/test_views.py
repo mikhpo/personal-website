@@ -5,16 +5,19 @@ import re
 from datetime import datetime, timedelta, timezone
 from html import unescape
 from http import HTTPStatus
+from io import BytesIO
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.core.files.base import ContentFile
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.http import HttpResponseBase
 from django.test import TestCase
 from django.urls import resolve, reverse
 from django.utils.crypto import get_random_string
+from PIL import Image
 
 if TYPE_CHECKING:
     from main.context_processors import AlertMessage, AlertsData
@@ -22,10 +25,12 @@ if TYPE_CHECKING:
 from gallery.apps import GalleryConfig
 from gallery.factories import AlbumFactory, PhotoFactory, TagFactory
 from gallery.models import Album, Photo, Tag
+from gallery.services import find_embed_preview
 from gallery.utils import is_image
 from gallery.views import (
     AlbumDetailView,
     AlbumListView,
+    EmbedPhotoView,
     GalleryHomeView,
     PhotoDetailView,
     PhotoListView,
@@ -51,6 +56,7 @@ TAG_DETAIL_URL = f"/{APP_NAME}/tag"
 TAG_DETAIL_URL_NAME = f"{APP_NAME}:tag-detail"
 UPLOAD_URL = f"/{APP_NAME}/upload/"
 UPLOAD_URL_NAME = f"{APP_NAME}:upload"
+EMBED_URL_NAME = f"{APP_NAME}:photo-embed"
 
 BASE_TEMPLATE_NAME = "base.html"
 GALLERY_TEMPLATE_NAME = f"{APP_NAME}/{APP_NAME}_home.html"
@@ -361,6 +367,184 @@ class TestPhotoDetailView(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.context.get("previous_photo_id"), public_a.pk)
         self.assertEqual(response.context.get("next_photo_id"), public_c.pk)
+
+
+class TestEmbedPhotoView(TestCase):
+    """Тесты постоянной ссылки на превью фотографии для вставки."""
+
+    @classmethod
+    def setUpTestData(cls) -> None:
+        """Создать первоначальные данные для проведения тестов."""
+        cls.album = AlbumFactory()
+        cls.photo = PhotoFactory(album=cls.album, public=True)
+        cls.private_photo = PhotoFactory(album=cls.album, public=False)
+        cls.size = settings.GALLERY_EMBED_SIZES[0]
+        return super().setUpTestData()
+
+    @staticmethod
+    def _image_bytes(width: int, height: int, fmt: str) -> bytes:
+        """Создать содержимое изображения заданных размеров в выбранном формате."""
+        buffer = BytesIO()
+        img = Image.new("RGBA", (width, height), color="blue")
+        if fmt == "GIF":
+            img = img.convert("P")
+        elif fmt == "JPEG":
+            img = img.convert("RGB")
+        img.save(buffer, format=fmt)
+        return buffer.getvalue()
+
+    def _embed_url(self, pk: int, size: int | None = None, ext: str = "jpg") -> str:
+        """Построить адрес постоянной ссылки на превью фотографии."""
+        return reverse(EMBED_URL_NAME, kwargs={"pk": pk, "size": size or self.size, "ext": ext})
+
+    def _embed_name(self, photo: Photo, size: int) -> str:
+        """Получить имя существующего файла превью; тест падает, если файл не найден."""
+        embed_name = find_embed_preview(photo, size)
+        self.assertIsNotNone(embed_name)
+        if embed_name is None:
+            return ""
+        return embed_name
+
+    def _embed_response_size(self, photo: Photo, size: int) -> tuple[int, int]:
+        """Получить размеры сгенерированного файла превью для вставки."""
+        with Image.open(BytesIO(storage.read_bytes(self._embed_name(photo, size)))) as img:
+            return img.size
+
+    def test_embed_url(self) -> None:
+        """Проверить разрешение маршрута постоянной ссылки на превью."""
+        with self.subTest("Расширение jpg"):
+            url = self._embed_url(self.photo.pk)
+            resolver_match = resolve(url)
+            self.assertEqual(resolver_match.func.view_class, EmbedPhotoView)
+            self.assertEqual(resolver_match.view_name, EMBED_URL_NAME)
+
+        # Маршрут допускает любое буквенное расширение: формат превью
+        # определяется исходником, а не ссылкой.
+        with self.subTest("Расширение png"):
+            resolver_match = resolve(self._embed_url(self.photo.pk, ext="png"))
+            self.assertEqual(resolver_match.func.view_class, EmbedPhotoView)
+
+    def test_anonymous_gets_redirect_to_stored_file(self) -> None:
+        """Анонимный запрос создает файл превью и перенаправляет на его адрес в хранилище."""
+        response = self.client.get(self._embed_url(self.photo.pk))
+        embed_name = self._embed_name(self.photo, self.size)
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
+        self.assertEqual(response.url, storage.url(embed_name))
+        self.assertTrue(storage.exists(embed_name))
+
+    def test_embed_preview_preserves_source_format(self) -> None:
+        """Превью для вставки создается в формате исходного изображения."""
+        for fmt, extension in (("JPEG", "jpg"), ("PNG", "png"), ("TIFF", "tif"), ("GIF", "gif")):
+            with self.subTest(fmt):
+                photo = Photo.objects.get(pk=PhotoFactory(album=self.album).pk)
+                photo.image.save(f"source.{extension}", ContentFile(self._image_bytes(2000, 1000, fmt)), save=True)
+
+                response = self.client.get(self._embed_url(photo.pk, ext=extension))
+
+                self.assertEqual(response.status_code, HTTPStatus.FOUND)
+                embed_name = self._embed_name(photo, self.size)
+                self.assertTrue(embed_name.endswith(f"{self.size}.{extension}"))
+                with Image.open(BytesIO(storage.read_bytes(embed_name))) as preview:
+                    self.assertEqual(preview.format, fmt)
+                    self.assertEqual(preview.size, (400, 200))
+
+    def test_embed_preview_preserves_aspect_ratio(self) -> None:
+        """Пропорции исходной фотографии сохраняются, размер задан по наибольшей стороне."""
+        self.client.get(self._embed_url(self.photo.pk, size=self.size))
+        self.client.get(self._embed_url(self.photo.pk, size=settings.GALLERY_EMBED_SIZES[1]))
+        # Исходник фабрики 800x600: превью 400 вписывается как 400x300,
+        # размер 800 совпадает с исходником без увеличения.
+        self.assertEqual(self._embed_response_size(self.photo, self.size), (400, 300))
+        self.assertEqual(self._embed_response_size(self.photo, settings.GALLERY_EMBED_SIZES[1]), (800, 600))
+
+    def test_second_request_does_not_regenerate(self) -> None:
+        """Повторный запрос возвращает редирект без перегенерации актуального файла."""
+        self.client.get(self._embed_url(self.photo.pk))
+        embed_name = self._embed_name(self.photo, self.size)
+        mtime_before = storage.get_modified_time(embed_name)
+
+        response = self.client.get(self._embed_url(self.photo.pk))
+
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
+        self.assertEqual(storage.get_modified_time(embed_name), mtime_before)
+
+    def test_unsupported_size_returns_404(self) -> None:
+        """Размер вне готового набора не обслуживается."""
+        url = self._embed_url(self.photo.pk, size=555)
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+
+    def test_missing_photo_returns_404(self) -> None:
+        """Ссылка на несуществующую фотографию отвечает 404."""
+        url = self._embed_url(999999)
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+
+    def test_embed_works_for_private_photo(self) -> None:
+        """Скрытие фотографии из галереи не прекращает работу созданных ссылок."""
+        response = self.client.get(self._embed_url(self.private_photo.pk))
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
+        self.assertTrue(storage.exists(self._embed_name(self.private_photo, self.size)))
+
+    def test_source_replacement_regenerates_preview(self) -> None:
+        """Замена исходника обновляет превью по новым пропорциям, формат и имя сохраняются."""
+        self.client.get(self._embed_url(self.photo.pk))
+        embed_name = self._embed_name(self.photo, self.size)
+        old_mtime = storage.get_modified_time(embed_name)
+
+        self.photo.image.save("replacement.jpg", ContentFile(self._image_bytes(2000, 1000, "JPEG")), save=True)
+
+        response = self.client.get(self._embed_url(self.photo.pk))
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
+        # Новый исходник 2000x1000 вписывается в 400 как 400x200.
+        self.assertEqual(self._embed_response_size(self.photo, self.size), (400, 200))
+        self.assertEqual(self._embed_name(self.photo, self.size), embed_name)
+        self.assertGreater(storage.get_modified_time(embed_name), old_mtime)
+
+    def test_source_replacement_with_format_change_switches_preview_file(self) -> None:
+        """Замена исходника на другой формат отдает превью нового формата по той же ссылке."""
+        self.client.get(self._embed_url(self.photo.pk))
+        old_name = self._embed_name(self.photo, self.size)
+        self.assertTrue(old_name.endswith(f"{self.size}.jpg"))
+
+        self.photo.image.save("replacement.png", ContentFile(self._image_bytes(2000, 1000, "PNG")), save=True)
+
+        response = self.client.get(self._embed_url(self.photo.pk))
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
+        new_name = self._embed_name(self.photo, self.size)
+        self.assertTrue(new_name.endswith(f"{self.size}.png"))
+        self.assertEqual(response.url, storage.url(new_name))
+        self.assertFalse(storage.exists(old_name))
+
+    def test_stale_extension_link_keeps_working_after_format_change(self) -> None:
+        """Ссылка с прежним расширением продолжает работать после смены формата исходника."""
+        self.client.get(self._embed_url(self.photo.pk, ext="jpg"))
+        self.photo.image.save("replacement.png", ContentFile(self._image_bytes(2000, 1000, "PNG")), save=True)
+
+        response = self.client.get(self._embed_url(self.photo.pk, ext="jpg"))
+
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
+        self.assertEqual(response.url, storage.url(self._embed_name(self.photo, self.size)))
+
+    def test_photo_deletion_breaks_link_and_removes_files(self) -> None:
+        """После удаления фотографии ссылка отвечает 404, файлы превью удалены."""
+        photo = Photo.objects.get(pk=PhotoFactory(album=self.album).pk)
+        url = self._embed_url(photo.pk)
+        self.client.get(url)
+        embed_name = self._embed_name(photo, self.size)
+        self.assertTrue(storage.exists(embed_name))
+
+        photo.delete()
+
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        self.assertFalse(storage.exists(embed_name))
+
+    def test_photo_detail_context_contains_embed_sizes(self) -> None:
+        """Страница фотографии получает набор размеров превью для вставок."""
+        url = f"{PHOTO_DETAIL_URL}/{self.photo.pk}/"
+        response = self.client.get(url)
+        self.assertEqual(response.context["embed_sizes"], list(settings.GALLERY_EMBED_SIZES))
 
 
 class TestAlbumListView(TestCase):

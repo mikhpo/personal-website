@@ -240,6 +240,35 @@ describe('PhotoDetail', () => {
   });
 
   /**
+   * Проверяет, что кнопка получения ссылки для вставки отображается
+   * только для персонала (isStaff).
+   */
+  test('отображает кнопку ссылки для вставки только для персонала', () => {
+    const { rerender } = render(<PhotoDetail photoId={2} isStaff={false} />);
+    expect(screen.queryByText('Ссылка для вставки')).not.toBeInTheDocument();
+
+    rerender(<PhotoDetail photoId={2} isStaff />);
+    expect(screen.getByText('Ссылка для вставки')).toBeInTheDocument();
+  });
+
+  /**
+   * Проверяет, что для staff по нажатию кнопки открывается модальное
+   * окно с постоянными ссылками на превью всех размеров из набора.
+   */
+  test('открывает модальное окно со ссылками для вставки', async () => {
+    const user = userEvent.setup();
+    render(<PhotoDetail photoId={2} isStaff embedSizes={[400, 800]} />);
+
+    await user.click(screen.getByText('Ссылка для вставки'));
+
+    const dialog = await screen.findByRole('dialog', { name: 'Ссылка для вставки' });
+    expect(within(dialog).getByText('400 px')).toBeInTheDocument();
+    expect(within(dialog).getByText('800 px')).toBeInTheDocument();
+    const linkInput = within(dialog).getByLabelText('Ссылка на превью 400 пикселов');
+    expect(linkInput).toHaveValue('http://localhost/gallery/embed/2/400.jpg');
+  });
+
+  /**
    * Проверяет переключение фотографий клавиатурой и свайпами.
    * Навигация выполняется полной загрузкой страницы через сервис navigateTo.
    */

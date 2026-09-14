@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Modal, Button } from 'react-bootstrap';
 import PropTypes from 'prop-types';
 import AboutPhoto from '@components/Gallery/Photo/AboutPhoto';
+import EmbedLinksModal from '@components/Gallery/Photo/EmbedLinksModal';
 import { usePhotoData, usePhotoNavigation } from '@hooks';
 
 /**
@@ -13,18 +14,30 @@ import { usePhotoData, usePhotoNavigation } from '@hooks';
  * Поддерживает переключение фотографий клавишами ArrowLeft/ArrowRight
  * и горизонтальными свайпами на сенсорных экранах (см. usePhotoNavigation);
  * при открытом модальном окне навигация отключена.
+ * Для staff доступна кнопка получения постоянных ссылок
+ * на превью фотографии для вставки в статьи.
  *
  * @param {Object} props - Пропсы компонента
  * @param {number} props.photoId - ID фотографии
  * @param {number} [props.previousPhotoId] - ID предыдущей фотографии (опционально)
  * @param {number} [props.nextPhotoId] - ID следующей фотографии (опционально)
+ * @param {boolean} [props.isStaff] - Признак staff: показывать кнопку получения ссылок
+ * @param {number[]} [props.embedSizes] - Размеры превью для вставок в пикселах по наибольшей стороне
  * @param {string} [props.apiUrl] - Базовый URL API
  * @return {JSX.Element} Компонент детального просмотра фотографии
  */
-const PhotoDetail = ({ photoId, previousPhotoId, nextPhotoId, apiUrl = '/api/gallery/photos/' }) => {
+const PhotoDetail = ({
+  photoId,
+  previousPhotoId,
+  nextPhotoId,
+  isStaff = false,
+  embedSizes = [],
+  apiUrl = '/api/gallery/photos/',
+}) => {
   const { photo, loading, error } = usePhotoData(photoId, apiUrl);
 
   const [showAboutModal, setShowAboutModal] = useState(false);
+  const [showEmbedModal, setShowEmbedModal] = useState(false);
 
   const previousUrl = previousPhotoId ? `/gallery/photo/${previousPhotoId}/` : null;
   const nextUrl = nextPhotoId ? `/gallery/photo/${nextPhotoId}/` : null;
@@ -32,7 +45,7 @@ const PhotoDetail = ({ photoId, previousPhotoId, nextPhotoId, apiUrl = '/api/gal
   usePhotoNavigation({
     previousUrl,
     nextUrl,
-    enabled: !showAboutModal,
+    enabled: !showAboutModal && !showEmbedModal,
   });
 
   if (loading) {
@@ -88,6 +101,15 @@ const PhotoDetail = ({ photoId, previousPhotoId, nextPhotoId, apiUrl = '/api/gal
             >
               О фото
             </Button>
+            {isStaff && (
+              <Button
+                variant="outline-dark"
+                id="get-embed-link-button"
+                onClick={() => setShowEmbedModal(true)}
+              >
+                Ссылка для вставки
+              </Button>
+            )}
             {nextUrl && (
               <a
                 href={nextUrl}
@@ -119,6 +141,30 @@ const PhotoDetail = ({ photoId, previousPhotoId, nextPhotoId, apiUrl = '/api/gal
           </Button>
         </Modal.Footer>
       </Modal>
+
+      {isStaff && (
+        <Modal
+          show={showEmbedModal}
+          onHide={() => setShowEmbedModal(false)}
+          aria-labelledby="embedLinksModalLabel"
+        >
+          <Modal.Header closeButton>
+            <Modal.Title id="embedLinksModalLabel">Ссылка для вставки</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <EmbedLinksModal
+              photoId={photoId}
+              sizes={embedSizes}
+              ext={photo.image_url ? photo.image_url.split('.').pop().toLowerCase() : 'jpg'}
+            />
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="outline-dark" onClick={() => setShowEmbedModal(false)}>
+              Закрыть
+            </Button>
+          </Modal.Footer>
+        </Modal>
+      )}
     </div>
   );
 };
@@ -127,6 +173,8 @@ PhotoDetail.propTypes = {
   photoId: PropTypes.number.isRequired,
   previousPhotoId: PropTypes.number,
   nextPhotoId: PropTypes.number,
+  isStaff: PropTypes.bool,
+  embedSizes: PropTypes.arrayOf(PropTypes.number),
   apiUrl: PropTypes.string,
 };
 
