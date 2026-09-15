@@ -13,9 +13,10 @@ import BaseCard from '@components/Card/BaseCard';
  * @param {string} props.album.name - Название альбома
  * @param {string} [props.album.description] - Описание альбома
  * @param {string} [props.album.cover_thumbnail_url] - URL миниатюры обложки
+ * @param {Function} [props.onImageLoad] - Обработчик загрузки изображения обложки
  * @return {JSX.Element} Компонент карточки альбома
  */
-const AlbumCard = ({ album }) => {
+const AlbumCard = ({ album, onImageLoad }) => {
   const albumUrl = `/gallery/album/${album.id}/`;
 
   // Если есть обложка, используем BaseCard
@@ -27,6 +28,7 @@ const AlbumCard = ({ album }) => {
         image={album.cover_thumbnail_url}
         description={album.description}
         imageAlt={album.name}
+        cardImgProps={{ onLoad: onImageLoad }}
       />
     );
   }
@@ -61,6 +63,7 @@ AlbumCard.propTypes = {
     description: PropTypes.string,
     cover_thumbnail_url: PropTypes.string,
   }).isRequired,
+  onImageLoad: PropTypes.func,
 };
 
 export default AlbumCard;

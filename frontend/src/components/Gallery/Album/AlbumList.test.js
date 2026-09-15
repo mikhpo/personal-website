@@ -293,10 +293,10 @@ describe("AlbumList", () => {
   });
 
   /**
-   * Проверить правильную структуру сетки.
-   * Компонент должен использовать правильные CSS классы для сетки Bootstrap.
+   * Проверить правильную структуру masonry-сетки.
+   * Компонент должен использовать контейнер masonry с сайзером и элементами.
    */
-  test("использует правильную структуру сетки Bootstrap", async () => {
+  test("использует правильную структуру masonry-сетки", async () => {
     global.fetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({ results: mockAlbums }),
@@ -314,19 +314,14 @@ describe("AlbumList", () => {
     expect(container).toBeInTheDocument();
     expect(container).toHaveAttribute("data-testid", "album-list-container");
 
-    // Проверить наличие строки
-    const row = renderResult.container.querySelector(".row");
-    expect(row).toBeInTheDocument();
-    expect(row).toHaveClass("g-4", "justify-content-center");
+    // Проверить наличие masonry-сетки и сайзера колонок
+    const grid = renderResult.container.querySelector(".masonry-grid");
+    expect(grid).toBeInTheDocument();
+    expect(grid.querySelector(".masonry-sizer")).toBeInTheDocument();
 
-    // Проверить колонки (должны быть с правильными классами для responsive grid)
-    const cols = renderResult.container.querySelectorAll(".col");
-    expect(cols).toHaveLength(mockAlbums.length);
-
-    // Проверить классы колонок (xs=1, md=4)
-    cols.forEach((col) => {
-      expect(col).toHaveClass("col"); // Базовый класс col
-    });
+    // Проверить, что каждый альбом обернут в элемент сетки
+    const items = renderResult.container.querySelectorAll(".masonry-item");
+    expect(items).toHaveLength(mockAlbums.length);
   });
 
   /**

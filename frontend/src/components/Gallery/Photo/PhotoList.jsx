@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col } from 'react-bootstrap';
+import { Container } from 'react-bootstrap';
 import PropTypes from 'prop-types';
 import PhotoCard from '@components/Gallery/Photo/PhotoCard';
 import SpinnerComponent from '@components/Spinner/Spinner';
 import AlertList from '@components/Alert/AlertList';
 import { Button } from 'react-bootstrap';
 import Pagination from '@components/Pagination/Pagination';
+import useMasonry from '@hooks/useMasonry';
 import { buildApiUrl } from '@utils/apiUrl';
 
 /**
@@ -275,6 +276,9 @@ const PhotoList = ({ apiUrl = '/api/gallery/photos/', tagSlug, search }) => {
     retryLoadPhotos();
   };
 
+  // Хук вызывается безусловно до ранних выходов; без отрисованной сетки он бездействует
+  const { containerRef, scheduleLayout } = useMasonry(photos);
+
   // Отображение индикатора загрузки
   if (loading) {
     return <SpinnerComponent message="Загрузка фотографий..." />;
@@ -315,13 +319,14 @@ const PhotoList = ({ apiUrl = '/api/gallery/photos/', tagSlug, search }) => {
   // Отображение списка фотографий с пагинацией
   return (
     <Container>
-      <Row xs={1} md={4} className="g-4 justify-content-center">
+      <div ref={containerRef} className="masonry-grid">
+        <div className="masonry-sizer" />
         {photos.map(photo => (
-          <Col key={photo.id}>
-            <PhotoCard photo={photo} />
-          </Col>
+          <div key={photo.id} className="masonry-item">
+            <PhotoCard photo={photo} onImageLoad={scheduleLayout} />
+          </div>
         ))}
-      </Row>
+      </div>
       <Pagination
         currentPage={pagination.currentPage}
         totalPages={pagination.totalPages}

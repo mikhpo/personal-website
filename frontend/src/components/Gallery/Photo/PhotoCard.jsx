@@ -16,9 +16,10 @@ import PropTypes from 'prop-types';
  * @param {number} props.photo.pk - Первичный ключ фотографии для URL
  * @param {string} props.photo.name - Название фотографии
  * @param {string} [props.photo.thumbnail_url] - URL миниатюры
+ * @param {Function} [props.onImageLoad] - Обработчик загрузки миниатюры
  * @return {JSX.Element} Карточка фотографии с миниатюрой
  */
-const PhotoCardComponent = ({ photo }) => {
+const PhotoCardComponent = ({ photo, onImageLoad }) => {
   const photoUrl = `/gallery/photo/${photo.id}/`;
 
   return (
@@ -30,6 +31,8 @@ const PhotoCardComponent = ({ photo }) => {
             src={photo.thumbnail_url}
             alt={photo.name}
             loading="lazy"
+            onLoad={onImageLoad}
+            onError={onImageLoad}
           />
         )}
       </Card>
@@ -44,6 +47,7 @@ PhotoCardComponent.propTypes = {
     name: PropTypes.string.isRequired,
     thumbnail_url: PropTypes.string,
   }).isRequired,
+  onImageLoad: PropTypes.func,
 };
 
 export default PhotoCardComponent;

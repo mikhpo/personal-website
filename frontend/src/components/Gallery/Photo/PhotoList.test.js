@@ -240,8 +240,8 @@ describe('PhotoList', () => {
     });
     const { container } = render(<PhotoList />);
     await waitFor(() => {
-      const cols = container.querySelectorAll('.col');
-      expect(cols).toHaveLength(50);
+      const items = container.querySelectorAll('.masonry-item');
+      expect(items).toHaveLength(50);
     });
   });
 
