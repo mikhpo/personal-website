@@ -22,6 +22,7 @@ describe('PhotoDetail', () => {
     name: 'Тестовое фото',
     slug: 'test-photo',
     image_url: '/media/photo.jpg',
+    preview_url: '/media/photo-preview.jpg',
     album: 1,
     album_name: 'Тестовый альбом',
     description: 'Описание тестовой фотографии',
@@ -54,14 +55,58 @@ describe('PhotoDetail', () => {
   });
 
   /**
-   * Проверяет, что компонент отображает изображение фотографии
+   * Проверяет, что компонент отображает превью фотографии
    * с правильным alt-текстом и src-адресом.
    */
-  test('отображает изображение фотографии', () => {
+  test('отображает превью фотографии', () => {
     render(<PhotoDetail photoId={2} previousPhotoId={mockPreviousPhotoId} nextPhotoId={mockNextPhotoId} />);
     const image = screen.getByAltText('Тестовое фото');
     expect(image).toBeInTheDocument();
-    expect(image).toHaveAttribute('src', '/media/photo.jpg');
+    expect(image).toHaveAttribute('src', '/media/photo-preview.jpg');
+  });
+
+  /**
+   * Проверяет, что клик по фотографии открывает оригинал в новой вкладке:
+   * изображение обернуто в ссылку на оригинальный файл.
+   */
+  test('открывает оригинал по клику на фотографию', () => {
+    render(<PhotoDetail photoId={2} previousPhotoId={mockPreviousPhotoId} nextPhotoId={mockNextPhotoId} />);
+    const image = screen.getByAltText('Тестовое фото');
+    const link = image.closest('a');
+    expect(link).toHaveAttribute('href', '/media/photo.jpg');
+    expect(link).toHaveAttribute('target', '_blank');
+    expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+    expect(link).toHaveAttribute('title', 'Открыть оригинал');
+  });
+
+  /**
+   * Проверяет плавное проявление фотографии: до загрузки она скрыта,
+   * после события загрузки - проявляется.
+   */
+  test('проявляется после загрузки фотографии', () => {
+    render(<PhotoDetail photoId={2} previousPhotoId={mockPreviousPhotoId} nextPhotoId={mockNextPhotoId} />);
+    const image = screen.getByAltText('Тестовое фото');
+    const link = image.closest('a');
+    expect(link).toHaveClass('card-entrance');
+    expect(link).not.toHaveClass('is-visible');
+
+    fireEvent.load(image);
+    expect(link).toHaveClass('is-visible');
+  });
+
+  /**
+   * Проверяет, что при отсутствии превью изображение не рендерится:
+   * откат к полноразмерному оригиналу не предусмотрен, превью
+   * генерируется сервером при первом обращении к API.
+   */
+  test('не отображает изображение если превью отсутствует', () => {
+    usePhotoData.mockReturnValueOnce({
+      photo: { ...mockPhoto, preview_url: null },
+      loading: false,
+      error: null,
+    });
+    render(<PhotoDetail photoId={2} />);
+    expect(screen.queryByRole('img')).not.toBeInTheDocument();
   });
 
   /**
@@ -226,12 +271,12 @@ describe('PhotoDetail', () => {
   });
 
   /**
-   * Проверяет, что если у фотографии отсутствует image_url,
+   * Проверяет, что если у фотографии нет ни превью, ни оригинала,
    * элемент img не рендерится.
    */
-  test('не отображает изображение если нет image_url', () => {
+  test('не отображает изображение если нет превью и оригинала', () => {
     usePhotoData.mockReturnValueOnce({
-      photo: { ...mockPhoto, image_url: null },
+      photo: { ...mockPhoto, image_url: null, preview_url: null },
       loading: false,
       error: null,
     });

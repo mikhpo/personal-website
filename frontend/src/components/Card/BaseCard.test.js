@@ -7,7 +7,7 @@
  */
 
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import BaseCard from './BaseCard';
 
 describe('BaseCard', () => {
@@ -160,6 +160,59 @@ describe('BaseCard', () => {
       const { container } = render(<BaseCard {...propsWithImage} />);
       const img = container.querySelector('.card-img-top');
       expect(img).toHaveAttribute('loading', 'lazy');
+    });
+  });
+
+  /**
+   * Проверяет плавное проявление карточки после загрузки изображения:
+   * до готовности изображения карточка скрыта, после загрузки или ошибки -
+   * проявляется, а внешний обработчик из cardImgProps срабатывает.
+   */
+  describe('проявление карточки', () => {
+    const propsWithImage = {
+      ...defaultProps,
+      image: '/media/test/image.jpg',
+    };
+
+    test('скрыта до загрузки изображения', () => {
+      const { container } = render(<BaseCard {...propsWithImage} />);
+      const card = container.querySelector('.card');
+      expect(card).toHaveClass('card-entrance');
+      expect(card).not.toHaveClass('is-visible');
+    });
+
+    test('проявляется после загрузки изображения', () => {
+      const { container } = render(<BaseCard {...propsWithImage} />);
+      const img = container.querySelector('.card-img-top');
+      fireEvent.load(img);
+      const card = container.querySelector('.card');
+      expect(card).toHaveClass('is-visible');
+    });
+
+    test('проявляется при ошибке загрузки изображения', () => {
+      const { container } = render(<BaseCard {...propsWithImage} />);
+      const img = container.querySelector('.card-img-top');
+      fireEvent.error(img);
+      const card = container.querySelector('.card');
+      expect(card).toHaveClass('is-visible');
+    });
+
+    test('видна сразу без изображения', () => {
+      const { container } = render(<BaseCard {...defaultProps} />);
+      const card = container.querySelector('.card');
+      expect(card).toHaveClass('card-entrance', 'is-visible');
+    });
+
+    test('пробрасывает onLoad из cardImgProps при загрузке изображения', () => {
+      const onImageLoad = jest.fn();
+      const propsWithHandlers = {
+        ...propsWithImage,
+        cardImgProps: { onLoad: onImageLoad },
+      };
+      const { container } = render(<BaseCard {...propsWithHandlers} />);
+      const img = container.querySelector('.card-img-top');
+      fireEvent.load(img);
+      expect(onImageLoad).toHaveBeenCalledTimes(1);
     });
   });
 

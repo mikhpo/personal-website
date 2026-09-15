@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card } from 'react-bootstrap';
 import PropTypes from 'prop-types';
 
@@ -48,9 +48,29 @@ const BaseCard = ({
 }) => {
   const isCentered = variant === 'centered';
   const cardClassName = `shadow rounded ${isCentered ? 'text-center' : ''} h-100 ${className}`;
+  const [imageReady, setImageReady] = useState(false);
+
+  /**
+   * Проявляет карточку и пробрасывает событие загрузки изображения наружу:
+   * masonry-сетка использует его для пересчета раскладки.
+   * @param {Function} [handler] - Внешний обработчик из cardImgProps
+   * @return {Function} Обработчик для событий load и error изображения
+   */
+  const handleImageReady = (handler) => (event) => {
+    setImageReady(true);
+    if (handler) {
+      handler(event);
+    }
+  };
+
+  // Изображение разворачивается в пропсы Card.Img; обработчики вынимаются,
+  // чтобы дополнить их проявлением карточки, остальное передается как есть
+  const { onLoad: onImageLoad, onError: onImageError, ...restImageProps } = cardImgProps;
+
+  const entranceClass = `card-entrance ${imageReady || !image ? 'is-visible' : ''}`;
 
   return (
-    <Card className={cardClassName}>
+    <Card className={`${cardClassName} ${entranceClass}`}>
       {image && (
         <a href={url}>
           <Card.Img
@@ -58,7 +78,9 @@ const BaseCard = ({
             src={image}
             alt={imageAlt || title}
             loading="lazy"
-            {...cardImgProps}
+            onLoad={handleImageReady(onImageLoad)}
+            onError={handleImageReady(onImageError)}
+            {...restImageProps}
           />
         </a>
       )}
