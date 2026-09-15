@@ -95,17 +95,18 @@ describe('PhotoDetail', () => {
   });
 
   /**
-   * Проверяет, что при отсутствии превью используется оригинал.
+   * Проверяет, что при отсутствии превью изображение не рендерится:
+   * откат к полноразмерному оригиналу не предусмотрен, превью
+   * генерируется сервером при первом обращении к API.
    */
-  test('использует оригинал если превью отсутствует', () => {
+  test('не отображает изображение если превью отсутствует', () => {
     usePhotoData.mockReturnValueOnce({
       photo: { ...mockPhoto, preview_url: null },
       loading: false,
       error: null,
     });
     render(<PhotoDetail photoId={2} />);
-    const image = screen.getByAltText('Тестовое фото');
-    expect(image).toHaveAttribute('src', '/media/photo.jpg');
+    expect(screen.queryByRole('img')).not.toBeInTheDocument();
   });
 
   /**

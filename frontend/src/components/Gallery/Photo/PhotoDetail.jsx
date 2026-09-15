@@ -11,6 +11,8 @@ import { usePhotoData, usePhotoNavigation } from '@hooks';
  * Отображает превью фотографии с кнопками навигации и модальным окном
  * с информацией о фотографии (альбом, описание, EXIF данные).
  * Соответствует старой Django реализации.
+ * Превью генерируется сервером при первом обращении, поэтому
+ * страница всегда загружает облегченный вариант изображения.
  * Поддерживает переключение фотографий клавишами ArrowLeft/ArrowRight
  * и горизонтальными свайпами на сенсорных экранах (см. usePhotoNavigation);
  * при открытом модальном окне навигация отключена.
@@ -79,12 +81,12 @@ const PhotoDetail = ({
     );
   }
 
-  const displayUrl = photo.preview_url || photo.image_url;
-
+  // Превью генерируется сервером при первом обращении, поэтому
+  // откат к оригиналу не нужен: страница всегда грузит облегченный вариант
   return (
     <div className="container" style={{ overflowY: 'auto', maxHeight: '100vh' }}>
       <div className="card shadow rounded justify-content">
-        {displayUrl && (
+        {photo.preview_url && (
           <a
             href={photo.image_url}
             target="_blank"
@@ -95,7 +97,7 @@ const PhotoDetail = ({
           >
             <img
               className="card-img"
-              src={displayUrl}
+              src={photo.preview_url}
               alt={photo.name}
               style={{ maxWidth: '100%', maxHeight: 'calc(100vh - 120px)', objectFit: 'contain' }}
               onLoad={() => setLoadedPhotoId(photoId)}
