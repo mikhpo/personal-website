@@ -2,9 +2,10 @@ import React from 'react';
 import { render, act } from '@testing-library/react';
 import useMasonry from './useMasonry';
 
-// Геометрия тестовой сетки: контейнер 1000px вмещает 4 колонки по 235px с желобом 24px
+// Геометрия тестовой сетки: контейнер 1000px вмещает ровно 4 колонки
+// по 232px с желобом 24px (4 x 232 + 3 x 24 = 1000)
 const CONTAINER_WIDTH = 1000;
-const COLUMN_WIDTH = 235;
+const COLUMN_WIDTH = 232;
 const GUTTER = 24;
 const COLUMN_STEP = COLUMN_WIDTH + GUTTER;
 
@@ -120,6 +121,10 @@ describe('useMasonry', () => {
       expect(columnXs).toContain(x);
     });
 
+    // Первые четыре карточки заняли четыре разные колонки
+    const firstRowXs = rects.slice(0, 4).map(({ x }) => x);
+    expect(new Set(firstRowXs).size).toBe(4);
+
     // Никакие два элемента не пересекаются: прямоугольники разделены,
     // если один из них целиком выше, ниже, левее или правее другого,
     // поэтому четыре условия соединены через ИЛИ
@@ -136,23 +141,23 @@ describe('useMasonry', () => {
       }
     }
 
-    // Карточки 4 и 5 встали в самые короткие на тот момент колонки
+    // Карточки 5 и 6 встали в самые короткие на тот момент колонки
     // (под карточки 3 и 1), а не в очередные по порядку;
     // вертикальный зазор между карточками дает CSS margin-bottom браузера,
     // в jsdom он нулевой, поэтому карточки примыкают вплотную
     const third = rects[2];
-    const fourth = rects[3];
-    expect(fourth.x).toBe(third.x);
-    expect(fourth.y).toBe(third.y + third.height);
+    const fifth = rects[4];
+    expect(fifth.x).toBe(third.x);
+    expect(fifth.y).toBe(third.y + third.height);
 
     const first = rects[0];
-    const fifth = rects[4];
-    expect(fifth.x).toBe(first.x);
-    expect(fifth.y).toBe(first.y + first.height);
+    const sixth = rects[5];
+    expect(sixth.x).toBe(first.x);
+    expect(sixth.y).toBe(first.y + first.height);
 
-    // Высота сетки равна высоте самой высокой колонки: 500 + 600
+    // Высота сетки равна высоте самой высокой колонки: 300 + 600
     const grid = container.querySelector('.masonry-grid');
-    expect(grid.style.height).toBe(`${loadedHeights[1] + loadedHeights[5]}px`);
+    expect(grid.style.height).toBe(`${loadedHeights[0] + loadedHeights[5]}px`);
   });
 
   test('перестраивает сетку при догрузке изображений', () => {
@@ -189,12 +194,12 @@ describe('useMasonry', () => {
     });
 
     // Сетка перестроилась под реальные пропорции: карточка 5 встала вплотную
-    // под карточку 1 в ее колонке, высота сетки стала высотой самой высокой колонки
-    const first = itemElements[0];
+    // под карточку 3 в ее колонке, высота сетки стала высотой самой высокой колонки
+    const third = itemElements[2];
     const fifth = itemElements[4];
-    expect(readPosition(fifth).x).toBe(readPosition(first).x);
-    expect(readPosition(fifth).y).toBe(300);
-    expect(grid.style.height).toBe(`${loadedHeights[1] + loadedHeights[5]}px`);
+    expect(readPosition(fifth).x).toBe(readPosition(third).x);
+    expect(readPosition(fifth).y).toBe(200);
+    expect(grid.style.height).toBe(`${loadedHeights[0] + loadedHeights[5]}px`);
   });
 
   test('проходит полный жизненный цикл сетки без ошибок', () => {
