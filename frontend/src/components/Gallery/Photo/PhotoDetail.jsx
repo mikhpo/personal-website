@@ -8,7 +8,7 @@ import { usePhotoData, usePhotoNavigation } from '@hooks';
 /**
  * Компонент детального просмотра фотографии.
  *
- * Отображает фотографию с кнопками навигации и модальным окном
+ * Отображает превью фотографии с кнопками навигации и модальным окном
  * с информацией о фотографии (альбом, описание, EXIF данные).
  * Соответствует старой Django реализации.
  * Поддерживает переключение фотографий клавишами ArrowLeft/ArrowRight
@@ -16,6 +16,8 @@ import { usePhotoData, usePhotoNavigation } from '@hooks';
  * при открытом модальном окне навигация отключена.
  * Для staff доступна кнопка получения постоянных ссылок
  * на превью фотографии для вставки в статьи.
+ * Фотография проявляется плавно после загрузки; клик по ней открывает
+ * оригинал в новой вкладке.
  *
  * @param {Object} props - Пропсы компонента
  * @param {number} props.photoId - ID фотографии
@@ -38,6 +40,11 @@ const PhotoDetail = ({
 
   const [showAboutModal, setShowAboutModal] = useState(false);
   const [showEmbedModal, setShowEmbedModal] = useState(false);
+
+  // Готовность хранится с привязкой к id: при переключении фотографии
+  // новая проявляется заново, без сброса состояния в эффекте
+  const [loadedPhotoId, setLoadedPhotoId] = useState(null);
+  const imageReady = loadedPhotoId === photoId;
 
   const previousUrl = previousPhotoId ? `/gallery/photo/${previousPhotoId}/` : null;
   const nextUrl = nextPhotoId ? `/gallery/photo/${nextPhotoId}/` : null;
@@ -72,16 +79,29 @@ const PhotoDetail = ({
     );
   }
 
+  const displayUrl = photo.preview_url || photo.image_url;
+
   return (
     <div className="container" style={{ overflowY: 'auto', maxHeight: '100vh' }}>
       <div className="card shadow rounded justify-content">
-        {photo.image_url && (
-          <img
-            className="card-img"
-            src={photo.image_url}
-            alt={photo.name}
-            style={{ maxWidth: '100%', maxHeight: 'calc(100vh - 120px)', objectFit: 'contain' }}
-          />
+        {displayUrl && (
+          <a
+            href={photo.image_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Открыть оригинал"
+            aria-label="Открыть оригинал"
+            className={`card-entrance ${imageReady ? 'is-visible' : ''}`}
+          >
+            <img
+              className="card-img"
+              src={displayUrl}
+              alt={photo.name}
+              style={{ maxWidth: '100%', maxHeight: 'calc(100vh - 120px)', objectFit: 'contain' }}
+              onLoad={() => setLoadedPhotoId(photoId)}
+              onError={() => setLoadedPhotoId(photoId)}
+            />
+          </a>
         )}
         <div className="card-footer" align="center">
           <div className="btn-group" role="group" aria-label="Навигация по фотографиям">
