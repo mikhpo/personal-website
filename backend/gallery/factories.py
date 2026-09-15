@@ -17,6 +17,26 @@ from gallery.schemas import ExifData
 
 fake = Faker(locale="ru_RU")
 
+# Габариты демо-изображений: чередование альбомной, портретной и квадратной
+# ориентаций дает фотографиям разные пропорции, как у реальной съемки
+IMAGE_SIZE_PRESETS = [
+    (1200, 800),
+    (800, 1200),
+    (800, 800),
+    (900, 600),
+    (600, 900),
+    (1000, 750),
+]
+
+# Палитра цветов демо-изображений для визуального различия карточек
+IMAGE_COLOR_PRESETS = [
+    (73, 109, 137),  # стальной синий
+    (0, 121, 140),  # бирюзовый
+    (168, 120, 90),  # терракотовый
+    (110, 130, 80),  # оливковый
+    (140, 90, 110),  # приглушенный сливовый
+]
+
 
 def generate_image_with_exif(exif_data: ExifData | None = None) -> SimpleUploadedFile:
     """Сгенерировать изображение с EXIF данными.
@@ -25,7 +45,9 @@ def generate_image_with_exif(exif_data: ExifData | None = None) -> SimpleUploade
         exif_data: Данные EXIF для записи в изображение. Если не указаны, генерируются случайно.
     """
     exif_obj = ExifDataFactory.build() if exif_data is None else exif_data
-    img = pImage.new("RGB", (800, 600), color=(73, 109, 137))
+    width, height = fake.random_element(IMAGE_SIZE_PRESETS)
+    color = fake.random_element(IMAGE_COLOR_PRESETS)
+    img = pImage.new("RGB", (width, height), color=color)
     exif = img.getexif()
     exif[0x010F] = exif_obj.make  # Make
     exif[0x0110] = exif_obj.model  # Model

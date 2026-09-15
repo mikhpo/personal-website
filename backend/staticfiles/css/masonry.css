@@ -1,0 +1,28 @@
+/* Masonry-сетка галереи.
+   Колонки задаются шириной .masonry-sizer и .masonry-item: Masonry принимает
+   ширину сайзера за ширину колонки (percentPosition), позиции считает сам.
+   Ширина элемента = доля колонки минус доля горизонтального желоба (24px),
+   вертикальный зазор - нижний отступ элемента. */
+
+.masonry-sizer,
+.masonry-item {
+    width: 100%;
+}
+
+@media (min-width: 576px) {
+    .masonry-sizer,
+    .masonry-item {
+        width: calc(50% - 12px);
+    }
+}
+
+@media (min-width: 768px) {
+    .masonry-sizer,
+    .masonry-item {
+        width: calc(25% - 18px);
+    }
+}
+
+.masonry-item {
+    margin-bottom: 24px;
+}

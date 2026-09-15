@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback } from "react";
 import PropTypes from "prop-types";
-import { Container, Row, Col } from "react-bootstrap";
+import { Container } from "react-bootstrap";
 import Spinner from "@components/Spinner/Spinner";
 import AlertList from "@components/Alert/AlertList";
 import LoadingError from "@components/Alert/LoadingError";
 import AlbumCard from "@components/Gallery/Album/AlbumCard";
 import usePagination from "@hooks/usePagination";
+import useMasonry from "@hooks/useMasonry";
 import Pagination from "@components/Pagination/Pagination";
 import { buildApiUrl } from "@utils/apiUrl";
 
@@ -127,6 +128,9 @@ const AlbumList = ({ apiUrl = "/api/gallery/albums/", tagSlug, search }) => {
     goToPage(page);
   };
 
+  // Хук вызывается безусловно до ранних выходов; без отрисованной сетки он бездействует
+  const { containerRef, scheduleLayout } = useMasonry(albums);
+
   if (loading) {
     return <Spinner message="Загрузка альбомов..." />;
   }
@@ -148,13 +152,14 @@ const AlbumList = ({ apiUrl = "/api/gallery/albums/", tagSlug, search }) => {
 
   return (
     <Container data-testid="album-list-container">
-      <Row xs={1} md={4} className="g-4 justify-content-center">
+      <div ref={containerRef} className="masonry-grid">
+        <div className="masonry-sizer" />
         {albums.map((album) => (
-          <Col key={album.id}>
-            <AlbumCard album={album} />
-          </Col>
+          <div key={album.id} className="masonry-item">
+            <AlbumCard album={album} onImageLoad={scheduleLayout} />
+          </div>
         ))}
-      </Row>
+      </div>
       {totalPages > 1 && (
         <Pagination
           currentPage={currentPage}

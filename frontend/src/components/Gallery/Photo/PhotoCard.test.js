@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import PhotoCard from './PhotoCard';
 
 /**
@@ -105,5 +105,29 @@ describe('PhotoCard', () => {
     };
     render(<PhotoCard photo={photoWithEmptyThumbnail} />);
     expect(screen.queryByRole('img')).not.toBeInTheDocument();
+  });
+
+  /**
+   * Проверяет, что загрузка миниатюры вызывает обработчик onImageLoad.
+   * Обработчик используется masonry-сеткой для пересчета раскладки.
+   */
+  test('вызывает onImageLoad при загрузке миниатюры', () => {
+    const onImageLoad = jest.fn();
+    render(<PhotoCard photo={fullPhoto} onImageLoad={onImageLoad} />);
+    const image = screen.getByAltText('Тестовое фото');
+    fireEvent.load(image);
+    expect(onImageLoad).toHaveBeenCalledTimes(1);
+  });
+
+  /**
+   * Проверяет, что ошибка загрузки миниатюры вызывает обработчик onImageLoad.
+   * Битая картинка меняет раскладку так же, как загруженная.
+   */
+  test('вызывает onImageLoad при ошибке загрузки миниатюры', () => {
+    const onImageLoad = jest.fn();
+    render(<PhotoCard photo={fullPhoto} onImageLoad={onImageLoad} />);
+    const image = screen.getByAltText('Тестовое фото');
+    fireEvent.error(image);
+    expect(onImageLoad).toHaveBeenCalledTimes(1);
   });
 });

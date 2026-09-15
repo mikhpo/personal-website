@@ -7,7 +7,7 @@
  */
 
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import AlbumCard from '@components/Gallery/Album/AlbumCard';
 
 describe('AlbumCard', () => {
@@ -163,5 +163,27 @@ describe('AlbumCard', () => {
     };
     render(<AlbumCard album={albumWithEmptyCover} />);
     expect(screen.queryByRole('img')).not.toBeInTheDocument();
+  });
+
+  /**
+   * Проверяет, что загрузка обложки вызывает обработчик onImageLoad.
+   * Обработчик используется masonry-сеткой для пересчета раскладки.
+   */
+  test('вызывает onImageLoad при загрузке обложки', () => {
+    const onImageLoad = jest.fn();
+    render(<AlbumCard album={fullAlbum} onImageLoad={onImageLoad} />);
+    fireEvent.load(screen.getByAltText('Тестовый альбом'));
+    expect(onImageLoad).toHaveBeenCalledTimes(1);
+  });
+
+  /**
+   * Проверяет, что ошибка загрузки обложки вызывает обработчик onImageLoad.
+   * Битая обложка меняет высоту карточки так же, как загруженная.
+   */
+  test('вызывает onImageLoad при ошибке загрузки обложки', () => {
+    const onImageLoad = jest.fn();
+    render(<AlbumCard album={fullAlbum} onImageLoad={onImageLoad} />);
+    fireEvent.error(screen.getByAltText('Тестовый альбом'));
+    expect(onImageLoad).toHaveBeenCalledTimes(1);
   });
 });

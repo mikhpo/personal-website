@@ -450,12 +450,19 @@ class TestEmbedPhotoView(TestCase):
 
     def test_embed_preview_preserves_aspect_ratio(self) -> None:
         """Пропорции исходной фотографии сохраняются, размер задан по наибольшей стороне."""
-        self.client.get(self._embed_url(self.photo.pk, size=self.size))
-        self.client.get(self._embed_url(self.photo.pk, size=settings.GALLERY_EMBED_SIZES[1]))
-        # Исходник фабрики 800x600: превью 400 вписывается как 400x300,
-        # размер 800 совпадает с исходником без увеличения.
-        self.assertEqual(self._embed_response_size(self.photo, self.size), (400, 300))
-        self.assertEqual(self._embed_response_size(self.photo, settings.GALLERY_EMBED_SIZES[1]), (800, 600))
+        # Габариты фабричных изображений случайны, поэтому для проверки пропорций
+        # создается фотография с заведомо альбомным исходником 800x600
+        source = SimpleUploadedFile(
+            name="embed-ratio.jpg",
+            content=self._image_bytes(800, 600, "JPEG"),
+            content_type="image/jpeg",
+        )
+        photo = Photo.objects.get(pk=PhotoFactory(album=self.album, public=True, image=source).pk)
+        self.client.get(self._embed_url(photo.pk, size=self.size))
+        self.client.get(self._embed_url(photo.pk, size=settings.GALLERY_EMBED_SIZES[1]))
+        # Превью 400 вписывается в 400x300, размер 800 совпадает с исходником без увеличения
+        self.assertEqual(self._embed_response_size(photo, self.size), (400, 300))
+        self.assertEqual(self._embed_response_size(photo, settings.GALLERY_EMBED_SIZES[1]), (800, 600))
 
     def test_second_request_does_not_regenerate(self) -> None:
         """Повторный запрос возвращает редирект без перегенерации актуального файла."""
