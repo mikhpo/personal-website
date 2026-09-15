@@ -28,7 +28,7 @@ const AlbumCard = ({ album, onImageLoad }) => {
         image={album.cover_thumbnail_url}
         description={album.description}
         imageAlt={album.name}
-        cardImgProps={{ onLoad: onImageLoad }}
+        cardImgProps={{ onLoad: onImageLoad, onError: onImageLoad }}
       />
     );
   }
