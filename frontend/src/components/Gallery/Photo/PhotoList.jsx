@@ -277,7 +277,7 @@ const PhotoList = ({ apiUrl = '/api/gallery/photos/', tagSlug, search }) => {
   };
 
   // Хук вызывается безусловно до ранних выходов; без отрисованной сетки он бездействует
-  const { containerRef, scheduleLayout } = useMasonry(photos);
+  const { containerRef, markImageReady, revealedIds } = useMasonry(photos);
 
   // Отображение индикатора загрузки
   if (loading) {
@@ -322,8 +322,12 @@ const PhotoList = ({ apiUrl = '/api/gallery/photos/', tagSlug, search }) => {
       <div ref={containerRef} className="masonry-grid">
         <div className="masonry-sizer" />
         {photos.map(photo => (
-          <div key={photo.id} className="masonry-item">
-            <PhotoCard photo={photo} onImageLoad={scheduleLayout} />
+          <div key={photo.id} className="masonry-item" data-id={photo.id}>
+            <PhotoCard
+              photo={photo}
+              revealed={revealedIds.has(photo.id)}
+              onImageLoad={() => markImageReady(photo.id)}
+            />
           </div>
         ))}
       </div>

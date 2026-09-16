@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Card } from 'react-bootstrap';
 import PropTypes from 'prop-types';
 
@@ -9,6 +9,11 @@ import PropTypes from 'prop-types';
  * названием и описанием. Поддерживает различные варианты отображения и
  * может быть использован для категорий, серий, альбомов и других сущностей.
  *
+ * Проп revealed управляет плавным проявлением карточки: masonry-сетка
+ * разрешает проявление только после пересчета, учтяшего высоту изображения,
+ * поэтому снимки не наваливаются друг на друга в начале загрузки. Без пропа
+ * карточка видима сразу.
+ *
  * @param {Object} props - Пропсы компонента
  * @param {string} props.title - Заголовок карточки
  * @param {string} props.url - URL для перехода при клике
@@ -17,6 +22,7 @@ import PropTypes from 'prop-types';
  * @param {string} [props.imageAlt] - Alt текст для изображения
  * @param {string} [props.variant="centered"] - Вариант отображения ("centered" | "left")
  * @param {string} [props.className] - Дополнительные CSS классы
+ * @param {boolean} [props.revealed=true] - Разрешено ли проявление карточки
  * @param {Object} [props.cardImgProps] - Дополнительные пропсы для Card.Img
  * @return {JSX.Element} Компонент карточки
  *
@@ -44,30 +50,13 @@ const BaseCard = ({
   imageAlt,
   variant = 'centered',
   className = '',
+  revealed = true,
   cardImgProps = {},
 }) => {
   const isCentered = variant === 'centered';
   const cardClassName = `shadow rounded ${isCentered ? 'text-center' : ''} h-100 ${className}`;
-  const [imageReady, setImageReady] = useState(false);
 
-  /**
-   * Проявляет карточку и пробрасывает событие загрузки изображения наружу:
-   * masonry-сетка использует его для пересчета раскладки.
-   * @param {Function} [handler] - Внешний обработчик из cardImgProps
-   * @return {Function} Обработчик для событий load и error изображения
-   */
-  const handleImageReady = (handler) => (event) => {
-    setImageReady(true);
-    if (handler) {
-      handler(event);
-    }
-  };
-
-  // Изображение разворачивается в пропсы Card.Img; обработчики вынимаются,
-  // чтобы дополнить их проявлением карточки, остальное передается как есть
-  const { onLoad: onImageLoad, onError: onImageError, ...restImageProps } = cardImgProps;
-
-  const entranceClass = `card-entrance ${imageReady || !image ? 'is-visible' : ''}`;
+  const entranceClass = `card-entrance ${revealed || !image ? 'is-visible' : ''}`;
 
   return (
     <Card className={`${cardClassName} ${entranceClass}`}>
@@ -78,9 +67,7 @@ const BaseCard = ({
             src={image}
             alt={imageAlt || title}
             loading="lazy"
-            onLoad={handleImageReady(onImageLoad)}
-            onError={handleImageReady(onImageError)}
-            {...restImageProps}
+            {...cardImgProps}
           />
         </a>
       )}
@@ -111,6 +98,7 @@ BaseCard.propTypes = {
   imageAlt: PropTypes.string,
   variant: PropTypes.oneOf(['centered', 'left']),
   className: PropTypes.string,
+  revealed: PropTypes.bool,
   cardImgProps: PropTypes.object,
 };
 

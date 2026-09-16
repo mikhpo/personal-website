@@ -164,9 +164,8 @@ describe('BaseCard', () => {
   });
 
   /**
-   * Проверяет плавное проявление карточки после загрузки изображения:
-   * до готовности изображения карточка скрыта, после загрузки или ошибки -
-   * проявляется, а внешний обработчик из cardImgProps срабатывает.
+   * Проверяет управление проявлением через проп revealed: masonry-сетка
+   * разрешает проявление только после пересчета, учтяшего высоту изображения.
    */
   describe('проявление карточки', () => {
     const propsWithImage = {
@@ -174,31 +173,27 @@ describe('BaseCard', () => {
       image: '/media/test/image.jpg',
     };
 
-    test('скрыта до загрузки изображения', () => {
+    test('видима по умолчанию', () => {
       const { container } = render(<BaseCard {...propsWithImage} />);
+      const card = container.querySelector('.card');
+      expect(card).toHaveClass('card-entrance', 'is-visible');
+    });
+
+    test('скрыта при revealed=false', () => {
+      const { container } = render(<BaseCard {...propsWithImage} revealed={false} />);
       const card = container.querySelector('.card');
       expect(card).toHaveClass('card-entrance');
       expect(card).not.toHaveClass('is-visible');
     });
 
-    test('проявляется после загрузки изображения', () => {
-      const { container } = render(<BaseCard {...propsWithImage} />);
-      const img = container.querySelector('.card-img-top');
-      fireEvent.load(img);
+    test('видима при revealed=true', () => {
+      const { container } = render(<BaseCard {...propsWithImage} revealed />);
       const card = container.querySelector('.card');
-      expect(card).toHaveClass('is-visible');
+      expect(card).toHaveClass('card-entrance', 'is-visible');
     });
 
-    test('проявляется при ошибке загрузки изображения', () => {
-      const { container } = render(<BaseCard {...propsWithImage} />);
-      const img = container.querySelector('.card-img-top');
-      fireEvent.error(img);
-      const card = container.querySelector('.card');
-      expect(card).toHaveClass('is-visible');
-    });
-
-    test('видна сразу без изображения', () => {
-      const { container } = render(<BaseCard {...defaultProps} />);
+    test('видна без изображения даже при revealed=false', () => {
+      const { container } = render(<BaseCard {...defaultProps} revealed={false} />);
       const card = container.querySelector('.card');
       expect(card).toHaveClass('card-entrance', 'is-visible');
     });

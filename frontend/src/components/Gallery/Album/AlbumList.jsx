@@ -129,7 +129,7 @@ const AlbumList = ({ apiUrl = "/api/gallery/albums/", tagSlug, search }) => {
   };
 
   // Хук вызывается безусловно до ранних выходов; без отрисованной сетки он бездействует
-  const { containerRef, scheduleLayout } = useMasonry(albums);
+  const { containerRef, markImageReady, revealedIds } = useMasonry(albums);
 
   if (loading) {
     return <Spinner message="Загрузка альбомов..." />;
@@ -155,8 +155,12 @@ const AlbumList = ({ apiUrl = "/api/gallery/albums/", tagSlug, search }) => {
       <div ref={containerRef} className="masonry-grid">
         <div className="masonry-sizer" />
         {albums.map((album) => (
-          <div key={album.id} className="masonry-item">
-            <AlbumCard album={album} onImageLoad={scheduleLayout} />
+          <div key={album.id} className="masonry-item" data-id={album.id}>
+            <AlbumCard
+              album={album}
+              revealed={revealedIds.has(album.id)}
+              onImageLoad={markImageReady}
+            />
           </div>
         ))}
       </div>
