@@ -166,14 +166,14 @@ describe('AlbumCard', () => {
   });
 
   /**
-   * Проверяет, что загрузка обложки вызывает обработчик onImageLoad.
-   * Обработчик используется masonry-сеткой для пересчета раскладки.
+   * Проверяет, что загрузка обложки вызывает обработчик onImageLoad с id альбома.
+   * Обработчик используется masonry-сеткой для учета высоты карточки.
    */
   test('вызывает onImageLoad при загрузке обложки', () => {
     const onImageLoad = jest.fn();
     render(<AlbumCard album={fullAlbum} onImageLoad={onImageLoad} />);
     fireEvent.load(screen.getByAltText('Тестовый альбом'));
-    expect(onImageLoad).toHaveBeenCalledTimes(1);
+    expect(onImageLoad).toHaveBeenCalledWith(fullAlbum.id);
   });
 
   /**
@@ -184,6 +184,30 @@ describe('AlbumCard', () => {
     const onImageLoad = jest.fn();
     render(<AlbumCard album={fullAlbum} onImageLoad={onImageLoad} />);
     fireEvent.error(screen.getByAltText('Тестовый альбом'));
-    expect(onImageLoad).toHaveBeenCalledTimes(1);
+    expect(onImageLoad).toHaveBeenCalledWith(fullAlbum.id);
+  });
+
+  /**
+   * Проверяет управление проявлением через проп revealed: masonry-сетка
+   * разрешает проявление только после пересчета.
+   */
+  test('скрыта при revealed=false и видима при revealed=true', () => {
+    const { rerender } = render(<AlbumCard album={fullAlbum} revealed={false} />);
+    let card = screen.getByAltText('Тестовый альбом').closest('.card');
+    expect(card).not.toHaveClass('is-visible');
+
+    rerender(<AlbumCard album={fullAlbum} revealed />);
+    card = screen.getByAltText('Тестовый альбом').closest('.card');
+    expect(card).toHaveClass('is-visible');
+  });
+
+  /**
+   * Проверяет, что альбом без обложки не участвует в проявлении вообще:
+   * у него нет класса входа, он виден с первого кадра.
+   */
+  test('альбом без обложки не участвует в проявлении', () => {
+    render(<AlbumCard album={minimalAlbum} revealed={false} />);
+    const card = screen.getByText('Тестовый альбом').closest('.card');
+    expect(card).not.toHaveClass('card-entrance');
   });
 });

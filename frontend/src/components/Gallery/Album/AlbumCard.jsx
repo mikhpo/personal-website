@@ -6,6 +6,9 @@ import BaseCard from '@components/Card/BaseCard';
  * Компонент карточки альбома.
  *
  * Отображает превью альбома с обложкой, названием и описанием.
+ * Прозрачна, пока родительская masonry-сетка не подтвердит проявление
+ * (проп revealed); альбом без обложки виден сразу - его высота известна
+ * без загрузки изображения.
  *
  * @param {Object} props - Пропсы компонента
  * @param {Object} props.album - Объект альбома
@@ -13,11 +16,18 @@ import BaseCard from '@components/Card/BaseCard';
  * @param {string} props.album.name - Название альбома
  * @param {string} [props.album.description] - Описание альбома
  * @param {string} [props.album.cover_thumbnail_url] - URL миниатюры обложки
- * @param {Function} [props.onImageLoad] - Обработчик загрузки изображения обложки
+ * @param {boolean} [props.revealed=true] - Разрешено ли проявление карточки
+ * @param {Function} [props.onImageLoad] - Обработчик загрузки или ошибки загрузки
+ *   обложки; вызывается с id альбома
  * @return {JSX.Element} Компонент карточки альбома
  */
-const AlbumCard = ({ album, onImageLoad }) => {
+const AlbumCard = ({ album, revealed = true, onImageLoad }) => {
   const albumUrl = `/gallery/album/${album.id}/`;
+  const handleImageReady = () => {
+    if (onImageLoad) {
+      onImageLoad(album.id);
+    }
+  };
 
   // Если есть обложка, используем BaseCard
   if (album.cover_thumbnail_url) {
@@ -28,7 +38,8 @@ const AlbumCard = ({ album, onImageLoad }) => {
         image={album.cover_thumbnail_url}
         description={album.description}
         imageAlt={album.name}
-        cardImgProps={{ onLoad: onImageLoad, onError: onImageLoad }}
+        revealed={revealed}
+        cardImgProps={{ onLoad: handleImageReady, onError: handleImageReady }}
       />
     );
   }
@@ -63,6 +74,7 @@ AlbumCard.propTypes = {
     description: PropTypes.string,
     cover_thumbnail_url: PropTypes.string,
   }).isRequired,
+  revealed: PropTypes.bool,
   onImageLoad: PropTypes.func,
 };
 

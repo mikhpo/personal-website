@@ -9,8 +9,8 @@ const COLUMN_WIDTH = 232;
 const GUTTER = 24;
 const COLUMN_STEP = COLUMN_WIDTH + GUTTER;
 
-// Ссылка на актуальный scheduleLayout из пробника
-const scheduleLayoutRef = { current: null };
+// Ссылка на актуальный markImageReady из пробника
+const markImageReadyRef = { current: null };
 
 /**
  * Пробник хука useMasonry: рендерит masonry-структуру как в списках галереи.
@@ -22,17 +22,18 @@ const scheduleLayoutRef = { current: null };
  * @return {JSX.Element} masonry-сетка
  */
 const HookProbe = ({ items }) => {
-  const { containerRef, scheduleLayout } = useMasonry(items);
-  scheduleLayoutRef.current = scheduleLayout;
+  const { containerRef, markImageReady, revealedIds } = useMasonry(items);
+  markImageReadyRef.current = markImageReady;
   return (
     <div ref={containerRef} className="masonry-grid" data-mock-width={CONTAINER_WIDTH}>
       <div className="masonry-sizer" data-mock-width={COLUMN_WIDTH} />
       {items.map((item) => (
         <div
           key={item.id}
-          className="masonry-item"
+          className={`masonry-item ${revealedIds.has(item.id) ? 'is-visible' : ''}`}
           data-mock-width={COLUMN_WIDTH}
           data-mock-height={item.height}
+          data-id={item.id}
         >
           {item.name}
         </div>
@@ -73,16 +74,18 @@ const readPosition = (element) => {
  * Тесты для хука useMasonry.
  *
  * Проверяют поведение сетки, видимое посетителю, на реальном masonry-layout:
- * с подмененными габаритами элементов библиотека выполняет настоящую раскладку,
- * и тестируются свойства результата - выравнивание по колонкам, отсутствие
- * наложений, плотная упаковка короткой колонки, перестроение при догрузке
- * изображений, высота сетки.
+ * с подмененными габаритами элементов библиотека выполняет настоящую
+ * раскладку, и тестируются свойства результата - карточка появляется только
+ * после пересчета, учтяшего ее высоту; проявленные карточки выровнены по
+ * колонкам и не пересекаются; высота сетки соответствует содержимому.
  */
 describe('useMasonry', () => {
   // Финальные высоты шести карточек: последняя пара проверяет упаковку в короткие колонки
   const loadedHeights = [300, 500, 200, 400, 250, 600];
+  const probeItems = loadedHeights.map((height, index) => ({ id: index + 1, height }));
 
   beforeEach(() => {
+    jest.useFakeTimers();
     jest.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockImplementation(function mockWidth() {
       return parseInt(this.dataset.mockWidth, 10) || 0;
     });
@@ -96,10 +99,34 @@ describe('useMasonry', () => {
     jest.restoreAllMocks();
   });
 
-  test('упаковывает элементы в четыре колонки без наложений', () => {
-    const { container } = render(
-      <HookProbe items={loadedHeights.map((height, index) => ({ id: index + 1, height }))} />,
-    );
+  test('скрывает карточки до первого пересчета и проявляет после', () => {
+    const { container } = render(<HookProbe items={probeItems} />);
+
+    // Сразу после монтирования ни одна карточка не проявлена:
+    // первичная раскладка не знает их высот
+    const gridItems = [...container.querySelectorAll('.masonry-item')];
+    gridItems.forEach((item) => {
+      expect(item).not.toHaveClass('is-visible');
+    });
+
+    // Отметить все изображения готовыми и дождаться контрольного пересчета
+    act(() => {
+      gridItems.forEach((_, index) => markImageReadyRef.current(index + 1));
+      jest.advanceTimersByTime(150);
+    });
+
+    gridItems.forEach((item) => {
+      expect(item).toHaveClass('is-visible');
+    });
+  });
+
+  test('упаковывает проявленные карточки в четыре колонки без наложений', () => {
+    const { container } = render(<HookProbe items={probeItems} />);
+
+    act(() => {
+      probeItems.forEach((_, index) => markImageReadyRef.current(index + 1));
+      jest.advanceTimersByTime(150);
+    });
 
     const itemElements = [...container.querySelectorAll('.masonry-item')];
     expect(itemElements).toHaveLength(loadedHeights.length);
@@ -160,53 +187,34 @@ describe('useMasonry', () => {
     expect(grid.style.height).toBe(`${loadedHeights[0] + loadedHeights[5]}px`);
   });
 
-  test('перестраивает сетку при догрузке изображений', () => {
-    // Миниатюры еще не загружены: карточки схлопнуты до заглушки 100px
-    const { container } = render(
-      <HookProbe items={loadedHeights.map((height, index) => ({ id: index + 1, height: 100 }))} />,
-    );
+  test('проявляет догрузившиеся карточки отдельным пересчетом при смене списка', () => {
+    const { container, rerender } = render(<HookProbe items={probeItems} />);
 
-    const itemElements = [...container.querySelectorAll('.masonry-item')];
-    const grid = container.querySelector('.masonry-grid');
-
-    // Схлопнутые карточки заняли верхний ряд, сетка низкая
-    expect(grid.style.height).toBe('200px');
-
-    // Картинки загрузились: высоты карточек выросли вне React, как в браузере,
-    // и каждая карточка подняла событие загрузки
-    jest.useFakeTimers();
     act(() => {
-      itemElements.forEach((element, index) => {
-        element.setAttribute('data-mock-height', String(loadedHeights[index]));
-        scheduleLayoutRef.current();
-      });
+      probeItems.forEach((_, index) => markImageReadyRef.current(index + 1));
       jest.advanceTimersByTime(150);
     });
 
-    // В браузере перестроение анимируется, и финальные позиции фиксируются
-    // по завершении перехода - доводим анимацию до конца
+    const newItems = [...probeItems, { id: 7, height: 350 }];
+    rerender(<HookProbe items={newItems} />);
+
+    // Карточка новой порции скрыта, пока ее изображение не готово
+    const seventh = [...container.querySelectorAll('.masonry-item')][6];
+    expect(seventh).not.toHaveClass('is-visible');
+
     act(() => {
-      itemElements.forEach((element) => {
-        const event = new Event('transitionend');
-        event.propertyName = 'transform';
-        element.dispatchEvent(event);
-      });
+      markImageReadyRef.current(7);
+      jest.advanceTimersByTime(150);
     });
 
-    // Сетка перестроилась под реальные пропорции: карточка 5 встала вплотную
-    // под карточку 3 в ее колонке, высота сетки стала высотой самой высокой колонки
-    const third = itemElements[2];
-    const fifth = itemElements[4];
-    expect(readPosition(fifth).x).toBe(readPosition(third).x);
-    expect(readPosition(fifth).y).toBe(200);
-    expect(grid.style.height).toBe(`${loadedHeights[0] + loadedHeights[5]}px`);
+    expect(seventh).toHaveClass('is-visible');
   });
 
   test('проходит полный жизненный цикл сетки без ошибок', () => {
-    const items = loadedHeights.map((height, index) => ({ id: index + 1, height }));
-    const { rerender, unmount } = render(<HookProbe items={items} />);
+    const { rerender, unmount } = render(<HookProbe items={probeItems} />);
 
-    rerender(<HookProbe items={[...items, { id: 7, height: 350 }]} />);
+    const newItems = [...probeItems, { id: 7, height: 350 }];
+    rerender(<HookProbe items={newItems} />);
     unmount();
   });
 

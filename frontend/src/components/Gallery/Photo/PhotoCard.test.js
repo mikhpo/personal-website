@@ -108,48 +108,55 @@ describe('PhotoCard', () => {
   });
 
   /**
-   * Проверяет, что карточка скрыта до загрузки миниатюры:
-   * начальная фаза раскладки masonry не должна быть видна.
+   * Проверяет, что карточка скрыта, пока проявление не разрешено:
+   * masonry-сетка раскрывает карточки только после пересчета.
    */
-  test('скрыта до загрузки миниатюры', () => {
-    const { container } = render(<PhotoCard photo={fullPhoto} />);
+  test('скрыта при revealed=false', () => {
+    const { container } = render(<PhotoCard photo={fullPhoto} revealed={false} />);
     const card = container.querySelector('.card');
     expect(card).toHaveClass('card-entrance');
     expect(card).not.toHaveClass('is-visible');
   });
 
   /**
-   * Проверяет, что после загрузки миниатюры карточка проявляется
-   * и обработчик onImageLoad срабатывает.
+   * Проверяет, что карточка видима при разрешенном проявлении.
    */
-  test('проявляется после загрузки миниатюры и вызывает onImageLoad', () => {
+  test('видима при revealed=true', () => {
+    const { container } = render(<PhotoCard photo={fullPhoto} revealed />);
+    const card = container.querySelector('.card');
+    expect(card).toHaveClass('card-entrance', 'is-visible');
+  });
+
+  /**
+   * Проверяет, что карточка видна сразу без миниатюры, даже если
+   * проявление не разрешено: ей нечего ждать.
+   */
+  test('видна сразу без миниатюры', () => {
+    const { container } = render(<PhotoCard photo={minimalPhoto} revealed={false} />);
+    const card = container.querySelector('.card');
+    expect(card).toHaveClass('card-entrance', 'is-visible');
+  });
+
+  /**
+   * Проверяет, что загрузка миниатюры вызывает обработчик onImageLoad.
+   * Обработчик используется masonry-сеткой для учета высоты карточки.
+   */
+  test('вызывает onImageLoad при загрузке миниатюры', () => {
     const onImageLoad = jest.fn();
-    const { container } = render(<PhotoCard photo={fullPhoto} onImageLoad={onImageLoad} />);
+    render(<PhotoCard photo={fullPhoto} onImageLoad={onImageLoad} />);
     const image = screen.getByAltText('Тестовое фото');
     fireEvent.load(image);
-    const card = container.querySelector('.card');
-    expect(card).toHaveClass('is-visible');
     expect(onImageLoad).toHaveBeenCalledTimes(1);
   });
 
   /**
-   * Проверяет, что при ошибке загрузки миниатюры карточка проявляется,
-   * показывая альтернативный текст вместо невидимой заглушки.
+   * Проверяет, что ошибка загрузки миниатюры также вызывает обработчик.
    */
-  test('проявляется при ошибке загрузки миниатюры', () => {
-    const { container } = render(<PhotoCard photo={fullPhoto} />);
+  test('вызывает onImageLoad при ошибке загрузки миниатюры', () => {
+    const onImageLoad = jest.fn();
+    render(<PhotoCard photo={fullPhoto} onImageLoad={onImageLoad} />);
     const image = screen.getByAltText('Тестовое фото');
     fireEvent.error(image);
-    const card = container.querySelector('.card');
-    expect(card).toHaveClass('is-visible');
-  });
-
-  /**
-   * Проверяет, что карточка без миниатюры видна сразу: ей нечего ждать.
-   */
-  test('видна сразу без миниатюры', () => {
-    const { container } = render(<PhotoCard photo={minimalPhoto} />);
-    const card = container.querySelector('.card');
-    expect(card).toHaveClass('card-entrance', 'is-visible');
+    expect(onImageLoad).toHaveBeenCalledTimes(1);
   });
 });
