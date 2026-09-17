@@ -10,6 +10,8 @@ from django.views.generic import RedirectView
 
 from blog.sitemaps import ArticleSitemap, CategorySitemap, SeriesSitemap, TopicSitemap
 from gallery.sitemaps import AlbumSitemap, PhotoSitemap, TagSitemap
+from main.sitemaps import AboutSitemap
+from main.views import AboutPageTemplateView
 from personal_website.views import HealthView, StaticRedirectView
 
 sitemaps = {
@@ -20,11 +22,13 @@ sitemaps = {
     "photos": PhotoSitemap,
     "albums": AlbumSitemap,
     "tags": TagSitemap,
+    "about": AboutSitemap,
 }
 
 urlpatterns = [
     path("health/", HealthView.as_view(), name="health"),
     path("", RedirectView.as_view(url="main/", permanent=True)),
+    path("about/", AboutPageTemplateView.as_view(), name="about"),
     path(
         "favicon.ico",
         StaticRedirectView.as_view(static_path="favicon.ico"),

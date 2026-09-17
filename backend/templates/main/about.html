@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% load static %}
+{% load react_tags %}
+<!--
+    Страница "Обо мне". Содержимое (контакты, ссылки на профили,
+    описание автора) хранится в единственной записи модели AboutPage
+    и редактируется в административном сайте.
+    Рендерится через React компонент AboutPage.
+-->
+{% block title %}
+    Обо мне
+{% endblock title %}
+{% block content %}
+    <div class="container">
+        <h1 class="mb-3">Обо мне</h1>
+        {% react_component "Main/AboutPage" apiUrl="/api/main/about/" %}
+    </div>
+{% endblock content %}
