@@ -8,10 +8,8 @@ from about.viewsets import AboutPageViewSet
 
 app_name = "about"
 
-# Префикс пути /api/about/ задает include в api/urls.py, поэтому в register
-# префикс пустой: иначе эндпоинт оказался бы на /api/about/about/.
-# SimpleRouter вместо DefaultRouter: корневой view DefaultRouter на пустом
-# префиксе перебил бы список содержимого.
+# Префикс "about/" задается в api/urls.py, поэтому здесь он пуст.
+# SimpleRouter вместо DefaultRouter: его корневой view занял бы адрес списка.
 router = SimpleRouter()
 router.register(r"", AboutPageViewSet, basename="about")
 
