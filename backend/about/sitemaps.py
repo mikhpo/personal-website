@@ -1,8 +1,8 @@
-"""Модуль для построения карты сайта по объектам главного раздела."""
+"""Модуль для построения карты сайта по объектам приложения Обо мне."""
 
 from django.contrib.sitemaps import Sitemap
 
-from main.models import AboutPage
+from about.models import AboutPage
 
 PROTOCOL = "https"
 

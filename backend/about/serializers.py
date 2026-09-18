@@ -1,8 +1,8 @@
-"""Сериализаторы главного раздела сайта."""
+"""Сериализаторы приложения страницы Обо мне."""
 
 from rest_framework import serializers
 
-from main.models import AboutPage
+from about.models import AboutPage
 
 
 class AboutPageSerializer(serializers.ModelSerializer):

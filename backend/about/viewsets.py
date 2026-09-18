@@ -1,4 +1,4 @@
-"""Представления API главного раздела сайта."""
+"""Представления API приложения страницы Обо мне."""
 
 from typing import ClassVar
 
@@ -7,8 +7,8 @@ from rest_framework.permissions import AllowAny
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from main.models import AboutPage
-from main.serializers import AboutPageSerializer
+from about.models import AboutPage
+from about.serializers import AboutPageSerializer
 
 
 class AboutPageViewSet(viewsets.ViewSet):

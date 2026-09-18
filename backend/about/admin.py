@@ -7,7 +7,7 @@ from django.db import models
 from django.http import HttpRequest
 from tinymce.widgets import TinyMCE  # type: ignore[import-untyped]
 
-from main.models import AboutPage
+from about.models import AboutPage
 
 
 @admin.register(AboutPage)

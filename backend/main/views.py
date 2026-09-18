@@ -2,7 +2,6 @@
 
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render
-from django.views.generic import TemplateView
 
 
 def main(request: HttpRequest) -> HttpResponse:
@@ -20,13 +19,3 @@ def search(request: HttpRequest) -> HttpResponse:
     через пропсы, смонтированные шаблоном.
     """
     return render(request, "main/search.html", {"search": request.GET.get("search", "")})
-
-
-class AboutPageTemplateView(TemplateView):
-    """Страница "Обо мне".
-
-    Шаблон монтирует React компонент, загружающий содержимое страницы
-    из API, поэтому вьюхе достаточно шаблона без контекста.
-    """
-
-    template_name = "main/about.html"
