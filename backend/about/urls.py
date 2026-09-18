@@ -8,8 +8,7 @@ from about.viewsets import AboutPageViewSet
 
 app_name = "about"
 
-# Префикс "about/" задается в api/urls.py, поэтому здесь он пуст.
-# SimpleRouter вместо DefaultRouter: его корневой view занял бы адрес списка.
+# Эндпоинт API: GET /api/about/
 router = SimpleRouter()
 router.register(r"", AboutPageViewSet, basename="about")
 
