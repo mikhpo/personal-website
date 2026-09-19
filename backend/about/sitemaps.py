@@ -2,7 +2,7 @@
 
 from django.contrib.sitemaps import Sitemap
 
-from about.models import AboutPage
+from about.models import About
 
 PROTOCOL = "https"
 
@@ -12,10 +12,10 @@ class AboutSitemap(Sitemap):
 
     protocol = PROTOCOL
 
-    def items(self) -> list[AboutPage]:
+    def items(self) -> list[About]:
         """Единственная запись страницы Обо мне."""
-        return [AboutPage.get_solo()]
+        return [About.get_solo()]
 
-    def location(self, obj: AboutPage) -> str:  # noqa: ARG002
+    def location(self, obj: About) -> str:  # noqa: ARG002
         """Адрес страницы Обо мне одинаков для любой записи."""
         return "/about/"

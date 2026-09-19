@@ -2,12 +2,12 @@
 
 from rest_framework import serializers
 
-from about.models import AboutPage
+from about.models import About
 
 
-class AboutPageSerializer(serializers.ModelSerializer):
+class AboutSerializer(serializers.ModelSerializer):
     """Сериализатор страницы Обо мне."""
 
     class Meta:  # noqa: D106
-        model = AboutPage
+        model = About
         fields = ("content",)

@@ -7,11 +7,11 @@ from rest_framework.permissions import AllowAny
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from about.models import AboutPage
-from about.serializers import AboutPageSerializer
+from about.models import About
+from about.serializers import AboutSerializer
 
 
-class AboutPageViewSet(viewsets.ViewSet):
+class AboutViewSet(viewsets.ViewSet):
     """Представление страницы Обо мне для API.
 
     Страница единственная, поэтому единственное действие - чтение
@@ -22,6 +22,6 @@ class AboutPageViewSet(viewsets.ViewSet):
 
     def list(self, request: Request) -> Response:  # noqa: ARG002
         """Возвращает содержимое страницы Обо мне."""
-        about_page = AboutPage.get_solo()
-        serializer = AboutPageSerializer(about_page)
+        about_page = About.get_solo()
+        serializer = AboutSerializer(about_page)
         return Response(serializer.data)

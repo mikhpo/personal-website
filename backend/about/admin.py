@@ -7,18 +7,18 @@ from django.db import models
 from django.http import HttpRequest
 from tinymce.widgets import TinyMCE  # type: ignore[import-untyped]
 
-from about.models import AboutPage
+from about.models import About
 
 
-@admin.register(AboutPage)
-class AboutPageAdmin(admin.ModelAdmin):
+@admin.register(About)
+class AboutAdmin(admin.ModelAdmin):
     """Настройки отображения страницы Обо мне в панели администрирования Django.
 
     Запись в списке одна, поэтому добавление и удаление запрещены -
     доступна только правка содержимого страницы.
     """
 
-    model = AboutPage
+    model = About
 
     # Стандартная форма текстового поля заменена на HTML форму TinyMCE.
     formfield_overrides: ClassVar[dict] = {models.TextField: {"widget": TinyMCE()}}  # type: ignore[assignment]
@@ -27,6 +27,6 @@ class AboutPageAdmin(admin.ModelAdmin):
         """Добавление записи запрещено - страница Обо мне всегда одна."""
         return False
 
-    def has_delete_permission(self, request: HttpRequest, obj: AboutPage | None = None) -> bool:  # noqa: ARG002
+    def has_delete_permission(self, request: HttpRequest, obj: About | None = None) -> bool:  # noqa: ARG002
         """Удаление записи запрещено - страница Обо мне существует всегда."""
         return False

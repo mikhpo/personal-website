@@ -6,10 +6,10 @@ from django.test import TestCase
 from django.urls import resolve, reverse
 from rest_framework.test import APITestCase
 
-from about.models import AboutPage
+from about.models import About
 
 
-class TestAboutPage(TestCase):
+class TestAbout(TestCase):
     """Тесты страницы Обо мне."""
 
     about_url = "/about/"
@@ -68,7 +68,7 @@ class TestAboutAPI(APITestCase):
 
     def test_get_about_page_with_content(self) -> None:
         """Получение содержимого страницы после заполнения в административном сайте."""
-        about_page = AboutPage.get_solo()
+        about_page = About.get_solo()
         about_page.content = "<p>Привет!</p>"
         about_page.save()
 
