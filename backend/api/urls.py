@@ -5,6 +5,7 @@ from django.views.generic import RedirectView
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 from rest_framework_simplejwt.views import TokenRefreshView, TokenVerifyView
 
+from about.urls import router as about_router
 from accounts.urls import router as accounts_router
 from accounts.views import TokenObtainPairLoggingView
 from blog.urls import router as blog_router
@@ -24,4 +25,5 @@ urlpatterns = [
     path("accounts/", include(accounts_router.urls)),
     path("gallery/", include(gallery_router.urls)),
     path("blog/", include(blog_router.urls)),
+    path("about/", include(about_router.urls)),
 ]

@@ -102,6 +102,7 @@ INSTALLED_APPS = [
     "drf_spectacular_sidecar",
     "auditlog",
     "huey.contrib.djhuey",
+    "about",
     "accounts",
     "backup",
     "gallery",
