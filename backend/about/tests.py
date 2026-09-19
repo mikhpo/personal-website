@@ -33,9 +33,9 @@ class TestAbout(TestCase):
         self.assertTemplateUsed(response, self.base_template)
 
     def test_about_page_heading(self) -> None:
-        """Проверяет заголовок страницы Обо мне."""
+        """Проверяет заголовок первого уровня страницы Обо мне независимо от классов оформления."""
         response = self.client.get(self.about_url)
-        self.assertContains(response, '<h1 class="mb-3">Обо мне</h1>')
+        self.assertRegex(response.content.decode(), r"<h1[^>]*>\s*Обо мне\s*</h1>")
 
     def test_about_page_react_component(self) -> None:
         """Проверяет монтирование React компонента страницы и адрес API в пропах."""
