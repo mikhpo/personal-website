@@ -3,6 +3,18 @@
 from django.db import migrations, models
 
 
+def create_about_page(apps, schema_editor) -> None:
+    """Создает пустую запись страницы, если она отсутствует."""
+    AboutPage = apps.get_model("about", "AboutPage")
+    AboutPage.objects.get_or_create(pk=1)
+
+
+def delete_about_page(apps, schema_editor) -> None:
+    """Удаляет запись страницы при откате миграции."""
+    AboutPage = apps.get_model("about", "AboutPage")
+    AboutPage.objects.filter(pk=1).delete()
+
+
 class Migration(migrations.Migration):
     initial = True
 
@@ -20,4 +32,5 @@ class Migration(migrations.Migration):
                 "verbose_name_plural": "Страница Обо мне",
             },
         ),
+        migrations.RunPython(create_about_page, delete_about_page),
     ]
