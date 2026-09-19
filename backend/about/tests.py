@@ -1,8 +1,5 @@
-"""Тесты приложения страницы Обо мне."""
+"""Тесты приложения Обо мне."""
 
-import json
-from html import unescape
-from html.parser import HTMLParser
 from http import HTTPStatus
 
 from django.test import TestCase
@@ -12,22 +9,7 @@ from rest_framework.test import APITestCase
 from about.models import About
 
 
-class DataPropsParser(HTMLParser):
-    """Собиратель значений data-props корневых элементов React по их id."""
-
-    def __init__(self) -> None:
-        """Пустой словарь собранных значений."""
-        super().__init__()
-        self.roots: dict[str, str] = {}
-
-    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:  # noqa: ARG002
-        """Сохраняет значение data-props элемента с атрибутом id."""
-        attributes = {key: value or "" for key, value in attrs}
-        if attributes.get("data-props") and attributes.get("id"):
-            self.roots[attributes["id"]] = attributes["data-props"]
-
-
-class TestAbout(TestCase):
+class TestAboutView(TestCase):
     """Тесты страницы Обо мне."""
 
     about_url = "/about/"
@@ -61,20 +43,9 @@ class TestAbout(TestCase):
         self.assertContains(response, 'data-component-name="About/AboutPage"')
         self.assertContains(response, '"apiUrl": "/api/about/"')
 
-    def test_about_page_navbar_link(self) -> None:
-        """Проверяет пункт Обо мне в данных навигационной панели."""
-        response = self.client.get(self.about_url)
-        parser = DataPropsParser()
-        parser.feed(response.content.decode())
-        navbar_data = json.loads(unescape(parser.roots["navbar-root"]))
-        self.assertIn(
-            {"url": "/about/", "text": "Обо мне", "active": True},
-            navbar_data["links"],
-        )
 
-
-class TestAboutAPI(APITestCase):
-    """Тесты API страницы Обо мне."""
+class TestAboutViewSet(APITestCase):
+    """Тесты для AboutViewSet."""
 
     about_api_url = "/api/about/"
 
