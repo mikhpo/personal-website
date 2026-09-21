@@ -38,6 +38,8 @@ tasks:
       Интерпретатор Python запускается через Poetry из виртуального окружения проекта.
       Перед запуском сервера применяются миграции базы данных и собираются статические файлы.
       Сервер PostgreSQL запускается в контейнере через Docker Compose.
+      Повторный запуск завершает зависший экземпляр сервера,
+      занимающий порт DJANGO_PORT (по умолчанию 8000).
     preconditions:
       - test -f compose.yaml
       - test -f .env
@@ -49,7 +51,8 @@ tasks:
       - "{{.COMPOSE_CMD}} ps"
       - poetry run python ./backend/manage.py migrate
       - poetry run python ./backend/manage.py collectstatic --noinput
-      - poetry run python ./backend/manage.py runserver
+      - lsof -t -i :${DJANGO_PORT:-8000} -sTCP:LISTEN | xargs kill 2>/dev/null || true
+      - poetry run python ./backend/manage.py runserver ${DJANGO_PORT:-8000}
 
   worker:
     desc: Запустить потребитель фоновых задач huey
