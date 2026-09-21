@@ -54,7 +54,7 @@ describe('PhotoCard', () => {
   test('ссылка на фото имеет правильный URL', () => {
     render(<PhotoCard photo={fullPhoto} />);
     const links = screen.getAllByRole('link');
-    links.forEach(link => {
+    links.forEach((link) => {
       expect(link).toHaveAttribute('href', '/gallery/photo/1/');
     });
   });

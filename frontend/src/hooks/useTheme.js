@@ -74,7 +74,7 @@ const useTheme = () => {
     (value) => {
       setStoredTheme(value === LIGHT_THEME || value === DARK_THEME ? value : null);
     },
-    [setStoredTheme]
+    [setStoredTheme],
   );
 
   const toggleTheme = useCallback(() => {

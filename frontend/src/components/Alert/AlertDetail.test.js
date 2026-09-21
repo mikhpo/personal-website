@@ -66,7 +66,7 @@ describe('Alert', () => {
       () => {
         expect(screen.queryByText('Тест')).not.toBeInTheDocument();
       },
-      { timeout: 200 }
+      { timeout: 200 },
     );
   });
 
@@ -77,7 +77,8 @@ describe('Alert', () => {
    * в тексте сообщения (например, ссылки и жирный текст).
    */
   test('рендерит HTML в сообщении', () => {
-    const htmlMessage = 'Загружено <b>5</b> фотографий в альбом <a href="/gallery/albums/test/" class="alert-link">Тестовый альбом</a>';
+    const htmlMessage =
+      'Загружено <b>5</b> фотографий в альбом <a href="/gallery/albums/test/" class="alert-link">Тестовый альбом</a>';
     const { container } = render(<Alert message={htmlMessage} level="success" />);
 
     // Проверяем наличие жирного текста
@@ -105,13 +106,7 @@ describe('Alert', () => {
       </button>
     );
 
-    const { container } = render(
-      <Alert
-        message="Ошибка загрузки данных"
-        level="error"
-        actions={actions}
-      />
-    );
+    const { container } = render(<Alert message="Ошибка загрузки данных" level="error" actions={actions} />);
 
     // Проверяем, что основное сообщение отображено
     expect(screen.getByText('Ошибка загрузки данных')).toBeInTheDocument();
@@ -134,9 +129,7 @@ describe('Alert', () => {
    * дополнительный блок для действий.
    */
   test('не отображает блок действий, если actions не передан', () => {
-    const { container } = render(
-      <Alert message="Тестовое сообщение" level="info" />
-    );
+    const { container } = render(<Alert message="Тестовое сообщение" level="info" />);
 
     // Проверяем, что сообщение отображено
     expect(screen.getByText('Тестовое сообщение')).toBeInTheDocument();
@@ -156,16 +149,14 @@ describe('Alert', () => {
     const actions = (
       <div>
         <button className="btn btn-primary me-2">Действие 1</button>
-        <a href="/actions/" className="btn btn-secondary">Действие 2</a>
+        <a href="/actions/" className="btn btn-secondary">
+          Действие 2
+        </a>
       </div>
     );
 
     const { container } = render(
-      <Alert
-        message="Сообщение с несколькими действиями"
-        level="warning"
-        actions={actions}
-      />
+      <Alert message="Сообщение с несколькими действиями" level="warning" actions={actions} />,
     );
 
     // Проверяем основное сообщение

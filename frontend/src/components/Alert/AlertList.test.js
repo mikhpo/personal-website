@@ -27,9 +27,7 @@ describe('AlertList', () => {
    * с правильным текстом и уровнем важности.
    */
   test('рендерит одно сообщение', () => {
-    const messages = [
-      { message: 'Тестовое сообщение', level: 'success' }
-    ];
+    const messages = [{ message: 'Тестовое сообщение', level: 'success' }];
 
     render(<AlertList messages={messages} />);
 
@@ -46,7 +44,7 @@ describe('AlertList', () => {
     const messages = [
       { message: 'Первое сообщение', level: 'success' },
       { message: 'Второе сообщение', level: 'warning' },
-      { message: 'Третье сообщение', level: 'error' }
+      { message: 'Третье сообщение', level: 'error' },
     ];
 
     render(<AlertList messages={messages} />);
@@ -93,8 +91,8 @@ describe('AlertList', () => {
         level: 'info',
         dismissible: false,
         autoClose: true,
-        autoCloseDelay: 3000
-      }
+        autoCloseDelay: 3000,
+      },
     ];
 
     render(<AlertList messages={messages} />);
@@ -102,5 +100,4 @@ describe('AlertList', () => {
     // Проверяем, что сообщение отображено
     expect(screen.getByText('Сообщение с авто-закрытием')).toBeInTheDocument();
   });
-
 });

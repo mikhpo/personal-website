@@ -19,7 +19,7 @@ jest.mock('./paginationHelpers', () => ({
   /**
    * Возвращает "/baseUrl?page=N"
    */
-  getPageUrl: jest.fn((baseUrl, page) => `${baseUrl}?page=${page}`)
+  getPageUrl: jest.fn((baseUrl, page) => `${baseUrl}?page=${page}`),
 }));
 
 jest.mock('./buttonStates', () => ({
@@ -28,10 +28,10 @@ jest.mock('./buttonStates', () => ({
    */
   getButtonText: jest.fn((type) => {
     const texts = {
-      'first': 'первая',
-      'prev': 'предыдущая',
-      'next': 'следующая',
-      'last': 'последняя'
+      first: 'первая',
+      prev: 'предыдущая',
+      next: 'следующая',
+      last: 'последняя',
     };
     return texts[type] || '';
   }),
@@ -41,10 +41,10 @@ jest.mock('./buttonStates', () => ({
    */
   getButtonClassName: jest.fn((type) => {
     const classes = {
-      'first': 'btn btn-outline-dark me-1',
-      'prev': 'btn btn-outline-dark me-1',
-      'next': 'btn btn-outline-dark ms-1',
-      'last': 'btn btn-outline-dark ms-1'
+      first: 'btn btn-outline-dark me-1',
+      prev: 'btn btn-outline-dark me-1',
+      next: 'btn btn-outline-dark ms-1',
+      last: 'btn btn-outline-dark ms-1',
     };
     return classes[type] || 'btn btn-outline-dark';
   }),
@@ -66,13 +66,18 @@ jest.mock('./buttonStates', () => ({
     if ((type === 'next' || type === 'last') && currentPage === totalPages) return undefined;
 
     switch (type) {
-      case 'first': return `${baseUrl}?page=1`;
-      case 'prev': return `${baseUrl}?page=${currentPage - 1}`;
-      case 'next': return `${baseUrl}?page=${currentPage + 1}`;
-      case 'last': return `${baseUrl}?page=${totalPages}`;
-      default: return undefined;
+      case 'first':
+        return `${baseUrl}?page=1`;
+      case 'prev':
+        return `${baseUrl}?page=${currentPage - 1}`;
+      case 'next':
+        return `${baseUrl}?page=${currentPage + 1}`;
+      case 'last':
+        return `${baseUrl}?page=${totalPages}`;
+      default:
+        return undefined;
     }
-  })
+  }),
 }));
 
 /**
@@ -88,9 +93,7 @@ describe('paginationRenderers', () => {
      * Ожидается: ссылка с href="/blog/?page=1" и текстом "1"
      */
     test('рендерит элемент первой страницы', () => {
-      const { container } = render(
-        renderPaginationItem('first-page', undefined, 3, 5, '/blog/')
-      );
+      const { container } = render(renderPaginationItem('first-page', undefined, 3, 5, '/blog/'));
 
       const item = container.querySelector('a');
       expect(item).toBeInTheDocument();
@@ -103,9 +106,7 @@ describe('paginationRenderers', () => {
      * Ожидается: элемент .page-item с классом disabled
      */
     test('рендерит многоточие в начале', () => {
-      const { container } = render(
-        renderPaginationItem('ellipsis-start', undefined, 3, 5, '/blog/')
-      );
+      const { container } = render(renderPaginationItem('ellipsis-start', undefined, 3, 5, '/blog/'));
 
       const ellipsis = container.querySelector('.page-item');
       expect(ellipsis).toBeInTheDocument();
@@ -117,9 +118,7 @@ describe('paginationRenderers', () => {
      * Ожидается: элемент .page-item с классом active и без ссылки
      */
     test('рендерит элемент страницы', () => {
-      const { container } = render(
-        renderPaginationItem('page', 3, 3, 5, '/blog/')
-      );
+      const { container } = render(renderPaginationItem('page', 3, 3, 5, '/blog/'));
 
       const item = container.querySelector('.page-item');
       expect(item).toBeInTheDocument();
@@ -135,9 +134,7 @@ describe('paginationRenderers', () => {
      * Ожидается: ссылка с href="/blog/?page=2"
      */
     test('рендерит элемент неактивной страницы со ссылкой', () => {
-      const { container } = render(
-        renderPaginationItem('page', 2, 3, 5, '/blog/')
-      );
+      const { container } = render(renderPaginationItem('page', 2, 3, 5, '/blog/'));
 
       const item = container.querySelector('a');
       expect(item).toBeInTheDocument();
@@ -149,9 +146,7 @@ describe('paginationRenderers', () => {
      * Ожидается: элемент .page-item с классом disabled
      */
     test('рендерит многоточие в конце', () => {
-      const { container } = render(
-        renderPaginationItem('ellipsis-end', undefined, 3, 5, '/blog/')
-      );
+      const { container } = render(renderPaginationItem('ellipsis-end', undefined, 3, 5, '/blog/'));
 
       const ellipsis = container.querySelector('.page-item');
       expect(ellipsis).toBeInTheDocument();
@@ -163,9 +158,7 @@ describe('paginationRenderers', () => {
      * Ожидается: ссылка с href="/blog/?page=5" и текстом "5"
      */
     test('рендерит элемент последней страницы', () => {
-      const { container } = render(
-        renderPaginationItem('last-page', undefined, 3, 5, '/blog/')
-      );
+      const { container } = render(renderPaginationItem('last-page', undefined, 3, 5, '/blog/'));
 
       const item = container.querySelector('a');
       expect(item).toBeInTheDocument();
@@ -192,9 +185,7 @@ describe('paginationRenderers', () => {
      * Ожидается: ссылка с href="/blog/?page=1", текстом "первая" и классами
      */
     test('рендерит кнопку "первая"', () => {
-      const { container } = render(
-        renderNavigationButton('first', 3, 5, '/blog/')
-      );
+      const { container } = render(renderNavigationButton('first', 3, 5, '/blog/'));
 
       const button = container.querySelector('a');
       expect(button).toBeInTheDocument();
@@ -208,9 +199,7 @@ describe('paginationRenderers', () => {
      * Ожидается: отключенная кнопка
      */
     test('рендерит отключенную кнопку "первая" на первой странице', () => {
-      const { container } = render(
-        renderNavigationButton('first', 1, 5, '/blog/')
-      );
+      const { container } = render(renderNavigationButton('first', 1, 5, '/blog/'));
 
       const button = container.querySelector('button');
       expect(button).toBeInTheDocument();
@@ -222,9 +211,7 @@ describe('paginationRenderers', () => {
      * Ожидается: ссылка с href="/blog/?page=2", текстом "предыдущая" и классами
      */
     test('рендерит кнопку "предыдущая"', () => {
-      const { container } = render(
-        renderNavigationButton('prev', 3, 5, '/blog/')
-      );
+      const { container } = render(renderNavigationButton('prev', 3, 5, '/blog/'));
 
       const button = container.querySelector('a');
       expect(button).toBeInTheDocument();
@@ -238,9 +225,7 @@ describe('paginationRenderers', () => {
      * Ожидается: отключенная кнопка
      */
     test('рендерит отключенную кнопку "предыдущая" на первой странице', () => {
-      const { container } = render(
-        renderNavigationButton('prev', 1, 5, '/blog/')
-      );
+      const { container } = render(renderNavigationButton('prev', 1, 5, '/blog/'));
 
       const button = container.querySelector('button');
       expect(button).toBeInTheDocument();
@@ -252,9 +237,7 @@ describe('paginationRenderers', () => {
      * Ожидается: ссылка с href="/blog/?page=4", текстом "следующая" и классами
      */
     test('рендерит кнопку "следующая"', () => {
-      const { container } = render(
-        renderNavigationButton('next', 3, 5, '/blog/')
-      );
+      const { container } = render(renderNavigationButton('next', 3, 5, '/blog/'));
 
       const button = container.querySelector('a');
       expect(button).toBeInTheDocument();
@@ -268,9 +251,7 @@ describe('paginationRenderers', () => {
      * Ожидается: отключенная кнопка
      */
     test('рендерит отключенную кнопку "следующая" на последней странице', () => {
-      const { container } = render(
-        renderNavigationButton('next', 5, 5, '/blog/')
-      );
+      const { container } = render(renderNavigationButton('next', 5, 5, '/blog/'));
 
       const button = container.querySelector('button');
       expect(button).toBeInTheDocument();
@@ -282,9 +263,7 @@ describe('paginationRenderers', () => {
      * Ожидается: ссылка с href="/blog/?page=5", текстом "последняя" и классами
      */
     test('рендерит кнопку "последняя"', () => {
-      const { container } = render(
-        renderNavigationButton('last', 3, 5, '/blog/')
-      );
+      const { container } = render(renderNavigationButton('last', 3, 5, '/blog/'));
 
       const button = container.querySelector('a');
       expect(button).toBeInTheDocument();
@@ -298,9 +277,7 @@ describe('paginationRenderers', () => {
      * Ожидается: отключенная кнопка
      */
     test('рендерит отключенную кнопку "последняя" на последней странице', () => {
-      const { container } = render(
-        renderNavigationButton('last', 5, 5, '/blog/')
-      );
+      const { container } = render(renderNavigationButton('last', 5, 5, '/blog/'));
 
       const button = container.querySelector('button');
       expect(button).toBeInTheDocument();

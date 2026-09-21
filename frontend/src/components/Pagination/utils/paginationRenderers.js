@@ -5,7 +5,12 @@
 import React from 'react';
 import { Pagination as BSPagination } from 'react-bootstrap';
 import { getPageUrl } from '@components/Pagination/utils/paginationHelpers';
-import { getButtonText, getButtonClassName, isButtonDisabled, getButtonHref } from '@components/Pagination/utils/buttonStates';
+import {
+  getButtonText,
+  getButtonClassName,
+  isButtonDisabled,
+  getButtonHref,
+} from '@components/Pagination/utils/buttonStates';
 
 /**
  * Рендерит элемент пагинации с номерами страниц
@@ -75,7 +80,8 @@ export const renderNavigationButton = (type, currentPage, totalPages, baseUrl, o
 
   // Если передан onPageChange, используем кнопку с обработчиком
   if (onPageChange) {
-    const targetPage = type === 'first' ? 1 : type === 'prev' ? currentPage - 1 : type === 'next' ? currentPage + 1 : totalPages;
+    const targetPage =
+      type === 'first' ? 1 : type === 'prev' ? currentPage - 1 : type === 'next' ? currentPage + 1 : totalPages;
     return (
       <button
         className={finalClassName}
@@ -90,20 +96,14 @@ export const renderNavigationButton = (type, currentPage, totalPages, baseUrl, o
 
   if (disabled) {
     return (
-      <button
-        className={finalClassName}
-        disabled
-      >
+      <button className={finalClassName} disabled>
         {text}
       </button>
     );
   }
 
   return (
-    <a
-      className={finalClassName}
-      href={href}
-    >
+    <a className={finalClassName} href={href}>
       {text}
     </a>
   );

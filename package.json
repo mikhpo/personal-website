@@ -16,6 +16,8 @@
     "test": "jest --config frontend/jest.config.js",
     "test:watch": "jest --config frontend/jest.config.js --watch",
     "eslint": "eslint . --max-warnings 0",
+    "format": "prettier --write frontend",
+    "format:check": "prettier --check frontend",
     "markdownlint": "markdownlint '**/*.md' --ignore-path .gitignore"
   },
   "author": "Mikhail Polyakov",
@@ -67,6 +69,7 @@
     "jest": "^30.4.2",
     "jest-environment-jsdom": "^30.4.1",
     "markdownlint-cli": "^0.49.0",
+    "prettier": "^3.9.8",
     "webpack-dev-server": "^6.0.0"
   }
 }

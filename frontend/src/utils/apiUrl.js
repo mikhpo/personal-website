@@ -28,7 +28,7 @@
 export function buildApiUrl(base, params = {}) {
   const url = new URL(base, window.location.origin);
   Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== null && value !== "") {
+    if (value !== undefined && value !== null && value !== '') {
       url.searchParams.append(key, value);
     }
   });

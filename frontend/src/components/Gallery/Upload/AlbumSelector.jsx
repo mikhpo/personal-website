@@ -35,13 +35,9 @@ const AlbumSelector = ({ albums, selectedAlbum, onChange, loading = false }) => 
   return (
     <Form.Group className="mb-3">
       <Form.Label>Выберите альбом</Form.Label>
-      <Form.Select
-        value={selectedAlbum || ''}
-        onChange={handleChange}
-        disabled={loading || albums.length === 0}
-      >
+      <Form.Select value={selectedAlbum || ''} onChange={handleChange} disabled={loading || albums.length === 0}>
         <option value="">-- Выберите альбом --</option>
-        {albums.map(album => (
+        {albums.map((album) => (
           <option key={album.id} value={album.id}>
             {album.name}
           </option>
@@ -56,7 +52,7 @@ AlbumSelector.propTypes = {
     PropTypes.shape({
       id: PropTypes.number.isRequired,
       name: PropTypes.string.isRequired,
-    })
+    }),
   ).isRequired,
   selectedAlbum: PropTypes.number,
   onChange: PropTypes.func.isRequired,

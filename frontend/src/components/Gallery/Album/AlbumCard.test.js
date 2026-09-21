@@ -53,7 +53,6 @@ describe('AlbumCard', () => {
     expect(screen.queryByRole('img')).not.toBeInTheDocument();
   });
 
-
   /**
    * Проверяет, что ссылка на альбом формируется с правильным URL.
    * Все ссылки в карточке должны вести на страницу альбома.
@@ -61,7 +60,7 @@ describe('AlbumCard', () => {
   test('ссылка на альбом имеет правильный URL', () => {
     render(<AlbumCard album={fullAlbum} />);
     const links = screen.getAllByRole('link');
-    links.forEach(link => {
+    links.forEach((link) => {
       expect(link).toHaveAttribute('href', '/gallery/album/1/');
     });
   });
@@ -109,8 +108,8 @@ describe('AlbumCard', () => {
     // Получаем все ссылки с текстом "Тестовый альбом"
     const titleLinks = screen.getAllByRole('link', { name: 'Тестовый альбом' });
     // Найдем ссылку с нужными классами (это ссылка на название, а не на изображение)
-    const titleLink = Array.from(titleLinks).find(link =>
-      link.classList.contains('text-decoration-none') && link.classList.contains('text-body')
+    const titleLink = Array.from(titleLinks).find(
+      (link) => link.classList.contains('text-decoration-none') && link.classList.contains('text-body'),
     );
     expect(titleLink).toBeInTheDocument();
     expect(titleLink).toHaveClass('text-decoration-none', 'text-body');

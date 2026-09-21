@@ -293,15 +293,11 @@ const PhotoList = ({ apiUrl = '/api/gallery/photos/', tagSlug, search }) => {
             message: error,
             level: 'error',
             actions: (
-              <Button
-                variant="outline-primary"
-                size="sm"
-                onClick={handleRetry}
-              >
+              <Button variant="outline-primary" size="sm" onClick={handleRetry}>
                 Повторить
               </Button>
-            )
-          }
+            ),
+          },
         ]}
       />
     );
@@ -310,9 +306,7 @@ const PhotoList = ({ apiUrl = '/api/gallery/photos/', tagSlug, search }) => {
   // Отображение сообщения о пустом списке фотографий;
   // при активном поиске сообщение включает запрос пользователя
   if (photos.length === 0) {
-    const emptyMessage = search
-      ? `По запросу "${search}" ничего не найдено`
-      : 'Нет доступных фотографий';
+    const emptyMessage = search ? `По запросу "${search}" ничего не найдено` : 'Нет доступных фотографий';
     return <AlertList messages={[{ message: emptyMessage, level: 'info' }]} />;
   }
 
@@ -321,7 +315,7 @@ const PhotoList = ({ apiUrl = '/api/gallery/photos/', tagSlug, search }) => {
     <Container>
       <div ref={containerRef} className="masonry-grid">
         <div className="masonry-sizer" />
-        {photos.map(photo => (
+        {photos.map((photo) => (
           <div key={photo.id} className="masonry-item" data-id={photo.id}>
             <PhotoCard
               photo={photo}

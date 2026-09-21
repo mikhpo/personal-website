@@ -41,9 +41,7 @@ const ArticleCard = ({ article }) => {
    * Усечённый HTML-контент для длинных статей (первые 50 слов)
    * @type {string}
    */
-  const truncatedContent = isLong
-    ? article.content.split(' ').slice(0, 50).join(' ')
-    : article.content;
+  const truncatedContent = isLong ? article.content.split(' ').slice(0, 50).join(' ') : article.content;
 
   return (
     <div className="container mb-3 pb-3">
@@ -52,13 +50,8 @@ const ArticleCard = ({ article }) => {
           <h2 className="card-title fs-4">
             <a href={articleUrl}>{article.title}</a>
           </h2>
-          <p
-            className="card-text"
-            dangerouslySetInnerHTML={{ __html: truncatedContent }}
-          />
-          {isLong && (
-            <a href={articleUrl}>Читать дальше</a>
-          )}
+          <p className="card-text" dangerouslySetInnerHTML={{ __html: truncatedContent }} />
+          {isLong && <a href={articleUrl}>Читать дальше</a>}
         </Card.Body>
       </Card>
     </div>

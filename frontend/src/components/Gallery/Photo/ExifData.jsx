@@ -65,7 +65,7 @@ const ExifData = ({ photo }) => {
     { label: 'Дата съёмки', value: formatDateTime(photo.datetime_taken) },
   ];
 
-  const filledFields = exifFields.filter(field => field.value);
+  const filledFields = exifFields.filter((field) => field.value);
 
   if (filledFields.length === 0) {
     return null;

@@ -76,11 +76,7 @@ const Alert = ({ message, level, dismissible, autoClose, autoCloseDelay, actions
   const variant = variantMap[level] || 'info';
 
   return (
-    <BSAlert
-      variant={variant}
-      onClose={dismissible ? () => setShow(false) : undefined}
-      dismissible={dismissible}
-    >
+    <BSAlert variant={variant} onClose={dismissible ? () => setShow(false) : undefined} dismissible={dismissible}>
       <div dangerouslySetInnerHTML={{ __html: message }} />
       {actions && <div className="mt-2">{actions}</div>}
     </BSAlert>

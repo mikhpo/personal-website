@@ -52,8 +52,7 @@ const CategoryGrid = () => {
     try {
       const data = await fetchCategoriesRequest();
       const categoriesList = data.results || data;
-      const withImages = (Array.isArray(categoriesList) ? categoriesList : [])
-        .filter((cat) => cat.image);
+      const withImages = (Array.isArray(categoriesList) ? categoriesList : []).filter((cat) => cat.image);
       setCategories(withImages);
       setLoading(false);
     } catch (err) {
@@ -79,11 +78,7 @@ const CategoryGrid = () => {
   }
 
   if (categories.length === 0) {
-    return (
-      <AlertList
-        messages={[{ message: 'Нет доступных категорий', level: 'info' }]}
-      />
-    );
+    return <AlertList messages={[{ message: 'Нет доступных категорий', level: 'info' }]} />;
   }
 
   return (

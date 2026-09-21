@@ -1,6 +1,7 @@
 import reactX from 'eslint-plugin-react-x';
 import reactRefresh from 'eslint-plugin-react-refresh';
 import jsxA11y from 'eslint-plugin-jsx-a11y';
+import prettierConfig from 'eslint-config-prettier';
 
 export default [
   {
@@ -60,6 +61,10 @@ export default [
       'react-refresh/only-export-components': 'warn',
       'no-unused-vars': ['error', { varsIgnorePattern: '^React$' }],
     },
+  },
+  {
+    // Отключает стилевые правила ESLint, конфликтующие с Prettier: форматирование делает только Prettier
+    ...prettierConfig,
   },
   {
     ignores: [

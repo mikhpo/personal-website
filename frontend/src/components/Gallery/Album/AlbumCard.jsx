@@ -59,9 +59,7 @@ const AlbumCard = ({ album, revealed = true, onImageLoad }) => {
             {album.name}
           </a>
         </h3>
-        {album.description && (
-          <p className="card-text">{album.description}</p>
-        )}
+        {album.description && <p className="card-text">{album.description}</p>}
       </div>
     </div>
   );

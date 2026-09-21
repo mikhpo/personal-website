@@ -110,11 +110,7 @@ const CommentForm = ({
 
   return (
     <form onSubmit={handleSubmit}>
-      {error && (
-        <AlertList
-          messages={[{ message: error, level: 'error' }]}
-        />
-      )}
+      {error && <AlertList messages={[{ message: error, level: 'error' }]} />}
       <div className="form-group">
         <Editor
           key={htmlTheme}
@@ -126,11 +122,7 @@ const CommentForm = ({
         />
         <br />
         <div className="d-flex align-items-center">
-          <Button
-            type="submit"
-            variant="outline-dark"
-            disabled={submitting}
-          >
+          <Button type="submit" variant="outline-dark" disabled={submitting}>
             {submitting ? 'Отправка...' : 'Добавить комментарий'}
             {!submitting && <i className="fas fa-comments ms-1" />}
           </Button>

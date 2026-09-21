@@ -14,9 +14,12 @@ jest.mock('@components/Blog/Comment/CommentList', () => {
   return function MockCommentList({ comments }) {
     return (
       <div data-testid="comment-list">
-        {comments && comments.map((c) => (
-          <div key={c.id} data-testid="comment">{c.author_username}</div>
-        ))}
+        {comments &&
+          comments.map((c) => (
+            <div key={c.id} data-testid="comment">
+              {c.author_username}
+            </div>
+          ))}
       </div>
     );
   };
@@ -71,9 +74,7 @@ describe('ArticleDetail', () => {
     content: '<p>Полный текст статьи</p>',
     published_at: '01 янв. 2024 г.',
     modified_at: '02 янв. 2024 г.',
-    comments: [
-      { id: 1, author_username: 'user1', content: 'Отлично!', posted: '01 янв. 2024 г.' },
-    ],
+    comments: [{ id: 1, author_username: 'user1', content: 'Отлично!', posted: '01 янв. 2024 г.' }],
   };
 
   beforeEach(() => {
@@ -288,12 +289,10 @@ describe('ArticleDetail', () => {
    * Компонент должен повторять запрос при клике на кнопку.
    */
   test('повторная попытка загрузки при нажатии кнопки "Повторить"', async () => {
-    global.fetch
-      .mockRejectedValueOnce(new Error('Статья не найдена'))
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockArticle,
-      });
+    global.fetch.mockRejectedValueOnce(new Error('Статья не найдена')).mockResolvedValueOnce({
+      ok: true,
+      json: async () => mockArticle,
+    });
 
     render(<ArticleDetail {...mockProps} />);
 

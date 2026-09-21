@@ -1,14 +1,14 @@
-import React, { useState, useEffect, useCallback } from "react";
-import PropTypes from "prop-types";
-import { Container } from "react-bootstrap";
-import Spinner from "@components/Spinner/Spinner";
-import AlertList from "@components/Alert/AlertList";
-import LoadingError from "@components/Alert/LoadingError";
-import AlbumCard from "@components/Gallery/Album/AlbumCard";
-import usePagination from "@hooks/usePagination";
-import useMasonry from "@hooks/useMasonry";
-import Pagination from "@components/Pagination/Pagination";
-import { buildApiUrl } from "@utils/apiUrl";
+import React, { useState, useEffect, useCallback } from 'react';
+import PropTypes from 'prop-types';
+import { Container } from 'react-bootstrap';
+import Spinner from '@components/Spinner/Spinner';
+import AlertList from '@components/Alert/AlertList';
+import LoadingError from '@components/Alert/LoadingError';
+import AlbumCard from '@components/Gallery/Album/AlbumCard';
+import usePagination from '@hooks/usePagination';
+import useMasonry from '@hooks/useMasonry';
+import Pagination from '@components/Pagination/Pagination';
+import { buildApiUrl } from '@utils/apiUrl';
 
 /**
  * Компонент списка альбомов с пагинацией.
@@ -42,21 +42,13 @@ import { buildApiUrl } from "@utils/apiUrl";
  * 4. Предоставляет возможность повторной загрузки при ошибке
  * 5. Поддерживает пагинацию с навигацией по страницам
  */
-const AlbumList = ({ apiUrl = "/api/gallery/albums/", tagSlug, search }) => {
+const AlbumList = ({ apiUrl = '/api/gallery/albums/', tagSlug, search }) => {
   const [albums, setAlbums] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const {
-    currentPage,
-    totalPages,
-    hasNext,
-    hasPrevious,
-    nextPage,
-    previousPage,
-    goToPage,
-    setTotalPages,
-  } = usePagination({ initialPage: 1 });
+  const { currentPage, totalPages, hasNext, hasPrevious, nextPage, previousPage, goToPage, setTotalPages } =
+    usePagination({ initialPage: 1 });
 
   /**
    * Выполняет HTTP-запрос к API для получения списка альбомов.
@@ -140,14 +132,8 @@ const AlbumList = ({ apiUrl = "/api/gallery/albums/", tagSlug, search }) => {
   }
 
   if (albums.length === 0) {
-    const emptyMessage = search
-      ? `По запросу "${search}" ничего не найдено`
-      : "Нет доступных альбомов";
-    return (
-      <AlertList
-        messages={[{ message: emptyMessage, level: "info" }]}
-      />
-    );
+    const emptyMessage = search ? `По запросу "${search}" ничего не найдено` : 'Нет доступных альбомов';
+    return <AlertList messages={[{ message: emptyMessage, level: 'info' }]} />;
   }
 
   return (
@@ -156,11 +142,7 @@ const AlbumList = ({ apiUrl = "/api/gallery/albums/", tagSlug, search }) => {
         <div className="masonry-sizer" />
         {albums.map((album) => (
           <div key={album.id} className="masonry-item" data-id={album.id}>
-            <AlbumCard
-              album={album}
-              revealed={revealedIds.has(album.id)}
-              onImageLoad={markImageReady}
-            />
+            <AlbumCard album={album} revealed={revealedIds.has(album.id)} onImageLoad={markImageReady} />
           </div>
         ))}
       </div>

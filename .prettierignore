@@ -1,0 +1,6 @@
+frontend/dist/
+frontend/coverage/
+frontend/webpack-stats.json
+staticfiles/
+node_modules/
+package-lock.json

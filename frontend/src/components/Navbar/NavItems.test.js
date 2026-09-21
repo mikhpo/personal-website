@@ -43,7 +43,7 @@ describe('NavItems', () => {
           { url: '/gallery/albums/', text: 'Альбомы' },
           { url: '/gallery/photos/', text: 'Фотографии' },
           { url: '#', text: 'Тэги', offcanvas: true },
-        ]
+        ],
       },
     ],
     userIsStaff: false,

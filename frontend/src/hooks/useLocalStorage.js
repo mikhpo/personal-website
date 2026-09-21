@@ -54,22 +54,25 @@ const useLocalStorage = (key, initialValue) => {
    * @param {any} value - Новое значение (null или undefined удаляют ключ)
    * @return {void}
    */
-  const setValue = useCallback((value) => {
-    try {
-      const valueToStore = value instanceof Function ? value(storedValue) : value;
-      setStoredValue(valueToStore);
+  const setValue = useCallback(
+    (value) => {
+      try {
+        const valueToStore = value instanceof Function ? value(storedValue) : value;
+        setStoredValue(valueToStore);
 
-      if (typeof window !== 'undefined') {
-        if (valueToStore === null || valueToStore === undefined) {
-          window.localStorage.removeItem(key);
-        } else {
-          window.localStorage.setItem(key, JSON.stringify(valueToStore));
+        if (typeof window !== 'undefined') {
+          if (valueToStore === null || valueToStore === undefined) {
+            window.localStorage.removeItem(key);
+          } else {
+            window.localStorage.setItem(key, JSON.stringify(valueToStore));
+          }
         }
+      } catch (error) {
+        console.warn(`Ошибка записи в localStorage ключа "${key}":`, error);
       }
-    } catch (error) {
-      console.warn(`Ошибка записи в localStorage ключа "${key}":`, error);
-    }
-  }, [key, storedValue]);
+    },
+    [key, storedValue],
+  );
 
   useEffect(() => {
     const initializeValue = () => {

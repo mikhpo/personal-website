@@ -37,18 +37,18 @@ const useAlbumPhotos = (albumId, apiUrl = '/api/gallery/albums/') => {
       updateLoadingState();
 
       fetch(`${apiUrl}${albumId}/`)
-        .then(response => {
+        .then((response) => {
           if (!response.ok) {
             throw new Error(`Ошибка загрузки данных альбома: ${response.status}`);
           }
           return response.json();
         })
-        .then(data => {
+        .then((data) => {
           const photosList = data.photos || [];
           setPhotos(Array.isArray(photosList) ? photosList : []);
           setLoading(false);
         })
-        .catch(err => {
+        .catch((err) => {
           setError(err.message);
           setLoading(false);
         });
@@ -80,25 +80,25 @@ const useAlbumPhotos = (albumId, apiUrl = '/api/gallery/albums/') => {
         updateLoadingState();
 
         fetch(`${apiUrl}${albumId}/`)
-          .then(response => {
+          .then((response) => {
             if (!response.ok) {
               throw new Error(`Ошибка загрузки данных альбома: ${response.status}`);
             }
             return response.json();
           })
-          .then(data => {
+          .then((data) => {
             const photosList = data.photos || [];
             setPhotos(Array.isArray(photosList) ? photosList : []);
             setLoading(false);
           })
-          .catch(err => {
+          .catch((err) => {
             setError(err.message);
             setLoading(false);
           });
       };
 
       fetchAlbumPhotos();
-    }
+    },
   };
 };
 

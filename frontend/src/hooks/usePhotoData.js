@@ -63,7 +63,7 @@ const usePhotoData = (photoPk, apiUrl = '/api/gallery/photos/') => {
     photo,
     loading,
     error,
-    refetch: safeRefetch
+    refetch: safeRefetch,
   };
 };
 

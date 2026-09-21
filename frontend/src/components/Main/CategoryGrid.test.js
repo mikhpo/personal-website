@@ -14,9 +14,7 @@ import CategoryGrid from '@components/Main/CategoryGrid';
 // Мокировать компонент CategoryCard для изоляции тестов
 jest.mock('@components/Main/CategoryCard', () => ({
   __esModule: true,
-  default: ({ category }) => (
-    <div data-testid={`category-card-${category.id}`}>{category.name}</div>
-  ),
+  default: ({ category }) => <div data-testid={`category-card-${category.id}`}>{category.name}</div>,
 }));
 
 // Мокировать компоненты Spinner и AlertList

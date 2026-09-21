@@ -40,11 +40,7 @@ import { useState, useCallback } from 'react';
  * });
  */
 const usePagination = (options = {}) => {
-  const {
-    initialPage = 1,
-    totalPages: initialTotalPages = 1,
-    onPageChange,
-  } = options;
+  const { initialPage = 1, totalPages: initialTotalPages = 1, onPageChange } = options;
 
   const [currentPage, setCurrentPage] = useState(initialPage);
   const [totalPages, setTotalPages] = useState(initialTotalPages);
@@ -97,14 +93,17 @@ const usePagination = (options = {}) => {
    * @param {number} page - Номер страницы для перехода
    * @return {void}
    */
-  const goToPage = useCallback((page) => {
-    if (page >= 1 && page <= totalPages && page !== currentPage) {
-      setCurrentPage(page);
-      if (onPageChange) {
-        onPageChange(page);
+  const goToPage = useCallback(
+    (page) => {
+      if (page >= 1 && page <= totalPages && page !== currentPage) {
+        setCurrentPage(page);
+        if (onPageChange) {
+          onPageChange(page);
+        }
       }
-    }
-  }, [currentPage, totalPages, onPageChange]);
+    },
+    [currentPage, totalPages, onPageChange],
+  );
 
   return {
     currentPage,

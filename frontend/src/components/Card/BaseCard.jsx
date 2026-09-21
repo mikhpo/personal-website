@@ -62,13 +62,7 @@ const BaseCard = ({
     <Card className={`${cardClassName} ${entranceClass}`}>
       {image && (
         <a href={url}>
-          <Card.Img
-            variant="top"
-            src={image}
-            alt={imageAlt || title}
-            loading="lazy"
-            {...cardImgProps}
-          />
+          <Card.Img variant="top" src={image} alt={imageAlt || title} loading="lazy" {...cardImgProps} />
         </a>
       )}
       <Card.Body className="d-flex flex-column">

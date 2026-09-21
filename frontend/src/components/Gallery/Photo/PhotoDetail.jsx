@@ -114,43 +114,27 @@ const PhotoDetail = ({
                 id="previous-photo-link"
                 aria-label="Предыдущая фотография"
               >
-                {"<"}
+                {'<'}
               </a>
             )}
-            <Button
-              variant="outline-dark"
-              onClick={() => setShowAboutModal(true)}
-            >
+            <Button variant="outline-dark" onClick={() => setShowAboutModal(true)}>
               О фото
             </Button>
             {isStaff && (
-              <Button
-                variant="outline-dark"
-                id="get-embed-link-button"
-                onClick={() => setShowEmbedModal(true)}
-              >
+              <Button variant="outline-dark" id="get-embed-link-button" onClick={() => setShowEmbedModal(true)}>
                 Ссылка для вставки
               </Button>
             )}
             {nextUrl && (
-              <a
-                href={nextUrl}
-                className="btn btn-outline-dark"
-                id="next-photo-link"
-                aria-label="Следующая фотография"
-              >
-                {">"}
+              <a href={nextUrl} className="btn btn-outline-dark" id="next-photo-link" aria-label="Следующая фотография">
+                {'>'}
               </a>
             )}
           </div>
         </div>
       </div>
 
-      <Modal
-        show={showAboutModal}
-        onHide={() => setShowAboutModal(false)}
-        aria-labelledby="aboutPhotoModalLabel"
-      >
+      <Modal show={showAboutModal} onHide={() => setShowAboutModal(false)} aria-labelledby="aboutPhotoModalLabel">
         <Modal.Header closeButton>
           <Modal.Title id="aboutPhotoModalLabel">О фото</Modal.Title>
         </Modal.Header>
@@ -165,11 +149,7 @@ const PhotoDetail = ({
       </Modal>
 
       {isStaff && (
-        <Modal
-          show={showEmbedModal}
-          onHide={() => setShowEmbedModal(false)}
-          aria-labelledby="embedLinksModalLabel"
-        >
+        <Modal show={showEmbedModal} onHide={() => setShowEmbedModal(false)} aria-labelledby="embedLinksModalLabel">
           <Modal.Header closeButton>
             <Modal.Title id="embedLinksModalLabel">Ссылка для вставки</Modal.Title>
           </Modal.Header>

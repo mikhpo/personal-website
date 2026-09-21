@@ -61,12 +61,7 @@ const UploadProgress = ({ progress, fileName, status }) => {
         </small>
         <small className="text-muted">{getStatusText()}</small>
       </div>
-      <ProgressBar
-        now={progress}
-        variant={getVariant()}
-        animated={isAnimated}
-        striped={isAnimated}
-      />
+      <ProgressBar now={progress} variant={getVariant()} animated={isAnimated} striped={isAnimated} />
     </div>
   );
 };

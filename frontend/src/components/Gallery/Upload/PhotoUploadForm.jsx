@@ -33,13 +33,14 @@ const PhotoUploadForm = () => {
       };
       updateLoadingState();
 
-      galleryService.getAlbums()
-        .then(data => {
+      galleryService
+        .getAlbums()
+        .then((data) => {
           const albumsList = data.results || data;
           setAlbums(Array.isArray(albumsList) ? albumsList : []);
           setLoadingAlbums(false);
         })
-        .catch(err => {
+        .catch((err) => {
           setAlbumsError(err.message);
           setLoadingAlbums(false);
         });
@@ -92,26 +93,22 @@ const PhotoUploadForm = () => {
 
     // Колбэк для обновления прогресса загрузки
     const onProgress = (fileName, progressData) => {
-      setUploadProgress(prev => ({
+      setUploadProgress((prev) => ({
         ...prev,
         [fileName]: progressData,
       }));
     };
 
-    const uploadResults = await galleryService.uploadPhotos(
-      selectedAlbum,
-      files,
-      onProgress
-    );
+    const uploadResults = await galleryService.uploadPhotos(selectedAlbum, files, onProgress);
 
     setUploading(false);
 
-    const failedUploads = uploadResults.filter(r => !r.success);
+    const failedUploads = uploadResults.filter((r) => !r.success);
     if (failedUploads.length > 0) {
-      setErrors(failedUploads.map(r => `${r.file}: ${r.error}`));
+      setErrors(failedUploads.map((r) => `${r.file}: ${r.error}`));
     }
 
-    const successfulUploads = uploadResults.filter(r => r.success);
+    const successfulUploads = uploadResults.filter((r) => r.success);
     if (successfulUploads.length > 0) {
       setSuccess(true);
       if (failedUploads.length === 0) {
@@ -135,13 +132,14 @@ const PhotoUploadForm = () => {
     setLoadingAlbums(true);
     setAlbumsError(null);
 
-    galleryService.getAlbums()
-      .then(data => {
+    galleryService
+      .getAlbums()
+      .then((data) => {
         const albumsList = data.results || data;
         setAlbums(Array.isArray(albumsList) ? albumsList : []);
         setLoadingAlbums(false);
       })
-      .catch(err => {
+      .catch((err) => {
         setAlbumsError(err.message);
         setLoadingAlbums(false);
       });
@@ -170,7 +168,9 @@ const PhotoUploadForm = () => {
   return (
     <Card className="shadow-sm p-3 mb-5 rounded">
       <Card.Body>
-        <Card.Title as="h1" className="fs-4">Загрузка фотографий</Card.Title>
+        <Card.Title as="h1" className="fs-4">
+          Загрузка фотографий
+        </Card.Title>
 
         <AlbumSelector
           albums={albums}
@@ -179,12 +179,7 @@ const PhotoUploadForm = () => {
           loading={loadingAlbums}
         />
 
-        <FileDropzone
-          onFilesSelect={handleFilesSelect}
-          accept="image/*"
-          multiple={true}
-          files={files}
-        />
+        <FileDropzone onFilesSelect={handleFilesSelect} accept="image/*" multiple={true} files={files} />
 
         {Object.keys(uploadProgress).length > 0 && (
           <div className="mt-4">
@@ -202,7 +197,9 @@ const PhotoUploadForm = () => {
 
         {errors.length > 0 && (
           <Alert variant="danger" className="mt-3">
-            <Alert.Heading as="h2" className="fs-4">Ошибки загрузки</Alert.Heading>
+            <Alert.Heading as="h2" className="fs-4">
+              Ошибки загрузки
+            </Alert.Heading>
             <ul className="mb-0">
               {errors.map((error) => (
                 <li key={error}>{error}</li>
@@ -218,11 +215,7 @@ const PhotoUploadForm = () => {
         )}
 
         <div className="d-flex justify-content-end mt-3">
-          <Button
-            variant="primary"
-            onClick={handleUpload}
-            disabled={uploading || !selectedAlbum || files.length === 0}
-          >
+          <Button variant="primary" onClick={handleUpload} disabled={uploading || !selectedAlbum || files.length === 0}>
             {uploading ? 'Загрузка...' : 'Загрузить'}
           </Button>
         </div>

@@ -32,7 +32,9 @@ jest.mock('@components/Alert/AlertList', () => {
     return (
       <div data-testid="alert-list">
         {messages.map((msg) => (
-          <div key={`${msg.level}-${msg.message}`} data-testid={`alert-${msg.level}`}>{msg.message}</div>
+          <div key={`${msg.level}-${msg.message}`} data-testid={`alert-${msg.level}`}>
+            {msg.message}
+          </div>
         ))}
       </div>
     );
@@ -48,7 +50,10 @@ jest.mock('@components/Spinner/Spinner', () => {
 
 describe('ArticleForm', () => {
   const taxonomies = {
-    categories: [{ id: 1, name: 'Разработка' }, { id: 2, name: 'Путешествия' }],
+    categories: [
+      { id: 1, name: 'Разработка' },
+      { id: 2, name: 'Путешествия' },
+    ],
     series: [{ id: 3, name: 'Серия А' }],
     topics: [{ id: 4, name: 'Тема Б' }],
   };
@@ -494,9 +499,10 @@ describe('ArticleForm', () => {
     test('публикация дожидается автосохранения', async () => {
       let resolveCreate;
       blogService.createArticle.mockImplementation(
-        () => new Promise((resolve) => {
-          resolveCreate = resolve;
-        }),
+        () =>
+          new Promise((resolve) => {
+            resolveCreate = resolve;
+          }),
       );
       blogService.updateArticle.mockResolvedValue(createdArticle);
       await renderForm();
@@ -520,9 +526,7 @@ describe('ArticleForm', () => {
      * Проверяет, что при ошибке автосохранения явное сохранение все равно выполняется.
      */
     test('публикация выполняется после ошибки автосохранения', async () => {
-      blogService.createArticle
-        .mockRejectedValueOnce(new Error('Ошибка сети'))
-        .mockResolvedValueOnce(createdArticle);
+      blogService.createArticle.mockRejectedValueOnce(new Error('Ошибка сети')).mockResolvedValueOnce(createdArticle);
       await renderForm();
       fillRequiredFields();
       await advanceAutosave();
@@ -550,9 +554,7 @@ describe('ArticleForm', () => {
      * Проверяет повтор автосохранения после ошибки при следующем тике.
      */
     test('повторяет автосохранение после ошибки', async () => {
-      blogService.createArticle
-        .mockRejectedValueOnce(new Error('Ошибка сети'))
-        .mockResolvedValueOnce(createdArticle);
+      blogService.createArticle.mockRejectedValueOnce(new Error('Ошибка сети')).mockResolvedValueOnce(createdArticle);
       await renderForm();
       fillRequiredFields();
       await advanceAutosave();

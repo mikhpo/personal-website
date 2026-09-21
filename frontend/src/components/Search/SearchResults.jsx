@@ -104,9 +104,7 @@ const SearchResults = ({ search }) => {
 
   // Пустой запрос: подсказка без обращения к API
   if (!search) {
-    return (
-      <p className="text-muted">Введите поисковый запрос, чтобы найти статьи и альбомы.</p>
-    );
+    return <p className="text-muted">Введите поисковый запрос, чтобы найти статьи и альбомы.</p>;
   }
 
   if (loading) {
@@ -121,11 +119,7 @@ const SearchResults = ({ search }) => {
             message: error,
             level: 'error',
             actions: (
-              <Button
-                variant="outline-primary"
-                size="sm"
-                onClick={() => setRetryCount((count) => count + 1)}
-              >
+              <Button variant="outline-primary" size="sm" onClick={() => setRetryCount((count) => count + 1)}>
                 Повторить
               </Button>
             ),

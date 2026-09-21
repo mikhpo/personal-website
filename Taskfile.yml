@@ -246,6 +246,29 @@ tasks:
     cmds:
       - npm run eslint
 
+  prettier:
+    desc: Отформатировать код фронтенда при помощи Prettier
+    summary: |
+      Форматирует JavaScript и JSON файлы фронтенда с помощью Prettier.
+      Использует конфигурацию из .prettierrc.json и список исключений из .prettierignore.
+    preconditions:
+      - test -f package.json
+      - test -f .prettierrc.json
+    cmds:
+      - npm run format
+
+  format:
+    desc: Отформатировать код Python и фронтенда
+    summary: |
+      Команда форматирует код всего проекта: Python через Ruff
+      (автоматическое исправление ошибок), JavaScript и JSON фронтенда через Prettier.
+    preconditions:
+      - test -f pyproject.toml
+      - test -f package.json
+    cmds:
+      - task: ruff
+      - task: prettier
+
   markdownlint:
     desc: Выполнить проверку Markdown файлов при помощи markdownlint
     summary: |

@@ -23,21 +23,15 @@ const PhotoNavigation = ({ previousPhoto, nextPhoto }) => {
     <div className="d-flex justify-content-between mt-3">
       <div>
         {previousPhoto && (
-          <Button
-            variant="primary"
-            href={`/gallery/photo/${previousPhoto.slug}/`}
-          >
+          <Button variant="primary" href={`/gallery/photo/${previousPhoto.slug}/`}>
             ← Предыдущая
           </Button>
         )}
       </div>
       <div>
         {nextPhoto && (
-          <Button
-            variant="primary"
-            href={`/gallery/photo/${nextPhoto.slug}/`}
-          >
-            {"Следующая ->"}
+          <Button variant="primary" href={`/gallery/photo/${nextPhoto.slug}/`}>
+            {'Следующая ->'}
           </Button>
         )}
       </div>

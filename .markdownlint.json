@@ -2,6 +2,6 @@
   "MD013": false,
   "MD041": false,
   "no-inline-html": {
-    "allowed_elements": [ "div", "img"]
+    "allowed_elements": ["div", "img"]
   }
 }

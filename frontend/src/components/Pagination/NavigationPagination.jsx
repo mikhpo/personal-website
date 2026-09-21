@@ -35,11 +35,7 @@ const NavigationPagination = ({
           <>
             {renderNavigationButton('first', currentPage, totalPages, baseUrl, onPageChange)}
             {onPrevious ? (
-              <button
-                className="btn btn-outline-dark me-1"
-                onClick={() => onPrevious()}
-                disabled={!hasPrevious}
-              >
+              <button className="btn btn-outline-dark me-1" onClick={() => onPrevious()} disabled={!hasPrevious}>
                 предыдущая
               </button>
             ) : (
@@ -48,19 +44,12 @@ const NavigationPagination = ({
           </>
         )}
 
-        <PageInfo
-          currentPage={currentPage}
-          totalPages={totalPages}
-        />
+        <PageInfo currentPage={currentPage} totalPages={totalPages} />
 
         {(currentPage < totalPages || hasNext) && (
           <>
             {onNext ? (
-              <button
-                className="btn btn-outline-dark ms-1"
-                onClick={() => onNext()}
-                disabled={!hasNext}
-              >
+              <button className="btn btn-outline-dark ms-1" onClick={() => onNext()} disabled={!hasNext}>
                 следующая
               </button>
             ) : (

@@ -105,7 +105,7 @@ describe('TagButton', () => {
       { id: 3, name: 'Архитектура', slug: 'architecture' },
     ];
 
-    tags.forEach(tag => {
+    tags.forEach((tag) => {
       const { unmount } = render(<TagButton tag={tag} />);
       expect(screen.getByText(tag.name)).toBeInTheDocument();
       expect(screen.getByRole('button')).toHaveAttribute('href', `/gallery/tag/${tag.slug}/`);

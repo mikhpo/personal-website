@@ -295,9 +295,7 @@ describe('api', () => {
         status: 404,
       });
 
-      await expect(api.patch('/api/test/1/', {})).rejects.toThrow(
-        'Ошибка частичного обновления: 404'
-      );
+      await expect(api.patch('/api/test/1/', {})).rejects.toThrow('Ошибка частичного обновления: 404');
     });
   });
 

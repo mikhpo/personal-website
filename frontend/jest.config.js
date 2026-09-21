@@ -35,11 +35,7 @@ module.exports = {
   // Исключаем результат collectstatic: backend/static
   // содержит дубликаты пакетов из node_modules.
   modulePathIgnorePatterns: ['<rootDir>/../backend/static'],
-  collectCoverageFrom: [
-    'src/**/*.{js,jsx}',
-    '!src/**/*.test.{js,jsx}',
-    '!src/**/__tests__/**',
-  ],
+  collectCoverageFrom: ['src/**/*.{js,jsx}', '!src/**/*.test.{js,jsx}', '!src/**/__tests__/**'],
   coverageThreshold: {
     global: {
       statements: 70,

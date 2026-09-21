@@ -17,10 +17,8 @@ describe('usePhotoNavigation', () => {
   const previousUrl = '/gallery/photo/1/';
   const nextUrl = '/gallery/photo/3/';
 
-  const renderNavigation = (options = {}) => renderHook(
-    (props) => usePhotoNavigation({ previousUrl, nextUrl, ...props }),
-    { initialProps: options }
-  );
+  const renderNavigation = (options = {}) =>
+    renderHook((props) => usePhotoNavigation({ previousUrl, nextUrl, ...props }), { initialProps: options });
 
   beforeEach(() => {
     navigateTo.mockClear();

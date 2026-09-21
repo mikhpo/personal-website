@@ -40,42 +40,32 @@ describe('usePagination', () => {
    */
   describe('hasNext и hasPrevious', () => {
     test('hasNext=true когда currentPage < totalPages', () => {
-      const { result } = renderHook(() =>
-        usePagination({ initialPage: 1, totalPages: 5 })
-      );
+      const { result } = renderHook(() => usePagination({ initialPage: 1, totalPages: 5 }));
 
       expect(result.current.hasNext).toBe(true);
       expect(result.current.hasPrevious).toBe(false);
     });
 
     test('hasNext=false когда currentPage === totalPages', () => {
-      const { result } = renderHook(() =>
-        usePagination({ initialPage: 5, totalPages: 5 })
-      );
+      const { result } = renderHook(() => usePagination({ initialPage: 5, totalPages: 5 }));
 
       expect(result.current.hasNext).toBe(false);
     });
 
     test('hasPrevious=true когда currentPage > 1', () => {
-      const { result } = renderHook(() =>
-        usePagination({ initialPage: 3, totalPages: 5 })
-      );
+      const { result } = renderHook(() => usePagination({ initialPage: 3, totalPages: 5 }));
 
       expect(result.current.hasPrevious).toBe(true);
     });
 
     test('hasPrevious=false когда currentPage === 1', () => {
-      const { result } = renderHook(() =>
-        usePagination({ initialPage: 1, totalPages: 5 })
-      );
+      const { result } = renderHook(() => usePagination({ initialPage: 1, totalPages: 5 }));
 
       expect(result.current.hasPrevious).toBe(false);
     });
 
     test('оба false когда только одна страница', () => {
-      const { result } = renderHook(() =>
-        usePagination({ initialPage: 1, totalPages: 1 })
-      );
+      const { result } = renderHook(() => usePagination({ initialPage: 1, totalPages: 1 }));
 
       expect(result.current.hasNext).toBe(false);
       expect(result.current.hasPrevious).toBe(false);
@@ -87,9 +77,7 @@ describe('usePagination', () => {
    */
   describe('nextPage', () => {
     test('увеличивает currentPage на 1', () => {
-      const { result } = renderHook(() =>
-        usePagination({ initialPage: 1, totalPages: 5 })
-      );
+      const { result } = renderHook(() => usePagination({ initialPage: 1, totalPages: 5 }));
 
       act(() => {
         result.current.nextPage();
@@ -99,9 +87,7 @@ describe('usePagination', () => {
     });
 
     test('не увеличивает страницу когда hasNext=false', () => {
-      const { result } = renderHook(() =>
-        usePagination({ initialPage: 5, totalPages: 5 })
-      );
+      const { result } = renderHook(() => usePagination({ initialPage: 5, totalPages: 5 }));
 
       const currentPageBefore = result.current.currentPage;
 
@@ -114,9 +100,7 @@ describe('usePagination', () => {
     });
 
     test('обновляет hasNext и hasPrevious после перехода', () => {
-      const { result } = renderHook(() =>
-        usePagination({ initialPage: 1, totalPages: 5 })
-      );
+      const { result } = renderHook(() => usePagination({ initialPage: 1, totalPages: 5 }));
 
       expect(result.current.hasPrevious).toBe(false);
 
@@ -133,9 +117,7 @@ describe('usePagination', () => {
    */
   describe('previousPage', () => {
     test('уменьшает currentPage на 1', () => {
-      const { result } = renderHook(() =>
-        usePagination({ initialPage: 3, totalPages: 5 })
-      );
+      const { result } = renderHook(() => usePagination({ initialPage: 3, totalPages: 5 }));
 
       act(() => {
         result.current.previousPage();
@@ -145,9 +127,7 @@ describe('usePagination', () => {
     });
 
     test('не уменьшает страницу когда hasPrevious=false', () => {
-      const { result } = renderHook(() =>
-        usePagination({ initialPage: 1, totalPages: 5 })
-      );
+      const { result } = renderHook(() => usePagination({ initialPage: 1, totalPages: 5 }));
 
       const currentPageBefore = result.current.currentPage;
 
@@ -165,9 +145,7 @@ describe('usePagination', () => {
    */
   describe('goToPage', () => {
     test('устанавливает указанную страницу', () => {
-      const { result } = renderHook(() =>
-        usePagination({ initialPage: 1, totalPages: 10 })
-      );
+      const { result } = renderHook(() => usePagination({ initialPage: 1, totalPages: 10 }));
 
       act(() => {
         result.current.goToPage(5);
@@ -177,9 +155,7 @@ describe('usePagination', () => {
     });
 
     test('не позволяет перейти на страницу меньше 1', () => {
-      const { result } = renderHook(() =>
-        usePagination({ initialPage: 3, totalPages: 5 })
-      );
+      const { result } = renderHook(() => usePagination({ initialPage: 3, totalPages: 5 }));
 
       const currentPageBefore = result.current.currentPage;
 
@@ -191,9 +167,7 @@ describe('usePagination', () => {
     });
 
     test('не позволяет перейти на страницу больше totalPages', () => {
-      const { result } = renderHook(() =>
-        usePagination({ initialPage: 3, totalPages: 5 })
-      );
+      const { result } = renderHook(() => usePagination({ initialPage: 3, totalPages: 5 }));
 
       const currentPageBefore = result.current.currentPage;
 
@@ -205,9 +179,7 @@ describe('usePagination', () => {
     });
 
     test('позволяет перейти на последнюю страницу', () => {
-      const { result } = renderHook(() =>
-        usePagination({ initialPage: 1, totalPages: 5 })
-      );
+      const { result } = renderHook(() => usePagination({ initialPage: 1, totalPages: 5 }));
 
       act(() => {
         result.current.goToPage(5);
@@ -223,9 +195,7 @@ describe('usePagination', () => {
    */
   describe('setTotalPages', () => {
     test('обновляет общее количество страниц', () => {
-      const { result } = renderHook(() =>
-        usePagination({ initialPage: 1, totalPages: 5 })
-      );
+      const { result } = renderHook(() => usePagination({ initialPage: 1, totalPages: 5 }));
 
       expect(result.current.totalPages).toBe(5);
 
@@ -238,9 +208,7 @@ describe('usePagination', () => {
     });
 
     test('пересчитывает hasNext после обновления totalPages', () => {
-      const { result } = renderHook(() =>
-        usePagination({ initialPage: 5, totalPages: 5 })
-      );
+      const { result } = renderHook(() => usePagination({ initialPage: 5, totalPages: 5 }));
 
       expect(result.current.hasNext).toBe(false);
 
@@ -252,9 +220,7 @@ describe('usePagination', () => {
     });
 
     test('пересчитывает hasPrevious при currentPage=1', () => {
-      const { result } = renderHook(() =>
-        usePagination({ initialPage: 1, totalPages: 1 })
-      );
+      const { result } = renderHook(() => usePagination({ initialPage: 1, totalPages: 1 }));
 
       act(() => {
         result.current.setTotalPages(5);
@@ -275,9 +241,7 @@ describe('usePagination', () => {
   describe('onPageChange callback', () => {
     test('вызывает onPageChange при nextPage', () => {
       const onPageChange = jest.fn();
-      const { result } = renderHook(() =>
-        usePagination({ initialPage: 1, totalPages: 5, onPageChange })
-      );
+      const { result } = renderHook(() => usePagination({ initialPage: 1, totalPages: 5, onPageChange }));
 
       act(() => {
         result.current.nextPage();
@@ -288,9 +252,7 @@ describe('usePagination', () => {
 
     test('вызывает onPageChange при previousPage', () => {
       const onPageChange = jest.fn();
-      const { result } = renderHook(() =>
-        usePagination({ initialPage: 3, totalPages: 5, onPageChange })
-      );
+      const { result } = renderHook(() => usePagination({ initialPage: 3, totalPages: 5, onPageChange }));
 
       act(() => {
         result.current.previousPage();
@@ -301,9 +263,7 @@ describe('usePagination', () => {
 
     test('вызывает onPageChange при goToPage', () => {
       const onPageChange = jest.fn();
-      const { result } = renderHook(() =>
-        usePagination({ initialPage: 1, totalPages: 5, onPageChange })
-      );
+      const { result } = renderHook(() => usePagination({ initialPage: 1, totalPages: 5, onPageChange }));
 
       act(() => {
         result.current.goToPage(4);
@@ -314,9 +274,7 @@ describe('usePagination', () => {
 
     test('не вызывает onPageChange для недопустимых страниц', () => {
       const onPageChange = jest.fn();
-      const { result } = renderHook(() =>
-        usePagination({ initialPage: 1, totalPages: 5, onPageChange })
-      );
+      const { result } = renderHook(() => usePagination({ initialPage: 1, totalPages: 5, onPageChange }));
 
       act(() => {
         result.current.goToPage(0); // Недопустимо
@@ -337,9 +295,7 @@ describe('usePagination', () => {
    */
   describe('граничные случаи', () => {
     test('работает с totalPages=1', () => {
-      const { result } = renderHook(() =>
-        usePagination({ initialPage: 1, totalPages: 1 })
-      );
+      const { result } = renderHook(() => usePagination({ initialPage: 1, totalPages: 1 }));
 
       expect(result.current.currentPage).toBe(1);
       expect(result.current.totalPages).toBe(1);
@@ -348,9 +304,7 @@ describe('usePagination', () => {
     });
 
     test('работает с большим количеством страниц', () => {
-      const { result } = renderHook(() =>
-        usePagination({ initialPage: 1, totalPages: 1000 })
-      );
+      const { result } = renderHook(() => usePagination({ initialPage: 1, totalPages: 1000 }));
 
       expect(result.current.hasNext).toBe(true);
 
@@ -363,9 +317,7 @@ describe('usePagination', () => {
     });
 
     test('corректно обрабатывает начальный номер страницы в середине диапазона', () => {
-      const { result } = renderHook(() =>
-        usePagination({ initialPage: 50, totalPages: 100 })
-      );
+      const { result } = renderHook(() => usePagination({ initialPage: 50, totalPages: 100 }));
 
       expect(result.current.currentPage).toBe(50);
       expect(result.current.hasNext).toBe(true);
