@@ -52,8 +52,7 @@ const SeriesGrid = () => {
     try {
       const data = await fetchSeriesRequest();
       const seriesList = data.results || data;
-      const withImages = (Array.isArray(seriesList) ? seriesList : [])
-        .filter((s) => s.image);
+      const withImages = (Array.isArray(seriesList) ? seriesList : []).filter((s) => s.image);
       setSeries(withImages);
       setLoading(false);
     } catch (err) {
@@ -79,11 +78,7 @@ const SeriesGrid = () => {
   }
 
   if (series.length === 0) {
-    return (
-      <AlertList
-        messages={[{ message: 'Нет доступных серий', level: 'info' }]}
-      />
-    );
+    return <AlertList messages={[{ message: 'Нет доступных серий', level: 'info' }]} />;
   }
 
   return (

@@ -64,12 +64,12 @@ const FileDropzone = ({ onFilesSelect, accept = 'image/*', multiple = true, file
   const validateFiles = (files) => {
     if (!accept) return files;
 
-    const acceptedTypes = accept.split(',').map(type => type.trim());
-    return Array.from(files).filter(file => {
+    const acceptedTypes = accept.split(',').map((type) => type.trim());
+    return Array.from(files).filter((file) => {
       if (acceptedTypes.includes('image/*')) {
         return file.type.startsWith('image/');
       }
-      return acceptedTypes.some(type => {
+      return acceptedTypes.some((type) => {
         if (type.startsWith('.')) {
           return file.name.toLowerCase().endsWith(type.toLowerCase());
         }
@@ -193,9 +193,7 @@ const FileDropzone = ({ onFilesSelect, accept = 'image/*', multiple = true, file
       >
         <Card.Body>
           <p className="mb-2">
-            {dragActive
-              ? 'Отпустите файлы здесь'
-              : 'Перетащите файлы сюда или кликните для выбора'}
+            {dragActive ? 'Отпустите файлы здесь' : 'Перетащите файлы сюда или кликните для выбора'}
           </p>
           <small className="text-muted">
             {multiple ? 'Можно выбрать несколько файлов' : 'Можно выбрать один файл'}

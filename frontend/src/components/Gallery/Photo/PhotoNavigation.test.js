@@ -18,9 +18,7 @@ describe('PhotoNavigation', () => {
    * где одна из кнопок навигации должна отсутствовать.
    */
   test('возвращает null если обе фотографии null', () => {
-    const { container } = render(
-      <PhotoNavigation previousPhoto={null} nextPhoto={null} />
-    );
+    const { container } = render(<PhotoNavigation previousPhoto={null} nextPhoto={null} />);
     expect(container.firstChild).toBeNull();
   });
 
@@ -29,9 +27,7 @@ describe('PhotoNavigation', () => {
    * Это дополнительная проверка для случая, когда пропсы могут быть не определены.
    */
   test('возвращает null если обе фотографии undefined', () => {
-    const { container } = render(
-      <PhotoNavigation previousPhoto={undefined} nextPhoto={undefined} />
-    );
+    const { container } = render(<PhotoNavigation previousPhoto={undefined} nextPhoto={undefined} />);
     expect(container.firstChild).toBeNull();
   });
 
@@ -92,7 +88,7 @@ describe('PhotoNavigation', () => {
   test('обе кнопки имеют вариант "primary"', () => {
     render(<PhotoNavigation previousPhoto={previousPhoto} nextPhoto={nextPhoto} />);
     const buttons = screen.getAllByRole('button');
-    buttons.forEach(button => {
+    buttons.forEach((button) => {
       expect(button).toHaveClass('btn-primary');
     });
   });
@@ -102,9 +98,7 @@ describe('PhotoNavigation', () => {
    * Это необходимо для корректного расположения кнопок по краям контейнера.
    */
   test('контейнер использует flexbox с правильным выравниванием', () => {
-    const { container } = render(
-      <PhotoNavigation previousPhoto={previousPhoto} nextPhoto={nextPhoto} />
-    );
+    const { container } = render(<PhotoNavigation previousPhoto={previousPhoto} nextPhoto={nextPhoto} />);
     const navigationContainer = container.firstChild;
     expect(navigationContainer).toHaveClass('d-flex', 'justify-content-between', 'mt-3');
   });
@@ -114,9 +108,7 @@ describe('PhotoNavigation', () => {
    * Это необходимо для правильной структуры разметки и последующей стилизации.
    */
   test('кнопки обёрнуты в div контейнеры', () => {
-    const { container } = render(
-      <PhotoNavigation previousPhoto={previousPhoto} nextPhoto={nextPhoto} />
-    );
+    const { container } = render(<PhotoNavigation previousPhoto={previousPhoto} nextPhoto={nextPhoto} />);
     const divs = container.querySelectorAll('.d-flex > div');
     expect(divs).toHaveLength(2);
   });
@@ -150,9 +142,7 @@ describe('PhotoNavigation', () => {
    * Это необходимо для корректного отображения только кнопки "Следующая".
    */
   test('левый контейнер пустой если нет previousPhoto', () => {
-    const { container } = render(
-      <PhotoNavigation previousPhoto={null} nextPhoto={nextPhoto} />
-    );
+    const { container } = render(<PhotoNavigation previousPhoto={null} nextPhoto={nextPhoto} />);
     const leftContainer = container.querySelector('.d-flex > div:first-child');
     expect(leftContainer).toBeEmptyDOMElement();
   });
@@ -162,9 +152,7 @@ describe('PhotoNavigation', () => {
    * Это необходимо для корректного отображения только кнопки "Предыдущая".
    */
   test('правый контейнер пустой если нет nextPhoto', () => {
-    const { container } = render(
-      <PhotoNavigation previousPhoto={previousPhoto} nextPhoto={null} />
-    );
+    const { container } = render(<PhotoNavigation previousPhoto={previousPhoto} nextPhoto={null} />);
     const rightContainer = container.querySelector('.d-flex > div:last-child');
     expect(rightContainer).toBeEmptyDOMElement();
   });

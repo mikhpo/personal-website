@@ -6,7 +6,7 @@
  */
 
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import ThemeToggle from './ThemeToggle';
 
 /**
@@ -26,9 +26,13 @@ const stubMatchMedia = (matchesDark) => {
 
 /**
  * Открывает выпадающее меню выбора темы кликом по кнопке.
+ * act оборачивается в async-вариант: popper позиционирует меню
+ * в микрозадаче после клика, и ее нужно промыть внутри act.
  */
-const openMenu = () => {
-  fireEvent.click(screen.getByRole('button', { name: 'Выбор темы' }));
+const openMenu = async () => {
+  await act(async () => {
+    fireEvent.click(screen.getByRole('button', { name: 'Выбор темы' }));
+  });
 };
 
 describe('ThemeToggle', () => {
@@ -78,29 +82,29 @@ describe('ThemeToggle', () => {
    * Проверяет содержимое выпадающего меню.
    */
   describe('меню выбора', () => {
-    test('содержит три варианта темы', () => {
+    test('содержит три варианта темы', async () => {
       render(<ThemeToggle />);
-      openMenu();
+      await openMenu();
 
       expect(screen.getByText('Светлая')).toBeInTheDocument();
       expect(screen.getByText('Тёмная')).toBeInTheDocument();
       expect(screen.getByText('Системная')).toBeInTheDocument();
     });
 
-    test('отмечает активной системную тему без явного выбора', () => {
+    test('отмечает активной системную тему без явного выбора', async () => {
       render(<ThemeToggle />);
-      openMenu();
+      await openMenu();
 
       expect(screen.getByText('Системная')).toHaveClass('active');
       expect(screen.getByText('Светлая')).not.toHaveClass('active');
       expect(screen.getByText('Тёмная')).not.toHaveClass('active');
     });
 
-    test('отмечает активной явно выбранную тему', () => {
+    test('отмечает активной явно выбранную тему', async () => {
       window.localStorage.setItem('theme', JSON.stringify('dark'));
 
       render(<ThemeToggle />);
-      openMenu();
+      await openMenu();
 
       expect(screen.getByText('Тёмная')).toHaveClass('active');
       expect(screen.getByText('Системная')).not.toHaveClass('active');
@@ -111,9 +115,9 @@ describe('ThemeToggle', () => {
    * Проверяет сохранение выбранной темы.
    */
   describe('выбор темы', () => {
-    test('выбор "Тёмная" сохраняет тему и обновляет атрибут на <html>', () => {
+    test('выбор "Тёмная" сохраняет тему и обновляет атрибут на <html>', async () => {
       render(<ThemeToggle />);
-      openMenu();
+      await openMenu();
 
       fireEvent.click(screen.getByText('Тёмная'));
 
@@ -122,9 +126,9 @@ describe('ThemeToggle', () => {
       expect(screen.getByRole('button', { name: 'Выбор темы' }).querySelector('i')).toHaveClass('bi-moon-stars-fill');
     });
 
-    test('выбор "Светлая" сохраняет тему и обновляет атрибут на <html>', () => {
+    test('выбор "Светлая" сохраняет тему и обновляет атрибут на <html>', async () => {
       render(<ThemeToggle />);
-      openMenu();
+      await openMenu();
 
       fireEvent.click(screen.getByText('Светлая'));
 
@@ -132,12 +136,12 @@ describe('ThemeToggle', () => {
       expect(document.documentElement).toHaveAttribute('data-bs-theme', 'light');
     });
 
-    test('выбор "Системная" удаляет явный выбор и следует системной теме', () => {
+    test('выбор "Системная" удаляет явный выбор и следует системной теме', async () => {
       window.localStorage.setItem('theme', JSON.stringify('dark'));
       window.matchMedia = stubMatchMedia(false);
 
       render(<ThemeToggle />);
-      openMenu();
+      await openMenu();
 
       fireEvent.click(screen.getByText('Системная'));
 

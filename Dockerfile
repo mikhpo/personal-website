@@ -49,10 +49,19 @@ RUN pip install --no-cache-dir poetry
 RUN localedef -i ru_RU -c -f UTF-8 -A /usr/share/locale/locale.alias ru_RU.UTF-8
 ENV LANG=ru_RU.utf8
 
-# Установить клиент MinIO из официального образа. Источник - Quay: публичные
-# репозитории MinIO в Docker Hub недоступны для анонимной загрузки. Версия и
-# дайджест зафиксированы: воспроизводимая сборка вместо плавающего latest.
-COPY --from=quay.io/minio/mc:RELEASE.2025-08-13T08-35-41Z@sha256:a7fe349ef4bd8521fb8497f55c6042871b2ae640607cf99d9bede5e9bdf11727 /usr/bin/mc /usr/local/bin/mc
+# Установить клиент MinIO. Публичные образы MinIO удалены и из Docker Hub, и с
+# quay.io, поэтому бинарник скачивается из GitHub releases того же релиза.
+# Контрольные суммы зафиксированы: воспроизводимая сборка вместо плавающего
+# источника.
+ARG TARGETARCH
+RUN case "${TARGETARCH}" in \
+        amd64) MC_SHA256=01f866e9c5f9b87c2b09116fa5d7c06695b106242d829a8bb32990c00312e891 ;; \
+        arm64) MC_SHA256=14c8c9616cfce4636add161304353244e8de383b2e2752c0e9dad01d4c27c12c ;; \
+    esac && \
+    curl -fsSL -o /tmp/mc "https://github.com/minio/mc/releases/download/RELEASE.2025-08-13T08-35-41Z/mc.linux-${TARGETARCH}.RELEASE.2025-08-13T08-35-41Z" && \
+    echo "${MC_SHA256}  /tmp/mc" | sha256sum -c - && \
+    install -m 0755 /tmp/mc /usr/local/bin/mc && \
+    rm -f /tmp/mc
 
 # Создать каталог для проекта и перейти в него.
 ENV WORK_DIR=/srv/website

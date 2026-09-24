@@ -6,7 +6,7 @@ import {
   createFirstPageElements,
   createMainPageElements,
   createLastPageElements,
-  renderPaginationItem
+  renderPaginationItem,
 } from '@components/Pagination/utils/paginationRenderers';
 
 /**
@@ -38,11 +38,7 @@ const NumbersPagination = ({ currentPage, totalPages, baseUrl }) => {
 
   const items = [...firstPageElements, ...mainPageElements, ...lastPageElements];
 
-  return (
-    <BSPagination className="justify-content-center">
-      {items}
-    </BSPagination>
-  );
+  return <BSPagination className="justify-content-center">{items}</BSPagination>;
 };
 
 NumbersPagination.propTypes = {

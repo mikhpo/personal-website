@@ -31,8 +31,8 @@ const EmbedLinksModal = ({ photoId, sizes, ext }) => {
   return (
     <>
       <p className="mb-2">
-        Постоянная ссылка на превью выбранного размера. Размер указан в пикселах по наибольшей стороне,
-        пропорции фотографии сохраняются. Вставьте ссылку в обычное поле адреса изображения в редакторе.
+        Постоянная ссылка на превью выбранного размера. Размер указан в пикселах по наибольшей стороне, пропорции
+        фотографии сохраняются. Вставьте ссылку в обычное поле адреса изображения в редакторе.
       </p>
       {sizes.map((size) => (
         <div className="input-group mb-2" key={size}>
@@ -46,11 +46,7 @@ const EmbedLinksModal = ({ photoId, sizes, ext }) => {
             readOnly
             onFocus={(event) => event.target.select()}
           />
-          <button
-            type="button"
-            className="btn btn-outline-dark"
-            onClick={() => copyEmbedUrl(size)}
-          >
+          <button type="button" className="btn btn-outline-dark" onClick={() => copyEmbedUrl(size)}>
             {copiedSize === size ? 'Скопировано' : 'Копировать'}
           </button>
         </div>

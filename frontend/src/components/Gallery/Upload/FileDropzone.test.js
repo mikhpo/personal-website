@@ -145,15 +145,10 @@ describe('FileDropzone', () => {
   // Проверяет фильтрацию файлов по типу image/*
   test('фильтрует файлы по типу image/*', () => {
     const handleFilesSelect = jest.fn();
-    const { container } = render(
-      <FileDropzone onFilesSelect={handleFilesSelect} accept="image/*" />
-    );
+    const { container } = render(<FileDropzone onFilesSelect={handleFilesSelect} accept="image/*" />);
 
     const dropzone = container.querySelector('.card');
-    const files = [
-      createMockFile('test.jpg', 'image/jpeg'),
-      createMockFile('test.txt', 'text/plain'),
-    ];
+    const files = [createMockFile('test.jpg', 'image/jpeg'), createMockFile('test.txt', 'text/plain')];
 
     fireEvent.drop(dropzone, {
       dataTransfer: { files },
@@ -165,15 +160,10 @@ describe('FileDropzone', () => {
   // Проверяет ограничение выбора одним файлом
   test('ограничивает выбор одним файлом если multiple=false', () => {
     const handleFilesSelect = jest.fn();
-    const { container } = render(
-      <FileDropzone onFilesSelect={handleFilesSelect} multiple={false} />
-    );
+    const { container } = render(<FileDropzone onFilesSelect={handleFilesSelect} multiple={false} />);
 
     const dropzone = container.querySelector('.card');
-    const files = [
-      createMockFile('test1.jpg', 'image/jpeg'),
-      createMockFile('test2.jpg', 'image/jpeg'),
-    ];
+    const files = [createMockFile('test1.jpg', 'image/jpeg'), createMockFile('test2.jpg', 'image/jpeg')];
 
     fireEvent.drop(dropzone, {
       dataTransfer: { files },
@@ -187,10 +177,7 @@ describe('FileDropzone', () => {
     const { container } = render(<FileDropzone onFilesSelect={jest.fn()} />);
 
     const input = container.querySelector('input[type="file"]');
-    const files = [
-      createMockFile('test1.jpg', 'image/jpeg'),
-      createMockFile('test2.jpg', 'image/jpeg'),
-    ];
+    const files = [createMockFile('test1.jpg', 'image/jpeg'), createMockFile('test2.jpg', 'image/jpeg')];
 
     fireEvent.change(input, { target: { files } });
 
@@ -206,10 +193,7 @@ describe('FileDropzone', () => {
     const { container } = render(<FileDropzone onFilesSelect={handleFilesSelect} />);
 
     const input = container.querySelector('input[type="file"]');
-    const files = [
-      createMockFile('test1.jpg', 'image/jpeg'),
-      createMockFile('test2.jpg', 'image/jpeg'),
-    ];
+    const files = [createMockFile('test1.jpg', 'image/jpeg'), createMockFile('test2.jpg', 'image/jpeg')];
 
     fireEvent.change(input, { target: { files } });
 
@@ -244,9 +228,7 @@ describe('FileDropzone', () => {
   // Проверяет фильтрацию файлов без типа при валидации
   test('обрабатывает файлы без типа', () => {
     const handleFilesSelect = jest.fn();
-    const { container } = render(
-      <FileDropzone onFilesSelect={handleFilesSelect} accept="image/*" />
-    );
+    const { container } = render(<FileDropzone onFilesSelect={handleFilesSelect} accept="image/*" />);
 
     const dropzone = container.querySelector('.card');
     const fileWithoutType = new File(['content'], 'test.jpg', { type: '' });
@@ -261,15 +243,10 @@ describe('FileDropzone', () => {
   // Проверяет валидацию файлов по расширению
   test('валидация работает с расширениями файлов', () => {
     const handleFilesSelect = jest.fn();
-    const { container } = render(
-      <FileDropzone onFilesSelect={handleFilesSelect} accept=".jpg,.png" />
-    );
+    const { container } = render(<FileDropzone onFilesSelect={handleFilesSelect} accept=".jpg,.png" />);
 
     const dropzone = container.querySelector('.card');
-    const files = [
-      createMockFile('test.jpg', 'image/jpeg'),
-      createMockFile('test.gif', 'image/gif'),
-    ];
+    const files = [createMockFile('test.jpg', 'image/jpeg'), createMockFile('test.gif', 'image/gif')];
 
     fireEvent.drop(dropzone, {
       dataTransfer: { files },

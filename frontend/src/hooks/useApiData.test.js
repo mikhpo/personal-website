@@ -28,9 +28,7 @@ describe('useApiData', () => {
     test('устанавливает loading=true при монтировании', () => {
       mockFetchFunction.mockImplementation(() => new Promise(() => {}));
 
-      const { result } = renderHook(() =>
-        useApiData(mockFetchFunction, { immediate: true })
-      );
+      const { result } = renderHook(() => useApiData(mockFetchFunction, { immediate: true }));
 
       expect(result.current.loading).toBe(true);
       expect(result.current.error).toBe(null);
@@ -40,9 +38,7 @@ describe('useApiData', () => {
     test('загружает данные при монтировании', async () => {
       mockFetchFunction.mockResolvedValue(mockData);
 
-      const { result } = renderHook(() =>
-        useApiData(mockFetchFunction, { immediate: true })
-      );
+      const { result } = renderHook(() => useApiData(mockFetchFunction, { immediate: true }));
 
       expect(result.current.loading).toBe(true);
 
@@ -59,9 +55,7 @@ describe('useApiData', () => {
       const errorMessage = 'Network error';
       mockFetchFunction.mockRejectedValue(new Error(errorMessage));
 
-      const { result } = renderHook(() =>
-        useApiData(mockFetchFunction, { immediate: true })
-      );
+      const { result } = renderHook(() => useApiData(mockFetchFunction, { immediate: true }));
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -79,9 +73,7 @@ describe('useApiData', () => {
     test('не загружает данные при монтировании', async () => {
       mockFetchFunction.mockResolvedValue(mockData);
 
-      const { result } = renderHook(() =>
-        useApiData(mockFetchFunction, { immediate: false })
-      );
+      const { result } = renderHook(() => useApiData(mockFetchFunction, { immediate: false }));
 
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toBe(null);
@@ -94,9 +86,7 @@ describe('useApiData', () => {
     test('позволяет загрузить данные через refetch', async () => {
       mockFetchFunction.mockResolvedValue(mockData);
 
-      const { result } = renderHook(() =>
-        useApiData(mockFetchFunction, { immediate: false })
-      );
+      const { result } = renderHook(() => useApiData(mockFetchFunction, { immediate: false }));
 
       // Загружаем данные вручную
       act(() => {
@@ -121,9 +111,7 @@ describe('useApiData', () => {
     test('перезагружает данные при вызове refetch', async () => {
       mockFetchFunction.mockResolvedValue(mockData);
 
-      const { result } = renderHook(() =>
-        useApiData(mockFetchFunction, { immediate: true })
-      );
+      const { result } = renderHook(() => useApiData(mockFetchFunction, { immediate: true }));
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -145,13 +133,9 @@ describe('useApiData', () => {
 
     test('очищает предыдущую ошибку при refetch', async () => {
       const errorMessage = 'First error';
-      mockFetchFunction
-        .mockRejectedValueOnce(new Error(errorMessage))
-        .mockResolvedValueOnce(mockData);
+      mockFetchFunction.mockRejectedValueOnce(new Error(errorMessage)).mockResolvedValueOnce(mockData);
 
-      const { result } = renderHook(() =>
-        useApiData(mockFetchFunction, { immediate: true })
-      );
+      const { result } = renderHook(() => useApiData(mockFetchFunction, { immediate: true }));
 
       await waitFor(() => {
         expect(result.current.error).toBe(errorMessage);
@@ -183,10 +167,9 @@ describe('useApiData', () => {
       const firstFetch = jest.fn().mockResolvedValue(mockData);
       const secondFetch = jest.fn().mockResolvedValue(mockData);
 
-      const { result, rerender } = renderHook(
-        ({ fetchFn }) => useApiData(fetchFn, { immediate: true }),
-        { initialProps: { fetchFn: firstFetch } }
-      );
+      const { result, rerender } = renderHook(({ fetchFn }) => useApiData(fetchFn, { immediate: true }), {
+        initialProps: { fetchFn: firstFetch },
+      });
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -212,9 +195,7 @@ describe('useApiData', () => {
     test('позволяет обновить данные вручную', async () => {
       mockFetchFunction.mockResolvedValue(mockData);
 
-      const { result } = renderHook(() =>
-        useApiData(mockFetchFunction, { immediate: true })
-      );
+      const { result } = renderHook(() => useApiData(mockFetchFunction, { immediate: true }));
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -237,11 +218,11 @@ describe('useApiData', () => {
   describe('initialData', () => {
     test('использует initialData как начальное значение', () => {
       const initialData = { results: [{ id: 0, name: 'Initial' }] };
-      mockFetchFunction.mockResolvedValue(mockData);
+      // Загрузка не должна завершиться: тест проверяет только начальное состояние,
+      // разрешившийся промис обновил бы состояние вне act после конца теста
+      mockFetchFunction.mockImplementation(() => new Promise(() => {}));
 
-      const { result } = renderHook(() =>
-        useApiData(mockFetchFunction, { immediate: true, initialData })
-      );
+      const { result } = renderHook(() => useApiData(mockFetchFunction, { immediate: true, initialData }));
 
       // Начальные данные должны быть доступны сразу
       expect(result.current.data).toEqual(initialData);
@@ -252,9 +233,7 @@ describe('useApiData', () => {
       const initialData = { results: [{ id: 0, name: 'Initial' }] };
       mockFetchFunction.mockResolvedValue(mockData);
 
-      const { result } = renderHook(() =>
-        useApiData(mockFetchFunction, { immediate: true, initialData })
-      );
+      const { result } = renderHook(() => useApiData(mockFetchFunction, { immediate: true, initialData }));
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false);

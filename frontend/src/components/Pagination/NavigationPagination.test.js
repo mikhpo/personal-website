@@ -36,7 +36,7 @@ describe('NavigationPagination', () => {
     render(<NavigationPagination currentPage={3} totalPages={5} baseUrl="/blog/" />);
 
     const buttons = screen.getAllByRole('link');
-    buttons.forEach(button => {
+    buttons.forEach((button) => {
       expect(button).toHaveClass('btn', 'btn-outline-dark');
     });
   });

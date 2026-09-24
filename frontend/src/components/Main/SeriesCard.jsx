@@ -32,12 +32,7 @@ const SeriesCard = ({ series }) => {
     <Card className="shadow rounded text-center h-100">
       {series.image && (
         <a href={seriesUrl}>
-          <Card.Img
-            variant="top"
-            src={series.image}
-            alt={series.name}
-            loading="lazy"
-          />
+          <Card.Img variant="top" src={series.image} alt={series.name} loading="lazy" />
         </a>
       )}
       <Card.Body className="d-flex flex-column">

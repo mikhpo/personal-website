@@ -360,9 +360,7 @@ const ArticleForm = ({ articleId = null, tinymceScriptSrc = '/static/tinymce/tin
   const saveArticle = async (state) => {
     const id = savedArticleIdRef.current;
     const formData = buildFormData(state);
-    const response = id
-      ? await blogService.updateArticle(id, formData)
-      : await blogService.createArticle(formData);
+    const response = id ? await blogService.updateArticle(id, formData) : await blogService.createArticle(formData);
     if (!id && response.id) {
       savedArticleIdRef.current = response.id;
       setSavedArticleId(response.id);
@@ -577,12 +575,7 @@ const ArticleForm = ({ articleId = null, tinymceScriptSrc = '/static/tinymce/tin
 
             <Form.Group className="mb-3" controlId="article-categories">
               <Form.Label>Категории</Form.Label>
-              <Form.Select
-                multiple
-                size={5}
-                value={form.categories}
-                onChange={handleMultiSelect('categories')}
-              >
+              <Form.Select multiple size={5} value={form.categories} onChange={handleMultiSelect('categories')}>
                 {taxonomies.categories.map((category) => (
                   <option key={category.id} value={category.id}>
                     {category.name}
@@ -593,12 +586,7 @@ const ArticleForm = ({ articleId = null, tinymceScriptSrc = '/static/tinymce/tin
 
             <Form.Group className="mb-3" controlId="article-series">
               <Form.Label>Серии</Form.Label>
-              <Form.Select
-                multiple
-                size={5}
-                value={form.series}
-                onChange={handleMultiSelect('series')}
-              >
+              <Form.Select multiple size={5} value={form.series} onChange={handleMultiSelect('series')}>
                 {taxonomies.series.map((serie) => (
                   <option key={serie.id} value={serie.id}>
                     {serie.name}
@@ -609,12 +597,7 @@ const ArticleForm = ({ articleId = null, tinymceScriptSrc = '/static/tinymce/tin
 
             <Form.Group className="mb-3" controlId="article-topics">
               <Form.Label>Темы</Form.Label>
-              <Form.Select
-                multiple
-                size={5}
-                value={form.topics}
-                onChange={handleMultiSelect('topics')}
-              >
+              <Form.Select multiple size={5} value={form.topics} onChange={handleMultiSelect('topics')}>
                 {taxonomies.topics.map((topic) => (
                   <option key={topic.id} value={topic.id}>
                     {topic.name}

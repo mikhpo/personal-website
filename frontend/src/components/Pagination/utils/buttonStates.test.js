@@ -1,9 +1,4 @@
-import {
-  isButtonDisabled,
-  getButtonHref,
-  getButtonText,
-  getButtonClassName
-} from './buttonStates';
+import { isButtonDisabled, getButtonHref, getButtonText, getButtonClassName } from './buttonStates';
 
 /**
  * Тесты для утилит состояний кнопок

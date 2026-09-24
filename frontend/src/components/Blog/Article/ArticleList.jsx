@@ -95,15 +95,18 @@ const ArticleList = ({ categorySlug, seriesSlug, topicSlug, search }) => {
    * @param {number} page - Номер страницы для запроса
    * @return {Promise<Object>} Ответ API со списком статей
    */
-  const fetchArticles = useCallback((page) => {
-    return blogService.getArticles({
-      categories__slug: categorySlug,
-      series__slug: seriesSlug,
-      topics__slug: topicSlug,
-      search,
-      page,
-    });
-  }, [categorySlug, seriesSlug, topicSlug, search]);
+  const fetchArticles = useCallback(
+    (page) => {
+      return blogService.getArticles({
+        categories__slug: categorySlug,
+        series__slug: seriesSlug,
+        topics__slug: topicSlug,
+        search,
+        page,
+      });
+    },
+    [categorySlug, seriesSlug, topicSlug, search],
+  );
 
   /**
    * Эффект для загрузки статей при монтировании, изменении фильтра/страницы или повторной попытке
@@ -165,15 +168,11 @@ const ArticleList = ({ categorySlug, seriesSlug, topicSlug, search }) => {
             message: error,
             level: 'error',
             actions: (
-              <Button
-                variant="outline-primary"
-                size="sm"
-                onClick={handleRetry}
-              >
+              <Button variant="outline-primary" size="sm" onClick={handleRetry}>
                 Повторить
               </Button>
-            )
-          }
+            ),
+          },
         ]}
       />
     );
@@ -182,16 +181,14 @@ const ArticleList = ({ categorySlug, seriesSlug, topicSlug, search }) => {
   // Отображение сообщения о пустом списке статей;
   // при активном поиске сообщение включает запрос пользователя
   if (articles.length === 0) {
-    const emptyMessage = search
-      ? `По запросу "${search}" ничего не найдено`
-      : 'Статьи не найдены';
+    const emptyMessage = search ? `По запросу "${search}" ничего не найдено` : 'Статьи не найдены';
     return <AlertList messages={[{ message: emptyMessage, level: 'info' }]} />;
   }
 
   // Отображение списка статей
   return (
     <div className="mb-3 pb-3">
-      {articles.map(article => (
+      {articles.map((article) => (
         <ArticleCard key={article.id} article={article} />
       ))}
       <Pagination
@@ -200,8 +197,8 @@ const ArticleList = ({ categorySlug, seriesSlug, topicSlug, search }) => {
         hasNext={hasNext}
         hasPrevious={hasPrevious}
         onPageChange={setCurrentPage}
-        onNext={() => setCurrentPage(p => p + 1)}
-        onPrevious={() => setCurrentPage(p => p - 1)}
+        onNext={() => setCurrentPage((p) => p + 1)}
+        onPrevious={() => setCurrentPage((p) => p - 1)}
         type="navigation"
       />
     </div>

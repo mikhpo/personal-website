@@ -13,7 +13,7 @@ import TagsOffcanvas from './TagsOffcanvas';
 // Библиотека jsdom не поддерживает matchMedia, поэтому создаётся мок-реализация
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
-  value: jest.fn().mockImplementation(query => ({
+  value: jest.fn().mockImplementation((query) => ({
     matches: false,
     media: query,
     onchange: null,
@@ -75,9 +75,11 @@ describe('TagsOffcanvas', () => {
     });
 
     // Используем getByText с точным матчером, чтобы избежать множественных совпадений
-    expect(screen.getByText((content, element) => {
-      return content === 'Загрузка тегов...' && element.tagName.toLowerCase() === 'p';
-    })).toBeInTheDocument();
+    expect(
+      screen.getByText((content, element) => {
+        return content === 'Загрузка тегов...' && element.tagName.toLowerCase() === 'p';
+      }),
+    ).toBeInTheDocument();
   });
 
   // Проверяет отображение списка тегов после успешной загрузки данных
@@ -199,13 +201,7 @@ describe('TagsOffcanvas', () => {
     });
 
     await act(async () => {
-      render(
-        <TagsOffcanvas
-          show={true}
-          onHide={jest.fn()}
-          tagsApiUrl="/custom/api/tags/"
-        />
-      );
+      render(<TagsOffcanvas show={true} onHide={jest.fn()} tagsApiUrl="/custom/api/tags/" />);
     });
 
     await waitFor(() => {
@@ -331,9 +327,7 @@ describe('TagsOffcanvas', () => {
 
     let container;
     await act(async () => {
-      const result = render(
-        <TagsOffcanvas show={true} onHide={jest.fn()} tagsApiUrl="/api/tags1/" />
-      );
+      const result = render(<TagsOffcanvas show={true} onHide={jest.fn()} tagsApiUrl="/api/tags1/" />);
       container = result.container;
     });
 
@@ -342,14 +336,11 @@ describe('TagsOffcanvas', () => {
     });
 
     await act(async () => {
-      render(
-        <TagsOffcanvas show={true} onHide={jest.fn()} tagsApiUrl="/api/tags2/" />
-      , { container });
+      render(<TagsOffcanvas show={true} onHide={jest.fn()} tagsApiUrl="/api/tags2/" />, { container });
     });
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith('/api/tags2/');
     });
   });
-
 });

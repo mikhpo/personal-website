@@ -14,9 +14,7 @@ import SeriesGrid from '@components/Main/SeriesGrid';
 // Мокировать компонент SeriesCard для изоляции тестов
 jest.mock('@components/Main/SeriesCard', () => ({
   __esModule: true,
-  default: ({ series }) => (
-    <div data-testid={`series-card-${series.id}`}>{series.name}</div>
-  ),
+  default: ({ series }) => <div data-testid={`series-card-${series.id}`}>{series.name}</div>,
 }));
 
 // Мокировать компоненты Spinner и AlertList

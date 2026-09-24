@@ -91,12 +91,14 @@ describe('CommentList', () => {
    * Компонент должен справляться с длинными списками.
    */
   test('обрабатывает большое количество комментариев', () => {
-    const manyComments = Array(50).fill(null).map((_, i) => ({
-      id: i + 1,
-      author_username: `user${i + 1}`,
-      content: `Комментарий ${i + 1}`,
-      posted: '15 янв. 2024 г.',
-    }));
+    const manyComments = Array(50)
+      .fill(null)
+      .map((_, i) => ({
+        id: i + 1,
+        author_username: `user${i + 1}`,
+        content: `Комментарий ${i + 1}`,
+        posted: '15 янв. 2024 г.',
+      }));
     render(<CommentList comments={manyComments} />);
     expect(screen.getAllByTestId('comment')).toHaveLength(50);
   });

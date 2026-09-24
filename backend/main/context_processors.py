@@ -123,6 +123,14 @@ def navbar_data(request: HttpRequest) -> ContextNavbarData:
         )
         links.append(gallery_link)
 
+    links.append(
+        NavbarLink(
+            url="/about/",
+            text="Обо мне",
+            active=request.path.startswith("/about/"),
+        ),
+    )
+
     return ContextNavbarData(
         navbar_data=NavbarData(
             brandName="Mikhail Polyakov",

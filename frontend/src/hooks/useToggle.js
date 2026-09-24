@@ -30,7 +30,7 @@ const useToggle = (initialValue = false) => {
    * @return {void}
    */
   const toggle = useCallback(() => {
-    setValue(v => !v);
+    setValue((v) => !v);
   }, []);
 
   /**

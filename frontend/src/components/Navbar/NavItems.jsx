@@ -42,12 +42,7 @@ const NavItems = ({ links, userIsStaff }) => (
       // Ссылка с выпадающим меню
       if (link.dropdown) {
         return (
-          <NavDropdown
-            key={link.url}
-            title={link.text}
-            id={`nav-dropdown-${link.url}`}
-            active={link.active}
-          >
+          <NavDropdown key={link.url} title={link.text} id={`nav-dropdown-${link.url}`} active={link.active}>
             {link.dropdown.map((item) => {
               // Элемент для открытия offcanvas панели
               if (item.offcanvas) {
@@ -88,11 +83,7 @@ const NavItems = ({ links, userIsStaff }) => (
 
       // Обычная навигационная ссылка
       return (
-        <Nav.Link
-          key={link.url}
-          href={link.url}
-          className={link.active ? 'active' : ''}
-        >
+        <Nav.Link key={link.url} href={link.url} className={link.active ? 'active' : ''}>
           {link.text}
         </Nav.Link>
       );
@@ -111,9 +102,9 @@ NavItems.propTypes = {
           url: PropTypes.string,
           text: PropTypes.string.isRequired,
           offcanvas: PropTypes.bool,
-        })
+        }),
       ),
-    })
+    }),
   ).isRequired,
   userIsStaff: PropTypes.bool,
 };

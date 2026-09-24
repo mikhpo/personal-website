@@ -6,9 +6,7 @@ import PhotoList from './PhotoList';
 // Мокировать компонент PhotoCard для изоляции тестов
 jest.mock('./PhotoCard', () => ({
   __esModule: true,
-  default: ({ photo }) => (
-    <div data-testid={`photo-card-${photo.id}`}>{photo.name}</div>
-  ),
+  default: ({ photo }) => <div data-testid={`photo-card-${photo.id}`}>{photo.name}</div>,
 }));
 
 /**
@@ -57,9 +55,7 @@ describe('PhotoList', () => {
     });
     render(<PhotoList tagSlug="example-tag" />);
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('tags__slug=example-tag'),
-      );
+      expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('tags__slug=example-tag'));
     });
   });
 
@@ -73,9 +69,7 @@ describe('PhotoList', () => {
     });
     render(<PhotoList search="sunset" />);
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('search=sunset'),
-      );
+      expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('search=sunset'));
     });
   });
 
@@ -202,9 +196,12 @@ describe('PhotoList', () => {
     await user.click(retryButton);
 
     // Дождаться появления фотографий
-    await waitFor(() => {
-      expect(screen.getByText('Фото 1')).toBeInTheDocument();
-    }, { timeout: 3000 });
+    await waitFor(
+      () => {
+        expect(screen.getByText('Фото 1')).toBeInTheDocument();
+      },
+      { timeout: 3000 },
+    );
   });
 
   /**
@@ -263,7 +260,7 @@ describe('PhotoList', () => {
    * Проверяет работу с фотографиями без thumbnail_url
    */
   test('работает с фотографиями без thumbnail_url', async () => {
-    const photosWithoutThumbnails = mockPhotos.map(p => ({ ...p, thumbnail_url: undefined }));
+    const photosWithoutThumbnails = mockPhotos.map((p) => ({ ...p, thumbnail_url: undefined }));
     global.fetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({ results: photosWithoutThumbnails }),
@@ -278,7 +275,7 @@ describe('PhotoList', () => {
    * Проверяет работу с фотографиями без datetime_taken
    */
   test('работает с фотографиями без datetime_taken', async () => {
-    const photosWithoutDates = mockPhotos.map(p => ({ ...p, datetime_taken: undefined }));
+    const photosWithoutDates = mockPhotos.map((p) => ({ ...p, datetime_taken: undefined }));
     global.fetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({ results: photosWithoutDates }),

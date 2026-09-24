@@ -145,23 +145,20 @@ const TagsOffcanvas = ({ show, onHide, tagsApiUrl = '/api/gallery/tags/' }) => {
                 message: error,
                 level: 'error',
                 actions: (
-                  <button
-                    className="btn btn-outline-primary btn-sm"
-                    onClick={handleRetry}
-                  >
+                  <button className="btn btn-outline-primary btn-sm" onClick={handleRetry}>
                     Повторить
                   </button>
-                )
-              }
+                ),
+              },
             ]}
           />
         )}
         {!loading && !error && tags.length === 0 && (
-          <AlertList messages={[{ message: "Нет доступных тегов", level: "info" }]} />
+          <AlertList messages={[{ message: 'Нет доступных тегов', level: 'info' }]} />
         )}
         {!loading && !error && tags.length > 0 && (
           <div className="d-grid gap-2">
-            {tags.map(tag => (
+            {tags.map((tag) => (
               <TagButton key={tag.id} tag={tag} />
             ))}
           </div>

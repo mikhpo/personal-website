@@ -53,21 +53,20 @@ describe('mountReactComponent', () => {
    * Проверяет, что функция правильно вызывает createRoot и рендерит компонент
    */
   test('должен успешно монтировать компонент при наличии элемента', async () => {
-    // Настройка мока для динамического импорта компонента
-    jest.mock('./components/TestComponent', () => ({
-      __esModule: true,
-      default: () => 'Mocked Component',
-    }), { virtual: true });
+    // Реестр содержит все компоненты, доступные шаблонам Django:
+    // имя берется из componentRegistry, динамический импорт не выполняется
+    window.mountReactComponent('Main/HomePage', 'test-container', { testProp: 'test' });
 
-    // Вызов тестируемой функции
-    window.mountReactComponent('TestComponent', 'test-container', { testProp: 'test' });
-
-    // Ожидание разрешения асинхронного динамического импорта
-    await Promise.resolve();
+    // Ожидание завершения синхронного монтирования
+    await new Promise((resolve) => setTimeout(resolve, 0));
 
     // Проверка вызова createRoot с правильным DOM элементом
     const { createRoot } = require('react-dom/client');
     expect(createRoot).toHaveBeenCalledWith(mockElement);
+
+    // Проверка, что компонент из реестра отрендерен в созданный корень
+    const rootInstance = createRoot.mock.results[0].value;
+    expect(rootInstance.render).toHaveBeenCalledTimes(1);
   });
 
   /**
@@ -104,7 +103,7 @@ describe('mountReactComponent', () => {
     window.mountReactComponent('NonExistentComponent', 'test-container');
 
     // Ожидание разрешения асинхронного динамического импорта и обработки ошибки
-    await new Promise(resolve => setTimeout(resolve, 0));
+    await new Promise((resolve) => setTimeout(resolve, 0));
 
     // Проверка вывода ошибки в консоль
     expect(mockConsoleError).toHaveBeenCalled();

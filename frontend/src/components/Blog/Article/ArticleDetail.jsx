@@ -153,15 +153,11 @@ const ArticleDetail = ({
             message: error,
             level: 'error',
             actions: (
-              <Button
-                variant="outline-primary"
-                size="sm"
-                onClick={handleRetry}
-              >
+              <Button variant="outline-primary" size="sm" onClick={handleRetry}>
                 Повторить
               </Button>
-            )
-          }
+            ),
+          },
         ]}
       />
     );
@@ -169,7 +165,7 @@ const ArticleDetail = ({
 
   // Отображение сообщения если статья не найдена
   if (!article) {
-    return <AlertList messages={[{ message: "Статья не найдена", level: "warning" }]} />;
+    return <AlertList messages={[{ message: 'Статья не найдена', level: 'warning' }]} />;
   }
 
   return (
@@ -177,10 +173,7 @@ const ArticleDetail = ({
       <Card className="shadow rounded justify-content">
         <Card.Body>
           <h1 className="card-title fs-4">{article.title}</h1>
-          <p
-            className="card-text"
-            dangerouslySetInnerHTML={{ __html: article.content }}
-          />
+          <p className="card-text" dangerouslySetInnerHTML={{ __html: article.content }} />
           <div className="card-footer">
             <small className="text-muted">Опубликовано {article.published_at}</small>
             <br />
@@ -195,12 +188,14 @@ const ArticleDetail = ({
             loginUrl={loginUrl}
             onSuccess={handleCommentSuccess}
             tinymceScriptSrc={tinymceScriptSrc}
-            asideActions={isStaff ? (
-              <a className="btn btn-outline-dark btn-sm" href={`${article.url}edit/`}>
-                <i className="fas fa-edit me-1" />
-                Редактировать
-              </a>
-            ) : null}
+            asideActions={
+              isStaff ? (
+                <a className="btn btn-outline-dark btn-sm" href={`${article.url}edit/`}>
+                  <i className="fas fa-edit me-1" />
+                  Редактировать
+                </a>
+              ) : null
+            }
           />
           {article.comments && article.comments.length > 0 && (
             <>

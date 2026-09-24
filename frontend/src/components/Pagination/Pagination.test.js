@@ -4,9 +4,7 @@ import Pagination from './Pagination';
 
 describe('Pagination', () => {
   test('не рендерится при одной странице', () => {
-    const { container } = render(
-      <Pagination currentPage={1} totalPages={1} baseUrl="/blog/" />
-    );
+    const { container } = render(<Pagination currentPage={1} totalPages={1} baseUrl="/blog/" />);
     expect(container.firstChild).toBeNull();
   });
 

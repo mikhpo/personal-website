@@ -32,12 +32,7 @@ const LoadingError = ({ message, onRetry, retryButtonText = 'Повторить'
           message,
           level: 'error',
           actions: (
-            <Button
-              variant="outline-primary"
-              size="sm"
-              onClick={onRetry}
-              data-testid="retry-button"
-            >
+            <Button variant="outline-primary" size="sm" onClick={onRetry} data-testid="retry-button">
               {retryButtonText}
             </Button>
           ),

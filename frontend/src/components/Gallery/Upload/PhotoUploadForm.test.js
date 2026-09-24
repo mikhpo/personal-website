@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import PhotoUploadForm from './PhotoUploadForm';
 import { galleryService } from '@services';
@@ -162,9 +162,7 @@ describe('PhotoUploadForm', () => {
     const user = userEvent.setup();
 
     galleryService.getAlbums.mockResolvedValue({ results: mockAlbums });
-    galleryService.uploadPhotos.mockResolvedValue([
-      { file: 'test.jpg', success: true },
-    ]);
+    galleryService.uploadPhotos.mockResolvedValue([{ file: 'test.jpg', success: true }]);
 
     render(<PhotoUploadForm />);
 
@@ -237,7 +235,9 @@ describe('PhotoUploadForm', () => {
     // Since we're mocking the service, we need to manually trigger the progress callback
     const uploadCall = galleryService.uploadPhotos.mock.calls[0];
     const onProgress = uploadCall[2];
-    onProgress('test.jpg', { progress: 50, status: 'uploading' });
+    act(() => {
+      onProgress('test.jpg', { progress: 50, status: 'uploading' });
+    });
 
     await waitFor(() => {
       expect(screen.getByText('Прогресс загрузки:')).toBeInTheDocument();
@@ -256,9 +256,7 @@ describe('PhotoUploadForm', () => {
     const user = userEvent.setup();
 
     galleryService.getAlbums.mockResolvedValue({ results: mockAlbums });
-    galleryService.uploadPhotos.mockResolvedValue([
-      { file: 'test.jpg', success: false, error: 'Upload failed' },
-    ]);
+    galleryService.uploadPhotos.mockResolvedValue([{ file: 'test.jpg', success: false, error: 'Upload failed' }]);
 
     render(<PhotoUploadForm />);
 
@@ -323,9 +321,7 @@ describe('PhotoUploadForm', () => {
     const user = userEvent.setup();
 
     galleryService.getAlbums.mockResolvedValue({ results: mockAlbums });
-    galleryService.uploadPhotos.mockResolvedValue([
-      { file: 'test.jpg', success: true },
-    ]);
+    galleryService.uploadPhotos.mockResolvedValue([{ file: 'test.jpg', success: true }]);
 
     render(<PhotoUploadForm />);
 
@@ -349,11 +345,7 @@ describe('PhotoUploadForm', () => {
     await user.click(uploadButton);
 
     await waitFor(() => {
-      expect(galleryService.uploadPhotos).toHaveBeenCalledWith(
-        1,
-        [file],
-        expect.any(Function)
-      );
+      expect(galleryService.uploadPhotos).toHaveBeenCalledWith(1, [file], expect.any(Function));
     });
   });
 
@@ -373,9 +365,7 @@ describe('PhotoUploadForm', () => {
     const user = userEvent.setup();
 
     galleryService.getAlbums.mockResolvedValue({ results: mockAlbums });
-    galleryService.uploadPhotos.mockResolvedValue([
-      { file: 'test.jpg', success: true },
-    ]);
+    galleryService.uploadPhotos.mockResolvedValue([{ file: 'test.jpg', success: true }]);
 
     render(<PhotoUploadForm />);
 

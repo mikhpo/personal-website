@@ -74,7 +74,7 @@ AlertList.propTypes = {
       autoClose: PropTypes.bool,
       autoCloseDelay: PropTypes.number,
       actions: PropTypes.node,
-    })
+    }),
   ),
 };
 

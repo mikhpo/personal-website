@@ -36,6 +36,9 @@ import CategoryGrid from '@components/Main/CategoryGrid';
 import SeriesCard from '@components/Main/SeriesCard';
 import SeriesGrid from '@components/Main/SeriesGrid';
 
+// Импорт About компонентов
+import About from '@components/About/AboutPage';
+
 // Импорт общих компонентов
 import SearchForm from '@components/Search/SearchForm';
 import SearchResults from '@components/Search/SearchResults';
@@ -81,6 +84,9 @@ const componentRegistry = {
   'Main/CategoryGrid': CategoryGrid,
   'Main/SeriesCard': SeriesCard,
   'Main/SeriesGrid': SeriesGrid,
+
+  // Компоненты About
+  'About/AboutPage': About,
 
   // Общие компоненты
   'Search/SearchForm': SearchForm,
@@ -133,5 +139,3 @@ window.mountReactComponent = (componentName, elementId, props = {}) => {
       console.error(`Failed to load component "${componentName}":`, error);
     });
 };
-
-console.log('React runtime loaded successfully');

@@ -52,6 +52,13 @@ repos:
         language: system
         types: [file]
         files: \.(md|markdown)$
+      - id: prettier
+        name: prettier
+        description: Форматирование JavaScript и JSON файлов при помощи Prettier
+        entry: npx prettier --write --ignore-unknown
+        language: system
+        types: [file]
+        files: \.(json|[cm]?[jt]sx?)$
       - id: eslint
         name: eslint
         description: Статический анализ кода JavaScript при помощи ESLint

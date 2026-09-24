@@ -16,11 +16,7 @@ jest.mock('@services');
 // Мок для @tinymce/tinymce-react: TinyMCE использует iframe, который не работает в jsdom
 jest.mock('@tinymce/tinymce-react', () => ({
   Editor: ({ value, onEditorChange, disabled }) => (
-    <textarea
-      value={value}
-      onChange={(e) => onEditorChange(e.target.value)}
-      disabled={disabled}
-    />
+    <textarea value={value} onChange={(e) => onEditorChange(e.target.value)} disabled={disabled} />
   ),
 }));
 
@@ -30,7 +26,9 @@ jest.mock('@components/Alert/AlertList', () => {
     return (
       <div data-testid="alert-list">
         {messages.map((msg) => (
-          <div key={`${msg.level}-${msg.message}`} data-testid={`alert-${msg.level}`}>{msg.message}</div>
+          <div key={`${msg.level}-${msg.message}`} data-testid={`alert-${msg.level}`}>
+            {msg.message}
+          </div>
         ))}
       </div>
     );
@@ -111,9 +109,7 @@ describe('CommentForm', () => {
    * Проверяет вывод дополнительных действий в ряду кнопки отправки.
    */
   test('отображает asideActions рядом с кнопкой отправки', () => {
-    render(
-      <CommentForm {...mockProps} asideActions={<a href="/edit/">Редактировать</a>} />,
-    );
+    render(<CommentForm {...mockProps} asideActions={<a href="/edit/">Редактировать</a>} />);
     const link = screen.getByText('Редактировать');
     expect(link).toBeInTheDocument();
     expect(link.closest('a')).toHaveAttribute('href', '/edit/');

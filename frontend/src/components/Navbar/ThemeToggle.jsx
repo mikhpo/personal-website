@@ -32,8 +32,7 @@ const ThemeToggle = ({ variant }) => {
 
   // В режиме "Системная" иконка кнопки показывает автоматический режим,
   // иначе - действующую тему
-  const toggleIcon =
-    storedTheme === null ? 'bi-circle-half' : theme === 'dark' ? 'bi-moon-stars-fill' : 'bi-sun-fill';
+  const toggleIcon = storedTheme === null ? 'bi-circle-half' : theme === 'dark' ? 'bi-moon-stars-fill' : 'bi-sun-fill';
 
   return (
     <Dropdown align="end" className="navbar-theme my-2 my-lg-0">

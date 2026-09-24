@@ -1,0 +1,13 @@
+{# Страница Обо мне: содержимое хранится в записи модели About, редактируется в админке, рендерит React компонент AboutPage. #}
+{% extends "base.html" %}
+{% load static %}
+{% load react_tags %}
+{% block title %}
+    Обо мне
+{% endblock title %}
+{% block content %}
+    <div class="container">
+        <h1 class="mb-3">Обо мне</h1>
+        {% react_component "About/AboutPage" apiUrl="/api/about/" %}
+    </div>
+{% endblock content %}

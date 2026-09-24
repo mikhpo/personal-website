@@ -77,11 +77,7 @@ const Navbar = ({ brandName, brandUrl, links, userAuthenticated, userName, userI
             <SearchForm targetUrl="/main/search/" placeholder="Поиск по сайту..." />
           </div>
           <ThemeToggle />
-          <UserAuthSection
-            userAuthenticated={userAuthenticated}
-            userName={userName}
-            userIsStaff={userIsStaff}
-          />
+          <UserAuthSection userAuthenticated={userAuthenticated} userName={userName} userIsStaff={userIsStaff} />
         </BSNavbar.Collapse>
       </Container>
     </BSNavbar>
@@ -100,9 +96,9 @@ Navbar.propTypes = {
         PropTypes.shape({
           url: PropTypes.string.isRequired,
           text: PropTypes.string.isRequired,
-        })
+        }),
       ),
-    })
+    }),
   ).isRequired,
   userAuthenticated: PropTypes.bool.isRequired,
   userName: PropTypes.string,

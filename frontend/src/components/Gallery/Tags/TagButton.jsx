@@ -25,12 +25,7 @@ const TagButton = ({ tag, onClick }) => {
   };
 
   return (
-    <Button
-      variant="outline-dark"
-      href={tagUrl}
-      onClick={handleClick}
-      className="w-100"
-    >
+    <Button variant="outline-dark" href={tagUrl} onClick={handleClick} className="w-100">
       {tag.name}
     </Button>
   );

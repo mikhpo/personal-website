@@ -48,11 +48,7 @@ const SearchForm = ({ targetUrl, search, placeholder, submitLabel, buttonVariant
   const handleSubmit = (event) => {
     event.preventDefault();
     const trimmedQuery = query.trim();
-    navigateTo(
-      trimmedQuery
-        ? `${targetUrl}?search=${encodeURIComponent(trimmedQuery)}`
-        : targetUrl,
-    );
+    navigateTo(trimmedQuery ? `${targetUrl}?search=${encodeURIComponent(trimmedQuery)}` : targetUrl);
   };
 
   return (

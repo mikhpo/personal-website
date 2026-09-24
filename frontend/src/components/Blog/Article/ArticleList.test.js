@@ -25,9 +25,15 @@ jest.mock('@components/Pagination/Pagination', () => {
   return function MockPagination({ currentPage, totalPages, hasNext, hasPrevious, onNext, onPrevious }) {
     return (
       <div data-testid="pagination">
-        <button onClick={onPrevious} disabled={!hasPrevious}>Пред.</button>
-        <span>Стр. {currentPage} из {totalPages}</span>
-        <button onClick={onNext} disabled={!hasNext}>След.</button>
+        <button onClick={onPrevious} disabled={!hasPrevious}>
+          Пред.
+        </button>
+        <span>
+          Стр. {currentPage} из {totalPages}
+        </span>
+        <button onClick={onNext} disabled={!hasNext}>
+          След.
+        </button>
       </div>
     );
   };
@@ -73,9 +79,7 @@ describe('ArticleList', () => {
   /**
    * Мок успешного ответа API без results (плоский список)
    */
-  const mockFlatApiResponse = [
-    { id: 1, slug: 'article-1', title: 'Статья 1', content: 'Контент 1' },
-  ];
+  const mockFlatApiResponse = [{ id: 1, slug: 'article-1', title: 'Статья 1', content: 'Контент 1' }];
 
   /**
    * Мок пустого ответа API
@@ -186,9 +190,7 @@ describe('ArticleList', () => {
    * Компонент должен повторять запрос при клике на кнопку.
    */
   test('повторная попытка загрузки при нажатии кнопки "Повторить"', async () => {
-    blogService.getArticles
-      .mockRejectedValueOnce(new Error('Ошибка сети'))
-      .mockResolvedValueOnce(mockApiResponse);
+    blogService.getArticles.mockRejectedValueOnce(new Error('Ошибка сети')).mockResolvedValueOnce(mockApiResponse);
 
     render(<ArticleList />);
 
@@ -224,13 +226,11 @@ describe('ArticleList', () => {
    * Компонент должен загружать данные для следующей страницы.
    */
   test('переходит на следующую страницу', async () => {
-    blogService.getArticles
-      .mockResolvedValueOnce(mockApiResponse)
-      .mockResolvedValueOnce({
-        ...mockApiResponse,
-        previous: '/api/blog/articles/',
-        next: null,
-      });
+    blogService.getArticles.mockResolvedValueOnce(mockApiResponse).mockResolvedValueOnce({
+      ...mockApiResponse,
+      previous: '/api/blog/articles/',
+      next: null,
+    });
 
     render(<ArticleList />);
 
@@ -256,9 +256,7 @@ describe('ArticleList', () => {
       next: null,
     };
 
-    blogService.getArticles
-      .mockResolvedValueOnce(responseWithPrevious)
-      .mockResolvedValueOnce(mockApiResponse);
+    blogService.getArticles.mockResolvedValueOnce(responseWithPrevious).mockResolvedValueOnce(mockApiResponse);
 
     render(<ArticleList />);
 
@@ -303,9 +301,7 @@ describe('ArticleList', () => {
     render(<ArticleList search="react" />);
 
     await waitFor(() => {
-      expect(blogService.getArticles).toHaveBeenCalledWith(
-        expect.objectContaining({ search: 'react' }),
-      );
+      expect(blogService.getArticles).toHaveBeenCalledWith(expect.objectContaining({ search: 'react' }));
     });
   });
 
