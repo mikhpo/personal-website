@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import PhotoUploadForm from './PhotoUploadForm';
 import { galleryService } from '@services';
@@ -235,7 +235,9 @@ describe('PhotoUploadForm', () => {
     // Since we're mocking the service, we need to manually trigger the progress callback
     const uploadCall = galleryService.uploadPhotos.mock.calls[0];
     const onProgress = uploadCall[2];
-    onProgress('test.jpg', { progress: 50, status: 'uploading' });
+    act(() => {
+      onProgress('test.jpg', { progress: 50, status: 'uploading' });
+    });
 
     await waitFor(() => {
       expect(screen.getByText('Прогресс загрузки:')).toBeInTheDocument();

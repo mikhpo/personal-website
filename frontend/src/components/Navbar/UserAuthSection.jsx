@@ -29,7 +29,7 @@ const UserAuthSection = ({ userAuthenticated, userName, userIsStaff }) => {
           {/* Выход в Django выполняется только запросом POST, поэтому оформлен формой с кнопкой.
               Отступ слева задает margin-right соседнего элемента с классом navbar-text (navbar.css) */}
           <form method="post" action="/accounts/logout/">
-            <input type="hidden" name="csrfmiddlewaretoken" value={getCsrfToken()} />
+            <input type="hidden" name="csrfmiddlewaretoken" value={getCsrfToken() ?? ''} />
             <button type="submit" className="btn btn-outline-dark text-nowrap">
               Выйти
             </button>

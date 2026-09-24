@@ -218,7 +218,9 @@ describe('useApiData', () => {
   describe('initialData', () => {
     test('использует initialData как начальное значение', () => {
       const initialData = { results: [{ id: 0, name: 'Initial' }] };
-      mockFetchFunction.mockResolvedValue(mockData);
+      // Загрузка не должна завершиться: тест проверяет только начальное состояние,
+      // разрешившийся промис обновил бы состояние вне act после конца теста
+      mockFetchFunction.mockImplementation(() => new Promise(() => {}));
 
       const { result } = renderHook(() => useApiData(mockFetchFunction, { immediate: true, initialData }));
 

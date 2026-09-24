@@ -141,7 +141,7 @@ describe('AlbumList', () => {
       json: async () => ({ results: mockAlbums }),
     });
 
-    userEvent.click(retryButton);
+    await userEvent.click(retryButton);
 
     // Ждем завершения повторной загрузки
     await waitFor(() => {

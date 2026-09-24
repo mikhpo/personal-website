@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import NavItems from './NavItems';
 
 /**
@@ -50,6 +50,17 @@ describe('NavItems', () => {
   };
 
   /**
+   * Открывает выпадающее меню галереи кликом по ссылке.
+   * act оборачивается в async-вариант: popper позиционирует меню
+   * в микрозадаче после клика, и ее нужно промыть внутри act.
+   */
+  const openGalleryDropdown = async () => {
+    await act(async () => {
+      fireEvent.click(screen.getByText('Галерея'));
+    });
+  };
+
+  /**
    * Тест проверяет корректность отображения обычных навигационных ссылок
    *
    * Проверяет наличие:
@@ -89,12 +100,11 @@ describe('NavItems', () => {
    * - Элементов выпадающего меню после открытия
    * - Обычных ссылок в выпадающем меню
    */
-  test('рендерит элементы выпадающего меню', () => {
+  test('рендерит элементы выпадающего меню', async () => {
     render(<NavItems {...defaultProps} />);
 
     // Симулируем открытие выпадающего меню
-    const galleryDropdown = screen.getByText('Галерея');
-    fireEvent.click(galleryDropdown);
+    await openGalleryDropdown();
 
     // После открытия меню элементы должны отображаться
     expect(screen.getByText('Альбомы')).toBeInTheDocument();
@@ -106,7 +116,7 @@ describe('NavItems', () => {
    * Тест проверяет, что элемент offcanvas
    * в выпадающем меню открывает боковую панель
    */
-  test('корректно обрабатывает кнопку offcanvas', () => {
+  test('корректно обрабатывает кнопку offcanvas', async () => {
     // Мокируем window.bootstrap
     const mockOffcanvasInstance = {
       show: jest.fn(),
@@ -131,8 +141,7 @@ describe('NavItems', () => {
     render(<NavItems {...defaultProps} />);
 
     // Сначала находим и кликаем на кнопку "Галерея", чтобы открыть dropdown
-    const galleryDropdown = screen.getByText('Галерея');
-    fireEvent.click(galleryDropdown);
+    await openGalleryDropdown();
 
     // Теперь кнопка "Тэги" должна стать видимой
     const tagsButton = screen.getByText('Тэги');
@@ -156,7 +165,7 @@ describe('NavItems', () => {
    * - Разделителя в выпадающем меню
    * - Ссылки на загрузку фотографий
    */
-  test('рендерит дополнительные элементы для staff пользователя', () => {
+  test('рендерит дополнительные элементы для staff пользователя', async () => {
     const props = {
       ...defaultProps,
       userIsStaff: true,
@@ -165,8 +174,7 @@ describe('NavItems', () => {
     render(<NavItems {...props} />);
 
     // Сначала находим и кликаем на кнопку "Галерея", чтобы открыть dropdown
-    const galleryDropdown = screen.getByText('Галерея');
-    fireEvent.click(galleryDropdown);
+    await openGalleryDropdown();
 
     // Проверяем наличие дополнительных элементов для staff
     expect(screen.getByText('Загрузка')).toBeInTheDocument();
@@ -179,7 +187,7 @@ describe('NavItems', () => {
    * Проверяет отсутствие:
    * - Ссылки на загрузку фотографий
    */
-  test('не рендерит дополнительные элементы для обычного пользователя', () => {
+  test('не рендерит дополнительные элементы для обычного пользователя', async () => {
     const props = {
       ...defaultProps,
       userIsStaff: false,
@@ -188,8 +196,7 @@ describe('NavItems', () => {
     render(<NavItems {...props} />);
 
     // Сначала находим и кликаем на кнопку "Галерея", чтобы открыть dropdown
-    const galleryDropdown = screen.getByText('Галерея');
-    fireEvent.click(galleryDropdown);
+    await openGalleryDropdown();
 
     // Проверяем отсутствие дополнительных элементов для обычного пользователя
     expect(screen.queryByText('Загрузка')).not.toBeInTheDocument();

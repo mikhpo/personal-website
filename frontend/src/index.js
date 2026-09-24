@@ -139,5 +139,3 @@ window.mountReactComponent = (componentName, elementId, props = {}) => {
       console.error(`Failed to load component "${componentName}":`, error);
     });
 };
-
-console.log('React runtime loaded successfully');

@@ -105,8 +105,12 @@ describe('ArticleForm', () => {
     });
   });
 
-  afterEach(() => {
-    jest.runOnlyPendingTimers();
+  afterEach(async () => {
+    // Отложенные таймеры автосохранения срабатывают и после конца теста:
+    // проматываем их внутри act, чтобы обновления состояния оставались обернутыми
+    await act(async () => {
+      await jest.runOnlyPendingTimersAsync();
+    });
     jest.useRealTimers();
     jest.resetAllMocks();
     jest.useFakeTimers();
