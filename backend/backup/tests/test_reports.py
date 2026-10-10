@@ -83,7 +83,7 @@ class TestBackupMediaReport(MediaTestCaseMixin):
         self.assertIn("Резервное копирование", html)
         self.assertIn("#e6f4ea", html)
         self.assertIn("Медиа", html)
-        self.assertIn("DISK (rclone:", html)
+        self.assertIn("DISK (", html)
         self.assertIn("Объектов", html)
         self.assertIn("5,0 Б", html)
 
@@ -119,7 +119,6 @@ class TestBackupMediaErrorReport(MediaTestCaseMixin):
             self.media_settings(),
             override_settings(
                 STORAGE_TYPE="s3",
-                MINIO_ALIAS=None,
                 AWS_STORAGE_BUCKET_NAME=None,
                 AWS_S3_ENDPOINT_URL=None,
                 AWS_ACCESS_KEY_ID=None,
@@ -157,8 +156,7 @@ class TestBackupDbReport(SimpleTestCase):
         with self.settings(
             BACKUP_ROOT=str(self.backup_root),
             BACKUP_DB_TARGETS="DISK",
-            BACKUP_TARGETS={"DISK": f"rclone:{self.target_root}"},
-            MC_PATH="mc",
+            BACKUP_TARGETS={"DISK": str(self.target_root)},
             BACKUP_DB_RETENTION_DAYS=14,
         ):
             call_command("backup_db", stdout=StringIO())
@@ -168,7 +166,7 @@ class TestBackupDbReport(SimpleTestCase):
         assert isinstance(message, EmailMultiAlternatives)
         html = str(message.alternatives[0][0])
         self.assertIn("База данных", html)
-        self.assertIn("DISK (rclone:", html)
+        self.assertIn("DISK (", html)
         self.assertIn(".dump", html)
         self.assertIn("дампы старше 14 дней удалены", html)
 

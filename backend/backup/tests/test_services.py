@@ -14,9 +14,7 @@ from django.core.management.base import CommandError
 from django.test import SimpleTestCase, override_settings
 
 from backup import services
-from backup.process import run_command
-from backup.targets import TARGET_PREFIXES
-from backup.tests.helpers import CallTarget, MediaTestCaseMixin, pg_client_compatible
+from backup.tests.helpers import MediaTestCaseMixin, pg_client_compatible
 
 OLD_AGE_DAYS = 20
 SECONDS_PER_DAY = 86400
@@ -77,22 +75,20 @@ class TestBackupMedia(MediaTestCaseMixin):
         stored = self.target_root / "storage"
         self.assertTrue((stored / "img1.jpg").exists())
 
-    @override_settings(BACKUP_MEDIA_TARGETS="", MC_PATH="mc")
+    @override_settings(BACKUP_MEDIA_TARGETS="")
     def test_verify_without_targets_raises(self) -> None:
         """Проверка целей медиа без их настройки - ошибка."""
         with self.assertRaisesMessage(CommandError, "цели медиа не настроены"):
             services.backup_media(verify=True)
 
-    def test_overwrite_and_remove_flags(self) -> None:
-        """Mc mirror с флагами --overwrite и --remove заменяет и удаляет лишнее."""
-        mc = shutil.which("mc")
-        assert mc is not None
-        (self.media_root / "keep.jpg").write_bytes(b"newer-longer-content")
-        (self.target_root / "keep.jpg").write_bytes(b"older")
-        (self.target_root / "stale.jpg").write_bytes(b"old")
-        run_command([mc, "mirror", "--overwrite", "--remove", str(self.media_root), str(self.target_root)])
-        self.assertEqual((self.target_root / "keep.jpg").read_bytes(), b"newer-longer-content")
-        self.assertFalse((self.target_root / "stale.jpg").exists())
+    def test_sync_removes_missing_from_target(self) -> None:
+        """Синхронизация удаляет из цели объекты, исчезнувшие из хранилища."""
+        stored = self.target_root / "storage"
+        stored.mkdir(parents=True)
+        (stored / "stale.jpg").write_bytes(b"old")
+        with self.media_settings():
+            services.backup_media()
+        self.assertFalse((stored / "stale.jpg").exists())
 
 
 class TestVerifyMedia(MediaTestCaseMixin):
@@ -130,25 +126,17 @@ class TestRestoreMedia(MediaTestCaseMixin):
         self.assertTrue((self.media_root / "img1.jpg").exists())
 
 
-class TestPluginMediaBackup(SimpleTestCase):
-    """Оркестрация медиа работает с любым плагином из реестра."""
+class TestMediaRoundTrip(MediaTestCaseMixin):
+    """Полный цикл медиа: синхронизация в цель и восстановление из нее."""
 
-    def test_backup_and_restore_through_registered_plugin(self) -> None:
-        """Бэкап и восстановление медиа идут через методы зарегистрированного плагина."""
-        TARGET_PREFIXES["call"] = CallTarget
-        self.addCleanup(TARGET_PREFIXES.pop, "call")
-        CallTarget.created.clear()
-        with override_settings(
-            STORAGE_TYPE="filesystem",
-            MEDIA_ROOT="/tmp/media",
-            BACKUP_MEDIA_TARGETS="CALL",
-            BACKUP_TARGETS={"CALL": "call:host/path"},
-        ):
+    def test_backup_then_restore(self) -> None:
+        """Файл переживает очистку хранилища и возвращается из цели."""
+        with self.media_settings():
             services.backup_media()
-            services.restore_media("CALL")
-        self.assertEqual(len(CallTarget.created), 2)
-        self.assertEqual(CallTarget.created[0].calls, ["sync_media"])
-        self.assertEqual(CallTarget.created[1].calls, ["media_count", "pull_media"])
+            (self.media_root / "img1.jpg").unlink()
+            self.assertFalse((self.media_root / "img1.jpg").exists())
+            services.restore_media("DISK")
+        self.assertTrue((self.media_root / "img1.jpg").exists())
 
 
 @skipUnless(pg_client_compatible(), "локальный клиент PostgreSQL несовместим с сервером")

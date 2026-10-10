@@ -60,8 +60,7 @@ class TestBackupDbCommand(SimpleTestCase):
         with self.settings(
             BACKUP_ROOT=str(self.backup_root),
             BACKUP_DB_TARGETS="DISK",
-            BACKUP_TARGETS={"DISK": f"rclone:{self.target_root}"},
-            MC_PATH="mc",
+            BACKUP_TARGETS={"DISK": str(self.target_root)},
             BACKUP_DB_RETENTION_DAYS=14,
         ):
             call_command("backup_db", stdout=StringIO())
@@ -92,8 +91,7 @@ class TestBackupCommand(SimpleTestCase):
             BACKUP_ROOT=str(self.backup_root),
             BACKUP_DB_TARGETS="DISK",
             BACKUP_MEDIA_TARGETS="DISK",
-            BACKUP_TARGETS={"DISK": f"rclone:{self.target_root}"},
-            MC_PATH="mc",
+            BACKUP_TARGETS={"DISK": str(self.target_root)},
             STORAGE_TYPE="filesystem",
             BACKUP_DB_RETENTION_DAYS=14,
         ):

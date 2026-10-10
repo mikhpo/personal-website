@@ -1,12 +1,14 @@
 """Вспомогательные функции системы резервного копирования.
 
 Вычисления и подготовка данных без выполнения операций: разбор списков
-целей, именование дампов, выбор последнего дампа, сбор переменных libpq,
-адресация медиа-хранилища для инструментов целей и проверка обязательных
-параметров.
+целей, разрешение имени цели в адрес rclone, именование дампов, выбор
+последнего дампа, сбор переменных libpq, адресация медиа-хранилища
+для rclone и проверка обязательных параметров.
 """
 
+import re
 import shutil
+from dataclasses import dataclass
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
@@ -19,8 +21,8 @@ RETENTION_SLACK_DAYS = 1
 SECONDS_PER_DAY = 86400
 BYTES_PER_KIB = 1024
 RCLONE_MEDIA_REMOTE = "media"  # имя remote; в переменных RCLONE_CONFIG_* пишется заглавными
+NAME_RE = re.compile(r"^[A-Z_][A-Z0-9_]*$")
 MEDIA_S3_VARS = (  # обязательны для операций с медиа при STORAGE_TYPE=s3
-    "MINIO_ALIAS",
     "AWS_STORAGE_BUCKET_NAME",
     "AWS_S3_ENDPOINT_URL",
     "AWS_ACCESS_KEY_ID",
@@ -28,20 +30,69 @@ MEDIA_S3_VARS = (  # обязательны для операций с меди�
 )
 
 
-def media_mc_address() -> str:
-    """Адрес медиа-хранилища для MinIO Client.
+@dataclass(frozen=True)
+class BackupTarget:
+    """Цель резервного копирования: имя и адрес хранилища в адресации rclone.
 
-    Returns:
-        str: "alias/бакет/префикс" при STORAGE_TYPE=s3 (префикс - каталог
-        медиа в бакете), иначе путь MEDIA_ROOT.
+    Attributes:
+        name (str): Имя цели из настроек (заглавные буквы, цифры,
+            подчеркивание), например "OFFSITE".
+        address (str): Локальный путь ("/mnt/backup") либо "remote:путь",
+            где remote настроен в rclone.conf хоста или переменными
+            RCLONE_CONFIG_*.
 
     Example:
-        >>> media_mc_address()
-        'local/media-bucket/media'
+        Для записи в .env ``BACKUP_YADISK='yadisk:site-backup'`` цель
+        создает resolve_target("YADISK"); дампы лежат в
+        ``yadisk:site-backup/db``, медиа - в ``yadisk:site-backup/storage``.
     """
-    if is_s3():
-        return f"{settings.MINIO_ALIAS}/{settings.AWS_STORAGE_BUCKET_NAME}/{settings.S3_MEDIA_LOCATION}"
-    return str(settings.MEDIA_ROOT)
+
+    name: str
+    address: str
+
+    def describe(self) -> str:
+        """Человекочитаемое описание цели для отчетов и журналов.
+
+        Returns:
+            str: Строка вида "OFFSITE (yadisk:site-backup)".
+
+        Example:
+            >>> BackupTarget("OFFSITE", "yadisk:site-backup").describe()
+            'OFFSITE (yadisk:site-backup)'
+        """
+        return f"{self.name} ({self.address})"
+
+
+def resolve_target(name: str) -> BackupTarget:
+    """Разрешить имя цели в адрес rclone из настроек BACKUP_TARGET_<ИМЯ>.
+
+    Args:
+        name (str): Имя цели, определенное записью BACKUP_TARGET_<ИМЯ> в .env.
+
+    Returns:
+        BackupTarget: Валидированная цель.
+
+    Raises:
+        CommandError: Недопустимое имя, цель не определена в .env либо
+            rclone не найден в PATH.
+
+    Example:
+        Для записи в .env ``BACKUP_YADISK='yadisk:site-backup'``:
+        >>> target = resolve_target("YADISK")
+        >>> target.address
+        'yadisk:site-backup'
+    """
+    if not NAME_RE.match(name):
+        msg = f'недопустимое имя цели "{name}": имена целей - заглавные буквы, цифры и подчеркивание'
+        raise CommandError(msg)
+    address = settings.BACKUP_TARGETS.get(name)
+    if not address:
+        msg = f'цель "{name}" не определена: нет переменной BACKUP_TARGET_{name} в .env'
+        raise CommandError(msg)
+    if not shutil.which("rclone"):
+        msg = f'цель "{name}" требует установленный rclone'
+        raise CommandError(msg)
+    return BackupTarget(name, address)
 
 
 def media_rclone_address() -> str:
@@ -63,6 +114,10 @@ def media_rclone_address() -> str:
 def media_rclone_env() -> dict[str, str] | None:
     """Переменные RCLONE_CONFIG_* для rclone-доступа к медиа-бакету.
 
+    ACL public-read выравнивает восстановление (pull_media) с загрузкой
+    через сайт: приложение публикует медиа с этим ACL, а rclone сам по
+    себе объектов публичными не делает.
+
     Returns:
         dict[str, str] | None: Переменные remote media при STORAGE_TYPE=s3,
         None при filesystem (rclone работает с локальным путем без настроек).
@@ -81,6 +136,7 @@ def media_rclone_env() -> dict[str, str] | None:
         f"RCLONE_CONFIG_{remote}_ACCESS_KEY_ID": settings.AWS_ACCESS_KEY_ID,
         f"RCLONE_CONFIG_{remote}_SECRET_ACCESS_KEY": settings.AWS_SECRET_ACCESS_KEY,
         f"RCLONE_CONFIG_{remote}_REGION": settings.AWS_S3_REGION_NAME,
+        f"RCLONE_CONFIG_{remote}_ACL": "public-read",
     }
 
 
@@ -99,29 +155,6 @@ def load_target_list(names_value: str | None) -> list[str]:
         ['LOCALDISK', 'OFFSITE']
     """
     return names_value.split() if names_value else []
-
-
-def mc_executable() -> str:
-    """Путь к MinIO Client из MC_PATH.
-
-    Returns:
-        str: Путь к исполняемому файлу mc.
-
-    Raises:
-        CommandError: MC_PATH не задан либо файл не найден.
-
-    Example:
-        >>> mc_executable()
-        '/usr/local/bin/mc'
-    """
-    path = settings.MC_PATH
-    if not path:
-        msg = "MC_PATH не задана в .env"
-        raise CommandError(msg)
-    if not shutil.which(path):
-        msg = f"MinIO Client не найден: {path} (MC_PATH в .env)"
-        raise CommandError(msg)
-    return path
 
 
 def now_local() -> datetime:
@@ -230,8 +263,8 @@ def require_pg_env() -> None:
 def require_media_env() -> None:
     """Проверить настройки S3, обязательные для операций с медиа при s3.
 
-    При filesystem инструмент определяется целями (доступность mc и rclone
-    проверяется при разрешении целей), обязательные настройки отсутствуют.
+    При filesystem обязательные настройки отсутствуют (доступность rclone
+    проверяется при разрешении целей).
 
     Raises:
         CommandError: При STORAGE_TYPE=s3 не задана одна из переменных

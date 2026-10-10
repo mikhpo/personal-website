@@ -167,7 +167,7 @@ omit = [
 ]
 
 [tool.mypy]
-exclude = ["venv", ".venv", "static"]
+exclude = ["venv", ".venv", "static", "plans"]
 disable_error_code = ["attr-defined", "var-annotated", "misc"]
 
 [[tool.mypy.overrides]]
