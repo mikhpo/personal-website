@@ -1,12 +1,12 @@
 """Тесты файловых хранилищ."""
 
 import unittest
+import uuid
 from concurrent.futures import ThreadPoolExecutor
 from io import BytesIO
 from pathlib import Path
 
-import boto3  # type: ignore[import-untyped]
-from botocore.client import Config  # type: ignore[import-untyped]
+import requests  # type: ignore[import-untyped]
 from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.files.storage import FileSystemStorage
@@ -22,25 +22,7 @@ from personal_website.storages import (
     select_static_storage,
     select_storage,
 )
-
-
-def is_s3_available() -> bool:
-    """Проверить доступность S3 хранилища."""
-    try:
-        s3_client = boto3.client(
-            "s3",
-            aws_access_key_id=settings.STORAGES["s3"]["OPTIONS"]["access_key"],
-            aws_secret_access_key=settings.STORAGES["s3"]["OPTIONS"]["secret_key"],
-            endpoint_url=settings.STORAGES["s3"]["OPTIONS"]["endpoint_url"],
-            config=Config(signature_version="s3v4"),
-        )
-        # Попытка получить список бакетов
-        s3_client.list_buckets()
-    except Exception:  # noqa: BLE001
-        return False
-    else:
-        return True
-
+from personal_website.utils import is_s3_available
 
 S3_AVAILABLE = is_s3_available()
 
@@ -372,6 +354,34 @@ class TestCustomS3Storage(SimpleTestCase):
 
         location_storage.delete(moved)
         location_storage.delete(source)
+
+    def test_replace_keeps_object_public(self) -> None:
+        """Объект после replace читается анонимно по base_url.
+
+        CopyObject без ACL делает копию приватной; replace обязан переносить
+        публичность: на object-ACL-провайдерах - параметром ACL, на
+        policy-серверах - политикой бакета на префикс медиа.
+        """
+        storage = CustomS3Storage(
+            bucket_name=settings.STORAGES["s3"]["OPTIONS"]["bucket_name"],
+            access_key=settings.STORAGES["s3"]["OPTIONS"]["access_key"],
+            secret_key=settings.STORAGES["s3"]["OPTIONS"]["secret_key"],
+            region_name=settings.STORAGES["s3"]["OPTIONS"]["region_name"],
+            endpoint_url=settings.STORAGES["s3"]["OPTIONS"]["endpoint_url"],
+            location=settings.S3_MEDIA_LOCATION,
+        )
+        content = b"public after replace"
+        source = storage.save(f"publicity/{uuid.uuid4().hex[:8]}.txt", ContentFile(content))
+        moved = f"publicity/{uuid.uuid4().hex[:8]}-moved.txt"
+        try:
+            storage.replace(source, moved)
+            url = f"{storage.base_url}{settings.S3_MEDIA_LOCATION}/{moved}"
+            response = requests.get(url, timeout=10)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.content, content)
+        finally:
+            storage.delete(moved)
+            storage.delete(source)
 
     def test_rmtree_under_location(self) -> None:
         """Метод rmtree удаляет объекты под префиксом location."""

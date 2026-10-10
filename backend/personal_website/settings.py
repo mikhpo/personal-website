@@ -211,11 +211,7 @@ TEMP_ROOT = os.getenv("TEMP_ROOT", default=PROJECT_DIR / "temp")
 # Абсолютный путь до каталога резервных копий (дампы БД хранятся в его db/).
 BACKUP_ROOT = os.getenv("BACKUP_ROOT", default=PROJECT_DIR / "backups")
 
-# Путь к MinIO Client для операций резервного копирования медиа.
-MC_PATH = os.getenv("MC_PATH")
-
 # Параметры S3-хранилища медиа.
-MINIO_ALIAS = os.getenv("MINIO_ALIAS")
 AWS_STORAGE_BUCKET_NAME = os.getenv("AWS_STORAGE_BUCKET_NAME")
 AWS_S3_ENDPOINT_URL = os.getenv("AWS_S3_ENDPOINT_URL")
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")

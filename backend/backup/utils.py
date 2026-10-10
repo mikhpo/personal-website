@@ -132,6 +132,7 @@ def media_rclone_env() -> dict[str, str] | None:
     remote = RCLONE_MEDIA_REMOTE.upper()
     return {
         f"RCLONE_CONFIG_{remote}_TYPE": "s3",
+        f"RCLONE_CONFIG_{remote}_PROVIDER": "Other",
         f"RCLONE_CONFIG_{remote}_ENDPOINT": settings.AWS_S3_ENDPOINT_URL,
         f"RCLONE_CONFIG_{remote}_ACCESS_KEY_ID": settings.AWS_ACCESS_KEY_ID,
         f"RCLONE_CONFIG_{remote}_SECRET_ACCESS_KEY": settings.AWS_SECRET_ACCESS_KEY,

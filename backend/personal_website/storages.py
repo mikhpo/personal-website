@@ -39,6 +39,10 @@ class BaseStorageMixin:
         if isinstance(name, Path):
             name = str(name)
 
+        # Полный S3 URI сворачивается к пути внутри бакета до отсечения
+        # base_location: иначе путь после обратной нормализации удваивается
+        name = self._normalize_s3_path(name)
+
         # Преобразуем base_location в строку, если это Path
         base_location = getattr(self, "base_location", "")
         if isinstance(base_location, Path):
@@ -532,10 +536,6 @@ class CustomS3Storage(BaseStorageMixin, S3Boto3Storage):
         else:
             return (files, dirs)
 
-    def __init__(self, *args, **kwargs) -> None:
-        """Инициализация хранилища с клиентом Minio."""
-        super().__init__(*args, **kwargs)
-
     @property
     def base_location(self) -> str:
         """Возвращает базовое расположение файлов в хранилище."""
@@ -822,12 +822,14 @@ class CustomS3Storage(BaseStorageMixin, S3Boto3Storage):
         dst_key = self._normalize_s3_path(dst_key)
 
         try:
-            # Копируем объект с новым ключом
+            # Копируем объект с новым ключом; без явного ACL копия становится
+            # приватной, и смена альбома скрывала бы фото от посетителей
             copy_source = {"Bucket": self.bucket_name, "Key": self._normalize_name(src_key)}
             self.connection.meta.client.copy_object(
                 CopySource=copy_source,
                 Bucket=self.bucket_name,
                 Key=self._normalize_name(dst_key),
+                ACL="public-read",
             )
         except Exception as error:
             error_message = f"Не удалось скопировать файл из {src_key} в {dst_key}: {error}"
@@ -885,12 +887,14 @@ class CustomS3Storage(BaseStorageMixin, S3Boto3Storage):
             src_key = self._get_relative_name(src_str).lstrip("/")
             src_key = self._normalize_s3_path(src_key)
 
-            # Копируем объект с новым ключом
+            # Копируем объект с новым ключом; ACL удерживает копию публичной,
+            # как и оригинал, загруженный через сайт
             copy_source = {"Bucket": self.bucket_name, "Key": self._normalize_name(src_key)}
             self.connection.meta.client.copy_object(
                 CopySource=copy_source,
                 Bucket=self.bucket_name,
                 Key=self._normalize_name(dst_key),
+                ACL="public-read",
             )
         # Файл не существует в S3, пытаемся обработать как локальный файл
         # Проверяем, является ли путь локальным (не начинается с s3://)

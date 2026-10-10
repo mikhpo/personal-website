@@ -10,8 +10,10 @@ from unittest import skipUnless
 from django.test import SimpleTestCase
 
 from backup import services
+from personal_website.utils import is_s3_available
 
 RCLONE = shutil.which("rclone")
+S3_AVAILABLE = is_s3_available()
 
 
 def pg_client_compatible() -> bool:

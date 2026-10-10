@@ -9,12 +9,14 @@ import uuid
 from pathlib import Path
 from unittest import skipUnless
 
+import boto3  # type: ignore[import-untyped]
+import requests  # type: ignore[import-untyped]
 from django.conf import settings
 from django.core.management.base import CommandError
 from django.test import SimpleTestCase, override_settings
 
 from backup import services
-from backup.tests.helpers import MediaTestCaseMixin, pg_client_compatible
+from backup.tests.helpers import S3_AVAILABLE, MediaTestCaseMixin, pg_client_compatible
 
 OLD_AGE_DAYS = 20
 SECONDS_PER_DAY = 86400
@@ -137,6 +139,44 @@ class TestMediaRoundTrip(MediaTestCaseMixin):
             self.assertFalse((self.media_root / "img1.jpg").exists())
             services.restore_media("DISK")
         self.assertTrue((self.media_root / "img1.jpg").exists())
+
+
+@skipUnless(S3_AVAILABLE and settings.STORAGE_TYPE == "s3", "S3-хранилище недоступно")
+class TestMediaS3RestoreKeepsPublic(SimpleTestCase):
+    """Восстановление медиа из цели сохраняет публичность объектов."""
+
+    def test_restore_keeps_objects_public(self) -> None:
+        """После restore_media объект читается анонимно по URL хранилища.
+
+        rclone не переносит ACL, поэтому загрузки восстановления идут
+        с RCLONE_CONFIG_MEDIA_ACL=public-read; policy-серверы публичность
+        дают политикой бакета. Анонимный запрос проверяет результат.
+        """
+        s3_options = settings.STORAGES["s3"]["OPTIONS"]
+        client = boto3.client(
+            "s3",
+            aws_access_key_id=s3_options["access_key"],
+            aws_secret_access_key=s3_options["secret_key"],
+            endpoint_url=s3_options["endpoint_url"],
+        )
+        bucket = s3_options["bucket_name"]
+        key = f"{settings.S3_MEDIA_LOCATION}/restore-public/{uuid.uuid4().hex[:8]}.jpg"
+        client.put_object(Bucket=bucket, Key=key, Body=b"image")
+        target_root = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, target_root)
+        self.addCleanup(client.delete_object, Bucket=bucket, Key=key)
+        with override_settings(
+            STORAGE_TYPE="s3",
+            BACKUP_MEDIA_TARGETS="DISK",
+            BACKUP_TARGETS={"DISK": str(target_root)},
+        ):
+            services.backup_media()
+            client.delete_object(Bucket=bucket, Key=key)
+            services.restore_media("DISK")
+        url = f"{settings.AWS_S3_ENDPOINT_URL.rstrip('/')}/{bucket}/{key}"
+        response = requests.get(url, timeout=10)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content, b"image")
 
 
 @skipUnless(pg_client_compatible(), "локальный клиент PostgreSQL несовместим с сервером")

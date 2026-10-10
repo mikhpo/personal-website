@@ -1,6 +1,7 @@
 """Коллекция вспомогательных фукнций и классов."""
 
 import datetime
+import json
 import locale
 import logging
 import re
@@ -139,8 +140,58 @@ def cleanup_temp_directory() -> None:
     shutil.rmtree(settings.TEMP_ROOT, ignore_errors=True)
 
 
-def create_s3_test_bucket() -> None:
-    """Создать тестовый бакет S3, если он не существует."""
+def is_s3_available() -> bool:
+    """Проверить доступность S3-хранилища из настроек."""
+    try:
+        s3_options = settings.STORAGES["s3"]["OPTIONS"]
+        s3_client = boto3.client(
+            "s3",
+            aws_access_key_id=s3_options["access_key"],
+            aws_secret_access_key=s3_options["secret_key"],
+            endpoint_url=s3_options["endpoint_url"],
+            config=Config(signature_version="s3v4"),
+        )
+        s3_client.list_buckets()
+    except Exception:  # noqa: BLE001
+        return False
+    return True
+
+
+def bucket_policy_document(bucket_name: str) -> str:
+    """Документ bucket policy: анонимное чтение медиа и статики.
+
+    Returns:
+        str: JSON-документ политики, разрешающий s3:GetObject всем
+        на префиксы медиа и статики бакета.
+    """
+    statements = [
+        {
+            "Effect": "Allow",
+            "Principal": "*",
+            "Action": "s3:GetObject",
+            "Resource": f"arn:aws:s3:::{bucket_name}/{prefix}/*",
+        }
+        for prefix in (settings.S3_MEDIA_LOCATION, settings.S3_STATIC_LOCATION)
+    ]
+    return json.dumps({"Version": "2012-10-17", "Statement": statements})
+
+
+def init_s3_bucket() -> str:
+    """Инициализировать новое хранилище: создать бакет и применить политику публичной раздачи.
+
+    Правило собственности: существующий бакет не изменяется. Внешний
+    провайдер (прод) всегда настроен до первого старта приложения,
+    поэтому политики внешних бакетов приложению недоступны; локальный
+    сервер стартует пустым и инициализируется полностью.
+
+    Returns:
+        str: "created" - бакет создан и политика применена;
+        "exists" - бакет существует, изменения не выполнялись.
+
+    Raises:
+        ClientError: Сервер недоступен или ответил ошибкой, кроме факта
+            существования бакета.
+    """
     # Получить настройки S3 из конфигурации хранилища
     s3_options = settings.STORAGES["s3"]["OPTIONS"]
 
@@ -155,14 +206,13 @@ def create_s3_test_bucket() -> None:
     )
 
     bucket_name = s3_options["bucket_name"]
-    # Пытаемся создать бакет
     try:
+        s3_client.head_bucket(Bucket=bucket_name)
+    except ClientError:
         s3_client.create_bucket(Bucket=bucket_name)
-    except ClientError as e:
-        # Если бакет уже существует и принадлежит нам, это не ошибка
-        if e.response["Error"]["Code"] != "BucketAlreadyOwnedByYou":
-            # Для всех других ошибок пробрасываем исключение дальше
-            raise
+        s3_client.put_bucket_policy(Bucket=bucket_name, Policy=bucket_policy_document(bucket_name))
+        return "created"
+    return "exists"
 
 
 def cleanup_s3_test_bucket() -> None:
@@ -209,9 +259,9 @@ def setup_test_environment() -> None:
     if Path(media_dir).exists():
         shutil.copytree(media_dir, settings.TEMP_ROOT, dirs_exist_ok=True)
 
-    # Если используется S3 в тестах, создать тестовый бакет
+    # Если используется S3 в тестах, инициализировать хранилище
     if getattr(settings, "STORAGE_TYPE", "filesystem") == "s3":
-        create_s3_test_bucket()
+        init_s3_bucket()
 
 
 def teardown_test_environment() -> None:

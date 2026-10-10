@@ -1,7 +1,7 @@
 """Фикстуры интеграционных тестов: автоматический подъем и остановка локального стека.
 
 Тесты пакета tests выполняются против полного docker-стека (приложение, PostgreSQL,
-nginx, MinIO). Фикстура повторяет шаги задачи task test-integration, поэтому тесты
+nginx, S3-сервер). Фикстура повторяет шаги задачи task test-integration, поэтому тесты
 можно запускать напрямую через pytest без предварительной подготовки окружения.
 """
 
@@ -17,12 +17,12 @@ from dotenv import load_dotenv
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 # Сервисы стека для интеграционных тестов: приложение с PostgreSQL обслуживают
-# страницы, nginx терминирует HTTPS, MinIO хранит медиа.
-STACK_SERVICES = ("application", "postgres", "nginx", "minio")
+# страницы, nginx терминирует HTTPS, S3-сервер хранит медиа.
+STACK_SERVICES = ("application", "postgres", "nginx", "s3")
 
 # Профили сервисов стека: без активных профилей down не видит профильные сервисы
 # и оставляет их работать, если .env ограничивает набор профилей (например, postgres).
-STACK_PROFILES = "postgres,minio,nginx"
+STACK_PROFILES = "postgres,s3,nginx"
 
 
 def _compose_command_and_wait() -> tuple[list[str], tuple[str, ...]]:
@@ -81,8 +81,6 @@ def integration_stack() -> Iterator[None]:
     os.environ.update(
         POSTGRES_HOST="postgres",
         DOMAIN_NAME=os.getenv("DOMAIN_NAME", default="localhost"),
-        MINIO_SERVER_URL="http://127.0.0.1:9000",
-        MINIO_BROWSER_REDIRECT_URL="http://127.0.0.1:9001",
     )
 
     def run_compose(action: list[str], profiles: str | None = None, *, check: bool = False) -> None:

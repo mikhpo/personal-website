@@ -110,6 +110,7 @@ class TestMediaAddress(SimpleTestCase):
             media_rclone_env(),
             {
                 "RCLONE_CONFIG_MEDIA_TYPE": "s3",
+                "RCLONE_CONFIG_MEDIA_PROVIDER": "Other",
                 "RCLONE_CONFIG_MEDIA_ENDPOINT": "http://s3:9000",
                 "RCLONE_CONFIG_MEDIA_ACCESS_KEY_ID": "key",
                 "RCLONE_CONFIG_MEDIA_SECRET_ACCESS_KEY": "secret",
