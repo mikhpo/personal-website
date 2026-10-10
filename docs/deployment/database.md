@@ -32,7 +32,7 @@
 
 Сервис postgres подключается профилем postgres (`COMPOSE_PROFILES=postgres` или `docker compose up -d postgres`). База, пользователь и пароль создаются образом автоматически из `POSTGRES_USER/POSTGRES_PASSWORD/POSTGRES_DB`. Имя хоста для соседних сервисов compose - `postgres`. Порт публикуется только на 127.0.0.1 хоста, внешний доступ к базе не предусмотрен.
 
-Данные живут в именованном томе postgres-data: `docker compose down` том сохраняет, `docker compose down -v` - удаляет (вместе с данными minio-data). Смена мажорной версии образа тома не переживает - см. раздел 5.
+Данные живут в именованном томе postgres-data: `docker compose down` том сохраняет, `docker compose down -v` - удаляет (вместе с данными s3-data). Смена мажорной версии образа тома не переживает - см. раздел 5.
 
 ## 4. systemd-PostgreSQL на хосте
 

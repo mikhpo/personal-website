@@ -24,7 +24,7 @@
 * [Webpack](https://webpack.js.org/) 5 (сборка фронтенда)
 * [Bootstrap](https://getbootstrap.com/) 5 (стили)
 * [PostgreSQL](https://www.postgresql.org/) (база данных)
-* [MinIO](https://min.io/) (объектное хранилище, S3-совместимое)
+* [RustFS](https://rustfs.com/) (объектное хранилище, S3-совместимое)
 
 Проект адаптирован для развертывания на Linux. Для развертывания используются следующие технологии:
 
@@ -45,7 +45,7 @@
     ├── requirements.txt
     ├── pyproject.toml
     ├── package.json
-    ├── compose.yaml           # сервисы Docker Compose (профили postgres, minio, nginx)
+    ├── compose.yaml           # сервисы Docker Compose (профили postgres, s3, nginx)
     ├── scripts/               # скрипты деплоя, бэкапов и первичной настройки сервера
     ├── tools/                 # вспомогательные скрипты для разработки
     ├── tests/                 # пакет интеграционных тестов
@@ -100,11 +100,11 @@
 
 Для локальной разработки необходимо запускать фронтенд и бэкенд отдельно в режиме наблюдения за изменениями файлов.
 
-Каждый инфраструктурный сервис в compose.yaml относится к собственному профилю: postgres, minio, nginx. Для типичной локальной разработки достаточно профиля postgres с файловым хранилищем. Профили активируются через переменную `COMPOSE_PROFILES` в файле `.env` (например, `postgres` или `postgres,minio`) или через флаг `docker compose --profile <имя>`. Без активных профилей поднимается только сервис application - использовать этот режим, если база данных, объектное хранилище и обратный прокси предоставляются вне Docker Compose.
+Каждый инфраструктурный сервис в compose.yaml относится к собственному профилю: postgres, s3, nginx. Для типичной локальной разработки достаточно профиля postgres с файловым хранилищем. Профили активируются через переменную `COMPOSE_PROFILES` в файле `.env` (например, `postgres` или `postgres,s3`) или через флаг `docker compose --profile <имя>`. Без активных профилей поднимается только сервис application - использовать этот режим, если база данных, объектное хранилище и обратный прокси предоставляются вне Docker Compose.
 
 ### Запуск с использованием Taskfile (рекомендуется)
 
-Основные команды - `task runserver` (сервер разработки с PostgreSQL), `task watch` (hot-reload), `task test` (полный цикл тестирования) и `task check` (статический анализ). Интеграционные тесты локального стека (приложение, PostgreSQL, MinIO и nginx с self-signed сертификатом) - `task test-integration`. Полный список команд Taskfile - в [docs/CONTRIBUTING.md](./docs/CONTRIBUTING.md).
+Основные команды - `task runserver` (сервер разработки с PostgreSQL), `task watch` (hot-reload), `task test` (полный цикл тестирования) и `task check` (статический анализ). Интеграционные тесты локального стека (приложение, PostgreSQL, S3-сервер и nginx с self-signed сертификатом) - `task test-integration`. Полный список команд Taskfile - в [docs/CONTRIBUTING.md](./docs/CONTRIBUTING.md).
 
 ### Ручной запуск режима разработки
 
@@ -132,13 +132,13 @@
 
 ## Развертывание
 
-Развертывание настраивается пятью независимыми параметрами: способ запуска приложения (Docker Compose / docker run / systemd Gunicorn), размещение базы данных (managed / контейнер / systemd), тип хранилища (filesystem / S3 / MinIO), вариант прокси (nginx + certbot в compose или на хосте) и конфигурация бэкапов. Поддерживаемые сочетания собраны в типовых сценариях - [docs/deployment/matrix.md](./docs/deployment/matrix.md).
+Развертывание настраивается пятью независимыми параметрами: способ запуска приложения (Docker Compose / docker run / systemd Gunicorn), размещение базы данных (managed / контейнер / systemd), тип хранилища (filesystem / S3 / RustFS), вариант прокси (nginx + certbot в compose или на хосте) и конфигурация бэкапов. Поддерживаемые сочетания собраны в типовых сценариях - [docs/deployment/matrix.md](./docs/deployment/matrix.md).
 
 Конфигурация задается одним файлом `.env` с секциями по параметрам (полный список переменных - [.env.example](./.env.example)). Рецепты по параметрам:
 
 * [Запуск приложения](./docs/deployment/application.md) - контракт приложения, Compose, docker run, systemd Gunicorn
 * [База данных](./docs/deployment/database.md) - managed-кластер, контейнер, systemd-PG, SSL, мажорный апгрейд
-* [Файловое хранилище](./docs/deployment/storage.md) - filesystem, S3, MinIO, статика
+* [Файловое хранилище](./docs/deployment/storage.md) - filesystem, S3, RustFS, статика
 * [Прокси и сертификаты](./docs/deployment/proxy.md) - nginx + certbot в compose и на хосте, выпуск и продление сертификатов
 * [Резервное копирование](./docs/deployment/backups.md) - цели, расписание, восстановление, смена типа хранилища
 
@@ -204,7 +204,7 @@
 
 ### Резервное копирование
 
-Резервное копирование БД и медиа реализовано приложением `backup` с management-командами: `backup`, `backup_db`, `backup_media` (с флагом `--verify` для проверки целей) создают копии, `restore_db`, `restore_media` - восстанавливают их. Команды запускаются хостовым скриптом `scripts/backup.sh` по расписанию cron (альтернатива - systemd timer). Цели бэкапов описываются в `.env` переменными `BACKUP_TARGET_<ИМЯ>` с префиксами `mc:` (MinIO Client) и `rclone:`. Настройка и семантика - [docs/deployment/backups.md](./docs/deployment/backups.md).
+Резервное копирование БД и медиа реализовано приложением `backup` с management-командами: `backup`, `backup_db`, `backup_media` (с флагом `--verify` для проверки целей) создают копии, `restore_db`, `restore_media` - восстанавливают их. Команды запускаются хостовым скриптом `scripts/backup.sh` по расписанию cron (альтернатива - systemd timer). Цели бэкапов описываются в `.env` переменными `BACKUP_TARGET_<ИМЯ>` с адресами rclone (локальный путь или `remote:путь`). Настройка и семантика - [docs/deployment/backups.md](./docs/deployment/backups.md).
 
 ## REST API
 

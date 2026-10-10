@@ -27,8 +27,7 @@ bash scripts/backup.sh restore_media <цель>
 Источники и списки целей задаются в секции "Бэкапы" .env:
 
 - `BACKUP_DB_TARGETS`, `BACKUP_MEDIA_TARGETS` - имена целей через пробел (пустой список - источник не копируется);
-- каждая цель - запись `BACKUP_TARGET_<ИМЯ>='<префикс>:<спецификация>'`: `mc:alias/бакет[/префикс]` (S3/MinIO через MinIO Client) или `rclone:remote:путь` / локальный путь (диски, облачные хранилища);
-- `MC_PATH` - путь к mc (только для mc-целей);
+- каждая цель - запись `BACKUP_TARGET_<ИМЯ>='<адрес rclone>'`: `remote:путь` (облачные хранилища, S3) или локальный путь (диски);
 - `BACKUP_DB_RETENTION_DAYS` - срок хранения дампов.
 
 Полная схема целей, семантика зеркала и расписание - [docs/deployment/backups.md](../../../docs/deployment/backups.md).
