@@ -102,6 +102,7 @@ INSTALLED_APPS = [
     "drf_spectacular_sidecar",
     "auditlog",
     "huey.contrib.djhuey",
+    "personal_website",
     "about",
     "accounts",
     "backup",
@@ -430,10 +431,6 @@ TEMPLATES = [
                 "main.context_processors.tags_data",
                 "main.context_processors.alerts_data",
             ],
-            "libraries": {
-                "file_tags": "personal_website.templatetags.file_tags",
-                "react_tags": "personal_website.templatetags.react_tags",
-            },
         },
     },
 ]
