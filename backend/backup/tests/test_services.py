@@ -60,7 +60,7 @@ class TestApplyLocalRetention(SimpleTestCase):
 class TestBackupDb(SimpleTestCase):
     """Тесты функции backup_db."""
 
-    @override_settings(BACKUP_DB_TARGETS="")
+    @override_settings(BACKUP_TARGETS="")
     def test_verify_without_targets_raises(self) -> None:
         """Проверка целей БД без их настройки - ошибка."""
         with self.assertRaisesMessage(CommandError, "цели БД не настроены"):
@@ -77,7 +77,7 @@ class TestBackupMedia(MediaTestCaseMixin):
         stored = self.target_root / "storage"
         self.assertTrue((stored / "img1.jpg").exists())
 
-    @override_settings(BACKUP_MEDIA_TARGETS="")
+    @override_settings(BACKUP_TARGETS="")
     def test_verify_without_targets_raises(self) -> None:
         """Проверка целей медиа без их настройки - ошибка."""
         with self.assertRaisesMessage(CommandError, "цели медиа не настроены"):
@@ -101,7 +101,7 @@ class TestVerifyMedia(MediaTestCaseMixin):
         with self.media_settings():
             services.backup_media()
             with self.assertLogs("backup.services", level="INFO") as logs:
-                services.verify_media(["DISK"])
+                services.verify_media([str(self.target_root)])
         self.assertFalse(any("предупреждение" in message for message in logs.output))
 
     def test_discrepancy_warns(self) -> None:
@@ -111,7 +111,7 @@ class TestVerifyMedia(MediaTestCaseMixin):
         (stored / "img1.jpg").write_bytes(b"image")
         (stored / "extra.jpg").write_bytes(b"extra")
         with self.media_settings(), self.assertLogs("backup.services", level="INFO") as logs:
-            services.verify_media(["DISK"])
+            services.verify_media([str(self.target_root)])
         self.assertTrue(any("предупреждение" in message for message in logs.output))
 
 
@@ -124,7 +124,7 @@ class TestRestoreMedia(MediaTestCaseMixin):
         stored.mkdir(parents=True)
         (stored / "img1.jpg").write_bytes(b"image")
         with self.media_settings():
-            services.restore_media("DISK")
+            services.restore_media(str(self.target_root))
         self.assertTrue((self.media_root / "img1.jpg").exists())
 
 
@@ -137,7 +137,7 @@ class TestMediaRoundTrip(MediaTestCaseMixin):
             services.backup_media()
             (self.media_root / "img1.jpg").unlink()
             self.assertFalse((self.media_root / "img1.jpg").exists())
-            services.restore_media("DISK")
+            services.restore_media(str(self.target_root))
         self.assertTrue((self.media_root / "img1.jpg").exists())
 
 
@@ -167,12 +167,11 @@ class TestMediaS3RestoreKeepsPublic(SimpleTestCase):
         self.addCleanup(client.delete_object, Bucket=bucket, Key=key)
         with override_settings(
             STORAGE_TYPE="s3",
-            BACKUP_MEDIA_TARGETS="DISK",
-            BACKUP_TARGETS={"DISK": str(target_root)},
+            BACKUP_TARGETS=str(target_root),
         ):
             services.backup_media()
             client.delete_object(Bucket=bucket, Key=key)
-            services.restore_media("DISK")
+            services.restore_media(str(self.target_root))
         url = f"{settings.AWS_S3_ENDPOINT_URL.rstrip('/')}/{bucket}/{key}"
         response = requests.get(url, timeout=10)
         self.assertEqual(response.status_code, 200)

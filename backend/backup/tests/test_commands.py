@@ -17,19 +17,8 @@ from backup import services
 from backup.tests.helpers import MediaTestCaseMixin, pg_client_compatible
 
 
-class TestBackupMediaCommand(MediaTestCaseMixin):
-    """Команда backup_media фактически зеркалирует медиа в цель."""
-
-    def test_mirrors_media_to_target(self) -> None:
-        """После вызова команды storage/ цели содержит файл хранилища."""
-        with self.media_settings():
-            call_command("backup_media", stdout=StringIO())
-        stored = self.target_root / "storage"
-        self.assertTrue((stored / "img1.jpg").exists())
-
-
 class TestRestoreMediaCommand(MediaTestCaseMixin):
-    """Команда restore_media фактически восстанавливает медиа из цели."""
+    """Команда restore media фактически восстанавливает медиа из цели."""
 
     def test_restores_media_from_target(self) -> None:
         """После вызова команды файл возвращается в хранилище."""
@@ -37,13 +26,13 @@ class TestRestoreMediaCommand(MediaTestCaseMixin):
         stored.mkdir(parents=True)
         (stored / "img1.jpg").write_bytes(b"image")
         with self.media_settings():
-            call_command("restore_media", "DISK", stdout=StringIO())
+            call_command("restore", "media", str(self.target_root), stdout=StringIO())
         self.assertTrue((self.media_root / "img1.jpg").exists())
 
 
 @skipUnless(pg_client_compatible(), "локальный клиент PostgreSQL несовместим с сервером")
 class TestBackupDbCommand(SimpleTestCase):
-    """Команда backup_db фактически создаёт дамп БД в цели."""
+    """Команда backup фактически создаёт дамп БД в цели."""
 
     def setUp(self) -> None:
         """Создать каталоги бэкапа и цели."""
@@ -59,11 +48,10 @@ class TestBackupDbCommand(SimpleTestCase):
         """После вызова команды в db/ цели появляется файл дампа."""
         with self.settings(
             BACKUP_ROOT=str(self.backup_root),
-            BACKUP_DB_TARGETS="DISK",
-            BACKUP_TARGETS={"DISK": str(self.target_root)},
+            BACKUP_TARGETS=str(self.target_root),
             BACKUP_DB_RETENTION_DAYS=14,
         ):
-            call_command("backup_db", stdout=StringIO())
+            call_command("backup", stdout=StringIO())
         self.assertTrue(list((self.target_root / "db").glob("*.dump")))
 
 
@@ -89,9 +77,7 @@ class TestBackupCommand(SimpleTestCase):
         with self.settings(
             MEDIA_ROOT=str(self.media_root),
             BACKUP_ROOT=str(self.backup_root),
-            BACKUP_DB_TARGETS="DISK",
-            BACKUP_MEDIA_TARGETS="DISK",
-            BACKUP_TARGETS={"DISK": str(self.target_root)},
+            BACKUP_TARGETS=str(self.target_root),
             STORAGE_TYPE="filesystem",
             BACKUP_DB_RETENTION_DAYS=14,
         ):
@@ -102,7 +88,7 @@ class TestBackupCommand(SimpleTestCase):
 
 @skipUnless(pg_client_compatible(), "локальный клиент PostgreSQL несовместим с сервером")
 class TestRestoreDbCommand(SimpleTestCase):
-    """Команда restore_db фактически восстанавливает базу данных."""
+    """Команда restore db фактически восстанавливает базу данных."""
 
     def setUp(self) -> None:
         """Создать базу-источник, пустую базу-приёмник и каталог дампов."""
@@ -128,7 +114,7 @@ class TestRestoreDbCommand(SimpleTestCase):
         with self.settings(DATABASES={"default": self._src_config}, BACKUP_ROOT=str(self.backup_root)):
             _dump_name, dump_path = services.dump_database()
         with self.settings(DATABASES={"default": self._dst_config}):
-            call_command("restore_db", dump_path, stdout=StringIO())
+            call_command("restore", "db", dump_path, stdout=StringIO())
         env = {"PATH": os.environ.get("PATH", ""), "PGDATABASE": self.dst_db, **services.pg_env()}
         result = subprocess.run(
             ["psql", "-tAc", "select count(*) from information_schema.tables where table_schema='public'"],

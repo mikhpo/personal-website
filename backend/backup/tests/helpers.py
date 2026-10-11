@@ -51,7 +51,6 @@ class MediaTestCaseMixin(SimpleTestCase):
         """Настройки медиа-операций для текущих каталогов."""
         return self.settings(
             MEDIA_ROOT=str(self.media_root),
-            BACKUP_MEDIA_TARGETS="DISK",
-            BACKUP_TARGETS={"DISK": str(self.target_root)},
+            BACKUP_TARGETS=str(self.target_root),
             STORAGE_TYPE="filesystem",
         )

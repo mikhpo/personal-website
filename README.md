@@ -204,7 +204,7 @@
 
 ### Резервное копирование
 
-Резервное копирование БД и медиа реализовано приложением `backup` с management-командами: `backup`, `backup_db`, `backup_media` (с флагом `--verify` для проверки целей) создают копии, `restore_db`, `restore_media` - восстанавливают их. Команды запускаются хостовым скриптом `scripts/backup.sh` по расписанию cron (альтернатива - systemd timer). Цели бэкапов описываются в `.env` переменными `BACKUP_TARGET_<ИМЯ>` с адресами rclone (локальный путь или `remote:путь`). Настройка и семантика - [docs/deployment/backups.md](./docs/deployment/backups.md).
+Резервное копирование БД и медиа реализовано приложением `backup`: команда `backup` (флаг `--verify` проверяет цели без копирования) создает копии, `restore db|media <адрес>` восстанавливает. Команды запускаются хостовым скриптом `scripts/backup.sh` по расписанию cron (альтернатива - systemd timer). Цели бэкапов - одна переменная `.env` `BACKUP_TARGETS` со списком адресов rclone (локальный путь или `remote:путь`). Настройка и семантика - [docs/deployment/backups.md](./docs/deployment/backups.md).
 
 ## REST API
 

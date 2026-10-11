@@ -225,18 +225,11 @@ AWS_S3_REGION_NAME = os.getenv("AWS_S3_REGION_NAME", "us-east-1")
 S3_MEDIA_LOCATION = "media"
 S3_STATIC_LOCATION = "static"
 
-# Цели резервного копирования: имя -> спецификация из записей BACKUP_TARGET_<ИМЯ> в .env.
-BACKUP_TARGET_PREFIX = "BACKUP_TARGET_"
+# Адреса целей резервного копирования (через пробел): БД и медиа копируются
+# во все перечисленные места. Адрес - путь локального каталога или rclone-адрес.
+BACKUP_TARGETS = os.getenv("BACKUP_TARGETS", default="")
 
-BACKUP_TARGETS = {
-    name.removeprefix(BACKUP_TARGET_PREFIX): value
-    for name, value in os.environ.items()
-    if name.startswith(BACKUP_TARGET_PREFIX)
-}
-
-# Имена целей БД и медиа (через пробел) и ретеншн дампов БД в днях.
-BACKUP_DB_TARGETS = os.getenv("BACKUP_DB_TARGETS", default="")
-BACKUP_MEDIA_TARGETS = os.getenv("BACKUP_MEDIA_TARGETS", default="")
+# Ретеншн дампов БД в днях.
 BACKUP_DB_RETENTION_DAYS = int(os.getenv("BACKUP_DB_RETENTION_DAYS", default="14") or "14")
 
 # E-mail получателя отчетов о результатах бэкапирования; пусто - оповещения отключены.

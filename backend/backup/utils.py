@@ -1,14 +1,10 @@
 """Вспомогательные функции системы резервного копирования.
 
-Вычисления и подготовка данных без выполнения операций: разбор списков
-целей, разрешение имени цели в адрес rclone, именование дампов, выбор
-последнего дампа, сбор переменных libpq, адресация медиа-хранилища
-для rclone и проверка обязательных параметров.
+Вычисления и подготовка данных без выполнения операций: разбор списка
+целей, именование дампов, выбор последнего дампа, сбор переменных libpq,
+адресация медиа-хранилища для rclone и проверка обязательных параметров.
 """
 
-import re
-import shutil
-from dataclasses import dataclass
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
@@ -21,78 +17,12 @@ RETENTION_SLACK_DAYS = 1
 SECONDS_PER_DAY = 86400
 BYTES_PER_KIB = 1024
 RCLONE_MEDIA_REMOTE = "media"  # имя remote; в переменных RCLONE_CONFIG_* пишется заглавными
-NAME_RE = re.compile(r"^[A-Z_][A-Z0-9_]*$")
 MEDIA_S3_VARS = (  # обязательны для операций с медиа при STORAGE_TYPE=s3
     "AWS_STORAGE_BUCKET_NAME",
     "AWS_S3_ENDPOINT_URL",
     "AWS_ACCESS_KEY_ID",
     "AWS_SECRET_ACCESS_KEY",
 )
-
-
-@dataclass(frozen=True)
-class BackupTarget:
-    """Цель резервного копирования: имя и адрес хранилища в адресации rclone.
-
-    Attributes:
-        name (str): Имя цели из настроек (заглавные буквы, цифры,
-            подчеркивание), например "OFFSITE".
-        address (str): Локальный путь ("/mnt/backup") либо "remote:путь",
-            где remote настроен в rclone.conf хоста или переменными
-            RCLONE_CONFIG_*.
-
-    Example:
-        Для записи в .env ``BACKUP_YADISK='yadisk:site-backup'`` цель
-        создает resolve_target("YADISK"); дампы лежат в
-        ``yadisk:site-backup/db``, медиа - в ``yadisk:site-backup/storage``.
-    """
-
-    name: str
-    address: str
-
-    def describe(self) -> str:
-        """Человекочитаемое описание цели для отчетов и журналов.
-
-        Returns:
-            str: Строка вида "OFFSITE (yadisk:site-backup)".
-
-        Example:
-            >>> BackupTarget("OFFSITE", "yadisk:site-backup").describe()
-            'OFFSITE (yadisk:site-backup)'
-        """
-        return f"{self.name} ({self.address})"
-
-
-def resolve_target(name: str) -> BackupTarget:
-    """Разрешить имя цели в адрес rclone из настроек BACKUP_TARGET_<ИМЯ>.
-
-    Args:
-        name (str): Имя цели, определенное записью BACKUP_TARGET_<ИМЯ> в .env.
-
-    Returns:
-        BackupTarget: Валидированная цель.
-
-    Raises:
-        CommandError: Недопустимое имя, цель не определена в .env либо
-            rclone не найден в PATH.
-
-    Example:
-        Для записи в .env ``BACKUP_YADISK='yadisk:site-backup'``:
-        >>> target = resolve_target("YADISK")
-        >>> target.address
-        'yadisk:site-backup'
-    """
-    if not NAME_RE.match(name):
-        msg = f'недопустимое имя цели "{name}": имена целей - заглавные буквы, цифры и подчеркивание'
-        raise CommandError(msg)
-    address = settings.BACKUP_TARGETS.get(name)
-    if not address:
-        msg = f'цель "{name}" не определена: нет переменной BACKUP_TARGET_{name} в .env'
-        raise CommandError(msg)
-    if not shutil.which("rclone"):
-        msg = f'цель "{name}" требует установленный rclone'
-        raise CommandError(msg)
-    return BackupTarget(name, address)
 
 
 def media_rclone_address() -> str:
@@ -141,21 +71,20 @@ def media_rclone_env() -> dict[str, str] | None:
     }
 
 
-def load_target_list(names_value: str | None) -> list[str]:
-    """Разбить строку списка целей на имена.
+def load_target_list(targets_value: str | None) -> list[str]:
+    """Разбить строку адресов целей на список.
 
     Args:
-        names_value (str | None): Значение настроек BACKUP_DB_TARGETS
-            или BACKUP_MEDIA_TARGETS.
+        targets_value (str | None): Значение настроек BACKUP_TARGETS.
 
     Returns:
-        list[str]: Имена целей; пустая строка или None дают пустой список.
+        list[str]: Адреса целей; пустая строка или None дают пустой список.
 
     Example:
-        >>> load_target_list("LOCALDISK OFFSITE")
-        ['LOCALDISK', 'OFFSITE']
+        >>> load_target_list("/mnt/backup yadisk:site-backup")
+        ['/mnt/backup', 'yadisk:site-backup']
     """
-    return names_value.split() if names_value else []
+    return targets_value.split() if targets_value else []
 
 
 def now_local() -> datetime:

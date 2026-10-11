@@ -25,7 +25,6 @@ from backup.utils import (
     DUMP_FLAGS,
     RETENTION_SLACK_DAYS,
     SECONDS_PER_DAY,
-    BackupTarget,
     dump_filename,
     is_s3,
     latest_dump,
@@ -35,7 +34,6 @@ from backup.utils import (
     pg_env,
     require_media_env,
     require_pg_env,
-    resolve_target,
 )
 
 logger = logging.getLogger(__name__)
@@ -254,16 +252,16 @@ def apply_local_retention(backup_root: str, retention_days: int) -> None:
             entry.unlink()
 
 
-def apply_retention(db_targets: list[BackupTarget], retention_days: int) -> None:
+def apply_retention(target_addresses: list[str], retention_days: int) -> None:
     """Удалить дампы старше retention_days дней в целях и локально.
 
     Args:
-        db_targets (list[BackupTarget]): Разрешенные цели БД.
+        target_addresses (list[str]): Адреса целей БД.
         retention_days (int): Срок хранения дампов в днях.
     """
     logger.info("Ретеншн дампов: %s дней", retention_days)
-    for target in db_targets:
-        prune_dumps(target.address, retention_days)
+    for address in target_addresses:
+        prune_dumps(address, retention_days)
     apply_local_retention(settings.BACKUP_ROOT, retention_days)
 
 
@@ -274,36 +272,35 @@ def verify_db_targets(db_targets: list[str]) -> None:
     dump_source_command | pg_restore -l.
 
     Args:
-        db_targets (list[str]): Имена целей БД.
+        db_targets (list[str]): Адреса целей БД.
 
     Raises:
         CommandError: Хотя бы одна цель недоступна, без дампов, с нечитаемым
             или несвежим дампом.
     """
     failures = 0
-    for name in db_targets:
-        target = resolve_target(name)
+    for address in db_targets:
         try:
-            target_dumps = dumps(target.address)
+            target_dumps = dumps(address)
         except CommandError:
-            logger.info("Цель %s (БД): недоступна", name)
+            logger.info("Цель %s (БД): недоступна", address)
             failures += 1
             continue
         if not target_dumps:
-            logger.info("Цель %s (БД): дампов нет", name)
+            logger.info("Цель %s (БД): дампов нет", address)
             failures += 1
             continue
         latest = latest_dump(target_dumps)
-        fresh = has_fresh_dump(target.address)
+        fresh = has_fresh_dump(address)
         try:
-            pipe_commands(dump_source_command(target.address, latest), ["pg_restore", "-l"], env=pg_env())
+            pipe_commands(dump_source_command(address, latest), ["pg_restore", "-l"], env=pg_env())
         except CommandError:
-            logger.info("Цель %s (БД): дамп %s не читается pg_restore -l", name, latest)
+            logger.info("Цель %s (БД): дамп %s не читается pg_restore -l", address, latest)
             failures += 1
         else:
             logger.info(
                 "Цель %s (БД): дамп %s, свежесть %s, pg_restore -l ок",
-                name,
+                address,
                 latest,
                 "да" if fresh else "нет",
             )
@@ -339,7 +336,7 @@ def backup_db(*, verify: bool = False) -> dict[str, Any] | None:
         >>> backup_db()  # эквивалент: python backend/manage.py backup_db
         >>> backup_db(verify=True)  # эквивалент: backup_db --verify
     """
-    db_targets = load_target_list(settings.BACKUP_DB_TARGETS)
+    db_targets = load_target_list(settings.BACKUP_TARGETS)
     if verify:
         if not db_targets:
             msg = "цели БД не настроены: BACKUP_DB_TARGETS пуст"
@@ -349,17 +346,17 @@ def backup_db(*, verify: bool = False) -> dict[str, Any] | None:
     if not db_targets:
         logger.info("БД не копируется: BACKUP_DB_TARGETS пуст")
         return None
-    resolved = [resolve_target(name) for name in db_targets]
+    resolved = db_targets
     dump_name, dump_path = dump_database()
     dump_size = Path(dump_path).stat().st_size
-    for target in resolved:
-        logger.info("Копирование дампа в цель %s", target.describe())
-        push_dump(target.address, dump_path, dump_name)
+    for address in resolved:
+        logger.info("Копирование дампа в цель %s", address)
+        push_dump(address, dump_path, dump_name)
     apply_retention(resolved, settings.BACKUP_DB_RETENTION_DAYS)
     remaining = len(list((Path(settings.BACKUP_ROOT) / "db").glob("*.dump")))
     logger.info("Резервное копирование БД завершено")
     return {
-        "targets": [target.describe() for target in resolved],
+        "targets": list(resolved),
         "dump_name": dump_name,
         "dump_size": dump_size,
         "retention_days": settings.BACKUP_DB_RETENTION_DAYS,
@@ -444,7 +441,7 @@ def restore_db(source_arg: str, dump_name: str | None = None) -> None:
     """Восстановить БД из локального файла дампа либо из дампа цели.
 
     Args:
-        source_arg (str): Путь к файлу дампа на диске либо имя цели;
+        source_arg (str): Путь к файлу дампа на диске либо адрес цели;
             для цели берется последний дамп, если dump_name не задан.
         dump_name (str | None): Имя конкретного дампа в db/ цели.
 
@@ -453,23 +450,22 @@ def restore_db(source_arg: str, dump_name: str | None = None) -> None:
             восстановление завершилось с ошибкой.
 
     Example:
-        >>> restore_db("OFFSITE")  # последний дамп цели OFFSITE
+        >>> restore_db("yadisk:site-backup")  # последний дамп цели
         >>> restore_db("/tmp/db_2026-08-25_1301.dump")  # локальный файл
-        >>> restore_db("OFFSITE", dump_name="db_2026-08-24_2301.dump")
+        >>> restore_db("yadisk:site-backup", dump_name="db_2026-08-24_2301.dump")
     """
     if Path(source_arg).is_file():
         restore_database(source_arg)
     else:
-        target = resolve_target(source_arg)
         if not dump_name:
             try:
-                target_dumps = dumps(target.address)
+                target_dumps = dumps(source_arg)
             except CommandError:
                 msg = f"db/ цели {source_arg} недоступен"
                 raise CommandError(msg) from None
             dump_name = latest_dump(target_dumps)
         logger.info("Дамп БД: %s (цель %s)", dump_name, source_arg)
-        restore_dump_stream(dump_source_command(target.address, dump_name))
+        restore_dump_stream(dump_source_command(source_arg, dump_name))
     logger.info("Проверка целостности (счетчики таблиц, примененные миграции) - скилл postgresql-restore")
 
 
@@ -518,29 +514,28 @@ def verify_media(media_targets: list[str]) -> None:
     в журнале: зеркало полное, расхождений быть не должно.
 
     Args:
-        media_targets (list[str]): Имена медиа-целей.
+        media_targets (list[str]): Адреса медиа-целей.
 
     Raises:
         CommandError: Хотя бы одна цель без содержимого при непустом источнике.
     """
     failures = 0
     source_count = media_source_count()
-    for name in media_targets:
-        target = resolve_target(name)
-        target_count = media_count(target.address)
+    for address in media_targets:
+        target_count = media_count(address)
         if source_count > 0 and target_count == 0:
-            logger.info("Цель %s (медиа): пусто или недоступен storage/ при %s объектах источника", name, source_count)
+            logger.info("Цель %s (медиа): пусто при %s объектах источника", address, source_count)
             failures += 1
             continue
         if target_count != source_count:
             logger.info(
                 "Цель %s (медиа): предупреждение - %s объектов против %s в источнике",
-                name,
+                address,
                 target_count,
                 source_count,
             )
         else:
-            logger.info("Цель %s (медиа): %s объектов (источник: %s)", name, target_count, source_count)
+            logger.info("Цель %s (медиа): %s объектов (источник: %s)", address, target_count, source_count)
     if failures:
         msg = f"проверка медиа-целей завершилась с ошибками: {failures}"
         raise CommandError(msg)
@@ -574,7 +569,7 @@ def backup_media(*, verify: bool = False) -> dict[str, Any] | None:
         >>> backup_media(verify=True)  # эквивалент: backup_media --verify
     """
     require_media_env()
-    media_targets = load_target_list(settings.BACKUP_MEDIA_TARGETS)
+    media_targets = load_target_list(settings.BACKUP_TARGETS)
     if verify:
         if not media_targets:
             msg = "цели медиа не настроены: BACKUP_MEDIA_TARGETS пуст"
@@ -584,14 +579,14 @@ def backup_media(*, verify: bool = False) -> dict[str, Any] | None:
     if not media_targets:
         logger.info("Медиа не копируется: BACKUP_MEDIA_TARGETS пуст")
         return None
-    resolved = [resolve_target(name) for name in media_targets]
-    for target in resolved:
-        logger.info("Синхронизация медиа в цель %s", target.describe())
-        sync_media(target.address)
+    resolved = media_targets
+    for address in resolved:
+        logger.info("Синхронизация медиа в цель %s", address)
+        sync_media(address)
     count, size = media_source_stats()
     logger.info("Резервное копирование медиа завершено")
     return {
-        "targets": [target.describe() for target in resolved],
+        "targets": list(resolved),
         "count": count,
         "size": size,
     }
@@ -605,20 +600,19 @@ def restore_media(target_name: str) -> None:
     в журнал.
 
     Args:
-        target_name (str): Имя цели с резервной копией медиа.
+        target_name (str): Адрес цели с резервной копией медиа.
 
     Raises:
         CommandError: При STORAGE_TYPE=s3 не заданы обязательные настройки,
             цель не определена либо копирование завершилось с ошибкой.
 
     Example:
-        >>> restore_media("OFFSITE")  # эквивалент: python backend/manage.py restore_media OFFSITE
+        >>> restore_media("yadisk:site-backup")  # медиа из storage/ цели
     """
     require_media_env()
-    target = resolve_target(target_name)
-    if media_count(target.address) == 0:
+    if media_count(target_name) == 0:
         logger.info("В цели %s нет медиа - восстановление пропущено", target_name)
         return
-    logger.info("Источник: цель %s (%s/storage)", target_name, target.address)
-    pull_media(target.address)
+    logger.info("Источник: цель %s (%s/storage)", target_name, target_name)
+    pull_media(target_name)
     logger.info("Медиа восстановлены")

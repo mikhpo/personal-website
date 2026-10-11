@@ -1,19 +1,14 @@
 """Тесты полезной логики подготовки данных системы резервного копирования."""
 
-import shutil
-from unittest import skipUnless
-
 from django.core.management.base import CommandError
 from django.test import SimpleTestCase, override_settings
 
 from backup.utils import (
-    BackupTarget,
     latest_dump,
     media_rclone_address,
     media_rclone_env,
     pg_env,
     require_media_env,
-    resolve_target,
 )
 
 DB_CONFIG = {
@@ -45,38 +40,6 @@ class TestDumpHelpers(SimpleTestCase):
         """Последний дамп выбирается по лексикографическому порядку имени."""
         names = ["db_2026-08-20_1200.dump", "db_2026-08-21_0800.dump"]
         self.assertEqual(latest_dump(names), "db_2026-08-21_0800.dump")
-
-
-class TestBackupTarget(SimpleTestCase):
-    """Тесты значения цели резервного копирования."""
-
-    def test_describe(self) -> None:
-        """Описание цели - имя и адрес."""
-        self.assertEqual(BackupTarget("OFFSITE", "yadisk:site-backup").describe(), "OFFSITE (yadisk:site-backup)")
-
-
-class TestResolveTarget(SimpleTestCase):
-    """Тесты разрешения имени цели в адрес rclone."""
-
-    @override_settings(BACKUP_TARGETS={"DISK": "/mnt/backup", "YADISK": "yadisk:site-backup"})
-    @skipUnless(shutil.which("rclone"), "rclone не установлен")
-    def test_resolve_returns_address(self) -> None:
-        """Цель разрешается в имя и адрес из настроек без изменений."""
-        local = resolve_target("DISK")
-        self.assertEqual((local.name, local.address), ("DISK", "/mnt/backup"))
-        remote = resolve_target("YADISK")
-        self.assertEqual((remote.name, remote.address), ("YADISK", "yadisk:site-backup"))
-
-    @override_settings(BACKUP_TARGETS={})
-    def test_unknown_name_raises(self) -> None:
-        """Незаписанное имя цели - ошибка."""
-        with self.assertRaisesMessage(CommandError, "не определена"):
-            resolve_target("NOWHERE")
-
-    def test_invalid_name_raises(self) -> None:
-        """Имя из строчных букв - ошибка."""
-        with self.assertRaisesMessage(CommandError, "недопустимое имя цели"):
-            resolve_target("disk")
 
 
 class TestPgEnv(SimpleTestCase):
