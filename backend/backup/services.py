@@ -490,8 +490,12 @@ def media_source_stats() -> tuple[int, int]:
             env=media_rclone_env(),
             capture=True,
         )
-        stats = json.loads(result.stdout)
-        return int(stats["count"]), int(stats["bytes"])
+        try:
+            stats = json.loads(result.stdout)
+        except json.JSONDecodeError as error:
+            msg = f"некорректный вывод rclone size: {result.stdout!r}"
+            raise CommandError(msg) from error
+        return int(stats.get("count", 0)), int(stats.get("bytes", 0))
     count = 0
     size = 0
     for root, _dirs, files in os.walk(settings.MEDIA_ROOT):

@@ -54,7 +54,7 @@ def _sqlite_unicode_like(*args: object) -> int:
 def register_unicode_like(sender: object, connection: BaseDatabaseWrapper, **kwargs: object) -> None:  # noqa: ARG001
     """Заменить функцию LIKE SQLite на юникод-регистронезависимую."""
     if connection.vendor == "sqlite":
-        connection.connection.create_function("LIKE", -1, _sqlite_unicode_like)
+        connection.connection.create_function("LIKE", -1, _sqlite_unicode_like, deterministic=True)
 
 
 @pytest.fixture(scope="session", autouse=True)

@@ -8,6 +8,7 @@ User=${SERVICE_USER}
 Group=www-data
 WorkingDirectory=${WORK_DIR}
 EnvironmentFile=${WORK_DIR}/.env
+# Вне STORAGE_TYPE=s3 команда завершается без действий
 ExecStartPre=${WORK_DIR}/.venv/bin/python backend/manage.py init_s3
 ExecStartPre=${WORK_DIR}/.venv/bin/python backend/manage.py migrate --noinput
 # Таблицы очереди не создаются в immediate-режиме DEBUG: SQL-хранилище не используется,

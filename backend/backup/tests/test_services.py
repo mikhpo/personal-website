@@ -9,8 +9,8 @@ import uuid
 from pathlib import Path
 from unittest import skipUnless
 
-import boto3  # type: ignore[import-untyped]
-import requests  # type: ignore[import-untyped]
+import boto3
+import requests
 from django.conf import settings
 from django.core.management.base import CommandError
 from django.test import SimpleTestCase, override_settings

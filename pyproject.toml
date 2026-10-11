@@ -174,8 +174,12 @@ disable_error_code = ["attr-defined", "var-annotated", "misc"]
 # без аннотаций типов.
 module = [
     "auditlog.*",
+    "boto3.*",
+    "botocore.*",
     "django.tasks.*",
     "imagekit.*",
+    "requests.*",
+    "whitenoise.*",
 ]
 ignore_missing_imports = true
 

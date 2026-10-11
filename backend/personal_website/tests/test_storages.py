@@ -6,12 +6,12 @@ from concurrent.futures import ThreadPoolExecutor
 from io import BytesIO
 from pathlib import Path
 
-import requests  # type: ignore[import-untyped]
+import requests
 from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.files.storage import FileSystemStorage
 from django.test import SimpleTestCase, override_settings
-from whitenoise.storage import CompressedStaticFilesStorage  # type: ignore[import-untyped]
+from whitenoise.storage import CompressedStaticFilesStorage
 
 from personal_website.storages import (
     CustomFileSystemStorage,

@@ -4,9 +4,9 @@ import os
 import unittest
 import uuid
 
-import boto3  # type: ignore[import-untyped]
-import requests  # type: ignore[import-untyped]
-from botocore.client import BaseClient, Config  # type: ignore[import-untyped]
+import boto3
+import requests
+from botocore.client import BaseClient, Config
 
 ENDPOINT = os.getenv("AWS_S3_ENDPOINT_URL")
 ACCESS_KEY = os.getenv("AWS_ACCESS_KEY_ID")

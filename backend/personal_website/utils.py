@@ -189,8 +189,8 @@ def init_s3_bucket() -> str:
         "exists" - бакет существует, изменения не выполнялись.
 
     Raises:
-        ClientError: Сервер недоступен или ответил ошибкой, кроме факта
-            существования бакета.
+        ClientError: Сервер недоступен либо существующий бакет недоступен
+            ключам (отказ доступа): такой бакет не создается и не изменяется.
     """
     # Получить настройки S3 из конфигурации хранилища
     s3_options = settings.STORAGES["s3"]["OPTIONS"]
@@ -208,7 +208,9 @@ def init_s3_bucket() -> str:
     bucket_name = s3_options["bucket_name"]
     try:
         s3_client.head_bucket(Bucket=bucket_name)
-    except ClientError:
+    except ClientError as error:
+        if error.response["Error"]["Code"] not in ("404", "NoSuchBucket"):
+            raise
         s3_client.create_bucket(Bucket=bucket_name)
         s3_client.put_bucket_policy(Bucket=bucket_name, Policy=bucket_policy_document(bucket_name))
         return "created"
