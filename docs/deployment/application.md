@@ -138,20 +138,22 @@ journalctl -u personal-website --since today
 
 Когда вариант не подходит: контейнерным прокси сокет хоста не виден (контейнер nginx работает в своем пространстве имен), поэтому вариант практически означает "только хостовый nginx". Кроме того, для него не выполняется контракт порта DJANGO_PORT.
 
-Комплект юнитов лежит в scripts/server/systemd/socket/ (setup.sh устанавливает TCP-вариант, сокет подключается вручную). Юнит personal-website.socket описывает сокет ListenStream=/run/personal-website.sock с правами группы www-data. Файл personal-website.service.template - сервисный юнит без --bind: Gunicorn наследует готовый дескриптор сокета от systemd (переменные LISTEN_FDS/LISTEN_PID) и рендерится envsubst по WORK_DIR и SERVICE_USER, как основной шаблон выше.
+Сервисный юнит один на оба режима - scripts/server/systemd/personal-website.service.template; режим привязки выбирает переменная GUNICORN_BIND_MODE из .env. При значении socket Gunicorn стартует без --bind и наследует готовый дескриптор сокета от systemd (переменные LISTEN_FDS/LISTEN_PID); юнит сокета personal-website.socket лежит в scripts/server/systemd/socket/ (ListenStream=/run/personal-website.sock, права группы www-data) и подключается вручную.
 
 Установка:
 
 ```bash
 export WORK_DIR=/srv/personal-website SERVICE_USER=<пользователь>
-envsubst "\$WORK_DIR \$SERVICE_USER" < personal-website.service.template |
+echo 'GUNICORN_BIND_MODE=socket' >> "$WORK_DIR/.env"
+envsubst "\$WORK_DIR \$SERVICE_USER" \
+    < scripts/server/systemd/personal-website.service.template |
     sudo tee /etc/systemd/system/personal-website.service >/dev/null
-sudo cp personal-website.socket /etc/systemd/system/
+sudo cp scripts/server/systemd/socket/personal-website.socket /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable --now personal-website.socket
 ```
 
-Сервисный юнит активируется первым же соединением с сокетом - раздел [Install] есть только у юнита сокета. Запрос после загрузки сервера подождет ExecStartPre (миграции и collectstatic). Проверить вариант можно так:
+Сервисный юнит в этом режиме не включается в загрузку (enable выполняется только для юнита сокета) и активируется первым же соединением с ним. Запрос после загрузки сервера подождет ExecStartPre (миграции и collectstatic). Проверить вариант можно так:
 
 ```bash
 curl --unix-socket /run/personal-website.sock http://localhost/health/
