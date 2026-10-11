@@ -68,10 +68,18 @@ tasks:
     env:
       POSTGRES_HOST: localhost
     cmds:
-      - "{{.COMPOSE_CMD}} up -d postgres"
-      - "{{.COMPOSE_CMD}} ps"
-      - poetry run python ./backend/manage.py create_huey_tables
-      - poetry run python ./backend/manage.py run_huey
+      - |
+        case "$(printf %s "{{.DEBUG}}" | tr A-Z a-z)" in
+          true|1|yes|y|ok)
+            echo "Очередь в immediate-режиме (DEBUG) - задачи выполняются синхронно, воркер не нужен"
+            ;;
+          *)
+            {{.COMPOSE_CMD}} up -d postgres
+            {{.COMPOSE_CMD}} ps
+            poetry run python ./backend/manage.py create_huey_tables
+            poetry run python ./backend/manage.py run_huey
+            ;;
+        esac
 
   migrate:
     desc: Подготовить и выполнить миграции, экспортировать новые диаграммы моделей
@@ -374,7 +382,12 @@ tasks:
     env:
       POSTGRES_HOST: postgres
     cmds:
-      - "{{.COMPOSE_CMD}} --profile postgres up -d {{.COMPOSE_WAIT}}"
+      - |
+        services=""
+        case "$(printf %s "{{.DEBUG}}" | tr A-Z a-z)" in
+          true|1|yes|y|ok) services=$({{.COMPOSE_CMD}} --profile postgres config --services 2>/dev/null | grep -v '^worker$' | tr '\n' ' ') ;;
+        esac
+        {{.COMPOSE_CMD}} --profile postgres up -d {{.COMPOSE_WAIT}} $services
       - "{{.COMPOSE_CMD}} ps"
       - "{{.COMPOSE_CMD}} watch"
 

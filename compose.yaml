@@ -110,7 +110,9 @@ services:
         source: ${POSTGRES_SSL_CERT_HOST_PATH:-${POSTGRES_SSL_ROOT_CERT_PATH:-/root/.postgresql/root.crt}}
         target: ${POSTGRES_SSL_ROOT_CERT_PATH:-/root/.postgresql/root.crt}
         read_only: true
-    restart: always
+    # on-failure вместо always: в immediate-режиме DEBUG воркер завершается
+    # успехом с сообщением и не должен перезапускаться.
+    restart: on-failure
     logging: *default-logging
 
   # Обратный прокси nginx: HTTPS, проксирование приложения

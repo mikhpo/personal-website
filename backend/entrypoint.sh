@@ -142,12 +142,20 @@ function main() {
         wait_for_port "$s3_host" "$s3_port"
     fi
 
+    # Режим DEBUG переводит очередь huey в синхронный immediate-режим без
+    # SQL-хранилища: consumer запускать не с чем, таблицы очереди не нужны.
+    debug_bool=$(str_to_bool "$DEBUG")
+
     # Воркер потребляет очередь huey и не обслуживает HTTP: схему базы
     # данных и таблицы очереди создает веб-сервис, воркер стартует
     # после его готовности (depends_on service_healthy в compose,
     # After в systemd-юните). exec замещает оболочку процессом воркера,
     # чтобы сигналы остановки контейнера доходили до него.
     if [[ "$RUN_MODE" == "worker" ]]; then
+        if $debug_bool; then
+            echo "Очередь в immediate-режиме (DEBUG) - воркер не нужен"
+            exit 0
+        fi
         exec $python "$manage" run_huey
     fi
 
@@ -157,16 +165,18 @@ function main() {
     # как и на миграции.
     $python "$manage" init_s3
 
-    # Выполнить миграции и создать таблицы очереди фоновых задач.
-    # Таблицы huey создаются вне миграций Django, команда идемпотентна.
+    # Выполнить миграции.
     $python "$manage" migrate
-    $python "$manage" create_huey_tables
+
+    # Создать таблицы очереди фоновых задач: huey не мигрирует схему,
+    # команда идемпотентна. В immediate-режиме (см. DEBUG выше) не выполняется.
+    if ! $debug_bool; then
+        $python "$manage" create_huey_tables
+    fi
 
     # Собрать статические файлы.
     $python "$manage" collectstatic --noinput
 
-    # В зависимости от значения переменной окружения DEBUG определить способ запуска.
-    debug_bool=$(str_to_bool "$DEBUG")
     if $debug_bool; then
         $python "$manage" runserver "$DJANGO_HOST":"$DJANGO_PORT"
     else

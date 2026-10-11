@@ -10,6 +10,9 @@ WorkingDirectory=${WORK_DIR}
 EnvironmentFile=${WORK_DIR}/.env
 ExecStartPre=${WORK_DIR}/.venv/bin/python backend/manage.py init_s3
 ExecStartPre=${WORK_DIR}/.venv/bin/python backend/manage.py migrate --noinput
+# Таблицы очереди не создаются в immediate-режиме DEBUG: SQL-хранилище не используется,
+# а команда создания таблиц на нем падает
+ExecStartPre=/bin/sh -c 'd=$(printf %s "${DEBUG}" | tr A-Z a-z); case "$d" in true|1|yes|y|ok) exit 0 ;; esac; exec ${WORK_DIR}/.venv/bin/python backend/manage.py create_huey_tables'
 ExecStartPre=${WORK_DIR}/.venv/bin/python backend/manage.py collectstatic --noinput
 ExecStart=:/bin/bash -c 'exec ${WORK_DIR}/.venv/bin/gunicorn \
     --workers=${GUNICORN_WORKERS:-$((2 * $(nproc --all) + 1))} \
