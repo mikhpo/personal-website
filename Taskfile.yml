@@ -385,7 +385,10 @@ tasks:
       - |
         services=""
         case "$(printf %s "{{.DEBUG}}" | tr A-Z a-z)" in
-          true|1|yes|y|ok) services=$({{.COMPOSE_CMD}} --profile postgres config --services 2>/dev/null | grep -v '^worker$' | tr '\n' ' ') ;;
+          true|1|yes|y|ok)
+            stack=$({{.COMPOSE_CMD}} --profile postgres config --services 2>/dev/null)
+            services=$(echo "$stack" | grep -v '^worker$' | tr '\n' ' ')
+            ;;
         esac
         {{.COMPOSE_CMD}} --profile postgres up -d {{.COMPOSE_WAIT}} $services
       - "{{.COMPOSE_CMD}} ps"
