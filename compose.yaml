@@ -206,10 +206,11 @@ services:
     environment:
       - RUSTFS_ACCESS_KEY=${AWS_ACCESS_KEY_ID}
       - RUSTFS_SECRET_KEY=${AWS_SECRET_ACCESS_KEY}
-    # Порт API (9000) публикуется только на localhost хоста: внешний доступ
-    # к объектному хранилищу не предусмотрен; консоли у сервера нет.
+    # Порты API (9000) и веб-консоли (9001) публикуются только на localhost
+    # хоста: внешний доступ к объектному хранилищу не предусмотрен.
     ports:
       - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
     volumes:
       - s3-data:/data:rw
     restart: always
