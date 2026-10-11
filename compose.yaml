@@ -196,13 +196,14 @@ services:
   # переменная COMPOSE_PROFILES или явное имя сервиса в команде up).
   s3:
     profiles: ["s3"]
-    # Версия и дайджест зафиксированы вместо плавающего latest; ключи серверу
+    # Образ следует плавающему latest: изменения RustFS приходят своевременно,
+    # регрессии сервера ловят S3-тесты прогона STORAGE_TYPE=s3. Ключи серверу
     # передаются теми же переменными, что и приложению
     # (AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY), без дефолтов: пустой ключ
     # не даст серверу стартовать с явной ошибкой вместо расхождения ключей
     # с приложением. Бакет и политику публичной раздачи создает entrypoint
     # приложения (manage.py init_s3, правило собственности).
-    image: rustfs/rustfs:1.0.1@sha256:1803faef57627e2d9c2e7d89d655d712ddded5389040054987163043fecb6a3c
+    image: rustfs/rustfs:latest
     environment:
       - RUSTFS_ACCESS_KEY=${AWS_ACCESS_KEY_ID}
       - RUSTFS_SECRET_KEY=${AWS_SECRET_ACCESS_KEY}
