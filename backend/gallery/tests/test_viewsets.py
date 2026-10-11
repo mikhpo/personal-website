@@ -1,6 +1,7 @@
 """Тесты API представлений галереи."""
 
 from io import BytesIO
+from unittest import skipUnless
 
 import pytest
 from django.contrib.auth import get_user_model
@@ -159,6 +160,15 @@ class TestPhotoViewSet(APITestCase):
 
     def test_search_photos(self) -> None:
         """Поиск фотографий по названию и описанию."""
+        url = "/api/gallery/photos/"
+        response = self.client.get(url, {"search": "Закат"})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(response.data["results"][0]["name"], "Закат в горах")
+
+    @skipUnless(connection.vendor == "postgresql", "регистронезависимость кириллицы обеспечивает ILIKE PostgreSQL")
+    def test_search_photos_case_insensitive(self) -> None:
+        """Поиск находит фотографию запросом в другом регистре."""
         url = "/api/gallery/photos/"
         response = self.client.get(url, {"search": "закат"})
         self.assertEqual(response.status_code, 200)
