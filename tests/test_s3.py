@@ -49,7 +49,7 @@ class TestS3Server(unittest.TestCase):
         self.assertLess(response.status_code, 500)
 
     def test_boto3_bucket_round_trip(self) -> None:
-        """boto3 работает с сервером: тестовый бакет создается, листируется и удаляется."""
+        """boto3 работает с сервером: тестовый бакет создается, виден в списке и удаляется."""
         client = _s3_client()
         bucket = f"python-test-{uuid.uuid4().hex[:8]}"
         client.create_bucket(Bucket=bucket)
