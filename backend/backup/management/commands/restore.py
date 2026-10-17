@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from django.core.management.base import BaseCommand, CommandError, CommandParser
+from django.core.management.base import BaseCommand, CommandParser
 
 from backup.services import restore_db, restore_media
 
@@ -21,9 +21,6 @@ class Command(BaseCommand):
     def handle(self, *args: Any, **options: Any) -> None:  # noqa: ANN401, ARG002
         """Восстановить выбранный источник из указанной цели."""
         if options["kind"] == "db":
-            if not options["target"]:
-                msg = "укажите адрес цели или путь к файлу дампа"
-                raise CommandError(msg)
             restore_db(options["target"], dump_name=options["dump"])
         else:
             restore_media(options["target"])
