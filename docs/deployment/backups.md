@@ -46,11 +46,15 @@ BACKUP_TARGETS='yadisk:site-backup /mnt/backup'
 Все команды выполняются через хостовой вход - из корня рабочей копии на сервере:
 
 ```bash
-bash scripts/backup.sh backup                          # БД + медиа во все цели
-bash scripts/backup.sh backup --verify                 # проверка целей без нового бэкапа
-bash scripts/backup.sh restore db yadisk:site-backup   # БД из последнего дампа цели
-bash scripts/backup.sh restore db /path/to/file.dump   # БД из локального файла дампа
+bash scripts/backup.sh backup                           # БД + медиа во все цели
+bash scripts/backup.sh backup --verify                  # проверка целей без нового бэкапа
+bash scripts/backup.sh backup_db                        # только БД (дамп + цели + ретеншн)
+bash scripts/backup.sh backup_media                     # только медиа (зеркальная синхронизация)
+bash scripts/backup.sh restore db yadisk:site-backup    # БД из последнего дампа цели
+bash scripts/backup.sh restore db /path/to/file.dump    # БД из локального файла дампа
 bash scripts/backup.sh restore media yadisk:site-backup # медиа из storage/ цели
+bash scripts/backup.sh restore_db <адрес | путь>        # то же, отдельными командами
+bash scripts/backup.sh restore_media <адрес>
 ```
 
 Проверка `--verify` проходит по каждой активной цели. Для БД она проверяет наличие дампа моложе 25 часов и читаемость последнего дампа `pg_restore -l` конвейером (`rclone cat` -> `pg_restore`) без выгрузки на диск. Для медиа - наличие содержимого `storage/` и сверку числа объектов с источником: зеркало полное, любое расхождение попадает в журнал как предупреждение.
@@ -132,7 +136,7 @@ journalctl -u personal-website-backup.service --since today
 
 ## 9. Оповещения о результатах
 
-Каждый реальный запуск команды backup сопровождается письмом-отчетом на адрес BACKUP_NOTIFY_EMAIL. Проверка целей (--verify) уведомлений не создает. Восстановление отчетами не покрывается: это редкая ручная операция, результат виден оператору сразу.
+Каждый реальный запуск команд бэкапирования (backup, backup_db, backup_media) сопровождается письмом-отчетом на адрес BACKUP_NOTIFY_EMAIL. Проверка целей (--verify) уведомлений не создает. Восстановление отчетами не покрывается: это редкая ручная операция, результат виден оператору сразу.
 
 Отчет содержит имя команды, хост, время начала (МСК) и длительность. При успехе в отчет входят разделы "База данных" (цели, имя и объем дампа, ретеншн) и "Медиа" (цели, число объектов и объем хранилища) - только по тому, что делала команда. При ошибке разделов нет: письмо содержит полный журнал команды. Запуск с ненастроенными целями письмом не сопровождается: бэкапирование не выполнялось.
 

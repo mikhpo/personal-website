@@ -12,10 +12,14 @@ description: Выполнение резервного копирования и
 Все операции - через хостовой вход `scripts/backup.sh` (из корня рабочей копии на сервере); скрипт читает .env и диспетчеризует по DEPLOY_MODE (compose - контейнер application, systemd - venv на хосте). Работа неинтерактивна.
 
 ```bash
-bash scripts/backup.sh backup                # БД + медиа во все цели
-bash scripts/backup.sh backup --verify       # проверка целей без нового бэкапа
+bash scripts/backup.sh backup                        # БД + медиа во все цели
+bash scripts/backup.sh backup --verify               # проверка целей без нового бэкапа
+bash scripts/backup.sh backup_db                     # только БД
+bash scripts/backup.sh backup_media                  # только медиа
 bash scripts/backup.sh restore db <источник> [--dump <имя>]
 bash scripts/backup.sh restore media <цель>
+bash scripts/backup.sh restore_db <источник> [--dump <имя>]   # то же отдельными командами
+bash scripts/backup.sh restore_media <цель>
 ```
 
 `restore db` принимает адрес цели (берется последний дамп `db/` цели, либо конкретный - флагом `--dump`) или путь к файлу дампа на диске. Лог операций - журнал Django (логгер backup).
