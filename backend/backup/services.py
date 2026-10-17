@@ -165,7 +165,7 @@ def verify_db_targets(db_targets: list[str]) -> None:
 def backup_db(*, verify: bool = False) -> dict[str, Any] | None:
     """Резервное копирование БД в цели либо проверка целей (verify=True).
 
-    Список целей берется из BACKUP_DB_TARGETS; при пустом списке бэкап
+    Список целей берется из BACKUP_TARGETS; при пустом списке бэкап
     пропускается с записью в журнал, а проверка считается ошибкой.
     После копирования выполняется ретеншн BACKUP_DB_RETENTION_DAYS.
 
@@ -189,12 +189,12 @@ def backup_db(*, verify: bool = False) -> dict[str, Any] | None:
     db_targets = load_target_list(settings.BACKUP_TARGETS)
     if verify:
         if not db_targets:
-            msg = "цели БД не настроены: BACKUP_DB_TARGETS пуст"
+            msg = "цели БД не настроены: BACKUP_TARGETS пуст"
             raise CommandError(msg)
         verify_db_targets(db_targets)
         return None
     if not db_targets:
-        logger.info("БД не копируется: BACKUP_DB_TARGETS пуст")
+        logger.info("БД не копируется: BACKUP_TARGETS пуст")
         return None
     resolved = db_targets
     dump_name, dump_path = dump_database()
@@ -385,7 +385,7 @@ def verify_media(media_targets: list[str]) -> None:
 def backup_media(*, verify: bool = False) -> dict[str, Any] | None:
     """Зеркальная синхронизация медиа в цели либо проверка целей (verify=True).
 
-    Список целей берется из BACKUP_MEDIA_TARGETS; при пустом списке
+    Список целей берется из BACKUP_TARGETS; при пустом списке
     копирование пропускается с записью в журнал, а проверка считается
     ошибкой. Синхронизация зеркальная: объекты, исчезнувшие из
     хранилища, удаляются из целей.
@@ -412,12 +412,12 @@ def backup_media(*, verify: bool = False) -> dict[str, Any] | None:
     media_targets = load_target_list(settings.BACKUP_TARGETS)
     if verify:
         if not media_targets:
-            msg = "цели медиа не настроены: BACKUP_MEDIA_TARGETS пуст"
+            msg = "цели медиа не настроены: BACKUP_TARGETS пуст"
             raise CommandError(msg)
         verify_media(media_targets)
         return None
     if not media_targets:
-        logger.info("Медиа не копируется: BACKUP_MEDIA_TARGETS пуст")
+        logger.info("Медиа не копируется: BACKUP_TARGETS пуст")
         return None
     resolved = media_targets
     for address in resolved:
