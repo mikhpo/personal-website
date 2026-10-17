@@ -22,7 +22,7 @@ BACKUP_TARGETS='yadisk:site-backup /mnt/backup'
 
 Новый инструмент копирования (если rclone перестанет устраивать) добавляется тремя шагами:
 
-1. функции операций для адресов своего вида - по образцу rclone-функций в [backend/backup/services.py](../../backend/backup/services.py): `push_dump`, `dumps`, `restore_db`, `prune_dumps`, `has_fresh_dump`, `media_count`, `sync_media`, `pull_media`;
+1. модуль с функциями операций для адресов своего вида - по образцу [backend/backup/rclone.py](../../backend/backup/rclone.py): `push_dump`, `dumps`, `prune_dumps`, `has_fresh_dump`, `media_count`, `sync_media`, `pull_media`;
 2. ветка по виду адреса в этих функциях (например, адрес с префиксом инструмента направляется в его функции);
 3. тесты нового инструмента на реальных операциях по образцу существующих в backend/backup/tests/.
 

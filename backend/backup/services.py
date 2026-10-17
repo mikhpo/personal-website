@@ -2,16 +2,14 @@
 
 Выполнение операций над БД и медиа: создание дампов, зеркальная
 синхронизация в цели, проверка целей (verify), восстановление
-и локальный ретеншн. Операции копирования - функции с адресом цели
-(rclone) параметром, адресация медиа-хранилища - backup.utils,
-запуск внешних команд - backup.process.
+и локальный ретеншн. Операции копирования выполняет инструмент
+rclone (модуль backup.rclone), адресация медиа-хранилища -
+backup.utils, запуск внешних команд - backup.process.
 """
 
-import json
 import logging
 import os
 import shutil
-import subprocess
 import time
 from pathlib import Path
 from typing import Any
@@ -19,6 +17,7 @@ from typing import Any
 from django.conf import settings
 from django.core.management.base import CommandError
 
+from backup import rclone
 from backup.process import pipe_commands, run_command
 from backup.utils import (
     BYTES_PER_KIB,
@@ -29,161 +28,12 @@ from backup.utils import (
     is_s3,
     latest_dump,
     load_target_list,
-    media_rclone_address,
-    media_rclone_env,
     pg_env,
     require_media_env,
     require_pg_env,
 )
 
 logger = logging.getLogger(__name__)
-
-FRESHNESS_WINDOW = "25h"
-
-
-# --- Цели: операции копирования ----------------------------------------------
-
-
-def count_lines(result: subprocess.CompletedProcess[str]) -> int:
-    r"""Число непустых строк захваченного вывода.
-
-    Args:
-        result (subprocess.CompletedProcess[str]): Результат команды
-            со списком объектов (rclone lsf).
-
-    Returns:
-        int: Количество непустых строк stdout; для вывода
-        "img1.jpg\\nimg2.jpg\\n" вернет 2.
-
-    Example:
-        >>> result = run_command(["printf", "a\\nb\\n\\n"], capture=True)
-        >>> count_lines(result)
-        2
-    """
-    return len([line for line in (result.stdout or "").splitlines() if line.strip()])
-
-
-def push_dump(address: str, dump_path: str, dump_name: str) -> None:
-    """Скопировать файл дампа в db/ цели.
-
-    Args:
-        address (str): Адрес хранилища цели.
-        dump_path (str): Локальный путь к файлу дампа.
-        dump_name (str): Имя файла дампа в db/ цели.
-
-    Raises:
-        CommandError: Копирование завершилось с ошибкой.
-    """
-    run_command(["rclone", "copyto", dump_path, f"{address}/db/{dump_name}"])
-
-
-def dumps(address: str) -> list[str]:
-    """Перечислить имена дампов в db/ цели.
-
-    Args:
-        address (str): Адрес хранилища цели.
-
-    Returns:
-        list[str]: Имена файлов дампов.
-
-    Raises:
-        CommandError: Листинг завершился с ошибкой (например, db/ недоступен).
-    """
-    result = run_command(["rclone", "lsf", "--files-only", f"{address}/db"], capture=True)
-    return [line.strip() for line in (result.stdout or "").splitlines() if line.strip()]
-
-
-def dump_source_command(address: str, dump_name: str) -> list[str]:
-    """Команда, выводящая дамп из db/ цели в stdout.
-
-    Args:
-        address (str): Адрес хранилища цели.
-        dump_name (str): Имя файла дампа.
-
-    Returns:
-        list[str]: Аргументы команды для pipe_commands или run_command.
-
-    Example:
-        >>> dump_source_command("/mnt/backup", "db_2026.dump")
-        ['rclone', 'cat', '/mnt/backup/db/db_2026.dump']
-    """
-    return ["rclone", "cat", f"{address}/db/{dump_name}"]
-
-
-def prune_dumps(address: str, retention_days: int) -> None:
-    """Удалить дампы старше retention_days дней из db/ цели.
-
-    Args:
-        address (str): Адрес хранилища цели.
-        retention_days (int): Срок хранения дампов в днях.
-
-    Raises:
-        CommandError: Удаление завершилось с ошибкой.
-    """
-    run_command(
-        ["rclone", "delete", f"{address}/db", "--min-age", f"{retention_days}d", "--include", "*.dump"],
-    )
-
-
-def has_fresh_dump(address: str) -> bool:
-    """Признак наличия в db/ цели дампа моложе окна свежести.
-
-    Args:
-        address (str): Адрес хранилища цели.
-
-    Returns:
-        bool: True, если за окно FRESHNESS_WINDOW появлялся *.dump.
-    """
-    result = run_command(
-        ["rclone", "lsf", "--files-only", "--max-age", FRESHNESS_WINDOW, "--include", "*.dump", f"{address}/db"],
-        capture=True,
-    )
-    return bool((result.stdout or "").strip())
-
-
-def media_count(address: str) -> int:
-    """Число объектов в storage/ цели (0 при отсутствии storage/).
-
-    Args:
-        address (str): Адрес хранилища цели.
-
-    Returns:
-        int: Количество объектов; 0 также при недоступном storage/.
-    """
-    result = run_command(
-        ["rclone", "lsf", "--recursive", "--files-only", f"{address}/storage"],
-        capture=True,
-        check=False,
-    )
-    return count_lines(result)
-
-
-def sync_media(address: str) -> None:
-    """Зеркально синхронизировать медиа-хранилище в storage/ цели.
-
-    Зеркало удаляет из цели объекты, исчезнувшие из хранилища.
-    При STORAGE_TYPE=s3 медиа-бакет открывается через remote media,
-    собираемый из RCLONE_CONFIG_* (см. backup.utils.media_rclone_env).
-
-    Args:
-        address (str): Адрес хранилища цели.
-
-    Raises:
-        CommandError: Синхронизация завершилась с ошибкой.
-    """
-    run_command(["rclone", "sync", media_rclone_address(), f"{address}/storage"], env=media_rclone_env())
-
-
-def pull_media(address: str) -> None:
-    """Скопировать storage/ цели в медиа-хранилище без удаления лишних файлов.
-
-    Args:
-        address (str): Адрес хранилища цели.
-
-    Raises:
-        CommandError: Копирование завершилось с ошибкой.
-    """
-    run_command(["rclone", "copy", f"{address}/storage", media_rclone_address()], env=media_rclone_env())
 
 
 # --- БД: бэкап ---------------------------------------------------------------
@@ -261,7 +111,7 @@ def apply_retention(target_addresses: list[str], retention_days: int) -> None:
     """
     logger.info("Ретеншн дампов: %s дней", retention_days)
     for address in target_addresses:
-        prune_dumps(address, retention_days)
+        rclone.prune_dumps(address, retention_days)
     apply_local_retention(settings.BACKUP_ROOT, retention_days)
 
 
@@ -281,7 +131,7 @@ def verify_db_targets(db_targets: list[str]) -> None:
     failures = 0
     for address in db_targets:
         try:
-            target_dumps = dumps(address)
+            target_dumps = rclone.dumps(address)
         except CommandError:
             logger.info("Цель %s (БД): недоступна", address)
             failures += 1
@@ -291,9 +141,9 @@ def verify_db_targets(db_targets: list[str]) -> None:
             failures += 1
             continue
         latest = latest_dump(target_dumps)
-        fresh = has_fresh_dump(address)
+        fresh = rclone.has_fresh_dump(address)
         try:
-            pipe_commands(dump_source_command(address, latest), ["pg_restore", "-l"], env=pg_env())
+            pipe_commands(rclone.dump_source_command(address, latest), ["pg_restore", "-l"], env=pg_env())
         except CommandError:
             logger.info("Цель %s (БД): дамп %s не читается pg_restore -l", address, latest)
             failures += 1
@@ -351,7 +201,7 @@ def backup_db(*, verify: bool = False) -> dict[str, Any] | None:
     dump_size = Path(dump_path).stat().st_size
     for address in resolved:
         logger.info("Копирование дампа в цель %s", address)
-        push_dump(address, dump_path, dump_name)
+        rclone.push_dump(address, dump_path, dump_name)
     apply_retention(resolved, settings.BACKUP_DB_RETENTION_DAYS)
     remaining = len(list((Path(settings.BACKUP_ROOT) / "db").glob("*.dump")))
     logger.info("Резервное копирование БД завершено")
@@ -459,13 +309,13 @@ def restore_db(source_arg: str, dump_name: str | None = None) -> None:
     else:
         if not dump_name:
             try:
-                target_dumps = dumps(source_arg)
+                target_dumps = rclone.dumps(source_arg)
             except CommandError:
                 msg = f"db/ цели {source_arg} недоступен"
                 raise CommandError(msg) from None
             dump_name = latest_dump(target_dumps)
         logger.info("Дамп БД: %s (цель %s)", dump_name, source_arg)
-        restore_dump_stream(dump_source_command(source_arg, dump_name))
+        restore_dump_stream(rclone.dump_source_command(source_arg, dump_name))
     logger.info("Проверка целостности (счетчики таблиц, примененные миграции) - скилл postgresql-restore")
 
 
@@ -481,17 +331,7 @@ def media_source_stats() -> tuple[int, int]:
         каталог MEDIA_ROOT (os.walk).
     """
     if is_s3():
-        result = run_command(
-            ["rclone", "size", "--json", media_rclone_address()],
-            env=media_rclone_env(),
-            capture=True,
-        )
-        try:
-            stats = json.loads(result.stdout)
-        except json.JSONDecodeError as error:
-            msg = f"некорректный вывод rclone size: {result.stdout!r}"
-            raise CommandError(msg) from error
-        return int(stats.get("count", 0)), int(stats.get("bytes", 0))
+        return rclone.media_size()
     count = 0
     size = 0
     for root, _dirs, files in os.walk(settings.MEDIA_ROOT):
@@ -522,7 +362,7 @@ def verify_media(media_targets: list[str]) -> None:
     failures = 0
     source_count = media_source_count()
     for address in media_targets:
-        target_count = media_count(address)
+        target_count = rclone.media_count(address)
         if source_count > 0 and target_count == 0:
             logger.info("Цель %s (медиа): пусто при %s объектах источника", address, source_count)
             failures += 1
@@ -582,7 +422,7 @@ def backup_media(*, verify: bool = False) -> dict[str, Any] | None:
     resolved = media_targets
     for address in resolved:
         logger.info("Синхронизация медиа в цель %s", address)
-        sync_media(address)
+        rclone.sync_media(address)
     count, size = media_source_stats()
     logger.info("Резервное копирование медиа завершено")
     return {
@@ -610,9 +450,9 @@ def restore_media(target_name: str) -> None:
         >>> restore_media("yadisk:site-backup")  # медиа из storage/ цели
     """
     require_media_env()
-    if media_count(target_name) == 0:
+    if rclone.media_count(target_name) == 0:
         logger.info("В цели %s нет медиа - восстановление пропущено", target_name)
         return
     logger.info("Источник: цель %s (%s/storage)", target_name, target_name)
-    pull_media(target_name)
+    rclone.pull_media(target_name)
     logger.info("Медиа восстановлены")
