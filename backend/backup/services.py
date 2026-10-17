@@ -2,11 +2,11 @@
 
 Выполнение операций над БД и медиа: создание дампов, зеркальная
 синхронизация в цели, проверка целей (verify), восстановление
-и локальный ретеншн. Операции над целями выполняют плагины
-backup.targets, запуск внешних команд - backup.process.
+и локальный ретеншн. Операции копирования выполняет инструмент
+rclone (модуль backup.rclone), адресация медиа-хранилища -
+backup.utils, запуск внешних команд - backup.process.
 """
 
-import json
 import logging
 import os
 import shutil
@@ -17,8 +17,8 @@ from typing import Any
 from django.conf import settings
 from django.core.management.base import CommandError
 
+from backup import rclone
 from backup.process import pipe_commands, run_command
-from backup.targets import Target, resolve_target
 from backup.utils import (
     BYTES_PER_KIB,
     DUMP_FLAGS,
@@ -28,8 +28,6 @@ from backup.utils import (
     is_s3,
     latest_dump,
     load_target_list,
-    mc_executable,
-    media_mc_address,
     pg_env,
     require_media_env,
     require_pg_env,
@@ -104,16 +102,16 @@ def apply_local_retention(backup_root: str, retention_days: int) -> None:
             entry.unlink()
 
 
-def apply_retention(db_targets: list[Target], retention_days: int) -> None:
+def apply_retention(target_addresses: list[str], retention_days: int) -> None:
     """Удалить дампы старше retention_days дней в целях и локально.
 
     Args:
-        db_targets (list[Target]): Разрешенные цели БД.
+        target_addresses (list[str]): Адреса целей БД.
         retention_days (int): Срок хранения дампов в днях.
     """
     logger.info("Ретеншн дампов: %s дней", retention_days)
-    for target in db_targets:
-        target.prune_dumps(retention_days)
+    for address in target_addresses:
+        rclone.prune_dumps(address, retention_days)
     apply_local_retention(settings.BACKUP_ROOT, retention_days)
 
 
@@ -124,36 +122,35 @@ def verify_db_targets(db_targets: list[str]) -> None:
     dump_source_command | pg_restore -l.
 
     Args:
-        db_targets (list[str]): Имена целей БД.
+        db_targets (list[str]): Адреса целей БД.
 
     Raises:
         CommandError: Хотя бы одна цель недоступна, без дампов, с нечитаемым
             или несвежим дампом.
     """
     failures = 0
-    for name in db_targets:
-        target = resolve_target(name)
+    for address in db_targets:
         try:
-            dumps = target.dumps()
+            target_dumps = rclone.dumps(address)
         except CommandError:
-            logger.info("Цель %s (БД): недоступна", name)
+            logger.info("Цель %s (БД): недоступна", address)
             failures += 1
             continue
-        if not dumps:
-            logger.info("Цель %s (БД): дампов нет", name)
+        if not target_dumps:
+            logger.info("Цель %s (БД): дампов нет", address)
             failures += 1
             continue
-        latest = latest_dump(dumps)
-        fresh = target.has_fresh_dump()
+        latest = latest_dump(target_dumps)
+        fresh = rclone.has_fresh_dump(address)
         try:
-            pipe_commands(target.dump_source_command(latest), ["pg_restore", "-l"], env=pg_env())
+            pipe_commands(rclone.dump_source_command(address, latest), ["pg_restore", "-l"], env=pg_env())
         except CommandError:
-            logger.info("Цель %s (БД): дамп %s не читается pg_restore -l", name, latest)
+            logger.info("Цель %s (БД): дамп %s не читается pg_restore -l", address, latest)
             failures += 1
         else:
             logger.info(
                 "Цель %s (БД): дамп %s, свежесть %s, pg_restore -l ок",
-                name,
+                address,
                 latest,
                 "да" if fresh else "нет",
             )
@@ -168,7 +165,7 @@ def verify_db_targets(db_targets: list[str]) -> None:
 def backup_db(*, verify: bool = False) -> dict[str, Any] | None:
     """Резервное копирование БД в цели либо проверка целей (verify=True).
 
-    Список целей берется из BACKUP_DB_TARGETS; при пустом списке бэкап
+    Список целей берется из BACKUP_TARGETS; при пустом списке бэкап
     пропускается с записью в журнал, а проверка считается ошибкой.
     После копирования выполняется ретеншн BACKUP_DB_RETENTION_DAYS.
 
@@ -189,27 +186,27 @@ def backup_db(*, verify: bool = False) -> dict[str, Any] | None:
         >>> backup_db()  # эквивалент: python backend/manage.py backup_db
         >>> backup_db(verify=True)  # эквивалент: backup_db --verify
     """
-    db_targets = load_target_list(settings.BACKUP_DB_TARGETS)
+    db_targets = load_target_list(settings.BACKUP_TARGETS)
     if verify:
         if not db_targets:
-            msg = "цели БД не настроены: BACKUP_DB_TARGETS пуст"
+            msg = "цели БД не настроены: BACKUP_TARGETS пуст"
             raise CommandError(msg)
         verify_db_targets(db_targets)
         return None
     if not db_targets:
-        logger.info("БД не копируется: BACKUP_DB_TARGETS пуст")
+        logger.info("БД не копируется: BACKUP_TARGETS пуст")
         return None
-    resolved = [resolve_target(name) for name in db_targets]
+    resolved = db_targets
     dump_name, dump_path = dump_database()
     dump_size = Path(dump_path).stat().st_size
-    for target in resolved:
-        logger.info("Копирование дампа в цель %s (%s: %s)", target.name, target.prefix, target.path)
-        target.push_dump(dump_path, dump_name)
+    for address in resolved:
+        logger.info("Копирование дампа в цель %s", address)
+        rclone.push_dump(address, dump_path, dump_name)
     apply_retention(resolved, settings.BACKUP_DB_RETENTION_DAYS)
     remaining = len(list((Path(settings.BACKUP_ROOT) / "db").glob("*.dump")))
     logger.info("Резервное копирование БД завершено")
     return {
-        "targets": [target.describe() for target in resolved],
+        "targets": list(resolved),
         "dump_name": dump_name,
         "dump_size": dump_size,
         "retention_days": settings.BACKUP_DB_RETENTION_DAYS,
@@ -270,12 +267,12 @@ def restore_database(dump_path: str) -> None:
 def restore_dump_stream(source_command: list[str]) -> None:
     """Восстановить БД из потока дампа, передаваемого источником в stdout.
 
-    Дамп не выгружается на диск: источник (mc cat / rclone cat) передается
+    Дамп не выгружается на диск: источник (rclone cat) передается
     в pg_restore конвейером через канал в памяти.
 
     Args:
         source_command (list[str]): Команда источника, выводящая дамп
-            в stdout (см. Target.dump_source_command).
+            в stdout (см. dump_source_command).
 
     Raises:
         CommandError: Параметры БД не заданы, pg_restore не найден либо
@@ -294,7 +291,7 @@ def restore_db(source_arg: str, dump_name: str | None = None) -> None:
     """Восстановить БД из локального файла дампа либо из дампа цели.
 
     Args:
-        source_arg (str): Путь к файлу дампа на диске либо имя цели;
+        source_arg (str): Путь к файлу дампа на диске либо адрес цели;
             для цели берется последний дамп, если dump_name не задан.
         dump_name (str | None): Имя конкретного дампа в db/ цели.
 
@@ -303,23 +300,22 @@ def restore_db(source_arg: str, dump_name: str | None = None) -> None:
             восстановление завершилось с ошибкой.
 
     Example:
-        >>> restore_db("OFFSITE")  # последний дамп цели OFFSITE
+        >>> restore_db("yadisk:site-backup")  # последний дамп цели
         >>> restore_db("/tmp/db_2026-08-25_1301.dump")  # локальный файл
-        >>> restore_db("OFFSITE", dump_name="db_2026-08-24_2301.dump")
+        >>> restore_db("yadisk:site-backup", dump_name="db_2026-08-24_2301.dump")
     """
     if Path(source_arg).is_file():
         restore_database(source_arg)
     else:
-        target = resolve_target(source_arg)
         if not dump_name:
             try:
-                dumps = target.dumps()
+                target_dumps = rclone.dumps(source_arg)
             except CommandError:
                 msg = f"db/ цели {source_arg} недоступен"
                 raise CommandError(msg) from None
-            dump_name = latest_dump(dumps)
+            dump_name = latest_dump(target_dumps)
         logger.info("Дамп БД: %s (цель %s)", dump_name, source_arg)
-        restore_dump_stream(target.dump_source_command(dump_name))
+        restore_dump_stream(rclone.dump_source_command(source_arg, dump_name))
     logger.info("Проверка целостности (счетчики таблиц, примененные миграции) - скилл postgresql-restore")
 
 
@@ -331,24 +327,11 @@ def media_source_stats() -> tuple[int, int]:
 
     Returns:
         tuple[int, int]: Количество объектов и суммарный размер в байтах;
-        источник - медиа-бакет при STORAGE_TYPE=s3 (mc ls --json) либо
+        источник - медиа-бакет при STORAGE_TYPE=s3 (rclone size) либо
         каталог MEDIA_ROOT (os.walk).
     """
     if is_s3():
-        result = run_command([mc_executable(), "ls", "--recursive", "--json", media_mc_address()], capture=True)
-        count = 0
-        size = 0
-        for line in (result.stdout or "").splitlines():
-            if not line.strip():
-                continue
-            try:
-                item = json.loads(line)
-            except json.JSONDecodeError:
-                continue
-            if item.get("type") == "file":
-                count += 1
-                size += int(item.get("size", 0))
-        return count, size
+        return rclone.media_size()
     count = 0
     size = 0
     for root, _dirs, files in os.walk(settings.MEDIA_ROOT):
@@ -371,29 +354,28 @@ def verify_media(media_targets: list[str]) -> None:
     в журнале: зеркало полное, расхождений быть не должно.
 
     Args:
-        media_targets (list[str]): Имена медиа-целей.
+        media_targets (list[str]): Адреса медиа-целей.
 
     Raises:
         CommandError: Хотя бы одна цель без содержимого при непустом источнике.
     """
     failures = 0
     source_count = media_source_count()
-    for name in media_targets:
-        target = resolve_target(name)
-        target_count = target.media_count()
+    for address in media_targets:
+        target_count = rclone.media_count(address)
         if source_count > 0 and target_count == 0:
-            logger.info("Цель %s (медиа): пусто или недоступен storage/ при %s объектах источника", name, source_count)
+            logger.info("Цель %s (медиа): пусто при %s объектах источника", address, source_count)
             failures += 1
             continue
         if target_count != source_count:
             logger.info(
                 "Цель %s (медиа): предупреждение - %s объектов против %s в источнике",
-                name,
+                address,
                 target_count,
                 source_count,
             )
         else:
-            logger.info("Цель %s (медиа): %s объектов (источник: %s)", name, target_count, source_count)
+            logger.info("Цель %s (медиа): %s объектов (источник: %s)", address, target_count, source_count)
     if failures:
         msg = f"проверка медиа-целей завершилась с ошибками: {failures}"
         raise CommandError(msg)
@@ -403,7 +385,7 @@ def verify_media(media_targets: list[str]) -> None:
 def backup_media(*, verify: bool = False) -> dict[str, Any] | None:
     """Зеркальная синхронизация медиа в цели либо проверка целей (verify=True).
 
-    Список целей берется из BACKUP_MEDIA_TARGETS; при пустом списке
+    Список целей берется из BACKUP_TARGETS; при пустом списке
     копирование пропускается с записью в журнал, а проверка считается
     ошибкой. Синхронизация зеркальная: объекты, исчезнувшие из
     хранилища, удаляются из целей.
@@ -427,24 +409,24 @@ def backup_media(*, verify: bool = False) -> dict[str, Any] | None:
         >>> backup_media(verify=True)  # эквивалент: backup_media --verify
     """
     require_media_env()
-    media_targets = load_target_list(settings.BACKUP_MEDIA_TARGETS)
+    media_targets = load_target_list(settings.BACKUP_TARGETS)
     if verify:
         if not media_targets:
-            msg = "цели медиа не настроены: BACKUP_MEDIA_TARGETS пуст"
+            msg = "цели медиа не настроены: BACKUP_TARGETS пуст"
             raise CommandError(msg)
         verify_media(media_targets)
         return None
     if not media_targets:
-        logger.info("Медиа не копируется: BACKUP_MEDIA_TARGETS пуст")
+        logger.info("Медиа не копируется: BACKUP_TARGETS пуст")
         return None
-    resolved = [resolve_target(name) for name in media_targets]
-    for target in resolved:
-        logger.info("Синхронизация медиа в цель %s (%s: %s)", target.name, target.prefix, target.path)
-        target.sync_media()
+    resolved = media_targets
+    for address in resolved:
+        logger.info("Синхронизация медиа в цель %s", address)
+        rclone.sync_media(address)
     count, size = media_source_stats()
     logger.info("Резервное копирование медиа завершено")
     return {
-        "targets": [target.describe() for target in resolved],
+        "targets": list(resolved),
         "count": count,
         "size": size,
     }
@@ -458,20 +440,19 @@ def restore_media(target_name: str) -> None:
     в журнал.
 
     Args:
-        target_name (str): Имя цели с резервной копией медиа.
+        target_name (str): Адрес цели с резервной копией медиа.
 
     Raises:
         CommandError: При STORAGE_TYPE=s3 не заданы обязательные настройки,
             цель не определена либо копирование завершилось с ошибкой.
 
     Example:
-        >>> restore_media("OFFSITE")  # эквивалент: python backend/manage.py restore_media OFFSITE
+        >>> restore_media("yadisk:site-backup")  # медиа из storage/ цели
     """
     require_media_env()
-    target = resolve_target(target_name)
-    if target.media_count() == 0:
+    if rclone.media_count(target_name) == 0:
         logger.info("В цели %s нет медиа - восстановление пропущено", target_name)
         return
-    logger.info("Источник: %s-цель %s (%s/storage)", target.prefix, target_name, target.path)
-    target.pull_media()
+    logger.info("Источник: цель %s (%s/storage)", target_name, target_name)
+    rclone.pull_media(target_name)
     logger.info("Медиа восстановлены")

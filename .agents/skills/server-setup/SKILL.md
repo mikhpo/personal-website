@@ -16,7 +16,7 @@ description: Первоначальная настройка нового сер
 
 ## Типовые сценарии развертывания
 
-Инфраструктурные сервисы compose.yaml относятся к собственным профилям: postgres, minio, nginx (переменная COMPOSE_PROFILES в .env, пустое значение - все внешние). Типовые сочетания параметров:
+Инфраструктурные сервисы compose.yaml относятся к собственным профилям: postgres, s3, nginx (переменная COMPOSE_PROFILES в .env, пустое значение - все внешние). Типовые сочетания параметров:
 
 | Сценарий | Способ запуска | Прокси | БД | Хранилище |
 | --- | --- | --- | --- | --- |
@@ -99,10 +99,10 @@ SSH-ключ сервера и настройка подключения (клю
 - Удалить абсолютные пути хоста (STORAGE_ROOT, STATIC_ROOT, BACKUP_ROOT, LOGS_ROOT, TEMP_ROOT) - контейнеру задаются compose-переменные.
 - Экранировать каждый `$` удвоением (`$$`) во всех значениях с `$` (например SECRET_KEY): compose интерполирует значения .env, неэкранированный фрагмент молча заменяется пустой строкой (в systemd-режиме экранирование не нужно). Проверка: `docker compose config` не выдаёт предупреждений вида `The "x" variable is not set`.
 - Добавить: `DOCKER_ENV=True`, `HTTP_PORT=80`, `HTTPS_PORT=443`, `DJANGO_PORT=8000`, `ACME_EMAIL=<email>`.
-- COMPOSE_PROFILES по выбранным вариантам: пусто при внешних БД и S3 с прокси на хосте; добавить nginx, если HTTPS обслуживает контейнерный nginx; postgres/minio - при локальных контейнерах.
+- COMPOSE_PROFILES по выбранным вариантам: пусто при внешних БД и S3 с прокси на хосте; добавить nginx, если HTTPS обслуживает контейнерный nginx; postgres/s3 - при локальных контейнерах.
 - `CERTBOT_STAGING=True` на тестовых средах с выпуском сертификатов (ACME staging, лимиты продакшена не расходуются); продакшен - `False`.
 - `POSTGRES_SSL_CERT_HOST_PATH=<домашний каталог>/.postgresql/root.crt` - путь на хосте для bind-mount (если пользователь не root).
-- Секция "Бэкапы" (только основной сервер): цели `BACKUP_TARGET_<ИМЯ>` (префиксы mc:/rclone:) и списки BACKUP_DB_TARGETS/BACKUP_MEDIA_TARGETS; схема и настройка алиасов mc / remotes rclone - [docs/deployment/backups.md](../../../docs/deployment/backups.md).
+- Секция "Бэкапы" (только основной сервер): переменная BACKUP_TARGETS со списком адресов rclone; схема и настройка remotes rclone - [docs/deployment/backups.md](../../../docs/deployment/backups.md).
 
 `chmod 600 .env`.
 

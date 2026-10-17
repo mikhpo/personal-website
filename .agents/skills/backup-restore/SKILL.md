@@ -1,6 +1,6 @@
 ---
 name: backup-restore
-description: Выполнение резервного копирования и восстановления - запуск scripts/backup.sh (backup, verify, restore_db, restore_media), настройка целей mc/rclone, перенос медиа при смене типа хранилища.
+description: Выполнение резервного копирования и восстановления - запуск scripts/backup.sh (backup, verify, restore db|media), настройка целей rclone, перенос медиа при смене типа хранилища.
 ---
 
 ## Предназначение
@@ -12,23 +12,23 @@ description: Выполнение резервного копирования и
 Все операции - через хостовой вход `scripts/backup.sh` (из корня рабочей копии на сервере); скрипт читает .env и диспетчеризует по DEPLOY_MODE (compose - контейнер application, systemd - venv на хосте). Работа неинтерактивна.
 
 ```bash
-bash scripts/backup.sh backup              # БД + медиа в настроенные цели
-bash scripts/backup.sh backup --verify     # проверка целей без нового бэкапа
-bash scripts/backup.sh backup_db           # только БД (дамп + цели + ретеншн)
-bash scripts/backup.sh backup_media        # только медиа (зеркальная синхронизация)
-bash scripts/backup.sh restore_db <источник> [--dump <имя>]
+bash scripts/backup.sh backup                        # БД + медиа во все цели
+bash scripts/backup.sh backup --verify               # проверка целей без нового бэкапа
+bash scripts/backup.sh backup_db                     # только БД
+bash scripts/backup.sh backup_media                  # только медиа
+bash scripts/backup.sh restore db <источник> [--dump <имя>]
+bash scripts/backup.sh restore media <цель>
+bash scripts/backup.sh restore_db <источник> [--dump <имя>]   # то же отдельными командами
 bash scripts/backup.sh restore_media <цель>
 ```
 
-`restore_db` принимает имя цели (берется последний дамп `db/` цели, либо конкретный - флагом `--dump`) или путь к файлу дампа на диске. Лог операций - журнал Django (логгер backup).
+`restore db` принимает адрес цели (берется последний дамп `db/` цели, либо конкретный - флагом `--dump`) или путь к файлу дампа на диске. Лог операций - журнал Django (логгер backup).
 
 ## Источники, цели, переменные
 
 Источники и списки целей задаются в секции "Бэкапы" .env:
 
-- `BACKUP_DB_TARGETS`, `BACKUP_MEDIA_TARGETS` - имена целей через пробел (пустой список - источник не копируется);
-- каждая цель - запись `BACKUP_TARGET_<ИМЯ>='<префикс>:<спецификация>'`: `mc:alias/бакет[/префикс]` (S3/MinIO через MinIO Client) или `rclone:remote:путь` / локальный путь (диски, облачные хранилища);
-- `MC_PATH` - путь к mc (только для mc-целей);
+- `BACKUP_TARGETS` - адреса целей через пробел (пустой список - бэкапирование отключено): `remote:путь` (облачные хранилища, S3) или локальный путь (диски);
 - `BACKUP_DB_RETENTION_DAYS` - срок хранения дампов.
 
 Полная схема целей, семантика зеркала и расписание - [docs/deployment/backups.md](../../../docs/deployment/backups.md).
@@ -36,7 +36,6 @@ bash scripts/backup.sh restore_media <цель>
 Инструменты целей настраиваются на сервере единовременно:
 
 ```bash
-mc alias set <алиас> <endpoint> <access-key> <secret-key>
 rclone config    # remote для облачных целей; локальным путям remote не нужен
 ```
 
@@ -46,15 +45,15 @@ rclone config    # remote для облачных целей; локальным
 
 При восстановлении с нуля (пустая БД + миграции) медиа должны быть доступны до запуска миграций: миграция gallery/0013 читает файлы через хранилище. В таком сценарии - сначала хранилище, потом БД.
 
-1. `bash scripts/backup.sh restore_media <цель>` - недеструктивное копирование из `storage/` цели;
-2. `bash scripts/backup.sh restore_db <цель | путь>` - восстановление с `--clean --if-exists` (объекты пересоздаются); конкретный дамп - `--dump <имя>`;
+1. `bash scripts/backup.sh restore media <адрес>` - недеструктивное копирование из `storage/` цели;
+2. `bash scripts/backup.sh restore db <адрес | путь>` - восстановление с `--clean --if-exists` (объекты пересоздаются); конкретный дамп - `--dump <имя>`;
 3. проверка целостности: счетчики таблиц и примененные миграции - скилл postgresql-restore; работоспособность - `curl http://127.0.0.1:${DJANGO_PORT}/health/`.
 
 Восстановление на новом сервере - до переключения DNS. Разовые операции с внешними дампами вне целей бэкапа (pg_dump/pg_restore напрямую, два варианта восстановления) - скиллы postgresql-dump, postgresql-restore.
 
 ## Перенос медиа при смене типа хранилища
 
-Отдельного механизма переноса нет: используется временная цель `BACKUP_TARGET_<ИМЯ>` (добавить в .env, включить в `BACKUP_MEDIA_TARGETS`, `backup_media`, переключить `STORAGE_TYPE` и параметры хранилища, перезапустить приложение, `restore_media`, сверить число объектов, удалить временную цель). Пошагово - [docs/deployment/backups.md](../../../docs/deployment/backups.md), раздел 7.
+Отдельного механизма переноса нет: используется временная цель - адрес добавляется в `BACKUP_TARGETS`, выполняется `backup`, переключаются `STORAGE_TYPE` и параметры хранилища, перезапускается приложение, `restore media <адрес>`, сверяется число объектов, адрес удаляется. Пошагово - [docs/deployment/backups.md](../../../docs/deployment/backups.md), раздел 7.
 
 ## Ограничения
 

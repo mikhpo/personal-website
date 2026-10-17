@@ -14,7 +14,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser: CommandParser) -> None:
         """Добавить источник дампа и опциональное имя конкретного дампа."""
-        parser.add_argument("source", help="путь к файлу дампа или имя цели")
+        parser.add_argument("source", help="путь к файлу дампа или адрес цели")
         parser.add_argument("--dump", default=None, help="имя конкретного дампа в цели")
 
     def handle(self, *args: Any, **options: Any) -> None:  # noqa: ANN401, ARG002

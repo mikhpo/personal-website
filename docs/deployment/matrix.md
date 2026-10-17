@@ -10,9 +10,9 @@
 | --- | --- | --- |
 | Запуск приложения | Docker Compose / docker run / systemd Gunicorn | DEPLOY_MODE, DJANGO_PORT, GUNICORN_WORKERS |
 | База данных | managed-кластер / контейнер compose / systemd на хосте | POSTGRES_*, профиль postgres |
-| Хранилище | filesystem / S3 удаленный / MinIO локальный | STORAGE_TYPE, AWS_*, профиль minio |
+| Хранилище | filesystem / S3 удаленный / RustFS локальный | STORAGE_TYPE, AWS_*, профиль s3 |
 | Прокси | nginx + certbot в compose / nginx + certbot на хосте | COMPOSE_PROFILES, HTTP_PORT, HTTPS_PORT, ACME_EMAIL |
-| Бэкапы | источники x цели (mc:, rclone:), расписание | BACKUP_*, cron/systemd timer |
+| Бэкапы | источники x цели (адреса rclone), расписание | BACKUP_*, cron/systemd timer |
 
 Бэкапы настраиваются независимо от остальных параметров в любом сценарии.
 

@@ -19,7 +19,7 @@ def manage_temp_dir() -> Generator[str, Any, None]:
     # Настроить тестовую среду
     setup_test_environment()
 
-    # Передать адрес временной папки как фикстуру для тестов.
+    # Передать адрес временного каталога как фикстуру для тестов.
     temp_dir = settings.TEMP_ROOT
     yield str(temp_dir)
 

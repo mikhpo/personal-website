@@ -29,7 +29,7 @@ class TestBackupMediaCommand(MediaTestCaseMixin):
 
 
 class TestRestoreMediaCommand(MediaTestCaseMixin):
-    """Команда restore_media фактически восстанавливает медиа из цели."""
+    """Команда restore media фактически восстанавливает медиа из цели."""
 
     def test_restores_media_from_target(self) -> None:
         """После вызова команды файл возвращается в хранилище."""
@@ -37,7 +37,7 @@ class TestRestoreMediaCommand(MediaTestCaseMixin):
         stored.mkdir(parents=True)
         (stored / "img1.jpg").write_bytes(b"image")
         with self.media_settings():
-            call_command("restore_media", "DISK", stdout=StringIO())
+            call_command("restore", "media", str(self.target_root), stdout=StringIO())
         self.assertTrue((self.media_root / "img1.jpg").exists())
 
 
@@ -59,9 +59,7 @@ class TestBackupDbCommand(SimpleTestCase):
         """После вызова команды в db/ цели появляется файл дампа."""
         with self.settings(
             BACKUP_ROOT=str(self.backup_root),
-            BACKUP_DB_TARGETS="DISK",
-            BACKUP_TARGETS={"DISK": f"rclone:{self.target_root}"},
-            MC_PATH="mc",
+            BACKUP_TARGETS=str(self.target_root),
             BACKUP_DB_RETENTION_DAYS=14,
         ):
             call_command("backup_db", stdout=StringIO())
@@ -90,10 +88,7 @@ class TestBackupCommand(SimpleTestCase):
         with self.settings(
             MEDIA_ROOT=str(self.media_root),
             BACKUP_ROOT=str(self.backup_root),
-            BACKUP_DB_TARGETS="DISK",
-            BACKUP_MEDIA_TARGETS="DISK",
-            BACKUP_TARGETS={"DISK": f"rclone:{self.target_root}"},
-            MC_PATH="mc",
+            BACKUP_TARGETS=str(self.target_root),
             STORAGE_TYPE="filesystem",
             BACKUP_DB_RETENTION_DAYS=14,
         ):

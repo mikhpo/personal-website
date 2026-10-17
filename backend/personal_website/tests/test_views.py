@@ -3,13 +3,12 @@
 from http import HTTPStatus
 from unittest.mock import patch
 
+from django.contrib.staticfiles.storage import staticfiles_storage
 from django.db.utils import OperationalError
-from django.test import SimpleTestCase, TestCase, override_settings
+from django.test import SimpleTestCase, TestCase
 from django.urls import reverse
 
 from personal_website.views import StaticRedirectView
-
-S3_STATIC_URL = "https://storage.yandexcloud.net/personal-website-storage/static/"
 
 
 class TestStaticRedirectView(SimpleTestCase):
@@ -27,12 +26,11 @@ class TestStaticRedirectView(SimpleTestCase):
         self.assertEqual(response.status_code, HTTPStatus.MOVED_PERMANENTLY)
         self.assertTrue(response["Location"].endswith("robots.txt"))
 
-    @override_settings(STATIC_URL=S3_STATIC_URL)
-    def test_redirect_targets_s3_bucket_in_s3_mode(self) -> None:
-        """В S3-режиме цель редиректа указывает в бакет объектного хранилища."""
+    def test_redirect_target_follows_static_storage(self) -> None:
+        """Цель редиректа - адрес файла в текущем хранилище статики."""
         response = self.client.get("/favicon.ico")
         self.assertEqual(response.status_code, HTTPStatus.MOVED_PERMANENTLY)
-        self.assertEqual(response["Location"], f"{S3_STATIC_URL}favicon.ico")
+        self.assertEqual(response["Location"], staticfiles_storage.url("favicon.ico"))
 
     def test_urls_are_resolvable(self) -> None:
         """Маршруты резолвятся в представления редиректа."""

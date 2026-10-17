@@ -1,12 +1,10 @@
 """Вспомогательные функции системы резервного копирования.
 
-Вычисления и подготовка данных без выполнения операций: разбор списков
+Вычисления и подготовка данных без выполнения операций: разбор списка
 целей, именование дампов, выбор последнего дампа, сбор переменных libpq,
-адресация медиа-хранилища для инструментов целей и проверка обязательных
-параметров.
+адресация медиа-хранилища для rclone и проверка обязательных параметров.
 """
 
-import shutil
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
@@ -20,28 +18,11 @@ SECONDS_PER_DAY = 86400
 BYTES_PER_KIB = 1024
 RCLONE_MEDIA_REMOTE = "media"  # имя remote; в переменных RCLONE_CONFIG_* пишется заглавными
 MEDIA_S3_VARS = (  # обязательны для операций с медиа при STORAGE_TYPE=s3
-    "MINIO_ALIAS",
     "AWS_STORAGE_BUCKET_NAME",
     "AWS_S3_ENDPOINT_URL",
     "AWS_ACCESS_KEY_ID",
     "AWS_SECRET_ACCESS_KEY",
 )
-
-
-def media_mc_address() -> str:
-    """Адрес медиа-хранилища для MinIO Client.
-
-    Returns:
-        str: "alias/бакет/префикс" при STORAGE_TYPE=s3 (префикс - каталог
-        медиа в бакете), иначе путь MEDIA_ROOT.
-
-    Example:
-        >>> media_mc_address()
-        'local/media-bucket/media'
-    """
-    if is_s3():
-        return f"{settings.MINIO_ALIAS}/{settings.AWS_STORAGE_BUCKET_NAME}/{settings.S3_MEDIA_LOCATION}"
-    return str(settings.MEDIA_ROOT)
 
 
 def media_rclone_address() -> str:
@@ -63,6 +44,10 @@ def media_rclone_address() -> str:
 def media_rclone_env() -> dict[str, str] | None:
     """Переменные RCLONE_CONFIG_* для rclone-доступа к медиа-бакету.
 
+    ACL public-read выравнивает восстановление (pull_media) с загрузкой
+    через сайт: приложение публикует медиа с этим ACL, а rclone сам по
+    себе объектов публичными не делает.
+
     Returns:
         dict[str, str] | None: Переменные remote media при STORAGE_TYPE=s3,
         None при filesystem (rclone работает с локальным путем без настроек).
@@ -77,51 +62,29 @@ def media_rclone_env() -> dict[str, str] | None:
     remote = RCLONE_MEDIA_REMOTE.upper()
     return {
         f"RCLONE_CONFIG_{remote}_TYPE": "s3",
+        f"RCLONE_CONFIG_{remote}_PROVIDER": "Other",
         f"RCLONE_CONFIG_{remote}_ENDPOINT": settings.AWS_S3_ENDPOINT_URL,
         f"RCLONE_CONFIG_{remote}_ACCESS_KEY_ID": settings.AWS_ACCESS_KEY_ID,
         f"RCLONE_CONFIG_{remote}_SECRET_ACCESS_KEY": settings.AWS_SECRET_ACCESS_KEY,
         f"RCLONE_CONFIG_{remote}_REGION": settings.AWS_S3_REGION_NAME,
+        f"RCLONE_CONFIG_{remote}_ACL": "public-read",
     }
 
 
-def load_target_list(names_value: str | None) -> list[str]:
-    """Разбить строку списка целей на имена.
+def load_target_list(targets_value: str | None) -> list[str]:
+    """Разбить строку адресов целей на список.
 
     Args:
-        names_value (str | None): Значение настроек BACKUP_DB_TARGETS
-            или BACKUP_MEDIA_TARGETS.
+        targets_value (str | None): Значение настроек BACKUP_TARGETS.
 
     Returns:
-        list[str]: Имена целей; пустая строка или None дают пустой список.
+        list[str]: Адреса целей; пустая строка или None дают пустой список.
 
     Example:
-        >>> load_target_list("LOCALDISK OFFSITE")
-        ['LOCALDISK', 'OFFSITE']
+        >>> load_target_list("/mnt/backup yadisk:site-backup")
+        ['/mnt/backup', 'yadisk:site-backup']
     """
-    return names_value.split() if names_value else []
-
-
-def mc_executable() -> str:
-    """Путь к MinIO Client из MC_PATH.
-
-    Returns:
-        str: Путь к исполняемому файлу mc.
-
-    Raises:
-        CommandError: MC_PATH не задан либо файл не найден.
-
-    Example:
-        >>> mc_executable()
-        '/usr/local/bin/mc'
-    """
-    path = settings.MC_PATH
-    if not path:
-        msg = "MC_PATH не задана в .env"
-        raise CommandError(msg)
-    if not shutil.which(path):
-        msg = f"MinIO Client не найден: {path} (MC_PATH в .env)"
-        raise CommandError(msg)
-    return path
+    return targets_value.split() if targets_value else []
 
 
 def now_local() -> datetime:
@@ -230,8 +193,8 @@ def require_pg_env() -> None:
 def require_media_env() -> None:
     """Проверить настройки S3, обязательные для операций с медиа при s3.
 
-    При filesystem инструмент определяется целями (доступность mc и rclone
-    проверяется при разрешении целей), обязательные настройки отсутствуют.
+    При filesystem обязательные настройки отсутствуют (доступность rclone
+    проверяется при разрешении целей).
 
     Raises:
         CommandError: При STORAGE_TYPE=s3 не задана одна из переменных

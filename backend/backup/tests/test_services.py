@@ -9,14 +9,14 @@ import uuid
 from pathlib import Path
 from unittest import skipUnless
 
+import boto3
+import requests
 from django.conf import settings
 from django.core.management.base import CommandError
 from django.test import SimpleTestCase, override_settings
 
 from backup import services
-from backup.process import run_command
-from backup.targets import TARGET_PREFIXES
-from backup.tests.helpers import CallTarget, MediaTestCaseMixin, pg_client_compatible
+from backup.tests.helpers import S3_AVAILABLE, MediaTestCaseMixin, pg_client_compatible
 
 OLD_AGE_DAYS = 20
 SECONDS_PER_DAY = 86400
@@ -60,7 +60,7 @@ class TestApplyLocalRetention(SimpleTestCase):
 class TestBackupDb(SimpleTestCase):
     """Тесты функции backup_db."""
 
-    @override_settings(BACKUP_DB_TARGETS="")
+    @override_settings(BACKUP_TARGETS="")
     def test_verify_without_targets_raises(self) -> None:
         """Проверка целей БД без их настройки - ошибка."""
         with self.assertRaisesMessage(CommandError, "цели БД не настроены"):
@@ -77,22 +77,20 @@ class TestBackupMedia(MediaTestCaseMixin):
         stored = self.target_root / "storage"
         self.assertTrue((stored / "img1.jpg").exists())
 
-    @override_settings(BACKUP_MEDIA_TARGETS="", MC_PATH="mc")
+    @override_settings(BACKUP_TARGETS="")
     def test_verify_without_targets_raises(self) -> None:
         """Проверка целей медиа без их настройки - ошибка."""
         with self.assertRaisesMessage(CommandError, "цели медиа не настроены"):
             services.backup_media(verify=True)
 
-    def test_overwrite_and_remove_flags(self) -> None:
-        """Mc mirror с флагами --overwrite и --remove заменяет и удаляет лишнее."""
-        mc = shutil.which("mc")
-        assert mc is not None
-        (self.media_root / "keep.jpg").write_bytes(b"newer-longer-content")
-        (self.target_root / "keep.jpg").write_bytes(b"older")
-        (self.target_root / "stale.jpg").write_bytes(b"old")
-        run_command([mc, "mirror", "--overwrite", "--remove", str(self.media_root), str(self.target_root)])
-        self.assertEqual((self.target_root / "keep.jpg").read_bytes(), b"newer-longer-content")
-        self.assertFalse((self.target_root / "stale.jpg").exists())
+    def test_sync_removes_missing_from_target(self) -> None:
+        """Синхронизация удаляет из цели объекты, исчезнувшие из хранилища."""
+        stored = self.target_root / "storage"
+        stored.mkdir(parents=True)
+        (stored / "stale.jpg").write_bytes(b"old")
+        with self.media_settings():
+            services.backup_media()
+        self.assertFalse((stored / "stale.jpg").exists())
 
 
 class TestVerifyMedia(MediaTestCaseMixin):
@@ -103,7 +101,7 @@ class TestVerifyMedia(MediaTestCaseMixin):
         with self.media_settings():
             services.backup_media()
             with self.assertLogs("backup.services", level="INFO") as logs:
-                services.verify_media(["DISK"])
+                services.verify_media([str(self.target_root)])
         self.assertFalse(any("предупреждение" in message for message in logs.output))
 
     def test_discrepancy_warns(self) -> None:
@@ -113,7 +111,7 @@ class TestVerifyMedia(MediaTestCaseMixin):
         (stored / "img1.jpg").write_bytes(b"image")
         (stored / "extra.jpg").write_bytes(b"extra")
         with self.media_settings(), self.assertLogs("backup.services", level="INFO") as logs:
-            services.verify_media(["DISK"])
+            services.verify_media([str(self.target_root)])
         self.assertTrue(any("предупреждение" in message for message in logs.output))
 
 
@@ -126,29 +124,58 @@ class TestRestoreMedia(MediaTestCaseMixin):
         stored.mkdir(parents=True)
         (stored / "img1.jpg").write_bytes(b"image")
         with self.media_settings():
-            services.restore_media("DISK")
+            services.restore_media(str(self.target_root))
         self.assertTrue((self.media_root / "img1.jpg").exists())
 
 
-class TestPluginMediaBackup(SimpleTestCase):
-    """Оркестрация медиа работает с любым плагином из реестра."""
+class TestMediaRoundTrip(MediaTestCaseMixin):
+    """Полный цикл медиа: синхронизация в цель и восстановление из нее."""
 
-    def test_backup_and_restore_through_registered_plugin(self) -> None:
-        """Бэкап и восстановление медиа идут через методы зарегистрированного плагина."""
-        TARGET_PREFIXES["call"] = CallTarget
-        self.addCleanup(TARGET_PREFIXES.pop, "call")
-        CallTarget.created.clear()
+    def test_backup_then_restore(self) -> None:
+        """Файл переживает очистку хранилища и возвращается из цели."""
+        with self.media_settings():
+            services.backup_media()
+            (self.media_root / "img1.jpg").unlink()
+            self.assertFalse((self.media_root / "img1.jpg").exists())
+            services.restore_media(str(self.target_root))
+        self.assertTrue((self.media_root / "img1.jpg").exists())
+
+
+@skipUnless(S3_AVAILABLE and settings.STORAGE_TYPE == "s3", "S3-хранилище недоступно")
+class TestMediaS3RestoreKeepsPublic(SimpleTestCase):
+    """Восстановление медиа из цели сохраняет публичность объектов."""
+
+    def test_restore_keeps_objects_public(self) -> None:
+        """После restore_media объект читается анонимно по URL хранилища.
+
+        rclone не переносит ACL, поэтому загрузки восстановления идут
+        с RCLONE_CONFIG_MEDIA_ACL=public-read; policy-серверы публичность
+        дают политикой бакета. Анонимный запрос проверяет результат.
+        """
+        s3_options = settings.STORAGES["s3"]["OPTIONS"]
+        client = boto3.client(
+            "s3",
+            aws_access_key_id=s3_options["access_key"],
+            aws_secret_access_key=s3_options["secret_key"],
+            endpoint_url=s3_options["endpoint_url"],
+        )
+        bucket = s3_options["bucket_name"]
+        key = f"{settings.S3_MEDIA_LOCATION}/restore-public/{uuid.uuid4().hex[:8]}.jpg"
+        client.put_object(Bucket=bucket, Key=key, Body=b"image")
+        target_root = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, target_root)
+        self.addCleanup(client.delete_object, Bucket=bucket, Key=key)
         with override_settings(
-            STORAGE_TYPE="filesystem",
-            MEDIA_ROOT="/tmp/media",
-            BACKUP_MEDIA_TARGETS="CALL",
-            BACKUP_TARGETS={"CALL": "call:host/path"},
+            STORAGE_TYPE="s3",
+            BACKUP_TARGETS=str(target_root),
         ):
             services.backup_media()
-            services.restore_media("CALL")
-        self.assertEqual(len(CallTarget.created), 2)
-        self.assertEqual(CallTarget.created[0].calls, ["sync_media"])
-        self.assertEqual(CallTarget.created[1].calls, ["media_count", "pull_media"])
+            client.delete_object(Bucket=bucket, Key=key)
+            services.restore_media(str(self.target_root))
+        url = f"{settings.AWS_S3_ENDPOINT_URL.rstrip('/')}/{bucket}/{key}"
+        response = requests.get(url, timeout=10)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content, b"image")
 
 
 @skipUnless(pg_client_compatible(), "локальный клиент PostgreSQL несовместим с сервером")

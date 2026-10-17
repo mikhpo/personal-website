@@ -102,6 +102,7 @@ INSTALLED_APPS = [
     "drf_spectacular_sidecar",
     "auditlog",
     "huey.contrib.djhuey",
+    "personal_website",
     "about",
     "accounts",
     "backup",
@@ -211,11 +212,7 @@ TEMP_ROOT = os.getenv("TEMP_ROOT", default=PROJECT_DIR / "temp")
 # Абсолютный путь до каталога резервных копий (дампы БД хранятся в его db/).
 BACKUP_ROOT = os.getenv("BACKUP_ROOT", default=PROJECT_DIR / "backups")
 
-# Путь к MinIO Client для операций резервного копирования медиа.
-MC_PATH = os.getenv("MC_PATH")
-
 # Параметры S3-хранилища медиа.
-MINIO_ALIAS = os.getenv("MINIO_ALIAS")
 AWS_STORAGE_BUCKET_NAME = os.getenv("AWS_STORAGE_BUCKET_NAME")
 AWS_S3_ENDPOINT_URL = os.getenv("AWS_S3_ENDPOINT_URL")
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
@@ -228,18 +225,11 @@ AWS_S3_REGION_NAME = os.getenv("AWS_S3_REGION_NAME", "us-east-1")
 S3_MEDIA_LOCATION = "media"
 S3_STATIC_LOCATION = "static"
 
-# Цели резервного копирования: имя -> спецификация из записей BACKUP_TARGET_<ИМЯ> в .env.
-BACKUP_TARGET_PREFIX = "BACKUP_TARGET_"
+# Адреса целей резервного копирования (через пробел): БД и медиа копируются
+# во все перечисленные места. Адрес - путь локального каталога или rclone-адрес.
+BACKUP_TARGETS = os.getenv("BACKUP_TARGETS", default="")
 
-BACKUP_TARGETS = {
-    name.removeprefix(BACKUP_TARGET_PREFIX): value
-    for name, value in os.environ.items()
-    if name.startswith(BACKUP_TARGET_PREFIX)
-}
-
-# Имена целей БД и медиа (через пробел) и ретеншн дампов БД в днях.
-BACKUP_DB_TARGETS = os.getenv("BACKUP_DB_TARGETS", default="")
-BACKUP_MEDIA_TARGETS = os.getenv("BACKUP_MEDIA_TARGETS", default="")
+# Ретеншн дампов БД в днях.
 BACKUP_DB_RETENTION_DAYS = int(os.getenv("BACKUP_DB_RETENTION_DAYS", default="14") or "14")
 
 # E-mail получателя отчетов о результатах бэкапирования; пусто - оповещения отключены.
@@ -434,10 +424,6 @@ TEMPLATES = [
                 "main.context_processors.tags_data",
                 "main.context_processors.alerts_data",
             ],
-            "libraries": {
-                "file_tags": "personal_website.templatetags.file_tags",
-                "react_tags": "personal_website.templatetags.react_tags",
-            },
         },
     },
 ]

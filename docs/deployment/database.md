@@ -32,7 +32,7 @@
 
 Сервис postgres подключается профилем postgres (`COMPOSE_PROFILES=postgres` или `docker compose up -d postgres`). База, пользователь и пароль создаются образом автоматически из `POSTGRES_USER/POSTGRES_PASSWORD/POSTGRES_DB`. Имя хоста для соседних сервисов compose - `postgres`. Порт публикуется только на 127.0.0.1 хоста, внешний доступ к базе не предусмотрен.
 
-Данные живут в именованном томе postgres-data: `docker compose down` том сохраняет, `docker compose down -v` - удаляет (вместе с данными minio-data). Смена мажорной версии образа тома не переживает - см. раздел 5.
+Данные живут в именованном томе postgres-data: `docker compose down` том сохраняет, `docker compose down -v` - удаляет (вместе с данными s3-data). Смена мажорной версии образа тома не переживает - см. раздел 5.
 
 ## 4. systemd-PostgreSQL на хосте
 
@@ -82,9 +82,9 @@ sudo -u postgres psql -c "CREATE DATABASE personal_website OWNER website ENCODIN
 
 Формат каталога данных не совместим между мажорными версиями PostgreSQL: том или каталог данных версии N не поднимется образом или пакетом версии N+1. Поэтому апгрейд выполняется через dump/restore, а не сменой версии на живых данных:
 
-1. Снять дамп работающей версии (скилл postgresql-dump или `bash scripts/backup.sh backup_db` - свежий дамп появится в `${BACKUP_ROOT}/db` и в целях).
+1. Снять дамп работающей версии (скилл postgresql-dump или `bash scripts/backup.sh backup` - свежий дамп появится в `${BACKUP_ROOT}/db` и в целях).
 2. Подготовить пустую базу новой версии: в compose - остановить стек, удалить том `postgres-data` (`docker compose down postgres` и `docker volume rm`), обновить тег образа postgres в compose.yaml и поднять стек снова (база создается заново из переменных окружения), в systemd - установить новую версию и создать пустой кластер `pg_createcluster`.
-3. Восстановить дамп в новую базу (скилл postgresql-restore или `bash scripts/backup.sh restore_db <путь>`). Правило совместимости: pg_restore не ниже версии сервера-источника.
+3. Восстановить дамп в новую базу (скилл postgresql-restore или `bash scripts/backup.sh restore db <путь>`). Правило совместимости: pg_restore не ниже версии сервера-источника.
 4. Проверить счетчики таблиц и примененные миграции `django_migrations`. Работоспособность приложения подтвердить эндпоинтом `/health/`.
 
 ## 6. Резервное копирование

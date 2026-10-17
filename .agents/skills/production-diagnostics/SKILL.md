@@ -13,11 +13,11 @@ description: Диагностика продакшен-сервера - пара
 
 - Окружения SourceCraft: `src envs` - список доступных сред; переключение флагом `--env <name>`, текущее видно в `src auth status`.
 - Скрипты деплоя в репозитории: `scripts/deploy.sh` (общий вход: бэкап и диспетчеризация по DEPLOY_MODE из .env) и ветви `scripts/docker/`, `scripts/server/` - путь проекта на сервере и последовательность деплоя.
-- Конфигурация стекa: `compose.yaml` - сервисы (application, nginx, certbot, postgres, minio; инфраструктурные подключаются профилями через COMPOSE_PROFILES).
+- Конфигурация стекa: `compose.yaml` - сервисы (application, worker, nginx, postgres, s3; инфраструктурные подключаются профилями через COMPOSE_PROFILES).
 - Способ запуска: DEPLOY_MODE в .env на сервере - compose (контейнеры, диагностика через docker compose) или systemd (systemctl/journalctl юнита personal-website; скилл server-setup).
 - CI-конфиг деплоя (`.sourcecraft/ci.yaml`, workflow `deploy-workflow`; зеркально `.github/workflows/deploy.yml`) - шаги деплоя и используемые секреты сервера (хост, пользователь, ключ).
 - `~/.ssh/config` - алиас подключения к серверу.
-- `.env` на сервере - актуальные переменные среды (DOMAIN_NAME, STORAGE_TYPE, DEBUG, DEPLOY_MODE, GUNICORN_WORKERS, CERTBOT_STAGING, параметры БД и хранилища; секция "Бэкапы": BACKUP_DB_TARGETS, BACKUP_MEDIA_TARGETS, цели BACKUP_TARGET_<ИМЯ>).
+- `.env` на сервере - актуальные переменные среды (DOMAIN_NAME, STORAGE_TYPE, DEBUG, DEPLOY_MODE, GUNICORN_WORKERS, CERTBOT_STAGING, параметры БД и хранилища; секция "Бэкапы": BACKUP_TARGETS).
 - Публичный адрес сайта (домен/URL) для проверки в браузере: переменная `DOMAIN_NAME` в `.env` на сервере.
 
 ## Доступ и расположение

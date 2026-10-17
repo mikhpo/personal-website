@@ -71,9 +71,8 @@ function check_deploy_mode() {
 
 #######################################
 # Установить системные пакеты.
-# rclone требуется для целей бэкапов вне S3 (локальные каталоги,
-# облачные диски); mc - для S3-целей (установка отдельной функцией);
-# gettext - компиляция каталогов переводов (msgfmt) и envsubst
+# rclone требуется для целей бэкапов (локальные каталоги, облачные
+# диски); gettext - компиляция каталогов переводов (msgfmt) и envsubst
 # для рендеринга шаблонов конфигураций.
 #######################################
 function install_packages() {
@@ -132,21 +131,6 @@ function install_node() {
         sudo tee /etc/apt/sources.list.d/nodesource.list >/dev/null
     sudo apt-get update
     sudo apt-get install -y nodejs
-}
-
-#######################################
-# Установить клиент MinIO, если он еще не установлен.
-# Требуется S3-целям бэкапов (префикс mc:).
-#######################################
-function install_minio() {
-    if command -v mc >/dev/null 2>&1; then
-        return
-    fi
-    local arch
-    arch="$(dpkg --print-architecture)"
-    curl -fsSL "https://dl.min.io/client/mc/release/linux-${arch}/mc" -o /tmp/mc
-    sudo install -m 0755 /tmp/mc "${MC_PATH:-/usr/local/bin/mc}"
-    rm -f /tmp/mc
 }
 
 #######################################
@@ -317,7 +301,6 @@ function main() {
     enable_ufw
     install_poetry
     install_node
-    install_minio
     setup_locale
     setup_timezone
     create_data_directories

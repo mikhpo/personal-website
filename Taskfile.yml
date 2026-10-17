@@ -68,10 +68,18 @@ tasks:
     env:
       POSTGRES_HOST: localhost
     cmds:
-      - "{{.COMPOSE_CMD}} up -d postgres"
-      - "{{.COMPOSE_CMD}} ps"
-      - poetry run python ./backend/manage.py create_huey_tables
-      - poetry run python ./backend/manage.py run_huey
+      - |
+        case "$(printf %s "{{.DEBUG}}" | tr A-Z a-z)" in
+          true|1|yes|y|ok)
+            echo "Очередь в immediate-режиме (DEBUG) - задачи выполняются синхронно, воркер не нужен"
+            ;;
+          *)
+            {{.COMPOSE_CMD}} up -d postgres
+            {{.COMPOSE_CMD}} ps
+            poetry run python ./backend/manage.py create_huey_tables
+            poetry run python ./backend/manage.py run_huey
+            ;;
+        esac
 
   migrate:
     desc: Подготовить и выполнить миграции, экспортировать новые диаграммы моделей
@@ -127,12 +135,14 @@ tasks:
       - test -f .env
     env:
       POSTGRES_HOST: localhost
-      MINIO_SERVER_URL: http://127.0.0.1:9000
-      MINIO_BROWSER_REDIRECT_URL: http://127.0.0.1:9001
+      AWS_S3_ENDPOINT_URL: http://127.0.0.1:9000
       WEBPACK_LOADER_CACHE: 'False'
     cmds:
       - defer: "{{.COMPOSE_CMD}} down"
-      - "{{.COMPOSE_CMD}} up -d postgres"
+      - |
+        services="postgres"
+        if [ "{{.STORAGE_TYPE}}" = "s3" ]; then services="postgres s3"; fi
+        {{.COMPOSE_CMD}} up -d $services
       - "{{.COMPOSE_CMD}} ps"
       - task: build-frontend
       - poetry run pytest {{.CLI_ARGS}}
@@ -150,11 +160,12 @@ tasks:
       - test -f .env
     env:
       POSTGRES_HOST: localhost
-      MINIO_SERVER_URL: http://127.0.0.1:9000
-      MINIO_BROWSER_REDIRECT_URL: http://127.0.0.1:9001
     cmds:
       - defer: "{{.COMPOSE_CMD}} down"
-      - "{{.COMPOSE_CMD}} up -d postgres"
+      - |
+        services="postgres"
+        if [ "{{.STORAGE_TYPE}}" = "s3" ]; then services="postgres s3"; fi
+        {{.COMPOSE_CMD}} up -d $services
       - "{{.COMPOSE_CMD}} ps"
       - task: test-frontend
       - task: test-backend
@@ -211,12 +222,11 @@ tasks:
     env:
       POSTGRES_HOST: postgres
       DOMAIN_NAME: '{{.DOMAIN_NAME | default "localhost"}}'
-      MINIO_SERVER_URL: http://127.0.0.1:9000
-      MINIO_BROWSER_REDIRECT_URL: http://127.0.0.1:9001
+      AWS_S3_ENDPOINT_URL: http://127.0.0.1:9000
     cmds:
       - task: dev-cert
       - defer: "{{.COMPOSE_CMD}} down"
-      - "{{.COMPOSE_CMD}} up -d {{.COMPOSE_WAIT}} application postgres nginx minio"
+      - "{{.COMPOSE_CMD}} up -d {{.COMPOSE_WAIT}} application postgres nginx s3"
       - "{{.COMPOSE_CMD}} ps"
       - poetry run pytest ./tests {{.CLI_ARGS}}
 
@@ -333,7 +343,7 @@ tasks:
     summary: |
       Запускает контейнеры Docker сервисов, определенных в файле Compose, в фоновом режиме (detached).
       Поднимается типовой набор для локальной разработки: приложение и PostgreSQL.
-      MinIO и nginx подключаются профилями (COMPOSE_PROFILES в .env) или явным
+      S3-сервер и nginx подключаются профилями (COMPOSE_PROFILES в .env) или явным
       указанием имени сервиса.
       Флаг --wait блокирует выполнение до прохождения healthcheck всех сервисов
       (применяется при использовании Docker Compose V2).
@@ -365,16 +375,24 @@ tasks:
       Запускает контейнеры Docker в фоновом режиме и пересоздает контейнеры в случае изменений при помощи Compose Watch.
       Поднимается типовой набор для локальной разработки: приложение и PostgreSQL;
       дополнительные сервисы подключаются профилями из COMPOSE_PROFILES в .env.
+      При DEBUG=True очередь задач работает синхронно (immediate-режим), воркер не нужен -
+      состав стека формируется без него, остальное поднимается как обычно.
       Флаг --wait дожидается прохождения healthcheck (применяется при использовании Docker Compose V2).
     preconditions:
       - test -f compose.yaml
       - test -f .env
     env:
       POSTGRES_HOST: postgres
-      MINIO_SERVER_URL: http://minio:9000
-      MINIO_BROWSER_REDIRECT_URL: http://minio:9001
     cmds:
-      - "{{.COMPOSE_CMD}} --profile postgres up -d {{.COMPOSE_WAIT}}"
+      - |
+        services=""
+        case "$(printf %s "{{.DEBUG}}" | tr A-Z a-z)" in
+          true|1|yes|y|ok)
+            stack=$({{.COMPOSE_CMD}} --profile postgres config --services 2>/dev/null)
+            services=$(echo "$stack" | grep -v '^worker$' | tr '\n' ' ')
+            ;;
+        esac
+        {{.COMPOSE_CMD}} --profile postgres up -d {{.COMPOSE_WAIT}} $services
       - "{{.COMPOSE_CMD}} ps"
       - "{{.COMPOSE_CMD}} watch"
 
@@ -397,20 +415,6 @@ tasks:
     cmds:
       - "{{.COMPOSE_CMD}} up -d postgres"
       - "{{.COMPOSE_CMD}} ps"
-
-  minio-alias:
-    desc: Создать алиас для сервера MinIO
-    summary: |
-      Создает алиас сервера S3 для клиента MinIO (mc). Значения считываются из переменных окружения.
-    preconditions:
-      - test -f compose.yaml
-      - test -f .env
-    cmds:
-      - defer: "{{.COMPOSE_CMD}} down"
-      - "{{.COMPOSE_CMD}} up -d minio"
-      - "{{.COMPOSE_CMD}} ps"
-      - mc alias set ${MINIO_ALIAS} ${MINIO_SERVER_URL} ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD}
-      - mc admin info ${MINIO_ALIAS}
 
   delete-branches:
     desc: Удалить все ветки, кроме основной

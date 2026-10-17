@@ -1,8 +1,7 @@
 #!/bin/bash
 #
 # Хостовый вход системы резервного копирования: запускает management-команды
-# приложения backend/backup/ (backup, backup_db, backup_media, restore_db,
-# restore_media) в контексте механизма развертывания. Читает .env и
+# для бэкапирования и восстановления базы данных и файлового хранилища,
 # диспетчеризует по DEPLOY_MODE: compose - docker compose exec -T application,
 # systemd - интерпретатор виртуального окружения на хосте.
 

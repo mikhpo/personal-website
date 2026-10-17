@@ -9,7 +9,7 @@ x-logging: &default-logging
     max-file: "3"
 
 # Инфраструктурные сервисы подключаются собственными профилями:
-# postgres, minio, nginx (обратный прокси с раздачей медиа
+# postgres, s3, nginx (обратный прокси с раздачей медиа
 # filesystem-хранилища). Пустое значение COMPOSE_PROFILES означает,
 # что все инфраструктурные сервисы внешние (managed-БД, удаленное S3,
 # хостовый обратный прокси), и поднимается только приложение.
@@ -62,8 +62,8 @@ services:
         source: ${POSTGRES_SSL_CERT_HOST_PATH:-${POSTGRES_SSL_ROOT_CERT_PATH:-/root/.postgresql/root.crt}}
         target: ${POSTGRES_SSL_ROOT_CERT_PATH:-/root/.postgresql/root.crt}
         read_only: true
-    # Порядок запуска относительно PostgreSQL и MinIO не задаётся через depends_on:
-    # эти сервисы относятся к собственным профилям (postgres, minio) и могут
+    # Порядок запуска относительно PostgreSQL и S3-сервера не задаётся через depends_on:
+    # эти сервисы относятся к собственным профилям (postgres, s3) и могут
     # отсутствовать в текущем окружении, поэтому готовность ожидается скриптом
     # entrypoint.sh (функция wait_for_port).
     restart: always
@@ -110,7 +110,9 @@ services:
         source: ${POSTGRES_SSL_CERT_HOST_PATH:-${POSTGRES_SSL_ROOT_CERT_PATH:-/root/.postgresql/root.crt}}
         target: ${POSTGRES_SSL_ROOT_CERT_PATH:-/root/.postgresql/root.crt}
         read_only: true
-    restart: always
+    # on-failure вместо always: в immediate-режиме DEBUG воркер завершается
+    # успехом с сообщением и не должен перезапускаться.
+    restart: on-failure
     logging: *default-logging
 
   # Обратный прокси nginx: HTTPS, проксирование приложения
@@ -187,36 +189,39 @@ services:
       timeout: 5s
       retries: 5
 
-  # S3-совместимое объектное хранилище Minio. Предназначено для окружений,
+  # S3-совместимое объектное хранилище RustFS. Предназначено для окружений,
   # где объектное хранилище не предоставляется внешним сервисом (удаленный
   # S3 или локальный каталог при STORAGE_TYPE=filesystem).
-  # Поднимается при активном профиле minio (флаг --profile minio,
+  # Поднимается при активном профиле s3 (флаг --profile s3,
   # переменная COMPOSE_PROFILES или явное имя сервиса в команде up).
-  minio:
-    profiles: ["minio"]
-    # Источник - Quay: публичный репозиторий MinIO в Docker Hub недоступен для
-    # анонимной загрузки. Версия и дайджест зафиксированы вместо плавающего latest.
-    image: quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e
-    command: minio server /data --console-address ":9001"
+  s3:
+    profiles: ["s3"]
+    # Образ следует плавающему latest: изменения RustFS приходят своевременно,
+    # регрессии сервера ловят S3-тесты прогона STORAGE_TYPE=s3. Ключи серверу
+    # передаются теми же переменными, что и приложению
+    # (AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY), без дефолтов: пустой ключ
+    # не даст серверу стартовать с явной ошибкой вместо расхождения ключей
+    # с приложением. Бакет и политику публичной раздачи создает entrypoint
+    # приложения (manage.py init_s3, правило собственности).
+    image: rustfs/rustfs:latest
     environment:
-      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
-      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
-    env_file: .env
+      - RUSTFS_ACCESS_KEY=${AWS_ACCESS_KEY_ID}
+      - RUSTFS_SECRET_KEY=${AWS_SECRET_ACCESS_KEY}
     # Порты API (9000) и веб-консоли (9001) публикуются только на localhost
     # хоста: внешний доступ к объектному хранилищу не предусмотрен.
     ports:
       - "127.0.0.1:9000:9000"
       - "127.0.0.1:9001:9001"
     volumes:
-      - minio-data:/data:rw
+      - s3-data:/data:rw
     restart: always
     logging: *default-logging
     healthcheck:
-      test: ["CMD", "mc", "ready", "local"]
+      test: ["CMD", "curl", "-s", "-o", "/dev/null", "http://127.0.0.1:9000/"]
       interval: 5s
       timeout: 5s
       retries: 5
 
 volumes:
   postgres-data:
-  minio-data:
+  s3-data:

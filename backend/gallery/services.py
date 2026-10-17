@@ -103,17 +103,20 @@ def find_embed_preview(photo: Photo, size: int) -> str | None:
 
 
 def embed_preview_is_fresh(photo: Photo, embed_name: str) -> bool:
-    """Определить, что файл превью для вставки существует и новее исходного изображения.
+    """Определить, что файл превью для вставки существует и строго новее исходного изображения.
 
     Сравнение времени изменения повторяет логику проверки кэша миниатюр
     (gallery.tasks._is_fresh): замена исходника под тем же именем файла
     делает существующее превью устаревшим и требует перегенерации.
+    Равенство времени считается устареванием: S3-серверы отдают время изменения
+    с точностью до секунды, и совпадение секунд не доказывает, что превью
+    создано после последней замены исходника.
     """
     storage = photo.image.storage
     source_name = photo.image.name
     if not source_name or not storage.exists(source_name) or not storage.exists(embed_name):
         return False
-    return storage.get_modified_time(embed_name) >= storage.get_modified_time(source_name)
+    return storage.get_modified_time(embed_name) > storage.get_modified_time(source_name)
 
 
 def generate_embed_preview(photo: Photo, size: int, previous_name: str | None = None) -> str:

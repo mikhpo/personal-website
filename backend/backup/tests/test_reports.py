@@ -13,6 +13,7 @@ from django.core.mail import EmailMultiAlternatives
 from django.core.management import call_command
 from django.test import SimpleTestCase, override_settings
 
+from backup import services
 from backup.reports import STATUS_FAIL, format_count, format_duration, format_size
 from backup.tests.helpers import MediaTestCaseMixin, pg_client_compatible
 
@@ -68,49 +69,59 @@ class TestReportFormats(SimpleTestCase):
 
 
 @override_settings(**NOTIFY_SETTINGS)
-class TestBackupMediaReport(MediaTestCaseMixin):
-    """Команда backup_media отправляет отчет об успешной синхронизации."""
+@skipUnless(pg_client_compatible(), "локальный клиент PostgreSQL несовместим с сервером")
+class TestBackupReport(MediaTestCaseMixin):
+    """Команда backup отправляет отчет об успешном копировании."""
 
     def test_sends_success_report_with_media_section(self) -> None:
         """В письме - тема с командой и статусом, раздел "Медиа" и цель."""
         with self.media_settings():
-            call_command("backup_media", stdout=StringIO())
+            call_command("backup", stdout=StringIO())
         self.assertEqual(len(mail.outbox), 1)
         message = mail.outbox[0]
-        self.assertTrue(message.subject.startswith("[personal-website] Бэкап: успех - backup_media"))
+        self.assertTrue(message.subject.startswith("[personal-website] Бэкап: успех - backup"))
         assert isinstance(message, EmailMultiAlternatives)
         html = str(message.alternatives[0][0])
         self.assertIn("Резервное копирование", html)
         self.assertIn("#e6f4ea", html)
         self.assertIn("Медиа", html)
-        self.assertIn("DISK (rclone:", html)
+        self.assertIn(str(self.target_root), html)
         self.assertIn("Объектов", html)
         self.assertIn("5,0 Б", html)
 
     def test_verify_does_not_send_report(self) -> None:
         """Проверка целей (--verify) уведомлений не создает."""
+        backup_root = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, backup_root)
+        db_dir = self.target_root / "db"
+        db_dir.mkdir(parents=True)
+        with self.settings(BACKUP_ROOT=str(backup_root)):
+            services.dump_database()
+        local_dump = next((backup_root / "db").glob("*.dump"))
+        shutil.copy(local_dump, db_dir / local_dump.name)
         stored = self.target_root / "storage"
         stored.mkdir(parents=True)
         (stored / "img1.jpg").write_bytes(b"image")
         with self.media_settings():
-            call_command("backup_media", "--verify", stdout=StringIO())
+            call_command("backup", "--verify", stdout=StringIO())
         self.assertEqual(len(mail.outbox), 0)
 
 
 @override_settings(**{**NOTIFY_SETTINGS, "BACKUP_NOTIFY_EMAIL": ""})
+@skipUnless(pg_client_compatible(), "локальный клиент PostgreSQL несовместим с сервером")
 class TestNotifyDisabled(MediaTestCaseMixin):
     """Пустой BACKUP_NOTIFY_EMAIL отключает рассылку отчетов."""
 
     def test_no_email_without_recipient(self) -> None:
         """Реальный запуск без получателя выполняется без писем."""
         with self.media_settings():
-            call_command("backup_media", stdout=StringIO())
+            call_command("backup", stdout=StringIO())
         self.assertTrue((self.target_root / "storage" / "img1.jpg").exists())
         self.assertEqual(len(mail.outbox), 0)
 
 
 @override_settings(**NOTIFY_SETTINGS)
-class TestBackupMediaErrorReport(MediaTestCaseMixin):
+class TestBackupErrorReport(MediaTestCaseMixin):
     """Ошибка операции дает письмо со статусом ОШИБКА и журналом."""
 
     def test_sends_error_report_with_journal(self) -> None:
@@ -119,14 +130,14 @@ class TestBackupMediaErrorReport(MediaTestCaseMixin):
             self.media_settings(),
             override_settings(
                 STORAGE_TYPE="s3",
-                MINIO_ALIAS=None,
+                BACKUP_TARGETS="",
                 AWS_STORAGE_BUCKET_NAME=None,
                 AWS_S3_ENDPOINT_URL=None,
                 AWS_ACCESS_KEY_ID=None,
                 AWS_SECRET_ACCESS_KEY=None,
             ),
         ):
-            call_command("backup_media", stdout=StringIO())
+            call_command("backup", stdout=StringIO())
         self.assertEqual(len(mail.outbox), 1)
         message = mail.outbox[0]
         self.assertIn(STATUS_FAIL, message.subject)
@@ -140,7 +151,7 @@ class TestBackupMediaErrorReport(MediaTestCaseMixin):
 @override_settings(**NOTIFY_SETTINGS)
 @skipUnless(pg_client_compatible(), "локальный клиент PostgreSQL несовместим с сервером")
 class TestBackupDbReport(SimpleTestCase):
-    """Команда backup_db отправляет отчет с разделом "База данных"."""
+    """Команда backup отправляет отчет с разделом "База данных"."""
 
     def setUp(self) -> None:
         """Создать каталоги бэкапа и цели."""
@@ -156,19 +167,17 @@ class TestBackupDbReport(SimpleTestCase):
         """В письме - цель, дамп, объем и ретеншн."""
         with self.settings(
             BACKUP_ROOT=str(self.backup_root),
-            BACKUP_DB_TARGETS="DISK",
-            BACKUP_TARGETS={"DISK": f"rclone:{self.target_root}"},
-            MC_PATH="mc",
+            BACKUP_TARGETS=str(self.target_root),
             BACKUP_DB_RETENTION_DAYS=14,
         ):
-            call_command("backup_db", stdout=StringIO())
+            call_command("backup", stdout=StringIO())
         self.assertEqual(len(mail.outbox), 1)
         message = mail.outbox[0]
-        self.assertTrue(message.subject.startswith("[personal-website] Бэкап: успех - backup_db"))
+        self.assertTrue(message.subject.startswith("[personal-website] Бэкап: успех - backup"))
         assert isinstance(message, EmailMultiAlternatives)
         html = str(message.alternatives[0][0])
         self.assertIn("База данных", html)
-        self.assertIn("DISK (rclone:", html)
+        self.assertIn(str(self.target_root), html)
         self.assertIn(".dump", html)
         self.assertIn("дампы старше 14 дней удалены", html)
 
@@ -178,6 +187,7 @@ class TestBackupDbReport(SimpleTestCase):
     BACKUP_NOTIFY_EMAIL="admin@example.com",
     DEFAULT_FROM_EMAIL="site@example.com",
 )
+@skipUnless(pg_client_compatible(), "локальный клиент PostgreSQL несовместим с сервером")
 class TestSendFailureDoesNotFail(MediaTestCaseMixin):
     """Отказ SMTP не меняет результат команды."""
 
@@ -187,5 +197,5 @@ class TestSendFailureDoesNotFail(MediaTestCaseMixin):
             self.media_settings(),
             self.assertLogs("backup.reports", level="WARNING"),
         ):
-            call_command("backup_media", stdout=StringIO())
+            call_command("backup", stdout=StringIO())
         self.assertTrue((self.target_root / "storage" / "img1.jpg").exists())

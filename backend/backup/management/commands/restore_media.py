@@ -13,8 +13,8 @@ class Command(BaseCommand):
     help = "Восстановление медиа из storage/ цели"
 
     def add_arguments(self, parser: CommandParser) -> None:
-        """Добавить аргумент имени цели."""
-        parser.add_argument("target", help="имя цели, из которой восстанавливается медиа")
+        """Добавить аргумент адреса цели."""
+        parser.add_argument("target", help="адрес цели, из которой восстанавливается медиа")
 
     def handle(self, *args: Any, **options: Any) -> None:  # noqa: ANN401, ARG002
         """Восстановить медиа из указанной цели."""

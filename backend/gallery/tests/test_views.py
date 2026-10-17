@@ -497,7 +497,7 @@ class TestEmbedPhotoView(TestCase):
         """Замена исходника обновляет превью по новым пропорциям, формат и имя сохраняются."""
         self.client.get(self._embed_url(self.photo.pk))
         embed_name = self._embed_name(self.photo, self.size)
-        old_mtime = storage.get_modified_time(embed_name)
+        old_bytes = storage.read_bytes(embed_name)
 
         self.photo.image.save("replacement.jpg", ContentFile(self._image_bytes(2000, 1000, "JPEG")), save=True)
 
@@ -506,7 +506,7 @@ class TestEmbedPhotoView(TestCase):
         # Новый исходник 2000x1000 вписывается в 400 как 400x200.
         self.assertEqual(self._embed_response_size(self.photo, self.size), (400, 200))
         self.assertEqual(self._embed_name(self.photo, self.size), embed_name)
-        self.assertGreater(storage.get_modified_time(embed_name), old_mtime)
+        self.assertNotEqual(storage.read_bytes(embed_name), old_bytes)
 
     def test_source_replacement_with_format_change_switches_preview_file(self) -> None:
         """Замена исходника на другой формат отдает превью нового формата по той же ссылке."""

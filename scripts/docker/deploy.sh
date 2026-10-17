@@ -79,7 +79,7 @@ function create_docker_directories() {
 #######################################
 # Остановить текущие контейнеры.
 # Внимание: флаг -v не используется намеренно - он удаляет именованные тома
-# (postgres-data, minio-data). Сертификаты Let's Encrypt хранятся
+# (postgres-data, s3-data). Сертификаты Let's Encrypt хранятся
 # в bind-mount ./nginx/letsencrypt и командой down не затрагиваются.
 #######################################
 function compose_down() {

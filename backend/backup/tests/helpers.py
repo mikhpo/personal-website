@@ -5,42 +5,15 @@ import shutil
 import subprocess
 import tempfile
 from pathlib import Path
-from typing import ClassVar
 from unittest import skipUnless
 
 from django.test import SimpleTestCase
 
 from backup import services
-from backup.targets import Target
+from personal_website.utils import is_s3_available
 
 RCLONE = shutil.which("rclone")
-MC = shutil.which("mc")
-
-
-class CallTarget(Target):
-    """Плагин для тестов оркестрации: записывает вызовы вместо операций."""
-
-    prefix = "call"
-    created: ClassVar[list["CallTarget"]] = []
-
-    def __init__(self, name: str, path: str) -> None:
-        """Сохранить имя, путь и журнал вызовов."""
-        super().__init__(name, path)
-        self.calls: list[str] = []
-        CallTarget.created.append(self)
-
-    def sync_media(self) -> None:
-        """Записать вызов синхронизации медиа."""
-        self.calls.append("sync_media")
-
-    def pull_media(self) -> None:
-        """Записать вызов восстановления медиа."""
-        self.calls.append("pull_media")
-
-    def media_count(self) -> int:
-        """Записать вызов; число объектов ненулевое, чтобы восстановление не пропускалось."""
-        self.calls.append("media_count")
-        return 1
+S3_AVAILABLE = is_s3_available()
 
 
 def pg_client_compatible() -> bool:
@@ -57,7 +30,6 @@ def pg_client_compatible() -> bool:
     return result.returncode == 0
 
 
-@skipUnless(MC, "MinIO Client (mc) не установлен")
 @skipUnless(RCLONE, "rclone не установлен")
 class MediaTestCaseMixin(SimpleTestCase):
     """Общая подготовка окружения для тестов медиа-операций."""
@@ -79,8 +51,6 @@ class MediaTestCaseMixin(SimpleTestCase):
         """Настройки медиа-операций для текущих каталогов."""
         return self.settings(
             MEDIA_ROOT=str(self.media_root),
-            BACKUP_MEDIA_TARGETS="DISK",
-            BACKUP_TARGETS={"DISK": f"rclone:{self.target_root}"},
-            MC_PATH="mc",
+            BACKUP_TARGETS=str(self.target_root),
             STORAGE_TYPE="filesystem",
         )

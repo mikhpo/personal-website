@@ -7,11 +7,14 @@ from gallery.models import Photo
 
 
 def _is_fresh(cachefile: ImageCacheFile) -> bool:
-    """Определить, что кэш-файл производной версии существует и новее исходника.
+    """Определить, что кэш-файл производной версии существует и строго новее исходника.
 
     Имя кэш-файла зависит только от имени исходника и параметров
     спецификации, поэтому замена исходника под тем же именем оставляет
     прежнее имя кэша - свежесть определяется сравнением времени изменения.
+    Равенство времени считается устареванием: S3-серверы отдают время изменения
+    с точностью до секунды, и совпадение секунд не доказывает, что кэш создан
+    после последней замены исходника.
     """
     storage = cachefile.storage
     source_name = cachefile.generator.source.name
@@ -19,7 +22,7 @@ def _is_fresh(cachefile: ImageCacheFile) -> bool:
         return False
     cache_mtime = storage.get_modified_time(cachefile.name)
     source_mtime = storage.get_modified_time(source_name)
-    return cache_mtime >= source_mtime
+    return cache_mtime > source_mtime
 
 
 @task
