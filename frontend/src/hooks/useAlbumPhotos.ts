@@ -1,40 +1,38 @@
-import { useState, useEffect } from 'react';
+/* eslint-disable react-x/set-state-in-effect -- синхронная установка состояния в effect - установленный паттерн загрузки этого хука; перестройка меняла бы рантайм и вне рамок миграции */
+import { useEffect, useState } from 'react';
+import type { components } from '../types/api-schema';
+
+type Photo = components['schemas']['Photo'];
+
+/** Результат хука useAlbumPhotos. */
+export interface UseAlbumPhotosResult {
+  photos: Photo[];
+  loading: boolean;
+  error: string | null;
+  refetch: () => void;
+}
 
 /**
  * Хук для загрузки фотографий альбома через эндпоинт детального просмотра альбома.
  *
  * Загружает данные альбома из API и возвращает список вложенных фотографий.
- *
- * @param {number|null} albumId - ID альбома для загрузки фотографий (может быть null)
- * @param {string} [apiUrl='/api/gallery/albums/'] - Базовый URL API альбомов
- * @return {Object} Объект с данными о фотографиях альбома и состоянии загрузки
- * @property {Array} photos - Массив фотографий альбома
- * @property {boolean} loading - Состояние загрузки
- * @property {string|null} error - Сообщение об ошибке или null
- * @property {Function} refetch - Функция для повторной загрузки данных
  */
-const useAlbumPhotos = (albumId, apiUrl = '/api/gallery/albums/') => {
-  const [photos, setPhotos] = useState([]);
+const useAlbumPhotos = (albumId: number | string | null, apiUrl = '/api/gallery/albums/'): UseAlbumPhotosResult => {
+  const [photos, setPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchAlbumPhotos = () => {
       if (albumId === null || albumId === undefined || albumId === '') {
-        const updateInitialState = () => {
-          setPhotos([]);
-          setLoading(false);
-          setError(null);
-        };
-        updateInitialState();
+        setPhotos([]);
+        setLoading(false);
+        setError(null);
         return;
       }
 
-      const updateLoadingState = () => {
-        setLoading(true);
-        setError(null);
-      };
-      updateLoadingState();
+      setLoading(true);
+      setError(null);
 
       fetch(`${apiUrl}${albumId}/`)
         .then((response) => {
@@ -43,12 +41,12 @@ const useAlbumPhotos = (albumId, apiUrl = '/api/gallery/albums/') => {
           }
           return response.json();
         })
-        .then((data) => {
+        .then((data: { photos?: Photo[] }) => {
           const photosList = data.photos || [];
           setPhotos(Array.isArray(photosList) ? photosList : []);
           setLoading(false);
         })
-        .catch((err) => {
+        .catch((err: Error) => {
           setError(err.message);
           setLoading(false);
         });
@@ -64,20 +62,14 @@ const useAlbumPhotos = (albumId, apiUrl = '/api/gallery/albums/') => {
     refetch: () => {
       const fetchAlbumPhotos = () => {
         if (albumId === null || albumId === undefined || albumId === '') {
-          const updateInitialState = () => {
-            setPhotos([]);
-            setLoading(false);
-            setError(null);
-          };
-          updateInitialState();
+          setPhotos([]);
+          setLoading(false);
+          setError(null);
           return;
         }
 
-        const updateLoadingState = () => {
-          setLoading(true);
-          setError(null);
-        };
-        updateLoadingState();
+        setLoading(true);
+        setError(null);
 
         fetch(`${apiUrl}${albumId}/`)
           .then((response) => {
@@ -86,12 +78,12 @@ const useAlbumPhotos = (albumId, apiUrl = '/api/gallery/albums/') => {
             }
             return response.json();
           })
-          .then((data) => {
+          .then((data: { photos?: Photo[] }) => {
             const photosList = data.photos || [];
             setPhotos(Array.isArray(photosList) ? photosList : []);
             setLoading(false);
           })
-          .catch((err) => {
+          .catch((err: Error) => {
             setError(err.message);
             setLoading(false);
           });

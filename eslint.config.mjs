@@ -91,7 +91,6 @@ export default [
       'frontend/coverage/**',
       '.venv/**',
       '**/*.min.js',
-      '**/*.d.ts',
     ],
   },
 ];

@@ -23,6 +23,18 @@ const ANIMATION_DURATION = '0.4s';
  */
 const ANIMATION_INSTANT = '0';
 
+/** Элемент сетки с идентификатором для проявления после пересчета. */
+interface MasonryItem {
+  id: number;
+}
+
+/** Результат хука: реф контейнера, отметка готовности и проявленные id. */
+export interface UseMasonryResult {
+  containerRef: React.RefObject<HTMLDivElement | null>;
+  markImageReady: (id: number) => void;
+  revealedIds: Set<number>;
+}
+
 /**
  * Хук для раскладки masonry-сетки через библиотеку masonry-layout.
  *
@@ -44,14 +56,6 @@ const ANIMATION_INSTANT = '0';
  * При отсутствии элементов в контейнере (загрузка, ошибка, пустой список)
  * хук бездействует, при размонтировании сетки уничтожает экземпляр Masonry.
  *
- * @param {Array} items - Список элементов сетки; смена списка запускает пересчет
- * @return {Object} Реф контейнера, отметка готовности и множество проявленных id
- * @property {Object} containerRef - Реф для контейнерного элемента сетки
- * @property {Function} markImageReady - Отметить изображение элемента готовым
- *   (события load и error); вешается на изображения карточек
- * @property {Set<number>} revealedIds - Множество id элементов, проявленных
- *   после пересчета
- *
  * @example
  * const { containerRef, markImageReady, revealedIds } = useMasonry(photos);
  * return (
@@ -69,20 +73,18 @@ const ANIMATION_INSTANT = '0';
  *   </div>
  * );
  */
-const useMasonry = (items) => {
-  const containerRef = useRef(null);
-  const masonryRef = useRef(null);
-  const layoutTimerRef = useRef(null);
-  const quietTimerRef = useRef(null);
-  const readyIdsRef = useRef(new Set());
-  const [revealedIds, setRevealedIds] = useState(() => new Set());
+const useMasonry = <T extends MasonryItem>(items: T[]): UseMasonryResult => {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const masonryRef = useRef<Masonry | null>(null);
+  const layoutTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const quietTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const readyIdsRef = useRef(new Set<number>());
+  const [revealedIds, setRevealedIds] = useState<Set<number>>(() => new Set());
 
   /**
    * Приглушить анимацию перестановок: во время града загрузок раскладки
    * следуют друг за другом чаще длительности перехода, и анимация
    * отменялась бы и перезапускалась на каждом пересчете.
-   * @function
-   * @return {void}
    */
   const silenceAnimations = useCallback(() => {
     if (masonryRef.current) {
@@ -93,8 +95,6 @@ const useMasonry = (items) => {
   /**
    * Назначить возврат плавной анимации после паузы тишины в граде загрузок:
    * пагинация, фильтры и редкие догрузки продолжают переставляться плавно.
-   * @function
-   * @return {void}
    */
   const armAnimationTimer = useCallback(() => {
     clearTimeout(quietTimerRef.current);
@@ -108,8 +108,6 @@ const useMasonry = (items) => {
   /**
    * Отложенный пересчет раскладки Masonry и проявление накопленной партии:
    * серия событий готовности схлопывается в один пересчет по истечении паузы.
-   * @function
-   * @return {void}
    */
   const scheduleCommit = useCallback(() => {
     clearTimeout(layoutTimerRef.current);
@@ -129,12 +127,9 @@ const useMasonry = (items) => {
    * Отметить изображение элемента готовым и назначить пересчет с проявлением:
    * приглушить анимацию, накопить готовность, пересчитать после паузы
    * и проявить накопленную партию на финальных позициях.
-   * @function
-   * @param {number} id - Идентификатор элемента сетки
-   * @return {void}
    */
   const markImageReady = useCallback(
-    (id) => {
+    (id: number) => {
       readyIdsRef.current.add(id);
       silenceAnimations();
       armAnimationTimer();
@@ -169,8 +164,8 @@ const useMasonry = (items) => {
 
     // Кэшированные изображения не поднимут событие load после монтирования:
     // завершенные помечаются готовыми сразу после первичной раскладки
-    container.querySelectorAll('.masonry-item').forEach((item) => {
-      const img = item.querySelector('img');
+    container.querySelectorAll<HTMLElement>('.masonry-item').forEach((item) => {
+      const img = item.querySelector<HTMLImageElement>('img');
       if (img && img.complete && img.naturalWidth > 0 && item.dataset.id !== undefined) {
         readyIdsRef.current.add(Number(item.dataset.id));
       }

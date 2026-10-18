@@ -1,17 +1,33 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import useLocalStorage from './useLocalStorage';
 
+/** Действующая тема сайта (Bootstrap color modes). */
+export type ThemeName = 'light' | 'dark';
+
 const STORAGE_KEY = 'theme';
-const LIGHT_THEME = 'light';
-const DARK_THEME = 'dark';
+const LIGHT_THEME: ThemeName = 'light';
+const DARK_THEME: ThemeName = 'dark';
 const MEDIA_QUERY = '(prefers-color-scheme: dark)';
+
+/** Результат хока useTheme. */
+export interface UseThemeResult {
+  /** Действующая тема. */
+  theme: ThemeName;
+  /** Системная тема браузера. */
+  systemTheme: ThemeName;
+  /** Явный выбор пользователя: 'light', 'dark' или null (следовать системе). */
+  storedTheme: string | null;
+  /** Устанавливает тему: 'light', 'dark' или null для возврата к системной. */
+  setTheme: (value: ThemeName | null) => void;
+  /** Переключает между 'light' и 'dark' (записывает явный выбор). */
+  toggleTheme: () => void;
+}
 
 /**
  * Возвращает системную тему браузера.
  * Если системную тему определить нельзя (нет matchMedia), используется светлая.
- * @return {string} 'dark' или 'light'
  */
-const getSystemTheme = () => {
+const getSystemTheme = (): ThemeName => {
   if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
     return LIGHT_THEME;
   }
@@ -26,26 +42,17 @@ const getSystemTheme = () => {
  * Выбранная тема синхронизируется с атрибутом data-bs-theme на элементе <html>,
  * смена системной темы ОС отслеживается на лету, пока пользователь не сделал явный выбор.
  *
- * @return {Object} Объект с состоянием и функциями управления темой
- * @property {string} theme - Действующая тема: 'light' или 'dark'
- * @property {string} systemTheme - Системная тема браузера: 'light' или 'dark'
- * @property {(string|null)} storedTheme - Явный выбор пользователя: 'light', 'dark' или null (следовать системе)
- * @property {Function} setTheme - Устанавливает тему: 'light', 'dark' или null для возврата к системной
- * @property {Function} toggleTheme - Переключает между 'light' и 'dark' (записывает явный выбор)
- *
  * @example
- * // Отображение и переключение темы
  * const { theme, toggleTheme } = useTheme();
  *
  * @example
- * // Выбор конкретной темы с возможностью вернуть системную
  * const { theme, setTheme } = useTheme();
  * setTheme('dark');
  * setTheme(null); // снова следовать системной теме
  */
-const useTheme = () => {
-  const [storedTheme, setStoredTheme] = useLocalStorage(STORAGE_KEY, null);
-  const [systemTheme, setSystemTheme] = useState(getSystemTheme);
+const useTheme = (): UseThemeResult => {
+  const [storedTheme, setStoredTheme] = useLocalStorage<string>(STORAGE_KEY, null);
+  const [systemTheme, setSystemTheme] = useState<ThemeName>(getSystemTheme);
 
   // Отслеживание смены системной темы: действует до явного выбора пользователя
   useEffect(() => {
@@ -53,7 +60,7 @@ const useTheme = () => {
       return undefined;
     }
     const mediaQuery = window.matchMedia(MEDIA_QUERY);
-    const handleChange = (event) => {
+    const handleChange = (event: MediaQueryListEvent) => {
       setSystemTheme(event.matches ? DARK_THEME : LIGHT_THEME);
     };
     mediaQuery.addEventListener('change', handleChange);
@@ -62,7 +69,7 @@ const useTheme = () => {
 
   // Явный выбор учитывается только для валидных значений:
   // мусор в localStorage обрабатывается так же, как его отсутствие
-  const theme = storedTheme === LIGHT_THEME || storedTheme === DARK_THEME ? storedTheme : systemTheme;
+  const theme: ThemeName = storedTheme === LIGHT_THEME || storedTheme === DARK_THEME ? storedTheme : systemTheme;
 
   useEffect(() => {
     if (typeof document !== 'undefined') {
@@ -71,7 +78,7 @@ const useTheme = () => {
   }, [theme]);
 
   const setTheme = useCallback(
-    (value) => {
+    (value: ThemeName | null) => {
       setStoredTheme(value === LIGHT_THEME || value === DARK_THEME ? value : null);
     },
     [setStoredTheme],

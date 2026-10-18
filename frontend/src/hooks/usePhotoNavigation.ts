@@ -4,6 +4,22 @@ import { navigateTo } from '@services';
 /** Минимальное горизонтальное смещение (в пикселях), распознаваемое как свайп. */
 const SWIPE_THRESHOLD_PX = 50;
 
+/** Опции хока usePhotoNavigation. */
+export interface UsePhotoNavigationOptions {
+  /** URL предыдущей фотографии или null. */
+  previousUrl: string | null;
+  /** URL следующей фотографии или null. */
+  nextUrl: string | null;
+  /** Активны ли обработчики; при false нажатия клавиш и свайпы игнорируются. */
+  enabled?: boolean;
+}
+
+/** Точка начала касания. */
+interface TouchPoint {
+  x: number;
+  y: number;
+}
+
 /**
  * Хук для переключения фотографий с клавиатуры и свайпами.
  *
@@ -19,12 +35,6 @@ const SWIPE_THRESHOLD_PX = 50;
  * Переход выполняется полной загрузкой страницы через navigateTo,
  * как при клике по обычной ссылке.
  *
- * @param {Object} options - Параметры хука
- * @param {string|null} options.previousUrl - URL предыдущей фотографии или null
- * @param {string|null} options.nextUrl - URL следующей фотографии или null
- * @param {boolean} [options.enabled=true] - Активны ли обработчики;
- *   при false нажатия клавиш и свайпы игнорируются
- *
  * @example
  * usePhotoNavigation({
  *   previousUrl: '/gallery/photo/1/',
@@ -32,16 +42,15 @@ const SWIPE_THRESHOLD_PX = 50;
  *   enabled: !showModal,
  * });
  */
-const usePhotoNavigation = ({ previousUrl, nextUrl, enabled = true }) => {
-  /** Точка начала касания { x, y } или null. */
-  const touchStartRef = useRef(null);
+const usePhotoNavigation = ({ previousUrl, nextUrl, enabled = true }: UsePhotoNavigationOptions): void => {
+  const touchStartRef = useRef<TouchPoint | null>(null);
 
   useEffect(() => {
     if (!enabled) {
       return undefined;
     }
 
-    const handleKeyDown = (event) => {
+    const handleKeyDown = (event: KeyboardEvent) => {
       // Не перехватывать браузерные комбинации с модификаторами.
       if (event.ctrlKey || event.altKey || event.metaKey || event.shiftKey) {
         return;
@@ -54,16 +63,19 @@ const usePhotoNavigation = ({ previousUrl, nextUrl, enabled = true }) => {
       }
     };
 
-    const handleTouchStart = (event) => {
+    const handleTouchStart = (event: TouchEvent) => {
       if (event.touches.length > 1) {
         touchStartRef.current = null;
         return;
       }
       const touch = event.touches[0];
+      if (!touch) {
+        return;
+      }
       touchStartRef.current = { x: touch.clientX, y: touch.clientY };
     };
 
-    const handleTouchEnd = (event) => {
+    const handleTouchEnd = (event: TouchEvent) => {
       const start = touchStartRef.current;
       touchStartRef.current = null;
       if (!start) {

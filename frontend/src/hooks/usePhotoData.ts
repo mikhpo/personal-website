@@ -1,24 +1,27 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import type { components } from '../types/api-schema';
+
+type Photo = components['schemas']['Photo'];
+
+/** Результат хука usePhotoData. */
+export interface UsePhotoDataResult {
+  photo: Photo | null;
+  loading: boolean;
+  error: string | null;
+  refetch: () => void;
+}
 
 /**
  * Хук для загрузки данных фотографии по pk.
  *
  * Загружает данные фотографии из API и управляет состоянием загрузки и ошибок.
- *
- * @param {number|string} photoPk - Первичный ключ фотографии для загрузки
- * @param {string} [apiUrl='/api/gallery/photos/'] - Базовый URL API
- * @return {Object} Объект с данными о фотографии и состоянии загрузки
- * @property {Object|null} photo - Данные фотографии или null
- * @property {boolean} loading - Состояние загрузки
- * @property {string|null} error - Сообщение об ошибке или null
- * @property {Function} refetch - Функция для повторной загрузки данных
  */
-const usePhotoData = (photoPk, apiUrl = '/api/gallery/photos/') => {
-  const [photo, setPhoto] = useState(null);
+const usePhotoData = (photoPk: number | string | null, apiUrl = '/api/gallery/photos/'): UsePhotoDataResult => {
+  const [photo, setPhoto] = useState<Photo | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const fetchPhotoRequest = useCallback(async () => {
+  const fetchPhotoRequest = useCallback(async (): Promise<Photo> => {
     if (!photoPk) {
       throw new Error('Не указан идентификатор фотографии');
     }

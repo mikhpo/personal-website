@@ -36,7 +36,7 @@ module.exports = {
     '^@utils/(.*)$': '<rootDir>/src/utils/$1',
     '^@utils$': '<rootDir>/src/utils/index.js',
     '^@hooks/(.*)$': '<rootDir>/src/hooks/$1',
-    '^@hooks$': '<rootDir>/src/hooks/index.js',
+    '^@hooks$': '<rootDir>/src/hooks/index.ts',
   },
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   // Исключаем результат collectstatic: backend/static
