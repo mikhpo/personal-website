@@ -161,6 +161,9 @@ jobs:
       - name: Run ESLint
         run: npm run eslint
 
+      - name: Проверка типов TypeScript
+        run: npm run typecheck
+
   # Проверка Markdown файлов при помощи markdownlint.
   markdownlint_check:
     name: Markdownlint check

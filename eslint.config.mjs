@@ -2,6 +2,9 @@ import reactX from 'eslint-plugin-react-x';
 import reactRefresh from 'eslint-plugin-react-refresh';
 import jsxA11y from 'eslint-plugin-jsx-a11y';
 import prettierConfig from 'eslint-config-prettier';
+import tseslint from 'typescript-eslint';
+
+const tsFiles = ['frontend/**/*.ts', 'frontend/**/*.tsx'];
 
 export default [
   {
@@ -60,6 +63,16 @@ export default [
       ...jsxA11y.flatConfigs.recommended.rules,
       'react-refresh/only-export-components': 'warn',
       'no-unused-vars': ['error', { varsIgnorePattern: '^React$' }],
+    },
+  },
+  // Парсер и правила typescript-eslint применяются только к TS-файлам;
+  // каждый элемент recommended-набора ограничивается тем же глобом файлов
+  ...tseslint.configs.recommended.map((config) => ({ ...config, files: tsFiles })),
+  {
+    files: tsFiles,
+    rules: {
+      'no-unused-vars': 'off',
+      '@typescript-eslint/no-unused-vars': ['error', { varsIgnorePattern: '^React$' }],
     },
   },
   {

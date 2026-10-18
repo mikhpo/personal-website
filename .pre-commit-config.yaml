@@ -66,6 +66,14 @@ repos:
         language: system
         types: [file]
         files: \.[jt]sx?$  # *.js, *.jsx, *.ts, *.tsx
+      - id: typecheck
+        name: typecheck
+        description: Проверка типов TypeScript при помощи tsc
+        entry: npm run typecheck
+        language: system
+        types: [file]
+        files: \.[jt]sx?$
+        pass_filenames: false
       - id: markdownlint
         name: markdownlint
         description: Проверка Markdown файлов при помощи markdownlint

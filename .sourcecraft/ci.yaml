@@ -60,6 +60,8 @@ workflows:
               - npm install
               - echo "Запуск ESLint для проверки JavaScript/TypeScript кода"
               - npm run eslint
+              - echo "Проверка типов TypeScript при помощи tsc"
+              - npm run typecheck
               - echo "Проверка Markdown файлов с помощью markdownlint"
               - npx markdownlint-cli '**/*.md' --ignore-path .gitignore
 

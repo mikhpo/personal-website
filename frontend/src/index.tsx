@@ -1,5 +1,6 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+import type { ComponentType } from 'react';
 
 // Импорт Alert компонентов
 import Alert from '@components/Alert/AlertDetail';
@@ -43,13 +44,21 @@ import About from '@components/About/AboutPage';
 import SearchForm from '@components/Search/SearchForm';
 import SearchResults from '@components/Search/SearchResults';
 
+declare global {
+  interface Window {
+    mountReactComponent: (componentName: string, elementId: string, props?: Record<string, unknown>) => void;
+  }
+}
+
 /**
  * Реестр зарегистрированных компонентов
  *
- * @description
- * Содержит все предзагруженные компоненты для быстрого доступа
+ * Содержит все предзагруженные компоненты для быстрого доступа.
+ * Граница data-props: каждый компонент получает произвольный набор props,
+ * сериализуемый Django-шаблоном, поэтому тип значения реестра - ComponentType<any>.
  */
-const componentRegistry = {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const componentRegistry: Record<string, ComponentType<any>> = {
   // Компоненты алертов
   'Alert/Alert': Alert,
   'Alert/AlertList': AlertList,
@@ -94,26 +103,14 @@ const componentRegistry = {
 };
 
 /**
- * Функция для монтирования React компонентов
- *
- * @description
  * Монтирует React компонент в указанный DOM элемент.
+ *
  * Сначала проверяет реестр предзагруженных компонентов, затем пытается динамический импорт.
  *
- * @param {string} componentName - Имя компонента (например, 'Gallery/AlbumList' или 'TestComponent')
- * @param {string} elementId - ID DOM элемента, в который будет смонтирован компонент
- * @param {Object} [props={}] - Свойства, передаваемые компоненту
- *
  * @example
- * // Монтирование предзагруженного компонента
  * window.mountReactComponent('Gallery/AlbumList', 'album-list-root', { apiUrl: '/api/albums/' });
- *
- * // Монтирование динамически загружаемого компонента
- * window.mountReactComponent('TestComponent', 'test-container', { title: 'Пример' });
- *
- * @return {void}
  */
-window.mountReactComponent = (componentName, elementId, props = {}) => {
+window.mountReactComponent = (componentName: string, elementId: string, props: Record<string, unknown> = {}) => {
   const element = document.getElementById(elementId);
   if (!element) {
     console.error(`Element with id "${elementId}" not found`);
@@ -123,14 +120,14 @@ window.mountReactComponent = (componentName, elementId, props = {}) => {
   const root = createRoot(element);
 
   // Проверить реестр предзагруженных компонентов
-  if (componentRegistry[componentName]) {
-    const Component = componentRegistry[componentName];
-    root.render(React.createElement(Component, props));
+  const Registered = componentRegistry[componentName];
+  if (Registered) {
+    root.render(React.createElement(Registered, props));
     return;
   }
 
   // Попытка динамического импорта для компонентов не из реестра
-  import(`@components/${componentName}.jsx`)
+  import(`@components/${componentName}`)
     .then((module) => {
       const Component = module.default;
       root.render(React.createElement(Component, props));

@@ -10,7 +10,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 
 # Скопировать конфигурационные файлы в frontend/ директорию
-COPY frontend/webpack.config.js frontend/.babelrc frontend/jest.config.js frontend/jest.setup.js ./frontend/
+COPY frontend/webpack.config.js frontend/.babelrc frontend/jest.config.js frontend/jest.setup.js frontend/tsconfig.json ./frontend/
 
 # Скопировать исходники frontend
 COPY frontend/src ./frontend/src

@@ -6,7 +6,7 @@
  */
 
 // Импорт тестируемой функции
-import './index.js';
+import './index';
 
 // Замена react-dom/client на мок для изоляции тестов от реального DOM
 jest.mock('react-dom/client', () => {

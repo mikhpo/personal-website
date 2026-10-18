@@ -19,7 +19,14 @@ module.exports = {
   testEnvironment: 'jsdom',
   rootDir: frontendDir,
   roots: ['<rootDir>/src'],
-  testMatch: ['**/__tests__/**/*.js', '**/?(*.)+(spec|test).js'],
+  testMatch: [
+    '**/__tests__/**/*.js',
+    '**/__tests__/**/*.ts',
+    '**/__tests__/**/*.tsx',
+    '**/?(*.)+(spec|test).js',
+    '**/?(*.)+(spec|test).ts',
+    '**/?(*.)+(spec|test).tsx',
+  ],
   moduleNameMapper: {
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
     '^@components/(.*)$': '<rootDir>/src/components/$1',
