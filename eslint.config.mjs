@@ -72,7 +72,7 @@ export default [
     files: tsFiles,
     rules: {
       'no-unused-vars': 'off',
-      '@typescript-eslint/no-unused-vars': ['error', { varsIgnorePattern: '^React$' }],
+      '@typescript-eslint/no-unused-vars': ['error', { varsIgnorePattern: '^React$|^_', argsIgnorePattern: '^_' }],
     },
   },
   {

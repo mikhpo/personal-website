@@ -3,16 +3,24 @@
  *
  * Вычисляет предыдущую и следующую фотографии на основе текущей фотографии
  * и списка фотографий альбома в порядке API.
- *
- * @param {Object|null} photo - Текущая фотография
- * @param {Array} albumPhotos - Массив фотографий альбома (в порядке API)
- * @return {Object} Объект с предыдущей и следующей фотографиями
- * @property {Object|null} previousPhoto - Предыдущая фотография или null
- * @property {Object|null} nextPhoto - Следующая фотография или null
  */
-const getPhotoNavigation = (photo, albumPhotos) => {
+
+import type { components } from '../types/api-schema';
+
+type Photo = components['schemas']['Photo'];
+
+/** Результат вычисления навигации по фотографиям альбома. */
+export interface PhotoNavigationResult {
+  previousPhoto: Photo | null;
+  nextPhoto: Photo | null;
+}
+
+/**
+ * Вычисляет предыдущую и следующую фотографии для текущей.
+ */
+const getPhotoNavigation = (photo: Photo | null, albumPhotos: Photo[] | null | undefined): PhotoNavigationResult => {
   // Если нет фотографии или списка фотографий, возвращаем null для обеих
-  if (!photo || !albumPhotos || !Array.isArray(albumPhotos) || albumPhotos.length === 0) {
+  if (!photo || !albumPhotos || albumPhotos.length === 0) {
     return {
       previousPhoto: null,
       nextPhoto: null,
@@ -31,15 +39,15 @@ const getPhotoNavigation = (photo, albumPhotos) => {
   }
 
   // Вычисляем предыдущую фотографию
-  let previousPhoto = null;
+  let previousPhoto: Photo | null = null;
   if (currentIndex > 0) {
-    previousPhoto = albumPhotos[currentIndex - 1];
+    previousPhoto = albumPhotos[currentIndex - 1] ?? null;
   }
 
   // Вычисляем следующую фотографию
-  let nextPhoto = null;
+  let nextPhoto: Photo | null = null;
   if (currentIndex < albumPhotos.length - 1) {
-    nextPhoto = albumPhotos[currentIndex + 1];
+    nextPhoto = albumPhotos[currentIndex + 1] ?? null;
   }
 
   return {

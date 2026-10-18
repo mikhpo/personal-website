@@ -7,10 +7,8 @@
 
 /**
  * Выполнить переход на указанный URL полной загрузкой страницы.
- *
- * @param {string} url - URL для перехода
  */
-const navigateTo = (url) => {
+const navigateTo = (url: string): void => {
   window.location.assign(url);
 };
 

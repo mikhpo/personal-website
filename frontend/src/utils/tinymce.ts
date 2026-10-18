@@ -6,17 +6,16 @@
  * рядом со скриптом.
  */
 
+import type { RawEditorOptions } from 'tinymce';
+
 /**
  * Возвращает объект init для компонента Editor (@tinymce/tinymce-react)
  * в цветовой схеме, соответствующей теме сайта.
  *
- * @param {boolean} isDark - Действует ли темная тема сайта
- * @return {Object} Конфигурация init для TinyMCE
- *
  * @example
  * <Editor init={getEditorInit(isDark)} />
  */
-export const getEditorInit = (isDark) => ({
+export const getEditorInit = (isDark: boolean): RawEditorOptions => ({
   license_key: 'gpl',
   // Тема редактора следует теме сайта: скин интерфейса и стили содержимого
   menubar: true,

@@ -5,121 +5,122 @@
  * - Получение списка альбомов и фотографий
  * - Загрузка фотографий
  * - Работа с тегами
+ *
+ * Типы ответов и параметров берутся из сгенерированной OpenAPI-схемы.
+ * Тип ответа списков до нормализации - объединение конверта и массива.
  */
 
+import type { components, operations } from '../types/api-schema';
+import type { Paginated } from '../types/pagination';
 import api from './api';
 import { buildApiUrl } from '../utils/apiUrl';
 
-/**
- * Базовый URL для API галереи.
- * @type {string}
- */
+type AlbumList = components['schemas']['AlbumList'];
+type AlbumDetail = components['schemas']['AlbumDetail'];
+type Photo = components['schemas']['Photo'];
+type Tag = components['schemas']['Tag'];
+type UploadResponse = components['schemas']['UploadResponse'];
+
+type AlbumListQuery = operations['gallery_albums_list']['parameters']['query'];
+type PhotoListQuery = operations['gallery_photos_list']['parameters']['query'];
+
+/** До нормализации списки читаются как конверт или массив - сводит читателей фаза 6. */
+type ListResponse<T> = Paginated<T> | T[];
+
+/** Прогресс загрузки одного файла для колбэка onProgress. */
+export interface UploadProgressState {
+  progress: number;
+  status: 'success' | 'error';
+  error?: string;
+}
+
+/** Результат загрузки одного файла. */
+export interface UploadOutcome {
+  file: string;
+  success: boolean;
+  data?: UploadResponse;
+  error?: string;
+}
+
 const BASE_URL = '/api/gallery';
 
-/**
- * Сервис для работы с галереей.
- * @namespace
- */
 export const galleryService = {
   /**
    * Получает список альбомов.
    *
-   * @async
-   * @param {Object} [params={}] - Параметры запроса
-   * @param {string} [params.page] - Номер страницы
-   * @return {Promise<Object>} Объект со списком альбомов
-   *
    * @example
    * const albums = await galleryService.getAlbums();
    */
-  async getAlbums(params = {}) {
+  async getAlbums(params: AlbumListQuery = {}): Promise<ListResponse<AlbumList>> {
     return api.get(buildApiUrl(`${BASE_URL}/albums/`, params));
   },
 
   /**
    * Получает детальную информацию об альбоме.
    *
-   * @async
-   * @param {number} id - ID альбома
-   * @return {Promise<Object>} Данные альбома с вложенными фотографиями
-   *
    * @example
    * const album = await galleryService.getAlbum(1);
    */
-  async getAlbum(id) {
+  async getAlbum(id: number): Promise<AlbumDetail> {
     return api.get(`${BASE_URL}/albums/${id}/`);
   },
 
   /**
    * Получает список фотографий.
    *
-   * @async
-   * @param {Object} [params={}] - Параметры запроса
-   * @param {string} [params.page] - Номер страницы
-   * @param {string} [params.album] - Фильтр по ID альбома
-   * @param {string} [params.tags__slug] - Фильтр по слагу тега
-   * @return {Promise<Object>} Объект со списком фотографий
-   *
    * @example
    * const photos = await galleryService.getPhotos();
    *
    * @example
-   * // Получить фотографии из альбома
    * const photos = await galleryService.getPhotos({ album: 1 });
    */
-  async getPhotos(params = {}) {
+  async getPhotos(params: PhotoListQuery = {}): Promise<ListResponse<Photo>> {
     return api.get(buildApiUrl(`${BASE_URL}/photos/`, params));
   },
 
   /**
    * Получает детальную информацию о фотографии.
    *
-   * @async
-   * @param {number} id - ID фотографии
-   * @return {Promise<Object>} Данные фотографии
-   *
    * @example
    * const photo = await galleryService.getPhoto(1);
    */
-  async getPhoto(id) {
+  async getPhoto(id: number): Promise<Photo> {
     return api.get(`${BASE_URL}/photos/${id}/`);
   },
 
   /**
    * Загружает фотографии на сервер.
    *
-   * @async
-   * @param {number} albumId - ID альбома для загрузки
-   * @param {File[]} files - Массив файлов для загрузки
-   * @param {Function} [onProgress] - Callback для отслеживания прогресса
-   * @return {Promise<Object[]>} Массив результатов загрузки
-   *
    * @example
    * const results = await galleryService.uploadPhotos(1, [file1, file2]);
    */
-  async uploadPhotos(albumId, files, onProgress) {
-    const results = [];
+  async uploadPhotos(
+    albumId: number,
+    files: File[],
+    onProgress?: (fileName: string, state: UploadProgressState) => void,
+  ): Promise<UploadOutcome[]> {
+    const results: UploadOutcome[] = [];
     const uploadUrl = `${BASE_URL}/upload/`;
 
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
+    for (const file of files) {
       const formData = new FormData();
-      formData.append('album_id', albumId);
+      formData.append('album_id', String(albumId));
       formData.append('photos', file);
 
       try {
         // Для FormData используем postForm метод API клиента
-        const result = await api.postForm(uploadUrl, formData);
+        const result = await api.postForm<UploadResponse>(uploadUrl, formData);
         results.push({ file: file.name, success: true, data: result });
 
         if (onProgress) {
           onProgress(file.name, { progress: 100, status: 'success' });
         }
       } catch (error) {
-        results.push({ file: file.name, success: false, error: error.message });
+        const message = error instanceof Error ? error.message : String(error);
+        results.push({ file: file.name, success: false, error: message });
 
         if (onProgress) {
-          onProgress(file.name, { progress: 0, status: 'error', error: error.message });
+          onProgress(file.name, { progress: 0, status: 'error', error: message });
         }
       }
     }
@@ -130,27 +131,20 @@ export const galleryService = {
   /**
    * Получает список тегов.
    *
-   * @async
-   * @return {Promise<Object>} Объект со списком тегов
-   *
    * @example
    * const tags = await galleryService.getTags();
    */
-  async getTags() {
+  async getTags(): Promise<ListResponse<Tag>> {
     return api.get(`${BASE_URL}/tags/`);
   },
 
   /**
    * Получает детальную информацию о теге.
    *
-   * @async
-   * @param {string} slug - Слаг тега
-   * @return {Promise<Object>} Данные тега
-   *
    * @example
    * const tag = await galleryService.getTag('nature');
    */
-  async getTag(slug) {
+  async getTag(slug: string): Promise<Tag> {
     return api.get(`${BASE_URL}/tags/${slug}/`);
   },
 };

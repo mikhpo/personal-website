@@ -32,7 +32,7 @@ module.exports = {
     '^@components/(.*)$': '<rootDir>/src/components/$1',
     '^@components$': '<rootDir>/src/components/index.js',
     '^@services/(.*)$': '<rootDir>/src/services/$1',
-    '^@services$': '<rootDir>/src/services/index.js',
+    '^@services$': '<rootDir>/src/services/index.ts',
     '^@utils/(.*)$': '<rootDir>/src/utils/$1',
     '^@utils$': '<rootDir>/src/utils/index.js',
     '^@hooks/(.*)$': '<rootDir>/src/hooks/$1',
