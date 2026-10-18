@@ -6,7 +6,11 @@
  * рядом со скриптом.
  */
 
-import type { RawEditorOptions } from 'tinymce';
+import type { ComponentProps } from 'react';
+import type { Editor } from '@tinymce/tinymce-react';
+
+/** Тип пропа init компонента Editor: опции TinyMCE без selector и target. */
+export type EditorInitOptions = ComponentProps<typeof Editor>['init'];
 
 /**
  * Возвращает объект init для компонента Editor (@tinymce/tinymce-react)
@@ -15,8 +19,10 @@ import type { RawEditorOptions } from 'tinymce';
  * @example
  * <Editor init={getEditorInit(isDark)} />
  */
-export const getEditorInit = (isDark: boolean): RawEditorOptions => ({
-  license_key: 'gpl',
+export const getEditorInit = (isDark: boolean): EditorInitOptions => ({
+  // Интеграция @tinymce/tinymce-react перекрывает license_key пропом licenseKey
+  // (по умолчанию 'gpl'); поле оставлено для прежнего объекта init
+  license_key: 'gpl' as unknown as never,
   // Тема редактора следует теме сайта: скин интерфейса и стили содержимого
   menubar: true,
   statusbar: true,
