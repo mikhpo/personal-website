@@ -14,6 +14,13 @@ class BasePagination(PageNumberPagination):
     page_size_query_param = "page_size"
     max_page_size = 100
 
+    def get_paginated_response_schema(self, schema: dict[str, Any]) -> dict[str, Any]:
+        """Дополняет схему конверта пагинации OpenAPI полем total_pages."""
+        result = super().get_paginated_response_schema(schema)
+        result["properties"]["total_pages"] = {"type": "integer", "example": 7}
+        result["required"] = [*result.get("required", []), "total_pages"]
+        return result
+
     def get_paginated_response(self, data: list[Any]) -> Response:
         """Возвращает ответ с дополнительным полем total_pages."""
         if self.page is None:

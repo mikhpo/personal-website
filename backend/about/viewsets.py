@@ -2,6 +2,7 @@
 
 from typing import ClassVar
 
+from drf_spectacular.utils import extend_schema
 from rest_framework import viewsets
 from rest_framework.permissions import AllowAny
 from rest_framework.request import Request
@@ -20,6 +21,7 @@ class AboutViewSet(viewsets.ViewSet):
 
     permission_classes: ClassVar[list] = [AllowAny]
 
+    @extend_schema(responses=AboutSerializer)
     def list(self, request: Request) -> Response:  # noqa: ARG002
         """Возвращает содержимое страницы Обо мне."""
         about_page = About.get_solo()

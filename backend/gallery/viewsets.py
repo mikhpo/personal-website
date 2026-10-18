@@ -5,8 +5,9 @@ from typing import TYPE_CHECKING, ClassVar
 from auditlog.context import set_actor
 from django.db.models import Prefetch
 from django_filters.rest_framework import DjangoFilterBackend
+from drf_spectacular.utils import extend_schema, inline_serializer
 from PIL import UnidentifiedImageError
-from rest_framework import filters, status, viewsets
+from rest_framework import filters, serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAdminUser, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
@@ -105,6 +106,35 @@ class UploadViewSet(viewsets.ViewSet):
 
     permission_classes: ClassVar[list] = [IsAdminUser]
 
+    @extend_schema(
+        request={
+            "multipart/form-data": {
+                "type": "object",
+                "properties": {
+                    "album_id": {"type": "integer"},
+                    "photos": {"type": "array", "items": {"type": "string", "format": "binary"}},
+                },
+                "required": ["album_id", "photos"],
+            },
+        },
+        responses={
+            201: inline_serializer(
+                name="UploadResponse",
+                fields={
+                    "results": inline_serializer(
+                        name="UploadResult",
+                        many=True,
+                        fields={
+                            "success": serializers.BooleanField(),
+                            "filename": serializers.CharField(),
+                            "id": serializers.IntegerField(required=False),
+                            "error": serializers.CharField(required=False),
+                        },
+                    ),
+                },
+            ),
+        },
+    )
     @action(detail=False, methods=["post"])
     def upload(self, request):  # noqa: ANN001, ANN201
         """Загрузить одну или несколько фотографий в альбом."""

@@ -17,6 +17,9 @@
     "test:watch": "jest --config frontend/jest.config.js --watch",
     "eslint": "eslint . --max-warnings 0",
     "typecheck": "tsc --noEmit -p frontend/tsconfig.json",
+    "schema:export": "poetry run python backend/manage.py spectacular --file frontend/src/types/schema.yaml",
+    "api-types": "openapi-typescript frontend/src/types/schema.yaml -o frontend/src/types/api-schema.ts",
+    "api-types:generate": "npm run schema:export && npm run api-types",
     "format": "prettier --write frontend",
     "format:check": "prettier --check frontend",
     "markdownlint": "markdownlint '**/*.md' --ignore-path .gitignore"
@@ -74,8 +77,9 @@
     "jest": "^30.4.2",
     "jest-environment-jsdom": "^30.4.1",
     "markdownlint-cli": "^0.49.0",
+    "openapi-typescript": "^7.13.0",
     "prettier": "^3.9.8",
-    "typescript": "^6.0.3",
+    "typescript": "^5.9.3",
     "typescript-eslint": "^8.71.2",
     "webpack-dev-server": "^6.0.0"
   }
