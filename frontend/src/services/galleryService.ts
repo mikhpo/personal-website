@@ -27,7 +27,8 @@ type PhotoListQuery = operations['gallery_photos_list']['parameters']['query'];
 /** Прогресс загрузки одного файла для колбэка onProgress. */
 export interface UploadProgressState {
   progress: number;
-  status: 'success' | 'error';
+  /** Состояния колбэка; сам сервис по завершении файла шлет только success и error */
+  status: 'uploading' | 'success' | 'error';
   error?: string;
 }
 
