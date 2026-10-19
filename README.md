@@ -123,7 +123,9 @@
 * Запуск Jest тестов: `npm test`
 * Запуск тестов в режиме наблюдения: `npm run test:watch`
 * Production сборка: `npm run build`
-* Линтинг JavaScript: `npm run eslint`
+* Проверка типов TypeScript: `npm run typecheck`
+* Линтинг: `npm run eslint`
+* Перегенерация типов API из OpenAPI-схемы (при изменении сериализаторов): `npm run api-types:generate`
 
 ### Остановка режима разработки
 
@@ -225,12 +227,14 @@
 
 ### Технологии фронтенда
 
+* [TypeScript](https://www.typescriptlang.org/) - типизированный язык фронтенда (строгий режим)
 * [React](https://react.dev/) 19 - UI библиотека
 * [Bootstrap](https://getbootstrap.com/) 5 - стили
 * [Webpack](https://webpack.js.org/) 5 - сборка
-* [Babel](https://babeljs.io/) - транспиляция JSX и ES6+
+* [Babel](https://babeljs.io/) - транспиляция TypeScript и JSX
 * [Jest](https://jestjs.io/) - тестирование компонентов
 * [django-webpack-loader](https://github.com/django-webpack/django-webpack-loader) - интеграция бандлов с Django
+* [openapi-typescript](https://github.com/openapi-ts/openapi-typescript) - генерация типов API из OpenAPI-схемы
 
 ### Структура фронтенда
 
@@ -254,13 +258,15 @@
 
 ### Команды фронтенда
 
-| Команда              | Описание                   |
-| -------------------- | -------------------------- |
-| `npm run dev`        | Сборка в режиме наблюдения |
-| `npm run build`      | Production сборка          |
-| `npm test`           | Запуск Jest тестов         |
-| `npm run test:watch` | Тесты в режиме наблюдения  |
-| `npm run eslint`     | Проверка кода ESLint       |
+| Команда                      | Описание                                 |
+| ---------------------------- | ---------------------------------------- |
+| `npm run dev`                | Сборка в режиме наблюдения               |
+| `npm run build`              | Production сборка                        |
+| `npm test`                   | Запуск Jest тестов                       |
+| `npm run test:watch`         | Тесты в режиме наблюдения                |
+| `npm run typecheck`          | Проверка типов TypeScript                |
+| `npm run eslint`             | Проверка кода ESLint                     |
+| `npm run api-types:generate` | Перегенерация типов API из OpenAPI-схемы |
 
 ### Интеграция с Django
 
