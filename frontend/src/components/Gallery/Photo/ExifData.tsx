@@ -41,11 +41,6 @@ const ExifData = ({ photo }: ExifDataProps) => {
     }
   };
 
-  // API отдает дату съемки полем taken_at; исторический код читал datetime_taken,
-  // которого в ответе нет, - строка не отображалась в продакшене. Чтение старого
-  // поля сохранено приведением до решения пользователя (журнал tasks.md, фаза 5)
-  const legacyDatetimeTaken = (photo as unknown as { datetime_taken?: string }).datetime_taken;
-
   const exifFields: ExifField[] = [
     { label: 'Камера', value: photo.camera },
     { label: 'Объектив', value: photo.lens_model },
@@ -53,7 +48,7 @@ const ExifData = ({ photo }: ExifDataProps) => {
     { label: 'Выдержка', value: photo.exposure ? `${photo.exposure} с` : null },
     { label: 'ISO', value: photo.iso ? `ISO ${photo.iso}` : null },
     { label: 'Фокусное расстояние', value: photo.focal_length ? `${photo.focal_length} мм` : null },
-    { label: 'Дата съёмки', value: formatDateTime(legacyDatetimeTaken) },
+    { label: 'Дата съёмки', value: formatDateTime(photo.taken_at) },
   ];
 
   const filledFields = exifFields.filter((field) => field.value);

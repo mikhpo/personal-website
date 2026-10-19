@@ -22,7 +22,7 @@ describe('ExifData', () => {
     exposure: '1/125',
     iso: 400,
     focal_length: 50,
-    datetime_taken: '2024-01-15T10:30:00Z',
+    taken_at: '2024-01-15T10:30:00Z',
   } as unknown as Photo;
 
   /**
@@ -101,7 +101,7 @@ describe('ExifData', () => {
    * Проверяет, что дата форматируется в русской локали
    */
   test('форматирует дату в русской локали', () => {
-    const photoWithDate = { datetime_taken: '2024-12-25T15:45:30Z' } as unknown as Photo;
+    const photoWithDate = { taken_at: '2024-12-25T15:45:30Z' } as unknown as Photo;
     render(<ExifData photo={photoWithDate} />);
     const dateText = screen.getByText(/25\.12\.2024/);
     expect(dateText).toBeInTheDocument();
@@ -111,7 +111,7 @@ describe('ExifData', () => {
    * Проверяет, что компонент возвращает null при некорректной дате
    */
   test('обрабатывает невалидную дату', () => {
-    const photoWithInvalidDate = { datetime_taken: 'invalid-date' } as unknown as Photo;
+    const photoWithInvalidDate = { taken_at: 'invalid-date' } as unknown as Photo;
     const { container } = render(<ExifData photo={photoWithInvalidDate} />);
     expect(container.firstChild).toBeNull();
   });
@@ -169,7 +169,7 @@ describe('ExifData', () => {
       exposure: null,
       iso: null,
       focal_length: null,
-      datetime_taken: null,
+      taken_at: null,
     } as unknown as Photo;
     const { container } = render(<ExifData photo={photoWithNulls} />);
     expect(container.firstChild).toBeNull();

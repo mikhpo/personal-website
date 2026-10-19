@@ -23,7 +23,7 @@ describe('AboutPhoto', () => {
     exposure: '1/125',
     iso: 400,
     focal_length: 50,
-    datetime_taken: '2024-01-15T10:30:00Z',
+    taken_at: '2024-01-15T10:30:00Z',
   } as unknown as Photo;
 
   /**

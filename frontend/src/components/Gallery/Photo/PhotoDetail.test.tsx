@@ -39,7 +39,7 @@ describe('PhotoDetail', () => {
     exposure: '1/125',
     iso: 400,
     focal_length: 50,
-    datetime_taken: '2024-01-15T10:00:00Z',
+    taken_at: '2024-01-15T10:00:00Z',
   } as unknown as Photo;
 
   // ID соседних фотографий для навигации (mockPhoto имеет id=2)
