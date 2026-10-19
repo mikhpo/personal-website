@@ -1,5 +1,6 @@
-/* eslint-disable react-x/set-state-in-effect -- синхронная установка состояния в effect - установленный паттерн загрузки этого хука; перестройка меняла бы рантайм и вне рамок миграции */
+/* eslint-disable react-x/set-state-in-effect -- синхронная установка состояния в effect - установленный паттерн загрузки этого хука */
 import { useEffect, useState } from 'react';
+import { galleryService } from '@services';
 import type { components } from '../types/api-schema';
 
 type Photo = components['schemas']['Photo'];
@@ -15,9 +16,10 @@ export interface UseAlbumPhotosResult {
 /**
  * Хук для загрузки фотографий альбома через эндпоинт детального просмотра альбома.
  *
- * Загружает данные альбома из API и возвращает список вложенных фотографий.
+ * Загружает данные альбома через сервис галереи и возвращает список вложенных
+ * фотографий целиком: навигация между фото работает без оглядки на пагинацию.
  */
-const useAlbumPhotos = (albumId: number | string | null, apiUrl = '/api/gallery/albums/'): UseAlbumPhotosResult => {
+const useAlbumPhotos = (albumId: number | string | null): UseAlbumPhotosResult => {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -34,16 +36,10 @@ const useAlbumPhotos = (albumId: number | string | null, apiUrl = '/api/gallery/
       setLoading(true);
       setError(null);
 
-      fetch(`${apiUrl}${albumId}/`)
-        .then((response) => {
-          if (!response.ok) {
-            throw new Error(`Ошибка загрузки данных альбома: ${response.status}`);
-          }
-          return response.json();
-        })
-        .then((data: { photos?: Photo[] }) => {
-          const photosList = data.photos || [];
-          setPhotos(Array.isArray(photosList) ? photosList : []);
+      galleryService
+        .getAlbum(albumId)
+        .then((album) => {
+          setPhotos(album.photos);
           setLoading(false);
         })
         .catch((err: Error) => {
@@ -53,44 +49,36 @@ const useAlbumPhotos = (albumId: number | string | null, apiUrl = '/api/gallery/
     };
 
     fetchAlbumPhotos();
-  }, [albumId, apiUrl]);
+  }, [albumId]);
+
+  const refetch = () => {
+    if (albumId === null || albumId === undefined || albumId === '') {
+      setPhotos([]);
+      setLoading(false);
+      setError(null);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    galleryService
+      .getAlbum(albumId)
+      .then((album) => {
+        setPhotos(album.photos);
+        setLoading(false);
+      })
+      .catch((err: Error) => {
+        setError(err.message);
+        setLoading(false);
+      });
+  };
 
   return {
     photos,
     loading,
     error,
-    refetch: () => {
-      const fetchAlbumPhotos = () => {
-        if (albumId === null || albumId === undefined || albumId === '') {
-          setPhotos([]);
-          setLoading(false);
-          setError(null);
-          return;
-        }
-
-        setLoading(true);
-        setError(null);
-
-        fetch(`${apiUrl}${albumId}/`)
-          .then((response) => {
-            if (!response.ok) {
-              throw new Error(`Ошибка загрузки данных альбома: ${response.status}`);
-            }
-            return response.json();
-          })
-          .then((data: { photos?: Photo[] }) => {
-            const photosList = data.photos || [];
-            setPhotos(Array.isArray(photosList) ? photosList : []);
-            setLoading(false);
-          })
-          .catch((err: Error) => {
-            setError(err.message);
-            setLoading(false);
-          });
-      };
-
-      fetchAlbumPhotos();
-    },
+    refetch,
   };
 };
 

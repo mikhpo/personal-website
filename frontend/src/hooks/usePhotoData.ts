@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { galleryService } from '@services';
 import type { components } from '../types/api-schema';
 
 type Photo = components['schemas']['Photo'];
@@ -14,26 +15,13 @@ export interface UsePhotoDataResult {
 /**
  * Хук для загрузки данных фотографии по pk.
  *
- * Загружает данные фотографии из API и управляет состоянием загрузки и ошибок.
+ * Загружает данные фотографии через сервис галереи и управляет состоянием
+ * загрузки и ошибок.
  */
-const usePhotoData = (photoPk: number | string | null, apiUrl = '/api/gallery/photos/'): UsePhotoDataResult => {
+const usePhotoData = (photoPk: number | string | null): UsePhotoDataResult => {
   const [photo, setPhoto] = useState<Photo | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const fetchPhotoRequest = useCallback(async (): Promise<Photo> => {
-    if (!photoPk) {
-      throw new Error('Не указан идентификатор фотографии');
-    }
-
-    const response = await fetch(`${apiUrl}${photoPk}/`);
-
-    if (!response.ok) {
-      throw new Error(`Ошибка загрузки фото: ${response.status}`);
-    }
-
-    return response.json();
-  }, [photoPk, apiUrl]);
 
   const loadPhoto = useCallback(async () => {
     if (!photoPk) {
@@ -47,14 +35,14 @@ const usePhotoData = (photoPk: number | string | null, apiUrl = '/api/gallery/ph
     setError(null);
 
     try {
-      const photoData = await fetchPhotoRequest();
+      const photoData = await galleryService.getPhoto(photoPk);
       setPhoto(photoData);
       setLoading(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
       setLoading(false);
     }
-  }, [photoPk, fetchPhotoRequest]);
+  }, [photoPk]);
 
   useEffect(() => {
     loadPhoto();

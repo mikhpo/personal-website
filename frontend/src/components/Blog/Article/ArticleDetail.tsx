@@ -4,6 +4,7 @@ import CommentList from '@components/Blog/Comment/CommentList';
 import CommentForm from '@components/Blog/Comment/CommentForm';
 import SpinnerComponent from '@components/Spinner/Spinner';
 import AlertList from '@components/Alert/AlertList';
+import { blogService } from '@services';
 import type { components } from '../../../types/api-schema';
 
 type Article = components['schemas']['Article'];
@@ -53,18 +54,12 @@ const ArticleDetail = ({
   /** Состояние ошибки при загрузке данных. */
   const [error, setError] = useState<string | null>(null);
 
-  const url = `/api/blog/articles/${articleId}/`;
-
   // Эффект для загрузки статьи при монтировании компонента
   useEffect(() => {
     /** Загружает статью из API. */
     const loadArticle = async () => {
       try {
-        const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error('Статья не найдена');
-        }
-        const data: Article = await response.json();
+        const data = await blogService.getArticle(articleId);
         setArticle(data);
       } catch (err) {
         setError(err instanceof Error ? err.message : String(err));
@@ -74,7 +69,7 @@ const ArticleDetail = ({
     };
 
     loadArticle();
-  }, [url]);
+  }, [articleId]);
 
   /**
    * Перезагружает статью после успешного добавления комментария
@@ -83,8 +78,7 @@ const ArticleDetail = ({
   const handleCommentSuccess = async () => {
     setLoading(true);
     try {
-      const response = await fetch(url);
-      const data: Article = await response.json();
+      const data = await blogService.getArticle(articleId);
       setArticle(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -101,11 +95,7 @@ const ArticleDetail = ({
       setError(null);
 
       try {
-        const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error('Статья не найдена');
-        }
-        const data: Article = await response.json();
+        const data = await blogService.getArticle(articleId);
         setArticle(data);
       } catch (err) {
         setError(err instanceof Error ? err.message : String(err));

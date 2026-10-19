@@ -75,12 +75,6 @@ class AlbumDetailView(DetailView):
         """
         return Album.objects.all()
 
-    def get_context_data(self, **kwargs) -> dict[str, Any]:
-        """Добавить URL API альбома в контекст."""
-        context = super().get_context_data(**kwargs)
-        context["album_api_url"] = f"/api/gallery/albums/{self.object.pk}/"
-        return context
-
 
 class PhotoListView(ListView):
     """Отображение списка фотографий."""

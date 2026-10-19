@@ -5,6 +5,7 @@ import SpinnerComponent from '@components/Spinner/Spinner';
 import AlertList from '@components/Alert/AlertList';
 import Pagination from '@components/Pagination/Pagination';
 import { blogService } from '@services';
+import { parseListResponse } from '@utils/pagination';
 import type { components } from '../../../types/api-schema';
 
 type Article = components['schemas']['Article'];
@@ -86,16 +87,12 @@ const ArticleList = ({ categorySlug, seriesSlug, topicSlug, search }: ArticleLis
 
       try {
         const data = await fetchArticles(currentPage);
-        // До нормализации (фаза 6) конверт читается как объединение: массив или конверт
-        const raw = Array.isArray(data) ? data : data.results || data;
-        const articlesList = Array.isArray(raw) ? raw : [];
-        setArticles(articlesList);
-        if (!Array.isArray(data) && data.count !== undefined) {
-          const pageSize = articlesList.length || 10;
-          setTotalPages(Math.ceil(data.count / pageSize));
-          setHasNext(!!data.next);
-          setHasPrevious(!!data.previous);
-        }
+        const { items, count, next, previous } = parseListResponse(data);
+        setArticles(items);
+        const pageSize = items.length || 10;
+        setTotalPages(Math.ceil(count / pageSize));
+        setHasNext(!!next);
+        setHasPrevious(!!previous);
       } catch (err) {
         setError(err instanceof Error ? err.message : String(err));
       } finally {

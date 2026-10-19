@@ -3,8 +3,9 @@ import { Offcanvas } from 'react-bootstrap';
 import TagButton from '@components/Gallery/Tags/TagButton';
 import SpinnerComponent from '@components/Spinner/Spinner';
 import AlertList from '@components/Alert/AlertList';
+import { galleryService } from '@services';
+import { parseListResponse } from '@utils/pagination';
 import type { components } from '../../../types/api-schema';
-import type { Paginated } from '../../../types/pagination';
 
 type Tag = components['schemas']['Tag'];
 
@@ -14,8 +15,6 @@ export interface TagsOffcanvasProps {
   show: boolean;
   /** Обработчик закрытия панели. */
   onHide: () => void;
-  /** URL API для загрузки тегов. */
-  tagsApiUrl?: string;
 }
 
 /**
@@ -23,7 +22,7 @@ export interface TagsOffcanvasProps {
  *
  * Загружает и отображает список всех тегов галереи в боковой панели.
  */
-const TagsOffcanvas = ({ show, onHide, tagsApiUrl = '/api/gallery/tags/' }: TagsOffcanvasProps) => {
+const TagsOffcanvas = ({ show, onHide }: TagsOffcanvasProps) => {
   const [tags, setTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -44,18 +43,11 @@ const TagsOffcanvas = ({ show, onHide, tagsApiUrl = '/api/gallery/tags/' }: Tags
         setLoading(true);
         setError(null);
 
-        const response = await fetch(tagsApiUrl);
-        if (!response.ok) {
-          throw new Error(`Ошибка загрузки: ${response.status}`);
-        }
-
-        const data: Paginated<Tag> | Tag[] = await response.json();
-        // До нормализации (фаза 6) конверт читается как объединение: массив или конверт
-        const raw = Array.isArray(data) ? data : data.results || data;
-        const tagsList = Array.isArray(raw) ? raw : [];
+        const data = await galleryService.getTags();
+        const { items } = parseListResponse(data);
 
         if (isMounted) {
-          setTags(tagsList);
+          setTags(items);
           setLoading(false);
         }
       } catch (err) {
@@ -71,7 +63,7 @@ const TagsOffcanvas = ({ show, onHide, tagsApiUrl = '/api/gallery/tags/' }: Tags
     return () => {
       isMounted = false;
     };
-  }, [show, tagsApiUrl]);
+  }, [show]);
 
   /**
    * Повторная загрузка тегов после ошибки с собственным флагом isMounted
@@ -88,17 +80,11 @@ const TagsOffcanvas = ({ show, onHide, tagsApiUrl = '/api/gallery/tags/' }: Tags
         setLoading(true);
         setError(null);
 
-        const response = await fetch(tagsApiUrl);
-        if (!response.ok) {
-          throw new Error(`Ошибка загрузки: ${response.status}`);
-        }
-
-        const data: Paginated<Tag> | Tag[] = await response.json();
-        const raw = Array.isArray(data) ? data : data.results || data;
-        const tagsList = Array.isArray(raw) ? raw : [];
+        const data = await galleryService.getTags();
+        const { items } = parseListResponse(data);
 
         if (isMounted) {
-          setTags(tagsList);
+          setTags(items);
           setLoading(false);
         }
       } catch (err) {

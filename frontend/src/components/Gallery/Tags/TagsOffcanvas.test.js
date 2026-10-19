@@ -3,10 +3,12 @@ import { render, screen, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import TagsOffcanvas from './TagsOffcanvas';
 
+jest.mock('@services');
+
 /**
  * Тесты для компонента TagsOffcanvas.
- * Проверяют загрузку тегов, отображение состояний загрузки/ошибки/пустого состояния,
- * обработку различных форматов ответа API и взаимодействие пользователя.
+ * Проверяют загрузку тегов через сервис API, отображение состояний
+ * загрузки/ошибки/пустого состояния и взаимодействие пользователя.
  */
 
 // Эмуляция window.matchMedia для корректной работы компонента Offcanvas из react-bootstrap.
@@ -33,42 +35,44 @@ describe('TagsOffcanvas', () => {
     { id: 3, name: 'Портрет', slug: 'portrait' },
   ];
 
-  // Настройка mock fetch перед каждым тестом
-  beforeEach(() => {
-    global.fetch = jest.fn();
+  const envelope = (results) => ({
+    count: results.length,
+    total_pages: 1,
+    next: null,
+    previous: null,
+    results,
   });
 
-  // Восстановление всех моков после каждого теста
-  afterEach(() => {
-    jest.restoreAllMocks();
+  let galleryService;
+
+  beforeEach(() => {
+    galleryService = require('@services').galleryService;
+    galleryService.getTags.mockReset();
   });
 
   // Проверяет, что компонент не загружает данные при show=false
   test('не загружает данные если show=false', () => {
     render(<TagsOffcanvas show={false} onHide={jest.fn()} />);
 
-    expect(global.fetch).not.toHaveBeenCalled();
+    expect(galleryService.getTags).not.toHaveBeenCalled();
   });
 
   // Проверяет загрузку тегов при монтировании компонента с show=true
   test('загружает теги при монтировании если show=true', async () => {
-    global.fetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ results: mockTags }),
-    });
+    galleryService.getTags.mockResolvedValueOnce(envelope(mockTags));
 
     await act(async () => {
       render(<TagsOffcanvas show={true} onHide={jest.fn()} />);
     });
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith('/api/gallery/tags/');
+      expect(galleryService.getTags).toHaveBeenCalled();
     });
   });
 
-  // Проверяет отображение индикатора загрузки во время выполнения fetch запроса
+  // Проверяет отображение индикатора загрузки во время выполнения запроса
   test('отображает индикатор загрузки', async () => {
-    global.fetch.mockImplementationOnce(() => new Promise(() => {}));
+    galleryService.getTags.mockImplementationOnce(() => new Promise(() => {}));
 
     await act(async () => {
       render(<TagsOffcanvas show={true} onHide={jest.fn()} />);
@@ -84,10 +88,7 @@ describe('TagsOffcanvas', () => {
 
   // Проверяет отображение списка тегов после успешной загрузки данных
   test('отображает список тегов после загрузки', async () => {
-    global.fetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ results: mockTags }),
-    });
+    galleryService.getTags.mockResolvedValueOnce(envelope(mockTags));
 
     await act(async () => {
       render(<TagsOffcanvas show={true} onHide={jest.fn()} />);
@@ -100,12 +101,9 @@ describe('TagsOffcanvas', () => {
     });
   });
 
-  // Проверяет отображение сообщения об ошибке при HTTP ошибке
+  // Проверяет отображение сообщения об ошибке при ошибке сервиса
   test('обрабатывает ошибку загрузки', async () => {
-    global.fetch.mockResolvedValueOnce({
-      ok: false,
-      status: 500,
-    });
+    galleryService.getTags.mockRejectedValueOnce(new Error('Ошибка загрузки: 500'));
 
     await act(async () => {
       render(<TagsOffcanvas show={true} onHide={jest.fn()} />);
@@ -118,7 +116,7 @@ describe('TagsOffcanvas', () => {
 
   // Проверяет отображение сообщения об ошибке при ошибке сети
   test('обрабатывает network error', async () => {
-    global.fetch.mockRejectedValueOnce(new Error('Network error'));
+    galleryService.getTags.mockRejectedValueOnce(new Error('Network error'));
 
     await act(async () => {
       render(<TagsOffcanvas show={true} onHide={jest.fn()} />);
@@ -129,12 +127,9 @@ describe('TagsOffcanvas', () => {
     });
   });
 
-  // Проверяет отображение пустого состояния при получении пустого массива от API
+  // Проверяет отображение пустого состояния при получении пустого списка
   test('отображает пустое состояние если нет тегов', async () => {
-    global.fetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ results: [] }),
-    });
+    galleryService.getTags.mockResolvedValueOnce(envelope([]));
 
     await act(async () => {
       render(<TagsOffcanvas show={true} onHide={jest.fn()} />);
@@ -142,79 +137,12 @@ describe('TagsOffcanvas', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Нет доступных тегов')).toBeInTheDocument();
-    });
-  });
-
-  // Проверяет корректную обработку ответа API в виде прямого массива без обёртки results
-  test('обрабатывает прямой массив без results', async () => {
-    global.fetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockTags,
-    });
-
-    await act(async () => {
-      render(<TagsOffcanvas show={true} onHide={jest.fn()} />);
-    });
-
-    await waitFor(() => {
-      expect(screen.getByText('Природа')).toBeInTheDocument();
-    });
-  });
-
-  // Проверяет отображение пустого состояния при получении пустого объекта от API
-  test('обрабатывает пустой объект ответа', async () => {
-    global.fetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({}),
-    });
-
-    await act(async () => {
-      render(<TagsOffcanvas show={true} onHide={jest.fn()} />);
-    });
-
-    await waitFor(() => {
-      expect(screen.getByText('Нет доступных тегов')).toBeInTheDocument();
-    });
-  });
-
-  // Проверяет отображение пустого состояния, если results не является массивом
-  test('обрабатывает не-массив в results', async () => {
-    global.fetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ results: 'not an array' }),
-    });
-
-    await act(async () => {
-      render(<TagsOffcanvas show={true} onHide={jest.fn()} />);
-    });
-
-    await waitFor(() => {
-      expect(screen.getByText('Нет доступных тегов')).toBeInTheDocument();
-    });
-  });
-
-  // Проверяет использование кастомного URL при передаче props tagsApiUrl
-  test('использует кастомный tagsApiUrl', async () => {
-    global.fetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ results: mockTags }),
-    });
-
-    await act(async () => {
-      render(<TagsOffcanvas show={true} onHide={jest.fn()} tagsApiUrl="/custom/api/tags/" />);
-    });
-
-    await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith('/custom/api/tags/');
     });
   });
 
   // Проверяет отображение заголовка "Тэги"
   test('отображает заголовок "Тэги"', async () => {
-    global.fetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ results: [] }),
-    });
+    galleryService.getTags.mockResolvedValueOnce(envelope([]));
 
     await act(async () => {
       render(<TagsOffcanvas show={true} onHide={jest.fn()} />);
@@ -225,10 +153,7 @@ describe('TagsOffcanvas', () => {
 
   // Проверяет отображение кнопки закрытия Offcanvas
   test('отображает кнопку закрытия', async () => {
-    global.fetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ results: [] }),
-    });
+    galleryService.getTags.mockResolvedValueOnce(envelope([]));
 
     await act(async () => {
       render(<TagsOffcanvas show={true} onHide={jest.fn()} />);
@@ -243,16 +168,12 @@ describe('TagsOffcanvas', () => {
     const user = userEvent.setup();
     const handleHide = jest.fn();
 
-    global.fetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ results: [] }),
-    });
+    galleryService.getTags.mockResolvedValueOnce(envelope([]));
 
     await act(async () => {
       render(<TagsOffcanvas show={true} onHide={handleHide} />);
     });
 
-    // Ожидаем рендер компонента и появление кнопки закрытия
     await waitFor(() => {
       const closeButton = screen.getByLabelText('Close');
       expect(closeButton).toBeInTheDocument();
@@ -266,15 +187,9 @@ describe('TagsOffcanvas', () => {
 
   // Проверяет возможность повторной загрузки данных после отображения ошибки
   test('повторная загрузка работает после ошибки', async () => {
-    global.fetch
-      .mockResolvedValueOnce({
-        ok: false,
-        status: 500,
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ results: mockTags }),
-      });
+    galleryService.getTags
+      .mockRejectedValueOnce(new Error('Ошибка загрузки: 500'))
+      .mockResolvedValueOnce(envelope(mockTags));
 
     const user = userEvent.setup();
 
@@ -296,10 +211,7 @@ describe('TagsOffcanvas', () => {
 
   // Проверяет загрузку данных при изменении show с false на true
   test('загружает данные при изменении show с false на true', async () => {
-    global.fetch.mockResolvedValue({
-      ok: true,
-      json: async () => ({ results: mockTags }),
-    });
+    galleryService.getTags.mockResolvedValue(envelope(mockTags));
 
     let container;
     await act(async () => {
@@ -307,40 +219,14 @@ describe('TagsOffcanvas', () => {
       container = result.container;
     });
 
-    expect(global.fetch).not.toHaveBeenCalled();
+    expect(galleryService.getTags).not.toHaveBeenCalled();
 
     await act(async () => {
       render(<TagsOffcanvas show={true} onHide={jest.fn()} />, { container });
     });
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  // Проверяет перезагрузку данных при изменении props tagsApiUrl
-  test('перезагружает данные при изменении tagsApiUrl', async () => {
-    global.fetch.mockResolvedValue({
-      ok: true,
-      json: async () => ({ results: mockTags }),
-    });
-
-    let container;
-    await act(async () => {
-      const result = render(<TagsOffcanvas show={true} onHide={jest.fn()} tagsApiUrl="/api/tags1/" />);
-      container = result.container;
-    });
-
-    await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith('/api/tags1/');
-    });
-
-    await act(async () => {
-      render(<TagsOffcanvas show={true} onHide={jest.fn()} tagsApiUrl="/api/tags2/" />, { container });
-    });
-
-    await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith('/api/tags2/');
+      expect(galleryService.getTags).toHaveBeenCalledTimes(1);
     });
   });
 });

@@ -1,15 +1,17 @@
 /**
  * Тесты для компонента AlbumList.
  *
- * Проверяет корректность отображения списка альбомов с различными состояниями:
- * загрузка, ошибка, пустое состояние, успешное отображение списка.
- * Тесты используют моки для изоляции компонента от внешних зависимостей.
+ * Проверяет корректность отображения списка альбомов через сервис API
+ * с различными состояниями: загрузка, ошибка, пустое состояние, фильтры
+ * и структура masonry-сетки.
  */
 
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import AlbumList from '@components/Gallery/Album/AlbumList';
+import AlbumList from './AlbumList';
+
+jest.mock('@services');
 
 // Мокировать компонент AlbumCard для изоляции тестов
 jest.mock('./AlbumCard', () => ({
@@ -37,18 +39,22 @@ jest.mock('@components/Alert/AlertList', () => ({
   ),
 }));
 
+// Объект мока создается один раз: стабильный setTotalPages не перезапускает
+// эффект загрузки на каждой перерисовке (как и реальный хук usePagination)
+const mockPaginationState = {
+  currentPage: 1,
+  totalPages: 1,
+  hasNext: false,
+  hasPrevious: false,
+  nextPage: jest.fn(),
+  previousPage: jest.fn(),
+  goToPage: jest.fn(),
+  setTotalPages: jest.fn(),
+};
+
 jest.mock('@hooks/usePagination', () => ({
   __esModule: true,
-  default: () => ({
-    currentPage: 1,
-    totalPages: 1,
-    hasNext: false,
-    hasPrevious: false,
-    nextPage: jest.fn(),
-    previousPage: jest.fn(),
-    goToPage: jest.fn(),
-    setTotalPages: jest.fn(),
-  }),
+  default: () => mockPaginationState,
 }));
 
 jest.mock('@components/Pagination/Pagination', () => ({
@@ -80,33 +86,27 @@ describe('AlbumList', () => {
     },
   ];
 
-  // Настройка мока fetch перед каждым тестом
-  beforeEach(() => {
-    global.fetch = jest.fn(() =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve({ results: [] }),
-      }),
-    );
+  const envelope = (results, extra = {}) => ({
+    count: results.length,
+    total_pages: 1,
+    next: null,
+    previous: null,
+    results,
+    ...extra,
   });
 
-  // Восстановление оригинального fetch после каждого теста
-  afterEach(() => {
-    jest.restoreAllMocks();
-  });
+  let galleryService;
 
-  // Очистить моки перед каждым тестом
   beforeEach(() => {
-    jest.clearAllMocks();
+    galleryService = require('@services').galleryService;
+    galleryService.getAlbums.mockReset();
   });
 
   /**
    * Проверить отображение состояния загрузки.
-   * Когда компонент загружает данные, должен отображаться компонент загрузки.
    */
   test('отображает состояние загрузки', () => {
-    // Мокаем fetch чтобы он не завершался сразу
-    global.fetch.mockImplementation(() => new Promise(() => {}));
+    galleryService.getAlbums.mockImplementationOnce(() => new Promise(() => {}));
 
     render(<AlbumList />);
     // Проверяем видимый текст (не visually-hidden)
@@ -118,32 +118,24 @@ describe('AlbumList', () => {
 
   /**
    * Проверить отображение состояния ошибки.
-   * Когда возникает ошибка загрузки, должен отображаться компонент ошибки.
    */
   test('отображает состояние ошибки', async () => {
-    // Мокаем сетевую ошибку
-    global.fetch.mockRejectedValueOnce(new Error('Network error'));
+    galleryService.getAlbums
+      .mockRejectedValueOnce(new Error('Network error'))
+      .mockResolvedValueOnce(envelope(mockAlbums));
 
     render(<AlbumList />);
 
-    // Ждем завершения асинхронной операции
     await waitFor(() => {
       expect(screen.getByText('Network error')).toBeInTheDocument();
     });
 
-    // Проверить, что кнопка повтора отображается
+    // Проверить, что кнопка повтора отображается и вызывает повторную загрузку
     const retryButton = screen.getByText('Повторить');
     expect(retryButton).toBeInTheDocument();
 
-    // Проверить, что кнопка повтора вызывает повторную загрузку
-    global.fetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ results: mockAlbums }),
-    });
-
     await userEvent.click(retryButton);
 
-    // Ждем завершения повторной загрузки
     await waitFor(() => {
       expect(screen.getByTestId('album-list-container')).toBeInTheDocument();
     });
@@ -151,19 +143,12 @@ describe('AlbumList', () => {
 
   /**
    * Проверить отображение пустого состояния.
-   * Когда API возвращает пустой массив альбомов без ошибок,
-   * должен отображаться компонент пустого состояния.
    */
   test('отображает пустое состояние', async () => {
-    // Настроить мок API для возврата пустого списка
-    global.fetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ results: [] }),
-    });
+    galleryService.getAlbums.mockResolvedValueOnce(envelope([]));
 
     render(<AlbumList />);
 
-    // Ждем завершения загрузки
     await waitFor(() => {
       expect(screen.getByText('Нет доступных альбомов')).toBeInTheDocument();
     });
@@ -171,23 +156,16 @@ describe('AlbumList', () => {
 
   /**
    * Проверить отображение списка альбомов.
-   * Когда API возвращает массив альбомов, должен отображаться список карточек.
    */
   test('отображает список альбомов', async () => {
-    // Настроить мок API для возврата списка альбомов
-    global.fetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ results: mockAlbums }),
-    });
+    galleryService.getAlbums.mockResolvedValueOnce(envelope(mockAlbums));
 
     render(<AlbumList />);
 
-    // Ждем завершения загрузки
     await waitFor(() => {
       expect(screen.getByTestId('album-list-container')).toBeInTheDocument();
     });
 
-    // Проверить, что каждый альбом отображается
     mockAlbums.forEach((album) => {
       expect(screen.getByTestId(`album-card-${album.id}`)).toBeInTheDocument();
       expect(screen.getByText(album.name)).toBeInTheDocument();
@@ -195,85 +173,49 @@ describe('AlbumList', () => {
   });
 
   /**
-   * Проверить передачу кастомного URL в API.
-   * Компонент должен использовать полученный apiUrl для загрузки данных.
+   * Проверить запрос первой страницы без фильтров.
    */
-  test('передает правильный apiUrl в fetch', async () => {
-    const tagApiUrl = '/api/gallery/albums/?tag=nature';
-    global.fetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ results: [] }),
-    });
-
-    render(<AlbumList apiUrl={tagApiUrl} />);
-
-    // Ждем завершения загрузки
-    await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/api/gallery/albums/?tag=nature&page=1'));
-    });
-  });
-
-  /**
-   * Проверить использование дефолтного URL если не передан.
-   * Если apiUrl не передан, должен использоваться URL по умолчанию.
-   */
-  test('использует дефолтный apiUrl если не указан', async () => {
-    global.fetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ results: [] }),
-    });
+  test('запрашивает первую страницу без фильтров', async () => {
+    galleryService.getAlbums.mockResolvedValueOnce(envelope([]));
 
     render(<AlbumList />);
 
-    // Ждем завершения загрузки
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/api/gallery/albums/?page=1'));
+      expect(galleryService.getAlbums).toHaveBeenCalledWith({ page: 1 });
     });
   });
 
   /**
-   * Проверить передачу слага тега в URL фильтрации.
-   * При передаче tagSlug фронтенд должен собрать URL с параметром tags__slug.
+   * Проверить передачу слага тега в параметры запроса.
    */
-  test('передаёт слаг тега в URL фильтрации', async () => {
-    global.fetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ results: [] }),
-    });
+  test('передаёт слаг тега в параметры запроса', async () => {
+    galleryService.getAlbums.mockResolvedValueOnce(envelope([]));
 
     render(<AlbumList tagSlug="example-tag" />);
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('tags__slug=example-tag'));
+      expect(galleryService.getAlbums).toHaveBeenCalledWith({ tags__slug: 'example-tag', page: 1 });
     });
   });
 
   /**
-   * Проверить передачу поискового запроса в URL выборки.
-   * При передаче search фронтенд должен собрать URL с параметром search.
+   * Проверить передачу поискового запроса в параметры выборки.
    */
-  test('передаёт поисковый запрос в URL выборки', async () => {
-    global.fetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ results: [] }),
-    });
+  test('передаёт поисковый запрос в параметры выборки', async () => {
+    galleryService.getAlbums.mockResolvedValueOnce(envelope([]));
 
     render(<AlbumList search="sunset" />);
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('search=sunset'));
+      expect(galleryService.getAlbums).toHaveBeenCalledWith({ search: 'sunset', page: 1 });
     });
   });
 
   /**
    * Проверить сообщение о пустом результате при активном поиске.
-   * Сообщение должно включать поисковый запрос пользователя.
    */
   test('отображает сообщение с запросом при пустом результате поиска', async () => {
-    global.fetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ results: [] }),
-    });
+    galleryService.getAlbums.mockResolvedValueOnce(envelope([]));
 
     render(<AlbumList search="sunset" />);
 
@@ -284,75 +226,36 @@ describe('AlbumList', () => {
 
   /**
    * Проверить правильную структуру masonry-сетки.
-   * Компонент должен использовать контейнер masonry с сайзером и элементами.
    */
   test('использует правильную структуру masonry-сетки', async () => {
-    global.fetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ results: mockAlbums }),
-    });
+    galleryService.getAlbums.mockResolvedValueOnce(envelope(mockAlbums));
 
     const renderResult = render(<AlbumList />);
 
-    // Ждем завершения загрузки
     await waitFor(() => {
       expect(screen.getByTestId('album-list-container')).toBeInTheDocument();
     });
 
-    // Проверить наличие контейнера
     const container = renderResult.container.querySelector('.container');
     expect(container).toBeInTheDocument();
     expect(container).toHaveAttribute('data-testid', 'album-list-container');
 
-    // Проверить наличие masonry-сетки и сайзера колонок
     const grid = renderResult.container.querySelector('.masonry-grid');
     expect(grid).toBeInTheDocument();
     expect(grid.querySelector('.masonry-sizer')).toBeInTheDocument();
 
-    // Проверить, что каждый альбом обернут в элемент сетки
     const items = renderResult.container.querySelectorAll('.masonry-item');
     expect(items).toHaveLength(mockAlbums.length);
   });
 
   /**
-   * Проверить обработку ответа без поля results.
-   * Компонент должен корректно обрабатывать прямой массив альбомов.
+   * Проверить обработку ошибок сервиса.
    */
-  test('обрабатывает результат без results', async () => {
-    // Мокаем ответ без поля results
-    global.fetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockAlbums,
-    });
+  test('обрабатывает ошибку сервиса', async () => {
+    galleryService.getAlbums.mockRejectedValueOnce(new Error('Ошибка загрузки: 500'));
 
     render(<AlbumList />);
 
-    // Ждем завершения асинхронной операции
-    await waitFor(() => {
-      expect(screen.getByTestId('album-list-container')).toBeInTheDocument();
-    });
-
-    // Проверить, что альбомы отображаются
-    mockAlbums.forEach((album) => {
-      expect(screen.getByTestId(`album-card-${album.id}`)).toBeInTheDocument();
-      expect(screen.getByText(album.name)).toBeInTheDocument();
-    });
-  });
-
-  /**
-   * Проверить обработку HTTP ошибок.
-   * При получении ошибочного HTTP статуса должна устанавливаться ошибка.
-   */
-  test('обрабатывает HTTP ошибку', async () => {
-    // Мокаем HTTP ошибку
-    global.fetch.mockResolvedValueOnce({
-      ok: false,
-      status: 500,
-    });
-
-    render(<AlbumList />);
-
-    // Ждем завершения асинхронной операции
     await waitFor(() => {
       expect(screen.getByText('Ошибка загрузки: 500')).toBeInTheDocument();
     });
@@ -360,50 +263,29 @@ describe('AlbumList', () => {
 
   /**
    * Проверить использование total_pages из ответа API.
-   * Компонент должен использовать значение total_pages от сервера, а не вычислять его.
    */
   test('использует total_pages из ответа API', async () => {
-    const mockData = {
-      count: 100,
-      total_pages: 5,
-      results: mockAlbums,
-    };
-    global.fetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockData,
-    });
+    galleryService.getAlbums.mockResolvedValueOnce(envelope(mockAlbums, { count: 100, total_pages: 5 }));
 
     render(<AlbumList />);
 
-    // Ждем завершения загрузки
     await waitFor(() => {
       expect(screen.getByTestId('album-list-container')).toBeInTheDocument();
     });
 
-    // Проверить, что альбомы отображаются
     mockAlbums.forEach((album) => {
       expect(screen.getByTestId(`album-card-${album.id}`)).toBeInTheDocument();
     });
   });
 
   /**
-   * Проверить работу с разным количеством страниц.
-   * Компонент должен корректно работать при разном количестве страниц от сервера.
+   * Проверить работу с одной страницей.
    */
   test('корректно работает с разным количеством страниц', async () => {
-    const mockDataSinglePage = {
-      count: 5,
-      total_pages: 1,
-      results: mockAlbums.slice(0, 1),
-    };
-    global.fetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockDataSinglePage,
-    });
+    galleryService.getAlbums.mockResolvedValueOnce(envelope(mockAlbums.slice(0, 1), { count: 5, total_pages: 1 }));
 
     render(<AlbumList />);
 
-    // Ждем завершения загрузки
     await waitFor(() => {
       expect(screen.getByTestId('album-list-container')).toBeInTheDocument();
     });

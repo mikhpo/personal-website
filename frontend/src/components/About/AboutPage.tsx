@@ -1,15 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import Spinner from '@components/Spinner/Spinner';
 import LoadingError from '@components/Alert/LoadingError';
-import type { components } from '../../types/api-schema';
-
-type AboutData = components['schemas']['About'];
-
-/** Свойства компонента страницы "Обо мне". */
-export interface AboutPageProps {
-  /** Адрес API с содержимым страницы. */
-  apiUrl?: string;
-}
+import { aboutService } from '@services';
 
 /**
  * Компонент страницы "Обо мне".
@@ -17,22 +9,11 @@ export interface AboutPageProps {
  * Загружает содержимое страницы из API и отображает его как HTML.
  * Пустой контент не выводит ничего - на странице остается только заголовок.
  */
-const About = ({ apiUrl = '/api/about/' }: AboutPageProps) => {
+const About = () => {
   // Состояния компонента: content - текст страницы, loading - идет загрузка, error - текст ошибки
   const [content, setContent] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  /** Выполняет запрос к API и возвращает данные ответа. */
-  const fetchRequest = useCallback(async (): Promise<AboutData> => {
-    const response = await fetch(apiUrl);
-
-    if (!response.ok) {
-      throw new Error(`Ошибка загрузки: ${response.status}`);
-    }
-
-    return response.json();
-  }, [apiUrl]);
 
   /** Загружает содержимое страницы при монтировании и по кнопке "Повторить". */
   const load = useCallback(async () => {
@@ -40,14 +21,14 @@ const About = ({ apiUrl = '/api/about/' }: AboutPageProps) => {
     setError(null);
 
     try {
-      const data = await fetchRequest();
+      const data = await aboutService.getAbout();
       setContent(data.content || '');
       setLoading(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
       setLoading(false);
     }
-  }, [fetchRequest]);
+  }, []);
 
   useEffect(() => {
     load();

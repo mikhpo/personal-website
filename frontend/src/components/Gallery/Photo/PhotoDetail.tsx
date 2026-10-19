@@ -16,8 +16,6 @@ export interface PhotoDetailProps {
   isStaff?: boolean;
   /** Размеры превью для вставок в пикселах по наибольшей стороне. */
   embedSizes?: number[];
-  /** Базовый URL API. */
-  apiUrl?: string;
 }
 
 /**
@@ -35,15 +33,8 @@ export interface PhotoDetailProps {
  * Фотография проявляется плавно после загрузки; клик по ней открывает
  * оригинал в новой вкладке.
  */
-const PhotoDetail = ({
-  photoId,
-  previousPhotoId,
-  nextPhotoId,
-  isStaff = false,
-  embedSizes = [],
-  apiUrl = '/api/gallery/photos/',
-}: PhotoDetailProps) => {
-  const { photo, loading, error } = usePhotoData(photoId, apiUrl);
+const PhotoDetail = ({ photoId, previousPhotoId, nextPhotoId, isStaff = false, embedSizes = [] }: PhotoDetailProps) => {
+  const { photo, loading, error } = usePhotoData(photoId);
 
   const [showAboutModal, setShowAboutModal] = useState(false);
   const [showEmbedModal, setShowEmbedModal] = useState(false);

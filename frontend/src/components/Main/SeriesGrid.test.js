@@ -11,6 +11,8 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import SeriesGrid from '@components/Main/SeriesGrid';
 
+jest.mock('@services');
+
 // Мокировать компонент SeriesCard для изоляции тестов
 jest.mock('@components/Main/SeriesCard', () => ({
   __esModule: true,
@@ -62,24 +64,19 @@ describe('SeriesGrid', () => {
     },
   ];
 
-  // Настройка мока fetch перед каждым тестом
-  beforeEach(() => {
-    global.fetch = jest.fn(() =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve({ results: [] }),
-      }),
-    );
+  const envelope = (results) => ({
+    count: results.length,
+    total_pages: 1,
+    next: null,
+    previous: null,
+    results,
   });
 
-  // Восстановление оригинального fetch после каждого теста
-  afterEach(() => {
-    jest.restoreAllMocks();
-  });
+  let blogService;
 
-  // Очистить моки перед каждым тестом
   beforeEach(() => {
-    jest.clearAllMocks();
+    blogService = require('@services').blogService;
+    blogService.getSeries.mockReset();
   });
 
   /**
@@ -87,8 +84,7 @@ describe('SeriesGrid', () => {
    * Когда компонент загружает данные, должен отображаться компонент загрузки.
    */
   test('отображает состояние загрузки', () => {
-    // Мокаем fetch чтобы он не завершался сразу
-    global.fetch.mockImplementation(() => new Promise(() => {}));
+    blogService.getSeries.mockImplementationOnce(() => new Promise(() => {}));
 
     render(<SeriesGrid />);
     // Проверяем видимый текст (не visually-hidden)
@@ -103,8 +99,7 @@ describe('SeriesGrid', () => {
    * Когда возникает ошибка загрузки, должен отображаться компонент ошибки.
    */
   test('отображает состояние ошибки', async () => {
-    // Мокаем сетевую ошибку
-    global.fetch.mockRejectedValueOnce(new Error('Network error'));
+    blogService.getSeries.mockRejectedValueOnce(new Error('Network error')).mockResolvedValueOnce(envelope(mockSeries));
 
     render(<SeriesGrid />);
 
@@ -113,15 +108,9 @@ describe('SeriesGrid', () => {
       expect(screen.getByText('Network error')).toBeInTheDocument();
     });
 
-    // Проверить, что кнопка повтора отображается
+    // Проверить, что кнопка повтора отображается и вызывает повторную загрузку
     const retryButton = screen.getByText('Повторить');
     expect(retryButton).toBeInTheDocument();
-
-    // Проверить, что кнопка повтора вызывает повторную загрузку
-    global.fetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ results: mockSeries }),
-    });
 
     userEvent.click(retryButton);
 
@@ -133,14 +122,10 @@ describe('SeriesGrid', () => {
 
   /**
    * Проверить отображение списка серий.
-   * Когда API возвращает массив серий, должен отображаться список карточек.
+   * Когда API возвращает список серий, должен отображаться список карточек.
    */
   test('отображает список серий', async () => {
-    // Настроить мок API для возврата списка серий
-    global.fetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ results: mockSeries }),
-    });
+    blogService.getSeries.mockResolvedValueOnce(envelope(mockSeries));
 
     render(<SeriesGrid />);
 
@@ -164,10 +149,7 @@ describe('SeriesGrid', () => {
    * Компонент должен использовать правильные CSS классы для сетки Bootstrap.
    */
   test('использует правильную структуру сетки Bootstrap', async () => {
-    global.fetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ results: mockSeries.slice(0, 2) }),
-    });
+    blogService.getSeries.mockResolvedValueOnce(envelope(mockSeries.slice(0, 2)));
 
     const renderResult = render(<SeriesGrid />);
 
@@ -193,42 +175,13 @@ describe('SeriesGrid', () => {
   });
 
   /**
-   * Проверить обработку ответа без поля results.
-   * Компонент должен корректно обрабатывать прямой массив серий.
+   * Проверить обработку ошибок сервиса.
    */
-  test('обрабатывает результат без results', async () => {
-    // Мокаем ответ без поля results
-    global.fetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockSeries,
-    });
+  test('обрабатывает ошибку сервиса', async () => {
+    blogService.getSeries.mockRejectedValueOnce(new Error('Ошибка загрузки: 500'));
 
     render(<SeriesGrid />);
 
-    // Ждем завершения асинхронной операции
-    await waitFor(() => {
-      expect(screen.getByTestId('series-grid-container')).toBeInTheDocument();
-    });
-
-    // Проверить, что серии с изображениями отображаются
-    expect(screen.getByTestId('series-card-1')).toBeInTheDocument();
-    expect(screen.queryByTestId('series-card-3')).not.toBeInTheDocument();
-  });
-
-  /**
-   * Проверить обработку HTTP ошибок.
-   * При получении ошибочного HTTP статуса должна устанавливаться ошибка.
-   */
-  test('обрабатывает HTTP ошибку', async () => {
-    // Мокаем HTTP ошибку
-    global.fetch.mockResolvedValueOnce({
-      ok: false,
-      status: 500,
-    });
-
-    render(<SeriesGrid />);
-
-    // Ждем завершения асинхронной операции
     await waitFor(() => {
       expect(screen.getByText('Ошибка загрузки: 500')).toBeInTheDocument();
     });
@@ -238,10 +191,7 @@ describe('SeriesGrid', () => {
    * Проверить отображение заголовка "Или серию".
    */
   test('отображает заголовок "Или серию"', async () => {
-    global.fetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ results: mockSeries.slice(0, 1) }),
-    });
+    blogService.getSeries.mockResolvedValueOnce(envelope(mockSeries.slice(0, 1)));
 
     render(<SeriesGrid />);
 

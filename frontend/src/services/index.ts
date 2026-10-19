@@ -9,6 +9,7 @@
 
 export { blogService } from './blogService';
 export { galleryService } from './galleryService';
+export { aboutService } from './aboutService';
 export { navigateTo } from './navigation';
 export { default as api, ApiError } from './api';
 export type { RequestOptions } from './api';

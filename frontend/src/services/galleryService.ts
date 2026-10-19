@@ -6,8 +6,8 @@
  * - Загрузка фотографий
  * - Работа с тегами
  *
- * Типы ответов и параметров берутся из сгенерированной OpenAPI-схемы.
- * Тип ответа списков до нормализации - объединение конверта и массива.
+ * Типы ответов и параметров берутся из сгенерированной OpenAPI-схемы;
+ * списочные методы возвращают конверт пагинации.
  */
 
 import type { components, operations } from '../types/api-schema';
@@ -23,9 +23,6 @@ type UploadResponse = components['schemas']['UploadResponse'];
 
 type AlbumListQuery = operations['gallery_albums_list']['parameters']['query'];
 type PhotoListQuery = operations['gallery_photos_list']['parameters']['query'];
-
-/** До нормализации списки читаются как конверт или массив - сводит читателей фаза 6. */
-type ListResponse<T> = Paginated<T> | T[];
 
 /** Прогресс загрузки одного файла для колбэка onProgress. */
 export interface UploadProgressState {
@@ -51,7 +48,7 @@ export const galleryService = {
    * @example
    * const albums = await galleryService.getAlbums();
    */
-  async getAlbums(params: AlbumListQuery = {}): Promise<ListResponse<AlbumList>> {
+  async getAlbums(params: AlbumListQuery = {}): Promise<Paginated<AlbumList>> {
     return api.get(buildApiUrl(`${BASE_URL}/albums/`, params));
   },
 
@@ -61,7 +58,7 @@ export const galleryService = {
    * @example
    * const album = await galleryService.getAlbum(1);
    */
-  async getAlbum(id: number): Promise<AlbumDetail> {
+  async getAlbum(id: number | string): Promise<AlbumDetail> {
     return api.get(`${BASE_URL}/albums/${id}/`);
   },
 
@@ -74,7 +71,7 @@ export const galleryService = {
    * @example
    * const photos = await galleryService.getPhotos({ album: 1 });
    */
-  async getPhotos(params: PhotoListQuery = {}): Promise<ListResponse<Photo>> {
+  async getPhotos(params: PhotoListQuery = {}): Promise<Paginated<Photo>> {
     return api.get(buildApiUrl(`${BASE_URL}/photos/`, params));
   },
 
@@ -84,7 +81,7 @@ export const galleryService = {
    * @example
    * const photo = await galleryService.getPhoto(1);
    */
-  async getPhoto(id: number): Promise<Photo> {
+  async getPhoto(id: number | string): Promise<Photo> {
     return api.get(`${BASE_URL}/photos/${id}/`);
   },
 
@@ -134,7 +131,7 @@ export const galleryService = {
    * @example
    * const tags = await galleryService.getTags();
    */
-  async getTags(): Promise<ListResponse<Tag>> {
+  async getTags(): Promise<Paginated<Tag>> {
     return api.get(`${BASE_URL}/tags/`);
   },
 

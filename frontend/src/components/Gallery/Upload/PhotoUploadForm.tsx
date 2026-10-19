@@ -6,6 +6,7 @@ import FileDropzone from '@components/Gallery/Upload/FileDropzone';
 import UploadProgress, { type UploadStatus } from '@components/Gallery/Upload/UploadProgress';
 import SpinnerComponent from '@components/Spinner/Spinner';
 import { galleryService } from '@services';
+import { parseListResponse } from '@utils/pagination';
 import type { components } from '../../../types/api-schema';
 
 type AlbumList = components['schemas']['AlbumList'];
@@ -41,10 +42,8 @@ const PhotoUploadForm = () => {
       galleryService
         .getAlbums()
         .then((data) => {
-          // До нормализации (фаза 6) конверт читается как объединение: массив или конверт
-          const raw = Array.isArray(data) ? data : data.results || data;
-          const albumsList = Array.isArray(raw) ? raw : [];
-          setAlbums(albumsList);
+          const { items } = parseListResponse(data);
+          setAlbums(items);
           setLoadingAlbums(false);
         })
         .catch((err: Error) => {
@@ -126,9 +125,8 @@ const PhotoUploadForm = () => {
     galleryService
       .getAlbums()
       .then((data) => {
-        const raw = Array.isArray(data) ? data : data.results || data;
-        const albumsList = Array.isArray(raw) ? raw : [];
-        setAlbums(albumsList);
+        const { items } = parseListResponse(data);
+        setAlbums(items);
         setLoadingAlbums(false);
       })
       .catch((err: Error) => {

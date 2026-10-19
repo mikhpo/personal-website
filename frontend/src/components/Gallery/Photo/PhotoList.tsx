@@ -1,21 +1,16 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Container, Button } from 'react-bootstrap';
 import PhotoCard from '@components/Gallery/Photo/PhotoCard';
 import SpinnerComponent from '@components/Spinner/Spinner';
 import AlertList from '@components/Alert/AlertList';
 import Pagination from '@components/Pagination/Pagination';
 import useMasonry from '@hooks/useMasonry';
-import { buildApiUrl } from '@utils/apiUrl';
+import { galleryService, api } from '@services';
+import { parseListResponse } from '@utils/pagination';
 import type { components } from '../../../types/api-schema';
 import type { Paginated } from '../../../types/pagination';
 
 type Photo = components['schemas']['Photo'];
-
-/** Ответ endpoint альбома: список фотографий без конверта пагинации. */
-type AlbumPhotosResponse = Pick<components['schemas']['AlbumDetail'], 'photos'>;
-
-/** Списочный ответ зависит от apiUrl: конверт, массив или ответ endpoint альбома. */
-type PhotosResponse = Paginated<Photo> | Photo[] | AlbumPhotosResponse;
 
 /** Состояние данных пагинации списка фотографий. */
 interface PaginationState {
@@ -26,56 +21,42 @@ interface PaginationState {
   totalPages: number;
 }
 
-/**
- * Разбирает списочный ответ до фотографий и конверта пагинации.
- *
- * До нормализации (фаза 6) сохраняет действующую толерантность читателя:
- * ответ endpoint альбома (photos), конверт пагинации (results) и голый массив.
- */
-const readPhotosResponse = (data: PhotosResponse): { photos: Photo[]; envelope: Paginated<Photo> | null } => {
-  if (Array.isArray(data)) {
-    return { photos: data, envelope: null };
-  }
-  if ('photos' in data) {
-    return { photos: Array.isArray(data.photos) ? data.photos : [], envelope: null };
-  }
-  return { photos: Array.isArray(data.results) ? data.results : [], envelope: data };
-};
-
-/** Вычисляет номер страницы из параметра page ссылки пагинации. */
-const currentPageFromUrl = (pageUrl: string): number => {
-  const url = new URL(pageUrl);
-  return parseInt(url.searchParams.get('page') || '1', 10);
-};
-
 /** Свойства компонента списка фотографий. */
 export interface PhotoListProps {
-  /** Базовый URL API; на странице альбома переопределяется endpoint альбома. */
-  apiUrl?: string;
+  /** ID альбома: включает режим страницы альбома без пагинации. */
+  albumId?: number | null;
   /** Слаг тега для фильтрации (tags__slug); URL фильтра строится во фронтенде. */
   tagSlug?: string;
   /** Поисковый запрос для фильтрации (search). */
   search?: string;
 }
 
+const EMPTY_PAGINATION: PaginationState = {
+  count: 0,
+  next: null,
+  previous: null,
+  currentPage: 1,
+  totalPages: 0,
+};
+
 /**
  * Компонент списка фотографий галереи.
  *
- * Загружает и отображает список фотографий из API галереи.
- * Обрабатывает состояния загрузки, ошибки и пустого списка.
- * Предоставляет возможность повторной попытки загрузки при ошибке.
- * Поддерживает пагинацию для навигации по большому количеству фотографий.
+ * Загружает и отображает список фотографий через сервис галереи.
+ * На странице альбома (проп albumId) фотографии берутся из детального
+ * ответа альбома целиком, без пагинации; в остальных режимах список
+ * построен по страницам.
  *
  * @example
  * <PhotoList />
  *
  * @example
- * <PhotoList apiUrl="/api/gallery/album/1/photos/" />
+ * <PhotoList albumId={1} />
  *
  * @example
  * <PhotoList search="закат" />
  */
-const PhotoList = ({ apiUrl = '/api/gallery/photos/', tagSlug, search }: PhotoListProps) => {
+const PhotoList = ({ albumId = null, tagSlug, search }: PhotoListProps) => {
   /** Состояние фотографий. */
   const [photos, setPhotos] = useState<Photo[]>([]);
 
@@ -86,65 +67,61 @@ const PhotoList = ({ apiUrl = '/api/gallery/photos/', tagSlug, search }: PhotoLi
   const [error, setError] = useState<string | null>(null);
 
   /** Состояние данных пагинации. */
-  const [pagination, setPagination] = useState<PaginationState>({
-    count: 0,
-    next: null,
-    previous: null,
-    currentPage: 1,
-    totalPages: 0,
-  });
+  const [pagination, setPagination] = useState<PaginationState>(EMPTY_PAGINATION);
 
-  /** Загружает данные по указанному URL. */
-  const fetchUrl = async (url: string): Promise<PhotosResponse> => {
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`Ошибка загрузки: ${response.status}`);
-    }
-    return await response.json();
-  };
+  /**
+   * Загружает первую страницу списка или полный список альбома.
+   */
+  const loadPhotos = useCallback(async () => {
+    setLoading(true);
+    setError(null);
 
-  // Эффект для загрузки фотографий при монтировании компонента или изменении apiUrl
-  useEffect(() => {
-    /** Загружает фотографии из API. */
-    const loadPhotos = async () => {
-      setLoading(true);
-      setError(null);
-
-      try {
-        const data = await fetchUrl(buildApiUrl(apiUrl, { tags__slug: tagSlug, search }));
-        const { photos: photosList, envelope } = readPhotosResponse(data);
-        setPhotos(photosList);
-
-        // Обновить данные пагинации
-        const totalPages = envelope && envelope.count ? Math.ceil(envelope.count / photosList.length) : 0;
-        setPagination({
-          count: envelope?.count || 0,
-          next: envelope?.next ?? null,
-          previous: envelope?.previous ?? null,
-          currentPage: 1,
-          totalPages: totalPages,
+    try {
+      if (albumId !== null) {
+        const album = await galleryService.getAlbum(albumId);
+        // Фотографии альбома приходят готовым массивом без конверта пагинации
+        const parsed = parseListResponse(album.photos);
+        setPhotos(parsed.items);
+        setPagination({ ...EMPTY_PAGINATION, count: parsed.count });
+      } else {
+        const data = await galleryService.getPhotos({
+          ...(tagSlug ? { tags__slug: tagSlug } : {}),
+          ...(search ? { search } : {}),
+          page: 1,
         });
-      } catch (err) {
-        setError(err instanceof Error ? err.message : String(err));
-      } finally {
-        setLoading(false);
+        const parsed = parseListResponse(data);
+        setPhotos(parsed.items);
+        const totalPages = parsed.count ? Math.ceil(parsed.count / (parsed.items.length || 1)) : 0;
+        setPagination({
+          count: parsed.count,
+          next: parsed.next,
+          previous: parsed.previous,
+          currentPage: 1,
+          totalPages,
+        });
       }
-    };
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setLoading(false);
+    }
+  }, [albumId, tagSlug, search]);
 
+  // Эффект для загрузки фотографий при монтировании и изменении источника данных
+  useEffect(() => {
     loadPhotos();
-  }, [apiUrl, tagSlug, search]);
+  }, [loadPhotos]);
 
-  /** Обновляет состояние пагинации и список по ответу страницы. */
-  const applyPageResponse = (data: PhotosResponse, currentPage: number, totalPages: number) => {
-    const { photos: photosList, envelope } = readPhotosResponse(data);
-    setPhotos(photosList);
-
+  /** Применяет ответ страницы к состоянию компонента. */
+  const applyPage = (data: Paginated<Photo>, currentPage: number) => {
+    const parsed = parseListResponse(data);
+    setPhotos(parsed.items);
     setPagination({
-      count: envelope?.count || 0,
-      next: envelope?.next ?? null,
-      previous: envelope?.previous ?? null,
+      count: parsed.count,
+      next: parsed.next,
+      previous: parsed.previous,
       currentPage,
-      totalPages,
+      totalPages: pagination.totalPages,
     });
   };
 
@@ -158,13 +135,32 @@ const PhotoList = ({ apiUrl = '/api/gallery/photos/', tagSlug, search }: PhotoLi
     setError(null);
 
     try {
-      // Построить URL с параметром страницы
-      const url = buildApiUrl(apiUrl, { tags__slug: tagSlug, search, page });
-
-      const data = await fetchUrl(url);
-      applyPageResponse(data, page, pagination.totalPages);
+      const data = await galleryService.getPhotos({
+        ...(tagSlug ? { tags__slug: tagSlug } : {}),
+        ...(search ? { search } : {}),
+        page,
+      });
+      applyPage(data, page);
 
       // Прокрутить страницу вверх
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /** Загружает страницу по ссылке пагинации (next или previous). */
+  const loadByLink = async (pageUrl: string) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const data = await api.get<Paginated<Photo>>(pageUrl);
+      const page = currentPageFromUrl(pageUrl);
+      applyPage(data, page);
+
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -176,72 +172,15 @@ const PhotoList = ({ apiUrl = '/api/gallery/photos/', tagSlug, search }: PhotoLi
   /** Обработчик перехода на следующую страницу. */
   const handleNext = async () => {
     if (pagination.next) {
-      setLoading(true);
-      setError(null);
-
-      try {
-        const data = await fetchUrl(pagination.next);
-        applyPageResponse(data, currentPageFromUrl(pagination.next), pagination.totalPages);
-
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      } catch (err) {
-        setError(err instanceof Error ? err.message : String(err));
-      } finally {
-        setLoading(false);
-      }
+      await loadByLink(pagination.next);
     }
   };
 
   /** Обработчик перехода на предыдущую страницу. */
   const handlePrevious = async () => {
     if (pagination.previous) {
-      setLoading(true);
-      setError(null);
-
-      try {
-        const data = await fetchUrl(pagination.previous);
-        applyPageResponse(data, currentPageFromUrl(pagination.previous), pagination.totalPages);
-
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      } catch (err) {
-        setError(err instanceof Error ? err.message : String(err));
-      } finally {
-        setLoading(false);
-      }
+      await loadByLink(pagination.previous);
     }
-  };
-
-  /**
-   * Повторная загрузка первой страницы: сбрасывает состояние ошибки
-   * и повторно выполняет запрос к API.
-   */
-  const handleRetry = () => {
-    /** Повторно загружает фотографии из API. */
-    const retryLoadPhotos = async () => {
-      setLoading(true);
-      setError(null);
-
-      try {
-        const data = await fetchUrl(buildApiUrl(apiUrl, { tags__slug: tagSlug, search }));
-        const { photos: photosList, envelope } = readPhotosResponse(data);
-        setPhotos(photosList);
-
-        const totalPages = envelope && envelope.count ? Math.ceil(envelope.count / photosList.length) : 0;
-        setPagination({
-          count: envelope?.count || 0,
-          next: envelope?.next ?? null,
-          previous: envelope?.previous ?? null,
-          currentPage: 1,
-          totalPages: totalPages,
-        });
-      } catch (err) {
-        setError(err instanceof Error ? err.message : String(err));
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    retryLoadPhotos();
   };
 
   // Хук вызывается безусловно до ранних выходов; без отрисованной сетки он бездействует
@@ -261,7 +200,7 @@ const PhotoList = ({ apiUrl = '/api/gallery/photos/', tagSlug, search }: PhotoLi
             message: error,
             level: 'error',
             actions: (
-              <Button variant="outline-primary" size="sm" onClick={handleRetry}>
+              <Button variant="outline-primary" size="sm" onClick={() => loadPhotos()}>
                 Повторить
               </Button>
             ),
@@ -304,6 +243,12 @@ const PhotoList = ({ apiUrl = '/api/gallery/photos/', tagSlug, search }: PhotoLi
       />
     </Container>
   );
+};
+
+/** Вычисляет номер страницы из параметра page ссылки пагинации. */
+const currentPageFromUrl = (pageUrl: string): number => {
+  const url = new URL(pageUrl);
+  return parseInt(url.searchParams.get('page') || '1', 10);
 };
 
 export default PhotoList;

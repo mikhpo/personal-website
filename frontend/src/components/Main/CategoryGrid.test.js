@@ -11,6 +11,8 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import CategoryGrid from '@components/Main/CategoryGrid';
 
+jest.mock('@services');
+
 // Мокировать компонент CategoryCard для изоляции тестов
 jest.mock('@components/Main/CategoryCard', () => ({
   __esModule: true,
@@ -62,24 +64,19 @@ describe('CategoryGrid', () => {
     },
   ];
 
-  // Настройка мока fetch перед каждым тестом
-  beforeEach(() => {
-    global.fetch = jest.fn(() =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve({ results: [] }),
-      }),
-    );
+  const envelope = (results) => ({
+    count: results.length,
+    total_pages: 1,
+    next: null,
+    previous: null,
+    results,
   });
 
-  // Восстановление оригинального fetch после каждого теста
-  afterEach(() => {
-    jest.restoreAllMocks();
-  });
+  let blogService;
 
-  // Очистить моки перед каждым тестом
   beforeEach(() => {
-    jest.clearAllMocks();
+    blogService = require('@services').blogService;
+    blogService.getCategories.mockReset();
   });
 
   /**
@@ -87,8 +84,7 @@ describe('CategoryGrid', () => {
    * Когда компонент загружает данные, должен отображаться компонент загрузки.
    */
   test('отображает состояние загрузки', () => {
-    // Мокаем fetch чтобы он не завершался сразу
-    global.fetch.mockImplementation(() => new Promise(() => {}));
+    blogService.getCategories.mockImplementationOnce(() => new Promise(() => {}));
 
     render(<CategoryGrid />);
     // Проверяем видимый текст (не visually-hidden)
@@ -103,8 +99,9 @@ describe('CategoryGrid', () => {
    * Когда возникает ошибка загрузки, должен отображаться компонент ошибки.
    */
   test('отображает состояние ошибки', async () => {
-    // Мокаем сетевую ошибку
-    global.fetch.mockRejectedValueOnce(new Error('Network error'));
+    blogService.getCategories
+      .mockRejectedValueOnce(new Error('Network error'))
+      .mockResolvedValueOnce(envelope(mockCategories));
 
     render(<CategoryGrid />);
 
@@ -113,15 +110,9 @@ describe('CategoryGrid', () => {
       expect(screen.getByText('Network error')).toBeInTheDocument();
     });
 
-    // Проверить, что кнопка повтора отображается
+    // Проверить, что кнопка повтора отображается и вызывает повторную загрузку
     const retryButton = screen.getByText('Повторить');
     expect(retryButton).toBeInTheDocument();
-
-    // Проверить, что кнопка повтора вызывает повторную загрузку
-    global.fetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ results: mockCategories }),
-    });
 
     userEvent.click(retryButton);
 
@@ -133,19 +124,14 @@ describe('CategoryGrid', () => {
 
   /**
    * Проверить отображение пустого состояния.
-   * Когда API возвращает пустой массив категорий без ошибок,
+   * Когда API возвращает пустой список категорий без ошибок,
    * должен отображаться компонент пустого состояния.
    */
   test('отображает пустое состояние', async () => {
-    // Настроить мок API для возврата пустого списка
-    global.fetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ results: [] }),
-    });
+    blogService.getCategories.mockResolvedValueOnce(envelope([]));
 
     render(<CategoryGrid />);
 
-    // Ждем завершения загрузки
     await waitFor(() => {
       expect(screen.getByText('Нет доступных категорий')).toBeInTheDocument();
     });
@@ -153,18 +139,13 @@ describe('CategoryGrid', () => {
 
   /**
    * Проверить отображение списка категорий.
-   * Когда API возвращает массив категорий, должен отображаться список карточек.
+   * Когда API возвращает список категорий, должен отображаться список карточек.
    */
   test('отображает список категорий', async () => {
-    // Настроить мок API для возврата списка категорий
-    global.fetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ results: mockCategories }),
-    });
+    blogService.getCategories.mockResolvedValueOnce(envelope(mockCategories));
 
     render(<CategoryGrid />);
 
-    // Ждем завершения загрузки
     await waitFor(() => {
       expect(screen.getByTestId('category-grid-container')).toBeInTheDocument();
     });
@@ -183,14 +164,10 @@ describe('CategoryGrid', () => {
    * Проверить отображение заголовка "Выберите категорию".
    */
   test('отображает заголовок "Выберите категорию"', async () => {
-    global.fetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ results: mockCategories.slice(0, 1) }),
-    });
+    blogService.getCategories.mockResolvedValueOnce(envelope(mockCategories.slice(0, 1)));
 
     render(<CategoryGrid />);
 
-    // Ждем завершения загрузки
     await waitFor(() => {
       expect(screen.getByText('Выберите категорию')).toBeInTheDocument();
     });

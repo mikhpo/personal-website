@@ -231,9 +231,6 @@ class TestPhotoListView(TestCase):
         with self.subTest("Страница содержит React компонент PhotoList"):
             self.assertContains(response, "Gallery/PhotoList")
 
-        with self.subTest("React компонент использует правильный API endpoint"):
-            self.assertContains(response, "/api/gallery/photos/")
-
         with self.subTest("Представление содержит полный набор тэгов галереи в контексте"):
             context = response.context
             tags = Tag.objects.all()
@@ -603,9 +600,6 @@ class TestAlbumListView(TestCase):
 
         with self.subTest("Страница содержит React компонент AlbumList"):
             self.assertContains(response, "Gallery/AlbumList")
-
-        with self.subTest("React компонент использует правильный API endpoint"):
-            self.assertContains(response, "/api/gallery/albums/")
 
         with self.subTest("Представление содержит полный набор тэгов галереи в контексте"):
             context = response.context

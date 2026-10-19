@@ -9,6 +9,8 @@ import React from 'react';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import ArticleDetail from './ArticleDetail';
 
+jest.mock('@services');
+
 // Мок для компонента CommentList
 jest.mock('@components/Blog/Comment/CommentList', () => {
   return function MockCommentList({ comments }) {
@@ -77,8 +79,11 @@ describe('ArticleDetail', () => {
     comments: [{ id: 1, author_username: 'user1', content: 'Отлично!', posted: '01 янв. 2024 г.' }],
   };
 
+  let blogService;
+
   beforeEach(() => {
-    global.fetch = jest.fn();
+    blogService = require('@services').blogService;
+    blogService.getArticle.mockReset();
   });
 
   afterEach(() => {
@@ -90,7 +95,7 @@ describe('ArticleDetail', () => {
    * Компонент должен показывать спиннер до получения данных от API.
    */
   test('отображает индикатор загрузки при монтировании', () => {
-    global.fetch.mockImplementation(() => new Promise(() => {}));
+    blogService.getArticle.mockImplementation(() => new Promise(() => {}));
     render(<ArticleDetail {...mockProps} />);
     expect(screen.getByTestId('spinner')).toBeInTheDocument();
     expect(screen.getByText('Загрузка статьи...')).toBeInTheDocument();
@@ -101,10 +106,7 @@ describe('ArticleDetail', () => {
    * Заголовок должен корректно отображаться после получения данных.
    */
   test('отображает заголовок статьи', async () => {
-    global.fetch.mockResolvedValue({
-      ok: true,
-      json: async () => mockArticle,
-    });
+    blogService.getArticle.mockResolvedValue(mockArticle);
 
     render(<ArticleDetail {...mockProps} />);
 
@@ -118,10 +120,7 @@ describe('ArticleDetail', () => {
    * HTML-контент должен корректно рендериться через dangerouslySetInnerHTML.
    */
   test('отображает контент статьи с HTML', async () => {
-    global.fetch.mockResolvedValue({
-      ok: true,
-      json: async () => mockArticle,
-    });
+    blogService.getArticle.mockResolvedValue(mockArticle);
 
     render(<ArticleDetail {...mockProps} />);
 
@@ -135,10 +134,7 @@ describe('ArticleDetail', () => {
    * Дата публикации должна отображаться в карточке статьи.
    */
   test('отображает дату публикации', async () => {
-    global.fetch.mockResolvedValue({
-      ok: true,
-      json: async () => mockArticle,
-    });
+    blogService.getArticle.mockResolvedValue(mockArticle);
 
     render(<ArticleDetail {...mockProps} />);
 
@@ -152,10 +148,7 @@ describe('ArticleDetail', () => {
    * Дата обновления должна отображаться в карточке статьи.
    */
   test('отображает дату обновления', async () => {
-    global.fetch.mockResolvedValue({
-      ok: true,
-      json: async () => mockArticle,
-    });
+    blogService.getArticle.mockResolvedValue(mockArticle);
 
     render(<ArticleDetail {...mockProps} />);
 
@@ -169,10 +162,7 @@ describe('ArticleDetail', () => {
    * Форма должна быть доступна для авторизованных пользователей.
    */
   test('отображает форму комментариев', async () => {
-    global.fetch.mockResolvedValue({
-      ok: true,
-      json: async () => mockArticle,
-    });
+    blogService.getArticle.mockResolvedValue(mockArticle);
 
     render(<ArticleDetail {...mockProps} />);
 
@@ -186,10 +176,7 @@ describe('ArticleDetail', () => {
    * ID статьи должен передаваться для создания комментария.
    */
   test('передает articleId в CommentForm', async () => {
-    global.fetch.mockResolvedValue({
-      ok: true,
-      json: async () => mockArticle,
-    });
+    blogService.getArticle.mockResolvedValue(mockArticle);
 
     render(<ArticleDetail {...mockProps} />);
 
@@ -203,10 +190,7 @@ describe('ArticleDetail', () => {
    * Статус авторизации должен передаваться для отображения формы.
    */
   test('передает isAuthenticated в CommentForm', async () => {
-    global.fetch.mockResolvedValue({
-      ok: true,
-      json: async () => mockArticle,
-    });
+    blogService.getArticle.mockResolvedValue(mockArticle);
 
     render(<ArticleDetail {...mockProps} />);
 
@@ -220,10 +204,7 @@ describe('ArticleDetail', () => {
    * Комментарии должны отображаться после загрузки статьи.
    */
   test('отображает список комментариев', async () => {
-    global.fetch.mockResolvedValue({
-      ok: true,
-      json: async () => mockArticle,
-    });
+    blogService.getArticle.mockResolvedValue(mockArticle);
 
     render(<ArticleDetail {...mockProps} />);
 
@@ -242,10 +223,7 @@ describe('ArticleDetail', () => {
       comments: [],
     };
 
-    global.fetch.mockResolvedValue({
-      ok: true,
-      json: async () => articleWithoutComments,
-    });
+    blogService.getArticle.mockResolvedValue(articleWithoutComments);
 
     render(<ArticleDetail {...mockProps} />);
 
@@ -259,7 +237,7 @@ describe('ArticleDetail', () => {
    * Компонент должен показывать сообщение об ошибке.
    */
   test('отображает ошибку при неудачной загрузке', async () => {
-    global.fetch.mockRejectedValue(new Error('Статья не найдена'));
+    blogService.getArticle.mockRejectedValue(new Error('Статья не найдена'));
 
     render(<ArticleDetail {...mockProps} />);
 
@@ -275,7 +253,7 @@ describe('ArticleDetail', () => {
    * Пользователь должен иметь возможность повторить запрос.
    */
   test('отображает кнопку "Повторить" при ошибке', async () => {
-    global.fetch.mockRejectedValue(new Error('Статья не найдена'));
+    blogService.getArticle.mockRejectedValue(new Error('Статья не найдена'));
 
     render(<ArticleDetail {...mockProps} />);
 
@@ -289,10 +267,7 @@ describe('ArticleDetail', () => {
    * Компонент должен повторять запрос при клике на кнопку.
    */
   test('повторная попытка загрузки при нажатии кнопки "Повторить"', async () => {
-    global.fetch.mockRejectedValueOnce(new Error('Статья не найдена')).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockArticle,
-    });
+    blogService.getArticle.mockRejectedValueOnce(new Error('Статья не найдена')).mockResolvedValueOnce(mockArticle);
 
     render(<ArticleDetail {...mockProps} />);
 
@@ -312,10 +287,7 @@ describe('ArticleDetail', () => {
    * Для неавторизованных пользователей должна отображаться ссылка входа.
    */
   test('передает isAuthenticated=false в CommentForm', async () => {
-    global.fetch.mockResolvedValue({
-      ok: true,
-      json: async () => mockArticle,
-    });
+    blogService.getArticle.mockResolvedValue(mockArticle);
 
     render(<ArticleDetail {...mockProps} isAuthenticated={false} loginUrl="/login/" />);
 
@@ -329,15 +301,12 @@ describe('ArticleDetail', () => {
    * Компонент должен использовать articleId для формирования URL API.
    */
   test('использует правильный URL для загрузки статьи', async () => {
-    global.fetch.mockResolvedValue({
-      ok: true,
-      json: async () => mockArticle,
-    });
+    blogService.getArticle.mockResolvedValue(mockArticle);
 
     render(<ArticleDetail articleId={5} isAuthenticated={true} loginUrl="/login/" />);
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith('/api/blog/articles/5/');
+      expect(blogService.getArticle).toHaveBeenCalledWith(5);
     });
   });
 
@@ -346,10 +315,7 @@ describe('ArticleDetail', () => {
      * Проверяет кнопку редактирования для staff.
      */
     test('показывает кнопку редактирования', async () => {
-      global.fetch.mockResolvedValue({
-        ok: true,
-        json: async () => ({ ...mockArticle, public: false, url: '/blog/article/test-slug/' }),
-      });
+      blogService.getArticle.mockResolvedValue({ ...mockArticle, public: false, url: '/blog/article/test-slug/' });
 
       render(<ArticleDetail {...mockProps} isStaff={true} />);
 
@@ -364,10 +330,7 @@ describe('ArticleDetail', () => {
      * Проверяет скрытие кнопки редактирования для обычного пользователя.
      */
     test('не показывает кнопку редактирования обычному пользователю', async () => {
-      global.fetch.mockResolvedValue({
-        ok: true,
-        json: async () => ({ ...mockArticle, public: false, url: '/blog/article/test-slug/' }),
-      });
+      blogService.getArticle.mockResolvedValue({ ...mockArticle, public: false, url: '/blog/article/test-slug/' });
 
       render(<ArticleDetail {...mockProps} />);
 

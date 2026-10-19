@@ -7,8 +7,8 @@
  * - Создание комментариев
  * - Получение категорий, серий и тем
  *
- * Типы ответов и параметров берутся из сгенерированной OpenAPI-схемы.
- * Тип ответа списков до нормализации - объединение конверта и массива.
+ * Типы ответов и параметров берутся из сгенерированной OpenAPI-схемы;
+ * списочные методы возвращают конверт пагинации.
  */
 
 import type { components, operations } from '../types/api-schema';
@@ -27,9 +27,6 @@ type CategoryListQuery = operations['blog_categories_list']['parameters']['query
 type SeriesListQuery = operations['blog_series_list']['parameters']['query'];
 type TopicListQuery = operations['blog_topics_list']['parameters']['query'];
 
-/** До нормализации списки читаются как конверт или массив - сводит читателей фаза 6. */
-type ListResponse<T> = Paginated<T> | T[];
-
 const BASE_URL = '/api/blog';
 
 export const blogService = {
@@ -42,7 +39,7 @@ export const blogService = {
    * @example
    * const data = await blogService.getArticles({ categories__slug: 'react' });
    */
-  async getArticles(params: ArticleListQuery = {}): Promise<ListResponse<Article>> {
+  async getArticles(params: ArticleListQuery = {}): Promise<Paginated<Article>> {
     return api.get(buildApiUrl(`${BASE_URL}/articles/`, params));
   },
 
@@ -94,7 +91,7 @@ export const blogService = {
    * @example
    * const comments = await blogService.getComments(1);
    */
-  async getComments(articleId: number): Promise<ListResponse<Comment>> {
+  async getComments(articleId: number): Promise<Paginated<Comment>> {
     return api.get(buildApiUrl(`${BASE_URL}/comments/`, { article: articleId }));
   },
 
@@ -104,7 +101,7 @@ export const blogService = {
    * @example
    * const categories = await blogService.getCategories();
    */
-  async getCategories(params: CategoryListQuery = {}): Promise<ListResponse<Category>> {
+  async getCategories(params: CategoryListQuery = {}): Promise<Paginated<Category>> {
     return api.get(buildApiUrl(`${BASE_URL}/categories/`, params));
   },
 
@@ -124,7 +121,7 @@ export const blogService = {
    * @example
    * const series = await blogService.getSeries();
    */
-  async getSeries(params: SeriesListQuery = {}): Promise<ListResponse<Series>> {
+  async getSeries(params: SeriesListQuery = {}): Promise<Paginated<Series>> {
     return api.get(buildApiUrl(`${BASE_URL}/series/`, params));
   },
 
@@ -144,7 +141,7 @@ export const blogService = {
    * @example
    * const topics = await blogService.getTopics();
    */
-  async getTopics(params: TopicListQuery = {}): Promise<ListResponse<Topic>> {
+  async getTopics(params: TopicListQuery = {}): Promise<Paginated<Topic>> {
     return api.get(buildApiUrl(`${BASE_URL}/topics/`, params));
   },
 

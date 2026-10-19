@@ -7,16 +7,14 @@ import AlbumCard from '@components/Gallery/Album/AlbumCard';
 import usePagination from '@hooks/usePagination';
 import useMasonry from '@hooks/useMasonry';
 import Pagination from '@components/Pagination/Pagination';
-import { buildApiUrl } from '@utils/apiUrl';
+import { galleryService } from '@services';
+import { parseListResponse } from '@utils/pagination';
 import type { components } from '../../../types/api-schema';
-import type { Paginated } from '../../../types/pagination';
 
 type AlbumList = components['schemas']['AlbumList'];
 
 /** Свойства компонента списка альбомов. */
 export interface AlbumListProps {
-  /** Базовый URL endpoint альбомов. */
-  apiUrl?: string;
   /** Слаг тега для фильтрации (tags__slug); URL фильтра строится во фронтенде. */
   tagSlug?: string;
   /** Поисковый запрос для фильтрации (search). */
@@ -36,7 +34,7 @@ export interface AlbumListProps {
  * @example
  * <AlbumList search="горы" />
  */
-const AlbumList = ({ apiUrl = '/api/gallery/albums/', tagSlug, search }: AlbumListProps) => {
+const AlbumList = ({ tagSlug, search }: AlbumListProps) => {
   const [albums, setAlbums] = useState<AlbumList[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -45,32 +43,10 @@ const AlbumList = ({ apiUrl = '/api/gallery/albums/', tagSlug, search }: AlbumLi
     usePagination({ initialPage: 1 });
 
   /**
-   * Выполняет HTTP-запрос к API для получения списка альбомов.
-   *
-   * useCallback с зависимостью [apiUrl, tagSlug, search] гарантирует, что
-   * функция не пересоздается при каждом рендере, и ее безопасно использовать
-   * в зависимостях других хуков без риска бесконечного цикла перерисовки.
-   */
-  const fetchAlbumsRequest = useCallback(
-    async (page = 1): Promise<Paginated<AlbumList> | AlbumList[]> => {
-      const url = buildApiUrl(apiUrl, { tags__slug: tagSlug, search, page });
-
-      const response = await fetch(url);
-
-      if (!response.ok) {
-        throw new Error(`Ошибка загрузки: ${response.status}`);
-      }
-
-      return response.json();
-    },
-    [apiUrl, tagSlug, search],
-  );
-
-  /**
    * Загружает альбомы для указанной страницы и обновляет состояние компонента.
    *
    * Стабильность ссылки критична для корректной работы useEffect: функция
-   * пересоздается только при изменении fetchAlbumsRequest или setTotalPages.
+   * пересоздается только при изменении tagSlug, search или setTotalPages.
    */
   const loadAlbums = useCallback(
     async (page: number) => {
@@ -78,13 +54,16 @@ const AlbumList = ({ apiUrl = '/api/gallery/albums/', tagSlug, search }: AlbumLi
       setError(null);
 
       try {
-        const data = await fetchAlbumsRequest(page);
-        // До нормализации (фаза 6) конверт читается как объединение: массив или конверт
-        const raw = Array.isArray(data) ? data : data.results || data;
-        const albumsList = Array.isArray(raw) ? raw : [];
-        setAlbums(albumsList);
+        const data = await galleryService.getAlbums({
+          ...(tagSlug ? { tags__slug: tagSlug } : {}),
+          ...(search ? { search } : {}),
+          page,
+        });
+        const { items } = parseListResponse(data);
+        setAlbums(items);
 
-        if (!Array.isArray(data) && data.total_pages) {
+        // total_pages отдает сам конверт альбомов: размер страницы знает только API
+        if (data.total_pages) {
           setTotalPages(data.total_pages);
         }
 
@@ -94,7 +73,7 @@ const AlbumList = ({ apiUrl = '/api/gallery/albums/', tagSlug, search }: AlbumLi
         setLoading(false);
       }
     },
-    [fetchAlbumsRequest, setTotalPages],
+    [tagSlug, search, setTotalPages],
   );
 
   // Загружает альбомы при изменении текущей страницы; loadAlbums стабильна

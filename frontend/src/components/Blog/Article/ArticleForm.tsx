@@ -6,6 +6,7 @@ import AlertList from '@components/Alert/AlertList';
 import { blogService, navigateTo } from '@services';
 import { useHtmlTheme } from '@hooks';
 import { getEditorInit } from '@utils/tinymce';
+import { parseListResponse } from '@utils/pagination';
 import type { components } from '../../../types/api-schema';
 import type { Paginated } from '../../../types/pagination';
 
@@ -182,17 +183,13 @@ const ArticleForm = ({ articleId = null, tinymceScriptSrc = '/static/tinymce/tin
   /**
    * Загружает справочник целиком, проходя все страницы пагинации.
    */
-  const fetchTaxonomy = async <T,>(
-    fetchPage: (params: { page: number }) => Promise<Paginated<T> | T[]>,
-  ): Promise<T[]> => {
+  const fetchTaxonomy = async <T,>(fetchPage: (params: { page: number }) => Promise<Paginated<T>>): Promise<T[]> => {
     const items: T[] = [];
     // Ограничение итераций защищает от зацикливания при некорректном API
     for (let page = 1; page <= 100; page += 1) {
-      const data = await fetchPage({ page });
-      // До нормализации (фаза 6) конверт читается как объединение: массив или конверт
-      const pageItems = Array.isArray(data) ? data : data.results || [];
+      const { items: pageItems, next } = parseListResponse(await fetchPage({ page }));
       items.push(...pageItems);
-      if (Array.isArray(data) || !data.next) {
+      if (!next) {
         return items;
       }
     }

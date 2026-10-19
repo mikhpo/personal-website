@@ -7,6 +7,6 @@
     <div class="mb-3">
         {% react_component "Search/SearchForm" search=search targetUrl="/gallery/photos/" placeholder="Поиск по фотографиям..." %}
     </div>
-    {% react_component "Gallery/PhotoList" apiUrl="/api/gallery/photos/" search=search %}
+    {% react_component "Gallery/PhotoList" search=search %}
 </div>
 {% endblock gallery %}

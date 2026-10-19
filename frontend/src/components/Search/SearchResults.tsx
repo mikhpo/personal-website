@@ -5,6 +5,7 @@ import AlbumCard from '@components/Gallery/Album/AlbumCard';
 import Spinner from '@components/Spinner/Spinner';
 import AlertList from '@components/Alert/AlertList';
 import { blogService, galleryService } from '@services';
+import { parseListResponse } from '@utils/pagination';
 import type { components } from '../../types/api-schema';
 
 type Article = components['schemas']['Article'];
@@ -63,11 +64,8 @@ const SearchResults = ({ search = '' }: SearchResultsProps) => {
         blogService.getArticles({ search, page_size: ARTICLES_PAGE_SIZE }),
         galleryService.getAlbums({ search, page_size: ALBUMS_PAGE_SIZE }),
       ]);
-      // До нормализации (фаза 6) конверт читается как объединение: массив или конверт
-      const articlesList = Array.isArray(articlesData) ? articlesData : articlesData.results;
-      const albumsList = Array.isArray(albumsData) ? albumsData : albumsData.results;
-      setArticles(articlesList || []);
-      setAlbums(albumsList || []);
+      setArticles(parseListResponse(articlesData).items);
+      setAlbums(parseListResponse(albumsData).items);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
