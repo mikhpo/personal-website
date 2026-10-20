@@ -18,6 +18,7 @@ import { buildApiUrl } from '../utils/apiUrl';
 type AlbumList = components['schemas']['AlbumList'];
 type AlbumDetail = components['schemas']['AlbumDetail'];
 type Photo = components['schemas']['Photo'];
+type PhotoDetail = components['schemas']['PhotoDetail'];
 type Tag = components['schemas']['Tag'];
 type UploadResponse = components['schemas']['UploadResponse'];
 
@@ -82,7 +83,7 @@ export const galleryService = {
    * @example
    * const photo = await galleryService.getPhoto(1);
    */
-  async getPhoto(id: number | string): Promise<Photo> {
+  async getPhoto(id: number | string): Promise<PhotoDetail> {
     return api.get(`${BASE_URL}/photos/${id}/`);
   },
 

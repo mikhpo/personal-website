@@ -137,6 +137,22 @@ class TestPhotoViewSet(APITestCase):
         self.assertIn("image_url", response.data)
         self.assertEqual(len(response.data["tags"]), 2)
 
+    def test_retrieve_photo_contains_neighbor_ids(self) -> None:
+        """Детальный ответ фотографии содержит id соседей по альбому."""
+        url = f"/api/gallery/photos/{self.photo1.pk}/"
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("previous_id", response.data)
+        self.assertIn("next_id", response.data)
+
+    def test_list_photos_have_no_neighbor_ids(self) -> None:
+        """Список фотографий не вычисляет соседей."""
+        response = self.client.get("/api/gallery/photos/")
+        self.assertEqual(response.status_code, 200)
+        for item in response.data["results"]:
+            self.assertNotIn("previous_id", item)
+            self.assertNotIn("next_id", item)
+
     def test_retrieve_private_photo_accessible_by_link(self) -> None:
         """Приватная фотография доступна по прямой ссылке.
 

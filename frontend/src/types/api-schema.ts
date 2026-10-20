@@ -949,6 +949,92 @@ export interface components {
              */
             album: number;
         };
+        /**
+         * @description Сериализатор детального просмотра фотографии с соседями по альбому.
+         *
+         *     Соседи вычисляются один раз на ответ: детальный эндпоинт отдает одну
+         *     фотографию, списковый обходит их стороной.
+         */
+        PhotoDetail: {
+            readonly id: number;
+            readonly tags: components["schemas"]["Tag"][];
+            readonly album_name: string;
+            /** @description Получить URL миниатюры. */
+            readonly thumbnail_url: string;
+            /** @description Получить URL превью. */
+            readonly preview_url: string;
+            /** @description Получить URL оригинального изображения. */
+            readonly image_url: string;
+            /** @description Получить название камеры. */
+            readonly camera: string;
+            /** @description Получить модель объектива. */
+            readonly lens_model: string;
+            /** @description Получить диафрагму. */
+            readonly aperture: string | null;
+            /** @description Получить выдержку. */
+            readonly exposure: string | null;
+            /** @description Получить ISO. */
+            readonly iso: number | null;
+            /** @description Получить фокусное расстояние. */
+            readonly focal_length: number | null;
+            /** @description Получить id предыдущей публичной фотографии альбома. */
+            readonly previous_id: number | null;
+            /** @description Получить id следующей публичной фотографии альбома. */
+            readonly next_id: number | null;
+            /**
+             * Изображение
+             * Format: uri
+             */
+            image: string;
+            /**
+             * Наименование
+             * @description Наименование фотографии
+             */
+            name?: string;
+            /**
+             * Описание
+             * @description Описание фотографии
+             */
+            description?: string;
+            /**
+             * Слаг
+             * @description Слаг фотографии
+             */
+            slug?: string;
+            /**
+             * Загружена
+             * Format: date-time
+             * @description Дата и время загрузки фотографии
+             */
+            readonly uploaded_at: string;
+            /**
+             * Создана
+             * Format: date-time
+             * @description Дата и время съемки фотографии
+             */
+            taken_at: string;
+            /**
+             * Изменена
+             * Format: date-time
+             * @description Дата и время последнего изменения фотографии
+             */
+            readonly modified_at: string;
+            /**
+             * Публичная
+             * @description Фотография публичная
+             */
+            public?: boolean;
+            /**
+             * EXIF данные
+             * @description EXIF данные изображения
+             */
+            readonly exif: unknown;
+            /**
+             * Альбом
+             * @description Альбом, в котором размещена фотография
+             */
+            album: number;
+        };
         /** @description Сериализатор для модели серии. */
         Series: {
             readonly id: number;
@@ -2150,7 +2236,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Photo"];
+                    "application/json": components["schemas"]["PhotoDetail"];
                 };
             };
         };

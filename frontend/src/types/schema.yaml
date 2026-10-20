@@ -1362,7 +1362,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Photo'
+                $ref: '#/components/schemas/PhotoDetail'
           description: ''
   /api/gallery/tags/:
     get:
@@ -2324,6 +2324,145 @@ components:
       - lens_model
       - modified_at
       - preview_url
+      - tags
+      - taken_at
+      - thumbnail_url
+      - uploaded_at
+    PhotoDetail:
+      type: object
+      description: |-
+        Сериализатор детального просмотра фотографии с соседями по альбому.
+
+        Соседи вычисляются один раз на ответ: детальный эндпоинт отдает одну
+        фотографию, списковый обходит их стороной.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tag'
+          readOnly: true
+        album_name:
+          type: string
+          readOnly: true
+        thumbnail_url:
+          type: string
+          description: Получить URL миниатюры.
+          readOnly: true
+        preview_url:
+          type: string
+          description: Получить URL превью.
+          readOnly: true
+        image_url:
+          type: string
+          description: Получить URL оригинального изображения.
+          readOnly: true
+        camera:
+          type: string
+          description: Получить название камеры.
+          readOnly: true
+        lens_model:
+          type: string
+          description: Получить модель объектива.
+          readOnly: true
+        aperture:
+          type: string
+          nullable: true
+          description: Получить диафрагму.
+          readOnly: true
+        exposure:
+          type: string
+          nullable: true
+          description: Получить выдержку.
+          readOnly: true
+        iso:
+          type: integer
+          nullable: true
+          description: Получить ISO.
+          readOnly: true
+        focal_length:
+          type: integer
+          nullable: true
+          description: Получить фокусное расстояние.
+          readOnly: true
+        previous_id:
+          type: integer
+          nullable: true
+          description: Получить id предыдущей публичной фотографии альбома.
+          readOnly: true
+        next_id:
+          type: integer
+          nullable: true
+          description: Получить id следующей публичной фотографии альбома.
+          readOnly: true
+        image:
+          type: string
+          format: uri
+          title: Изображение
+        name:
+          type: string
+          title: Наименование
+          description: Наименование фотографии
+          maxLength: 255
+        description:
+          type: string
+          title: Описание
+          description: Описание фотографии
+        slug:
+          type: string
+          title: Слаг
+          description: Слаг фотографии
+          maxLength: 50
+          pattern: ^[-a-zA-Z0-9_]+$
+        uploaded_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Загружена
+          description: Дата и время загрузки фотографии
+        taken_at:
+          type: string
+          format: date-time
+          title: Создана
+          description: Дата и время съемки фотографии
+        modified_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Изменена
+          description: Дата и время последнего изменения фотографии
+        public:
+          type: boolean
+          title: Публичная
+          description: Фотография публичная
+        exif:
+          readOnly: true
+          nullable: true
+          title: EXIF данные
+          description: EXIF данные изображения
+        album:
+          type: integer
+          title: Альбом
+          description: Альбом, в котором размещена фотография
+      required:
+      - album
+      - album_name
+      - aperture
+      - camera
+      - exif
+      - exposure
+      - focal_length
+      - id
+      - image
+      - image_url
+      - iso
+      - lens_model
+      - modified_at
+      - next_id
+      - preview_url
+      - previous_id
       - tags
       - taken_at
       - thumbnail_url

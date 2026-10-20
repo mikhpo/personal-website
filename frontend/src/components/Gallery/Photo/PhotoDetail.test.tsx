@@ -40,11 +40,9 @@ describe('PhotoDetail', () => {
     iso: 400,
     focal_length: 50,
     taken_at: '2024-01-15T10:00:00Z',
+    previous_id: 1,
+    next_id: 3,
   } as unknown as Photo;
-
-  // ID соседних фотографий для навигации (mockPhoto имеет id=2)
-  const mockPreviousPhotoId = 1; // Предыдущая фотография в альбоме
-  const mockNextPhotoId = 3; // Следующая фотография в альбомe
 
   // Настройка: изолируем тесты от реальных API запросов
   // PhotoDetail использует хук usePhotoData для загрузки данных
@@ -66,7 +64,7 @@ describe('PhotoDetail', () => {
    * с правильным alt-текстом и src-адресом.
    */
   test('отображает превью фотографии', () => {
-    render(<PhotoDetail photoId={2} previousPhotoId={mockPreviousPhotoId} nextPhotoId={mockNextPhotoId} />);
+    render(<PhotoDetail photoId={2} />);
     const image = screen.getByAltText('Тестовое фото');
     expect(image).toBeInTheDocument();
     expect(image).toHaveAttribute('src', '/media/photo-preview.jpg');
@@ -77,7 +75,7 @@ describe('PhotoDetail', () => {
    * изображение обернуто в ссылку на оригинальный файл.
    */
   test('открывает оригинал по клику на фотографию', () => {
-    render(<PhotoDetail photoId={2} previousPhotoId={mockPreviousPhotoId} nextPhotoId={mockNextPhotoId} />);
+    render(<PhotoDetail photoId={2} />);
     const image = screen.getByAltText('Тестовое фото');
     const link = image.closest('a');
     expect(link).toHaveAttribute('href', '/media/photo.jpg');
@@ -91,7 +89,7 @@ describe('PhotoDetail', () => {
    * после события загрузки - проявляется.
    */
   test('проявляется после загрузки фотографии', () => {
-    render(<PhotoDetail photoId={2} previousPhotoId={mockPreviousPhotoId} nextPhotoId={mockNextPhotoId} />);
+    render(<PhotoDetail photoId={2} />);
     const image = screen.getByAltText('Тестовое фото');
     const link = image.closest('a');
     expect(link).toHaveClass('card-entrance');
@@ -121,7 +119,7 @@ describe('PhotoDetail', () => {
    * "Предыдущая" (<), "Следующая" (>) и "О фото".
    */
   test('отображает кнопки навигации', () => {
-    render(<PhotoDetail photoId={2} previousPhotoId={mockPreviousPhotoId} nextPhotoId={mockNextPhotoId} />);
+    render(<PhotoDetail photoId={2} />);
     expect(screen.getByText('<')).toBeInTheDocument();
     expect(screen.getByText('>')).toBeInTheDocument();
     expect(screen.getByText('О фото')).toBeInTheDocument();
@@ -132,7 +130,7 @@ describe('PhotoDetail', () => {
    * и предназначена для открытия модального окна с информацией о фотографии.
    */
   test('отображает кнопку "О фото" для открытия модального окна', () => {
-    render(<PhotoDetail photoId={2} previousPhotoId={mockPreviousPhotoId} nextPhotoId={mockNextPhotoId} />);
+    render(<PhotoDetail photoId={2} />);
     expect(screen.getByText('О фото')).toBeInTheDocument();
   });
 
@@ -182,8 +180,13 @@ describe('PhotoDetail', () => {
    * Проверяет, что кнопка "Предыдущая" не отображается,
    * если previousPhotoId равен null.
    */
-  test('нет кнопки "Предыдущая" если previousPhotoId null', () => {
-    render(<PhotoDetail photoId={2} previousPhotoId={null as unknown as number} nextPhotoId={mockNextPhotoId} />);
+  test('нет кнопки "Предыдущая" если previous_id null', () => {
+    mockUsePhotoData.mockReturnValue({
+      photo: { ...mockPhoto, previous_id: null },
+      loading: false,
+      error: null,
+    } as unknown as UsePhotoDataResult);
+    render(<PhotoDetail photoId={2} />);
     expect(screen.queryByText('<')).not.toBeInTheDocument();
   });
 
@@ -191,8 +194,13 @@ describe('PhotoDetail', () => {
    * Проверяет, что кнопка "Следующая" не отображается,
    * если nextPhotoId равен null.
    */
-  test('нет кнопки "Следующая" если nextPhotoId null', () => {
-    render(<PhotoDetail photoId={2} previousPhotoId={mockPreviousPhotoId} nextPhotoId={null as unknown as number} />);
+  test('нет кнопки "Следующая" если next_id null', () => {
+    mockUsePhotoData.mockReturnValue({
+      photo: { ...mockPhoto, next_id: null },
+      loading: false,
+      error: null,
+    } as unknown as UsePhotoDataResult);
+    render(<PhotoDetail photoId={2} />);
     expect(screen.queryByText('>')).not.toBeInTheDocument();
   });
 
@@ -201,7 +209,7 @@ describe('PhotoDetail', () => {
    * на правильный URL вида /gallery/photo/{id}/.
    */
   test('ссылка на предыдущую фотографию имеет правильный href', () => {
-    render(<PhotoDetail photoId={2} previousPhotoId={mockPreviousPhotoId} nextPhotoId={mockNextPhotoId} />);
+    render(<PhotoDetail photoId={2} />);
     const prevLink = screen.getByText('<');
     expect(prevLink).toHaveAttribute('href', '/gallery/photo/1/');
   });
@@ -211,7 +219,7 @@ describe('PhotoDetail', () => {
    * на правильный URL вида /gallery/photo/{id}/.
    */
   test('ссылка на следующую фотографию имеет правильный href', () => {
-    render(<PhotoDetail photoId={2} previousPhotoId={mockPreviousPhotoId} nextPhotoId={mockNextPhotoId} />);
+    render(<PhotoDetail photoId={2} />);
     const nextLink = screen.getByText('>');
     expect(nextLink).toHaveAttribute('href', '/gallery/photo/3/');
   });
@@ -221,7 +229,7 @@ describe('PhotoDetail', () => {
    * стрелки "<" и ">" сами по себе неинформативны.
    */
   test('кнопки навигации имеют aria-label', () => {
-    render(<PhotoDetail photoId={2} previousPhotoId={mockPreviousPhotoId} nextPhotoId={mockNextPhotoId} />);
+    render(<PhotoDetail photoId={2} />);
 
     expect(screen.getByLabelText('Предыдущая фотография')).toHaveAttribute('href', '/gallery/photo/1/');
     expect(screen.getByLabelText('Следующая фотография')).toHaveAttribute('href', '/gallery/photo/3/');
@@ -234,7 +242,7 @@ describe('PhotoDetail', () => {
    */
   test('открывает модальное окно с информацией о фотографии', async () => {
     const user = userEvent.setup();
-    render(<PhotoDetail photoId={2} previousPhotoId={mockPreviousPhotoId} nextPhotoId={mockNextPhotoId} />);
+    render(<PhotoDetail photoId={2} />);
 
     await user.click(screen.getByText('О фото'));
 
@@ -251,7 +259,7 @@ describe('PhotoDetail', () => {
    */
   test('отображает в модальном окне ссылку на альбом', async () => {
     const user = userEvent.setup();
-    render(<PhotoDetail photoId={2} previousPhotoId={mockPreviousPhotoId} nextPhotoId={mockNextPhotoId} />);
+    render(<PhotoDetail photoId={2} />);
 
     await user.click(screen.getByText('О фото'));
 
@@ -266,7 +274,7 @@ describe('PhotoDetail', () => {
    */
   test('закрывает модальное окно при нажатии на кнопку закрытия', async () => {
     const user = userEvent.setup();
-    render(<PhotoDetail photoId={2} previousPhotoId={mockPreviousPhotoId} nextPhotoId={mockNextPhotoId} />);
+    render(<PhotoDetail photoId={2} />);
 
     const exifButton = screen.getByText('О фото');
     await user.click(exifButton);
@@ -330,7 +338,7 @@ describe('PhotoDetail', () => {
      * на следующую фотографию альбома.
      */
     test('ArrowRight переходит к следующей фотографии', () => {
-      render(<PhotoDetail photoId={2} previousPhotoId={mockPreviousPhotoId} nextPhotoId={mockNextPhotoId} />);
+      render(<PhotoDetail photoId={2} />);
 
       fireEvent.keyDown(document, { key: 'ArrowRight' });
 
@@ -343,7 +351,7 @@ describe('PhotoDetail', () => {
      * на предыдущую фотографию альбома.
      */
     test('ArrowLeft переходит к предыдущей фотографии', () => {
-      render(<PhotoDetail photoId={2} previousPhotoId={mockPreviousPhotoId} nextPhotoId={mockNextPhotoId} />);
+      render(<PhotoDetail photoId={2} />);
 
       fireEvent.keyDown(document, { key: 'ArrowLeft' });
 
@@ -355,7 +363,7 @@ describe('PhotoDetail', () => {
      * Проверяет, что свайп влево переключает на следующую фотографию.
      */
     test('свайп влево переходит к следующей фотографии', () => {
-      render(<PhotoDetail photoId={2} previousPhotoId={mockPreviousPhotoId} nextPhotoId={mockNextPhotoId} />);
+      render(<PhotoDetail photoId={2} />);
 
       fireEvent.touchStart(document, { touches: [{ clientX: 200, clientY: 100 }] });
       fireEvent.touchEnd(document, { changedTouches: [{ clientX: 100, clientY: 100 }] });
@@ -368,7 +376,7 @@ describe('PhotoDetail', () => {
      * Проверяет, что свайп вправо переключает на предыдущую фотографию.
      */
     test('свайп вправо переходит к предыдущей фотографии', () => {
-      render(<PhotoDetail photoId={2} previousPhotoId={mockPreviousPhotoId} nextPhotoId={mockNextPhotoId} />);
+      render(<PhotoDetail photoId={2} />);
 
       fireEvent.touchStart(document, { touches: [{ clientX: 100, clientY: 100 }] });
       fireEvent.touchEnd(document, { changedTouches: [{ clientX: 220, clientY: 100 }] });
@@ -383,7 +391,7 @@ describe('PhotoDetail', () => {
      */
     test('стрелки игнорируются при открытом модальном окне', async () => {
       const user = userEvent.setup();
-      render(<PhotoDetail photoId={2} previousPhotoId={mockPreviousPhotoId} nextPhotoId={mockNextPhotoId} />);
+      render(<PhotoDetail photoId={2} />);
 
       await user.click(screen.getByText('О фото'));
       expect(await screen.findByRole('dialog', { name: 'О фото' })).toBeInTheDocument();
@@ -405,7 +413,12 @@ describe('PhotoDetail', () => {
      * не выполняет переход.
      */
     test('ArrowLeft игнорируется без предыдущей фотографии', () => {
-      render(<PhotoDetail photoId={2} previousPhotoId={null as unknown as number} nextPhotoId={mockNextPhotoId} />);
+      mockUsePhotoData.mockReturnValue({
+        photo: { ...mockPhoto, previous_id: null },
+        loading: false,
+        error: null,
+      } as unknown as UsePhotoDataResult);
+      render(<PhotoDetail photoId={2} />);
 
       fireEvent.keyDown(document, { key: 'ArrowLeft' });
 
@@ -417,7 +430,12 @@ describe('PhotoDetail', () => {
      * не выполняет переход.
      */
     test('ArrowRight игнорируется без следующей фотографии', () => {
-      render(<PhotoDetail photoId={2} previousPhotoId={mockPreviousPhotoId} nextPhotoId={null as unknown as number} />);
+      mockUsePhotoData.mockReturnValue({
+        photo: { ...mockPhoto, next_id: null },
+        loading: false,
+        error: null,
+      } as unknown as UsePhotoDataResult);
+      render(<PhotoDetail photoId={2} />);
 
       fireEvent.keyDown(document, { key: 'ArrowRight' });
 

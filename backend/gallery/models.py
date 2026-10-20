@@ -255,6 +255,17 @@ class Photo(models.Model):
         """Абсолютная ссылка на фотографию определяется первичным ключом фотографии."""
         return reverse("gallery:photo-detail", kwargs={"pk": self.pk})
 
+    def get_neighbor_ids(self) -> tuple[int | None, int | None]:
+        """Вернуть id предыдущей и следующей публичных фотографий альбома по дате съемки.
+
+        Скрытые фотографии не предлагаются соседями ни при прямом заходе,
+        ни из списков.
+        """
+        album_photos = self.album.photos.filter(public=True)
+        previous = album_photos.filter(taken_at__lt=self.taken_at).order_by("-taken_at").first()
+        next_photo = album_photos.filter(taken_at__gt=self.taken_at).order_by("taken_at").first()
+        return (previous.pk if previous else None, next_photo.pk if next_photo else None)
+
     def embed_preview_dir(self) -> str:
         """Определить каталог файлов превью фотографии для вставок по постоянным ссылкам.
 

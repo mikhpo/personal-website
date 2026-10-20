@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { galleryService } from '@services';
 import type { components } from '../types/api-schema';
 
-type Photo = components['schemas']['Photo'];
+type Photo = components['schemas']['PhotoDetail'];
 
 /** Результат хука usePhotoData. */
 export interface UsePhotoDataResult {

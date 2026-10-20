@@ -1,45 +1,41 @@
 import React from 'react';
-import { Button } from 'react-bootstrap';
-import type { components } from '../../../types/api-schema';
-
-type Photo = components['schemas']['Photo'];
 
 /** Свойства компонента навигации между фотографиями. */
 export interface PhotoNavigationProps {
-  /** Предыдущая фотография или null. */
-  previousPhoto?: Photo | null;
-  /** Следующая фотография или null. */
-  nextPhoto?: Photo | null;
+  /** URL предыдущей фотографии или null. */
+  previousUrl: string | null;
+  /** URL следующей фотографии или null. */
+  nextUrl: string | null;
+  /** Действия между стрелками навигации (кнопки "О фото" и других модальных окон). */
+  children?: React.ReactNode;
 }
 
 /**
  * Компонент навигации между фотографиями.
  *
- * Отображает кнопки "Предыдущая" и "Следующая" для перемещения между
- * фото в альбоме.
+ * Рендерит стрелки перехода к предыдущей и следующей фотографии альбома;
+ * между ними размещаются дочерние действия страницы (кнопки модальных окон).
  */
-const PhotoNavigation = ({ previousPhoto, nextPhoto }: PhotoNavigationProps) => {
-  if (!previousPhoto && !nextPhoto) {
-    return null;
-  }
-
+const PhotoNavigation = ({ previousUrl, nextUrl, children }: PhotoNavigationProps) => {
   return (
-    <div className="d-flex justify-content-between mt-3">
-      <div>
-        {previousPhoto && (
-          <Button variant="primary" href={`/gallery/photo/${previousPhoto.slug}/`}>
-            ← Предыдущая
-          </Button>
-        )}
-      </div>
-      <div>
-        {nextPhoto && (
-          <Button variant="primary" href={`/gallery/photo/${nextPhoto.slug}/`}>
-            {'Следующая ->'}
-          </Button>
-        )}
-      </div>
-    </div>
+    <>
+      {previousUrl && (
+        <a
+          href={previousUrl}
+          className="btn btn-outline-dark"
+          id="previous-photo-link"
+          aria-label="Предыдущая фотография"
+        >
+          {'<'}
+        </a>
+      )}
+      {children}
+      {nextUrl && (
+        <a href={nextUrl} className="btn btn-outline-dark" id="next-photo-link" aria-label="Следующая фотография">
+          {'>'}
+        </a>
+      )}
+    </>
   );
 };
 

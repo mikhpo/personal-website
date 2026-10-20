@@ -112,24 +112,13 @@ class PhotoDetailView(DetailView):
         return Photo.objects.all()
 
     def get_context_data(self, **kwargs) -> dict[str, Any]:
-        """Добавить ID предыдущей и следующей фотографий и размеры превью для вставок."""
+        """Добавляет размеры превью для вставок.
+
+        Соседние фотографии приходят фронтенду полями previous_id и next_id
+        детального ответа API (PhotoDetailSerializer).
+        """
         context: dict[str, Any] = super().get_context_data(**kwargs)
-        photo: Photo = self.object
-        album: Album = photo.album
         context["embed_sizes"] = list(settings.GALLERY_EMBED_SIZES)
-
-        # Навигация prev/next только по публичным фотографиям альбома:
-        # скрытые не предлагаются соседями ни при прямом заходе, ни из списков.
-        all_photos_qs: QuerySet[Photo] = album.photos.filter(public=True).order_by("taken_at")
-
-        previous_photo = all_photos_qs.filter(taken_at__lt=photo.taken_at).order_by("-taken_at").first()
-        if previous_photo:
-            context["previous_photo_id"] = previous_photo.pk
-
-        next_photo = all_photos_qs.filter(taken_at__gt=photo.taken_at).order_by("taken_at").first()
-        if next_photo:
-            context["next_photo_id"] = next_photo.pk
-
         return context
 
 

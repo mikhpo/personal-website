@@ -73,6 +73,31 @@ class PhotoSerializer(serializers.ModelSerializer):
         return obj.focal_length
 
 
+class PhotoDetailSerializer(PhotoSerializer):
+    """Сериализатор детального просмотра фотографии с соседями по альбому.
+
+    Соседи вычисляются один раз на ответ: детальный эндпоинт отдает одну
+    фотографию, списковый обходит их стороной.
+    """
+
+    previous_id = serializers.SerializerMethodField()
+    next_id = serializers.SerializerMethodField()
+
+    _neighbors: tuple[int | None, int | None] | None = None
+
+    def get_previous_id(self, obj: Photo) -> int | None:
+        """Получить id предыдущей публичной фотографии альбома."""
+        if self._neighbors is None:
+            self._neighbors = obj.get_neighbor_ids()
+        return self._neighbors[0]
+
+    def get_next_id(self, obj: Photo) -> int | None:
+        """Получить id следующей публичной фотографии альбома."""
+        if self._neighbors is None:
+            self._neighbors = obj.get_neighbor_ids()
+        return self._neighbors[1]
+
+
 class AlbumBaseSerializer(serializers.ModelSerializer):
     """Базовый сериализатор для альбома с общими полями."""
 

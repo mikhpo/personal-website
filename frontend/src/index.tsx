@@ -22,7 +22,6 @@ import AlbumList from '@components/Gallery/Album/AlbumList';
 import PhotoDetail from '@components/Gallery/Photo/PhotoDetail';
 import PhotoList from '@components/Gallery/Photo/PhotoList';
 import ExifData from '@components/Gallery/Photo/ExifData';
-import PhotoNavigation from '@components/Gallery/Photo/PhotoNavigation';
 import TagButton from '@components/Gallery/Tags/TagButton';
 import TagsOffcanvas from '@components/Gallery/Tags/TagsOffcanvas';
 import AlbumSelector from '@components/Gallery/Upload/AlbumSelector';
@@ -79,7 +78,6 @@ const componentRegistry: Record<string, ComponentType<any>> = {
   'Gallery/PhotoDetail': PhotoDetail,
   'Gallery/PhotoList': PhotoList,
   'Gallery/ExifData': ExifData,
-  'Gallery/PhotoNavigation': PhotoNavigation,
   'Gallery/TagButton': TagButton,
   'Gallery/TagsOffcanvas': TagsOffcanvas,
   'Gallery/AlbumSelector': AlbumSelector,

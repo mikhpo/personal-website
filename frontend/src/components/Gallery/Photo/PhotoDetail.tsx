@@ -2,16 +2,13 @@ import React, { useState } from 'react';
 import { Modal, Button } from 'react-bootstrap';
 import AboutPhoto from '@components/Gallery/Photo/AboutPhoto';
 import EmbedLinksModal from '@components/Gallery/Photo/EmbedLinksModal';
+import PhotoNavigation from '@components/Gallery/Photo/PhotoNavigation';
 import { usePhotoData, usePhotoNavigation } from '@hooks';
 
 /** Свойства компонента детального просмотра фотографии. */
 export interface PhotoDetailProps {
   /** ID фотографии. */
   photoId: number;
-  /** ID предыдущей фотографии. */
-  previousPhotoId?: number;
-  /** ID следующей фотографии. */
-  nextPhotoId?: number;
   /** Признак staff: показывать кнопку получения ссылок. */
   isStaff?: boolean;
   /** Размеры превью для вставок в пикселах по наибольшей стороне. */
@@ -33,7 +30,7 @@ export interface PhotoDetailProps {
  * Фотография проявляется плавно после загрузки; клик по ней открывает
  * оригинал в новой вкладке.
  */
-const PhotoDetail = ({ photoId, previousPhotoId, nextPhotoId, isStaff = false, embedSizes = [] }: PhotoDetailProps) => {
+const PhotoDetail = ({ photoId, isStaff = false, embedSizes = [] }: PhotoDetailProps) => {
   const { photo, loading, error } = usePhotoData(photoId);
 
   const [showAboutModal, setShowAboutModal] = useState(false);
@@ -44,8 +41,9 @@ const PhotoDetail = ({ photoId, previousPhotoId, nextPhotoId, isStaff = false, e
   const [loadedPhotoId, setLoadedPhotoId] = useState<number | null>(null);
   const imageReady = loadedPhotoId === photoId;
 
-  const previousUrl = previousPhotoId ? `/gallery/photo/${previousPhotoId}/` : null;
-  const nextUrl = nextPhotoId ? `/gallery/photo/${nextPhotoId}/` : null;
+  // Соседи приходят полями previous_id/next_id детального ответа API
+  const previousUrl = photo?.previous_id ? `/gallery/photo/${photo.previous_id}/` : null;
+  const nextUrl = photo?.next_id ? `/gallery/photo/${photo.next_id}/` : null;
 
   usePhotoNavigation({
     previousUrl,
@@ -102,31 +100,19 @@ const PhotoDetail = ({ photoId, previousPhotoId, nextPhotoId, isStaff = false, e
           </a>
         )}
         {/* align - устаревший HTML-атрибут; приведение сохраняет прежний DOM */}
+        {/* align - устаревший HTML-атрибут; приведение сохраняет прежний DOM */}
         <div className="card-footer" {...({ align: 'center' } as React.HTMLAttributes<HTMLDivElement>)}>
           <div className="btn-group" role="group" aria-label="Навигация по фотографиям">
-            {previousUrl && (
-              <a
-                href={previousUrl}
-                className="btn btn-outline-dark"
-                id="previous-photo-link"
-                aria-label="Предыдущая фотография"
-              >
-                {'<'}
-              </a>
-            )}
-            <Button variant="outline-dark" onClick={() => setShowAboutModal(true)}>
-              О фото
-            </Button>
-            {isStaff && (
-              <Button variant="outline-dark" id="get-embed-link-button" onClick={() => setShowEmbedModal(true)}>
-                Ссылка для вставки
+            <PhotoNavigation previousUrl={previousUrl} nextUrl={nextUrl}>
+              <Button variant="outline-dark" onClick={() => setShowAboutModal(true)}>
+                О фото
               </Button>
-            )}
-            {nextUrl && (
-              <a href={nextUrl} className="btn btn-outline-dark" id="next-photo-link" aria-label="Следующая фотография">
-                {'>'}
-              </a>
-            )}
+              {isStaff && (
+                <Button variant="outline-dark" id="get-embed-link-button" onClick={() => setShowEmbedModal(true)}>
+                  Ссылка для вставки
+                </Button>
+              )}
+            </PhotoNavigation>
           </div>
         </div>
       </div>

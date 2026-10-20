@@ -334,37 +334,6 @@ class TestPhotoDetailView(TestCase):
             response = self.client.get(url)
             self.assertNotContains(response, "noindex")
 
-    def test_photo_detail_prev_next_skips_unpublished(self) -> None:
-        """Prev/next навигация на странице фото фильтрует скрытые фотографии.
-
-        Скрытые фотографии не должны предлагаться в качестве соседей даже
-        при прямом заходе по share-ссылке на скрытую фотографию.
-        """
-        # Отдельный альбом, чтобы исключить влияние фото из setUpTestData.
-        album = AlbumFactory()
-
-        # Три публичные фотографии с разными taken_at и одна скрытая между ними.
-        # taken_at устанавливаем через update(), т.к. Photo.save() перезаписывает
-        # его из EXIF при создании.
-        public_a = PhotoFactory(album=album, public=True)
-        Photo.objects.filter(pk=public_a.pk).update(taken_at=datetime(2022, 1, 1, tzinfo=timezone.utc))
-        private_b = PhotoFactory(album=album, public=False)
-        Photo.objects.filter(pk=private_b.pk).update(taken_at=datetime(2022, 1, 2, tzinfo=timezone.utc))
-        public_c = PhotoFactory(album=album, public=True)
-        Photo.objects.filter(pk=public_c.pk).update(taken_at=datetime(2022, 1, 3, tzinfo=timezone.utc))
-
-        # Для первой публичной следующая - третья (через скрытую)
-        url = f"{PHOTO_DETAIL_URL}/{public_a.pk}/"
-        response = self.client.get(url)
-        self.assertEqual(response.context.get("next_photo_id"), public_c.pk)
-        self.assertNotEqual(response.context.get("next_photo_id"), private_b.pk)
-
-        # Для скрытой фотографии соседи - обе публичные
-        url = f"{PHOTO_DETAIL_URL}/{private_b.pk}/"
-        response = self.client.get(url)
-        self.assertEqual(response.context.get("previous_photo_id"), public_a.pk)
-        self.assertEqual(response.context.get("next_photo_id"), public_c.pk)
-
 
 class TestEmbedPhotoView(TestCase):
     """Тесты постоянной ссылки на превью фотографии для вставки."""

@@ -19,6 +19,7 @@ from gallery.models import Album, Photo, Tag
 from gallery.serializers import (
     AlbumDetailSerializer,
     AlbumListSerializer,
+    PhotoDetailSerializer,
     PhotoSerializer,
     TagSerializer,
 )
@@ -77,6 +78,13 @@ class PhotoViewSet(viewsets.ReadOnlyModelViewSet):
     filter_backends: ClassVar[list] = [DjangoFilterBackend, filters.OrderingFilter, DatabaseSearchFilter]
     filterset_fields: ClassVar[list] = ["tags__slug"]
     search_fields: ClassVar[list] = ["name", "description"]
+
+    def get_serializer_class(self) -> type[PhotoSerializer]:
+        """Детальный ответ дополняется соседями по альбому."""
+        if self.action == "retrieve":
+            return PhotoDetailSerializer
+        return PhotoSerializer
+
     ordering_fields: ClassVar[list] = ["taken_at", "uploaded_at", "name"]
     ordering: ClassVar[list] = ["-taken_at"]
 
