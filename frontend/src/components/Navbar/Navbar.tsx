@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Navbar as BSNavbar, Nav, Container } from 'react-bootstrap';
 import NavItems, { type NavLink } from '@components/Navbar/NavItems';
 import UserAuthSection from '@components/Navbar/UserAuthSection';
 import ThemeToggle from '@components/Navbar/ThemeToggle';
+import TagsOffcanvas from '@components/Gallery/Tags/TagsOffcanvas';
 import SearchForm from '@components/Search/SearchForm';
 
 /** Свойства компонента навигационной панели. */
@@ -28,6 +29,10 @@ export interface NavbarProps {
  * поиска, ведущую на /main/search/.
  */
 const Navbar = ({ brandName, brandUrl, links, userAuthenticated, userName = '', userIsStaff = false }: NavbarProps) => {
+  // Панель тегов открывается из выпадающего меню галереи и принадлежит Navbar:
+  // offcanvas рендерится в portal, поэтому находится в конце дерева
+  const [tagsOpen, setTagsOpen] = useState(false);
+
   return (
     // Без variant: цвета ссылок и фона задаются CSS-переменными Bootstrap
     // и автоматически адаптируются к активной теме (data-bs-theme на <html>)
@@ -37,7 +42,7 @@ const Navbar = ({ brandName, brandUrl, links, userAuthenticated, userName = '', 
         <BSNavbar.Toggle aria-controls="basic-navbar-nav" />
         <BSNavbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto">
-            <NavItems links={links} userIsStaff={userIsStaff} />
+            <NavItems links={links} userIsStaff={userIsStaff} onOpenOffcanvas={() => setTagsOpen(true)} />
           </Nav>
           {/* Класс navbar-search задает отступ до секции авторизации, равный зазору внутри нее (navbar.css) */}
           <div className="navbar-search my-2 my-lg-0">
@@ -47,6 +52,7 @@ const Navbar = ({ brandName, brandUrl, links, userAuthenticated, userName = '', 
           <UserAuthSection userAuthenticated={userAuthenticated} userName={userName} userIsStaff={userIsStaff} />
         </BSNavbar.Collapse>
       </Container>
+      <TagsOffcanvas show={tagsOpen} onHide={() => setTagsOpen(false)} />
     </BSNavbar>
   );
 };

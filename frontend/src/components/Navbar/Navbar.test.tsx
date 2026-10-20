@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
 import Navbar from '@components/Navbar/Navbar';
 import UserAuthSection from './UserAuthSection';
 import { navigateTo } from '../../utils/navigate';
@@ -196,55 +196,36 @@ describe('Navbar', () => {
    * @function
    * @name handles-tags-offcanvas-button-correctly
    */
-  test('корректно обрабатывает кнопку offcanvas для тегов', () => {
-    // Мокируем window.bootstrap
-    const mockOffcanvasInstance = {
-      show: jest.fn(),
+  test('корректно обрабатывает кнопку offcanvas для тегов', async () => {
+    const galleryProps = {
+      ...defaultProps,
+      links: defaultProps.links.map((link) =>
+        link.text === 'Галерея'
+          ? {
+              ...link,
+              active: true,
+              dropdown: [
+                { url: '/gallery/albums/', text: 'Альбомы' },
+                { url: '/gallery/photos/', text: 'Фотографии' },
+                { url: '#', text: 'Тэги', offcanvas: true },
+              ],
+            }
+          : link,
+      ),
     };
 
-    const mockBootstrap = {
-      Offcanvas: {
-        getOrCreateInstance: jest.fn(() => mockOffcanvasInstance),
-      },
-    };
+    render(<Navbar {...galleryProps} />);
 
-    Object.defineProperty(window, 'bootstrap', {
-      value: mockBootstrap,
-      writable: true,
+    await act(async () => {
+      fireEvent.click(screen.getByText('Галерея'));
     });
 
-    // Мокируем document.getElementById
-    const mockOffcanvasElement = document.createElement('div');
-    mockOffcanvasElement.id = 'tagsOffcanvas';
-    document.getElementById = jest.fn(() => mockOffcanvasElement);
+    fireEvent.click(screen.getByText('Тэги'));
 
-    const props = {
-      ...defaultProps,
-      userAuthenticated: true,
-      userName: 'testuser',
-    };
-
-    render(<Navbar {...props} />);
-
-    // Сначала находим и кликаем на кнопку "Галерея", чтобы открыть dropdown
-    const galleryDropdown = screen.getByText('Галерея');
-    expect(galleryDropdown).toBeInTheDocument();
-
-    // Имитируем hover или клик для открытия dropdown
-    fireEvent.click(galleryDropdown);
-
-    // Теперь кнопка "Тэги" должна стать видимой
-    const tagsButton = screen.getByText('Тэги');
-    expect(tagsButton).toBeInTheDocument();
-    expect(tagsButton).toHaveAttribute('href', '#');
-
-    // Симулируем клик по кнопке
-    fireEvent.click(tagsButton);
-
-    // Проверяем, что были вызваны соответствующие функции
-    expect(document.getElementById).toHaveBeenCalledWith('tagsOffcanvas');
-    expect(mockBootstrap.Offcanvas.getOrCreateInstance).toHaveBeenCalledWith(mockOffcanvasElement);
-    expect(mockOffcanvasInstance.show).toHaveBeenCalled();
+    // Открывается React-панель тегов (offcanvas рендерится с ролью dialog)
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+    });
   });
 });
 

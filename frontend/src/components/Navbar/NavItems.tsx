@@ -22,6 +22,8 @@ export interface NavLink {
 export interface NavItemsProps {
   links: NavLink[];
   userIsStaff?: boolean;
+  /** Обработчик открытия offcanvas-панели тегов. */
+  onOpenOffcanvas?: () => void;
 }
 
 /**
@@ -30,7 +32,7 @@ export interface NavItemsProps {
  * Отображает навигационные ссылки в виде обычных ссылок или выпадающих меню.
  * Поддерживает отображение специальных элементов для администраторов.
  */
-const NavItems = ({ links, userIsStaff = false }: NavItemsProps) => (
+const NavItems = ({ links, userIsStaff = false, onOpenOffcanvas }: NavItemsProps) => (
   <>
     {links.map((link) => {
       // Ссылка с выпадающим меню
@@ -43,12 +45,10 @@ const NavItems = ({ links, userIsStaff = false }: NavItemsProps) => (
                 return (
                   <NavDropdown.Item
                     key={item.text}
+                    href="#"
                     onClick={(e) => {
                       e.preventDefault();
-                      const offcanvas = document.getElementById('tagsOffcanvas');
-                      if (offcanvas && window.bootstrap?.Offcanvas) {
-                        window.bootstrap.Offcanvas.getOrCreateInstance(offcanvas).show();
-                      }
+                      onOpenOffcanvas?.();
                     }}
                   >
                     {item.text}

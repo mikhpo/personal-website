@@ -118,28 +118,9 @@ describe('NavItems', () => {
    * в выпадающем меню открывает боковую панель
    */
   test('корректно обрабатывает кнопку offcanvas', async () => {
-    // Мокируем window.bootstrap
-    const mockOffcanvasInstance = {
-      show: jest.fn(),
-    };
+    const onOpenOffcanvas = jest.fn();
 
-    const mockBootstrap = {
-      Offcanvas: {
-        getOrCreateInstance: jest.fn(() => mockOffcanvasInstance),
-      },
-    };
-
-    Object.defineProperty(window, 'bootstrap', {
-      value: mockBootstrap,
-      writable: true,
-    });
-
-    // Мокируем document.getElementById
-    const mockOffcanvasElement = document.createElement('div');
-    mockOffcanvasElement.id = 'tagsOffcanvas';
-    document.getElementById = jest.fn(() => mockOffcanvasElement);
-
-    render(<NavItems {...defaultProps} />);
+    render(<NavItems {...defaultProps} onOpenOffcanvas={onOpenOffcanvas} />);
 
     // Сначала находим и кликаем на кнопку "Галерея", чтобы открыть dropdown
     await openGalleryDropdown();
@@ -152,10 +133,7 @@ describe('NavItems', () => {
     // Симулируем клик по кнопке
     fireEvent.click(tagsButton);
 
-    // Проверяем, что были вызваны соответствующие функции
-    expect(document.getElementById).toHaveBeenCalledWith('tagsOffcanvas');
-    expect(mockBootstrap.Offcanvas.getOrCreateInstance).toHaveBeenCalledWith(mockOffcanvasElement);
-    expect(mockOffcanvasInstance.show).toHaveBeenCalled();
+    expect(onOpenOffcanvas).toHaveBeenCalledTimes(1);
   });
 
   /**
