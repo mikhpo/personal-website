@@ -403,7 +403,7 @@ Workflows:
 * task test-backend - тестирование Django с собранным фронтендом
 * task test-integration - интеграционные тесты локального стека (приложение, PostgreSQL, S3-сервер, nginx)
 * task dev-cert - self-signed сертификат для локального nginx
-* task check - статический анализ (Ruff, Mypy, ESLint, markdownlint)
+* task check - статический анализ (Ruff, Mypy, ESLint, TypeScript, markdownlint)
 * task build-frontend - сборка React фронтенда
 * task migrate - создание и применение миграций
 * task install - установка зависимостей Python и Node.js

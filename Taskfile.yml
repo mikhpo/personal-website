@@ -247,19 +247,29 @@ tasks:
       - poetry run mypy .
 
   eslint:
-    desc: Выполнить статический анализ кода JavaScript/React при помощи ESLint
+    desc: Выполнить статический анализ кода TypeScript/React при помощи ESLint
     summary: |
-      Проверяет качество кода JavaScript и React компонентов с помощью ESLint.
-      Использует конфигурацию из .eslintrc.json.
+      Проверяет качество кода TypeScript и React компонентов с помощью ESLint.
+      Использует конфигурацию из eslint.config.mjs.
     preconditions:
       - test -f package.json
     cmds:
       - npm run eslint
 
+  typecheck:
+    desc: Выполнить проверку типов TypeScript
+    summary: |
+      Проверяет типы TypeScript при помощи tsc в режиме без генерации файлов.
+      Используется конфигурация из frontend/tsconfig.json.
+    preconditions:
+      - test -f package.json
+    cmds:
+      - npm run typecheck
+
   prettier:
     desc: Отформатировать код фронтенда при помощи Prettier
     summary: |
-      Форматирует JavaScript и JSON файлы фронтенда с помощью Prettier.
+      Форматирует код и JSON файлы фронтенда с помощью Prettier.
       Использует конфигурацию из .prettierrc.json и список исключений из .prettierignore.
     preconditions:
       - test -f package.json
@@ -271,7 +281,7 @@ tasks:
     desc: Отформатировать код Python и фронтенда
     summary: |
       Команда форматирует код всего проекта: Python через Ruff
-      (автоматическое исправление ошибок), JavaScript и JSON фронтенда через Prettier.
+      (автоматическое исправление ошибок), код и JSON фронтенда через Prettier.
     preconditions:
       - test -f pyproject.toml
       - test -f package.json
@@ -291,7 +301,7 @@ tasks:
 
   check:
     desc: Выполнить статический анализ кода и проверки Django
-    summary: Команда запускает проверки Ruff, Mypy, ESLint, markdownlint и Django
+    summary: Команда запускает проверки Ruff, Mypy, ESLint, TypeScript, markdownlint и Django
     preconditions:
       - test -f pyproject.toml
       - test -f package.json
@@ -299,6 +309,7 @@ tasks:
       - task: ruff
       - task: mypy
       - task: eslint
+      - task: typecheck
       - task: markdownlint
       - poetry run python backend/manage.py check
 
