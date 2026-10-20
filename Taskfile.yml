@@ -253,6 +253,7 @@ tasks:
       Использует конфигурацию из eslint.config.mjs.
     preconditions:
       - test -f package.json
+      - test -f eslint.config.mjs
     cmds:
       - npm run eslint
 
@@ -263,6 +264,7 @@ tasks:
       Используется конфигурация из frontend/tsconfig.json.
     preconditions:
       - test -f package.json
+      - test -f frontend/tsconfig.json
     cmds:
       - npm run typecheck
 
@@ -296,6 +298,7 @@ tasks:
       Использует конфигурацию из .markdownlint.json.
     preconditions:
       - test -f package.json
+      - test -f .markdownlint.json
     cmds:
       - npm run markdownlint
 
