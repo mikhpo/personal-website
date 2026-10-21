@@ -43,7 +43,7 @@ class TestPhotoSerializer(TestCase):
         self.assertEqual(data["next_id"], other.pk)
 
     def test_list_serializer_has_no_neighbor_ids(self) -> None:
-        """Базовый сериализатор не вычисляет соседей: список не платит за них запросами."""
+        """Базовый сериализатор не вычисляет соседей: в списке они не нужны."""
         data = PhotoSerializer(self.photo).data
         self.assertNotIn("previous_id", data)
         self.assertNotIn("next_id", data)
