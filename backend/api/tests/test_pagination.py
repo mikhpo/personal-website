@@ -23,24 +23,30 @@ class TestBasePagination(APITestCase):
         self.factory = APIRequestFactory()
 
     def test_custom_page_size_within_limit(self) -> None:
-        """Тест пользовательского размера страницы в пределах лимита."""
-        request = Request(self.factory.get("/", {"page_size": 50}))
+        """Размер страницы из query-параметра в пределах лимита применяется как есть."""
+        page_size = 50
+        request = Request(self.factory.get("/", {"page_size": page_size}))
         pagination = BasePagination()
         pagination.request = request
 
-        self.assertEqual(pagination.get_page_size(request), 50)
+        self.assertEqual(pagination.get_page_size(request), page_size)
 
     def test_custom_page_size_exceeding_limit(self) -> None:
-        """Тест размера страницы больше максимального."""
-        request = Request(self.factory.get("/", {"page_size": 150}))
+        """Размер страницы из query-параметра выше лимита обрезается до max_page_size."""
+        request = Request(self.factory.get("/", {"page_size": BasePagination.max_page_size + 50}))
         pagination = BasePagination()
         pagination.request = request
 
-        self.assertEqual(pagination.get_page_size(request), 100)
+        self.assertEqual(pagination.get_page_size(request), BasePagination.max_page_size)
 
     def test_paginated_response_includes_total_pages(self) -> None:
-        """Тест проверки наличия поля total_pages в ответе пагинации."""
-        for _ in range(100):
+        """Ответ пагинации содержит все поля.
+
+        count равен числу объектов, total_pages и размер результатов согласованы
+        с размером страницы по умолчанию.
+        """
+        total_photos = 100
+        for _ in range(total_photos):
             PhotoFactory.create()
         queryset: QuerySet[Photo] = Photo.objects.all()
 
@@ -59,17 +65,19 @@ class TestBasePagination(APITestCase):
         self.assertIn("previous", response.data)
         self.assertIn("results", response.data)
 
-        self.assertEqual(response.data["count"], 100)
-        self.assertEqual(response.data["total_pages"], 5)
-        self.assertEqual(len(response.data["results"]), 20)
+        self.assertEqual(response.data["count"], total_photos)
+        self.assertEqual(response.data["total_pages"], total_photos // BasePagination.page_size)
+        self.assertEqual(len(response.data["results"]), BasePagination.page_size)
 
     def test_paginated_response_with_custom_page_size(self) -> None:
-        """Тест проверки total_pages с кастомным размером страницы."""
-        for _ in range(100):
+        """total_pages и размер результатов согласованы с размером страницы из query-параметра."""
+        total_photos = 100
+        for _ in range(total_photos):
             PhotoFactory.create()
         queryset: QuerySet[Photo] = Photo.objects.all()
 
-        request = Request(self.factory.get("/", {"page_size": 10}))
+        page_size = 10
+        request = Request(self.factory.get("/", {"page_size": page_size}))
         pagination = BasePagination()
         pagination.request = request
 
@@ -78,9 +86,9 @@ class TestBasePagination(APITestCase):
 
         response = pagination.get_paginated_response(cast("list[Photo]", page))
 
-        self.assertEqual(response.data["count"], 100)
-        self.assertEqual(response.data["total_pages"], 10)
-        self.assertEqual(len(response.data["results"]), 10)
+        self.assertEqual(response.data["count"], total_photos)
+        self.assertEqual(response.data["total_pages"], total_photos // page_size)
+        self.assertEqual(len(response.data["results"]), page_size)
 
 
 class TestGalleryPhotoPagination(APITestCase):
@@ -91,17 +99,17 @@ class TestGalleryPhotoPagination(APITestCase):
         self.factory = APIRequestFactory()
 
     def test_large_page_size_exceeding_limit(self) -> None:
-        """Тест размера страницы больше максимального."""
-        request = Request(self.factory.get("/", {"page_size": 150}))
+        """Размер страницы из query-параметра выше лимита обрезается до max_page_size."""
+        request = Request(self.factory.get("/", {"page_size": GalleryPhotoPagination.max_page_size + 50}))
         pagination = GalleryPhotoPagination()
         pagination.request = request
 
-        self.assertEqual(pagination.get_page_size(request), 100)
+        self.assertEqual(pagination.get_page_size(request), GalleryPhotoPagination.max_page_size)
 
     def test_paginated_response_total_pages(self) -> None:
-        """Тест проверки total_pages для пагинации галереи с реальными объектами."""
-        # Создаем 80 фотографий (стандартный размер страницы = 40, должно получиться 2 страницы)
-        for _ in range(80):
+        """Число страниц и результаты согласованы с размером страницы по умолчанию."""
+        total_photos = 80
+        for _ in range(total_photos):
             PhotoFactory.create()
         queryset: QuerySet[Photo] = Photo.objects.all()
 
@@ -109,37 +117,35 @@ class TestGalleryPhotoPagination(APITestCase):
         pagination = GalleryPhotoPagination()
         pagination.request = request
 
-        # Применяем пагинацию к queryset
         page = pagination.paginate_queryset(queryset, request)
         self.assertIsNotNone(page)
 
         response = pagination.get_paginated_response(cast("list[Photo]", page))
 
-        self.assertEqual(response.data["count"], 80)
-        self.assertEqual(response.data["total_pages"], 2)
-        self.assertEqual(len(response.data["results"]), 40)  # Первая страница
+        self.assertEqual(response.data["count"], total_photos)
+        self.assertEqual(response.data["total_pages"], total_photos // GalleryPhotoPagination.page_size)
+        self.assertEqual(len(response.data["results"]), GalleryPhotoPagination.page_size)
 
     def test_paginated_response_with_custom_page_size(self) -> None:
-        """Тест проверки total_pages с кастомным размером страницы для галереи."""
-        # Создаем 50 фотографий
-        for _ in range(50):
+        """Число страниц и результаты согласованы с размером страницы из query-параметра."""
+        total_photos = 50
+        for _ in range(total_photos):
             PhotoFactory.create()
         queryset: QuerySet[Photo] = Photo.objects.all()
 
-        # Устанавливаем кастомный размер страницы = 25
-        request = Request(self.factory.get("/", {"page_size": 25}))
+        page_size = 25
+        request = Request(self.factory.get("/", {"page_size": page_size}))
         pagination = GalleryPhotoPagination()
         pagination.request = request
 
-        # Применяем пагинацию к queryset
         page = pagination.paginate_queryset(queryset, request)
         self.assertIsNotNone(page)
 
         response = pagination.get_paginated_response(cast("list[Photo]", page))
 
-        self.assertEqual(response.data["count"], 50)
-        self.assertEqual(response.data["total_pages"], 2)
-        self.assertEqual(len(response.data["results"]), 25)  # Первая страница
+        self.assertEqual(response.data["count"], total_photos)
+        self.assertEqual(response.data["total_pages"], total_photos // page_size)
+        self.assertEqual(len(response.data["results"]), page_size)
 
 
 class TestBlogArticlePagination(APITestCase):
@@ -150,25 +156,26 @@ class TestBlogArticlePagination(APITestCase):
         self.factory = APIRequestFactory()
 
     def test_small_page_size(self) -> None:
-        """Тест маленького размера страницы."""
-        request = Request(self.factory.get("/", {"page_size": 2}))
+        """Маленький размер страницы из query-параметра применяется как есть."""
+        page_size = 2
+        request = Request(self.factory.get("/", {"page_size": page_size}))
         pagination = BlogArticlePagination()
         pagination.request = request
 
-        self.assertEqual(pagination.get_page_size(request), 2)
+        self.assertEqual(pagination.get_page_size(request), page_size)
 
     def test_page_size_exceeding_limit(self) -> None:
-        """Тест размера страницы больше максимального."""
-        request = Request(self.factory.get("/", {"page_size": 100}))
+        """Размер страницы из query-параметра выше лимита обрезается до max_page_size."""
+        request = Request(self.factory.get("/", {"page_size": BlogArticlePagination.max_page_size + 50}))
         pagination = BlogArticlePagination()
         pagination.request = request
 
-        self.assertEqual(pagination.get_page_size(request), 50)
+        self.assertEqual(pagination.get_page_size(request), BlogArticlePagination.max_page_size)
 
     def test_paginated_response_total_pages(self) -> None:
-        """Тест проверки total_pages для пагинации блога с реальными объектами."""
-        # Создаем 25 статей (стандартный размер страницы = 5, должно получиться 5 страниц)
-        for _ in range(25):
+        """Число страниц и результаты согласованы с размером страницы по умолчанию."""
+        total_articles = 25
+        for _ in range(total_articles):
             ArticleFactory.create()
         queryset: QuerySet[Article] = Article.objects.all()
 
@@ -176,34 +183,32 @@ class TestBlogArticlePagination(APITestCase):
         pagination = BlogArticlePagination()
         pagination.request = request
 
-        # Применяем пагинацию к queryset
         page = pagination.paginate_queryset(queryset, request)
         self.assertIsNotNone(page)
 
         response = pagination.get_paginated_response(cast("list[Article]", page))
 
-        self.assertEqual(response.data["count"], 25)
-        self.assertEqual(response.data["total_pages"], 5)
-        self.assertEqual(len(response.data["results"]), 5)  # Первая страница
+        self.assertEqual(response.data["count"], total_articles)
+        self.assertEqual(response.data["total_pages"], total_articles // BlogArticlePagination.page_size)
+        self.assertEqual(len(response.data["results"]), BlogArticlePagination.page_size)
 
     def test_paginated_response_with_custom_page_size(self) -> None:
-        """Тест проверки total_pages с кастомным размером страницы для блога."""
-        # Создаем 30 статей
-        for _ in range(30):
+        """Число страниц и результаты согласованы с размером страницы из query-параметра."""
+        total_articles = 30
+        for _ in range(total_articles):
             ArticleFactory.create()
         queryset: QuerySet[Article] = Article.objects.all()
 
-        # Устанавливаем кастомный размер страницы = 10
-        request = Request(self.factory.get("/", {"page_size": 10}))
+        page_size = 10
+        request = Request(self.factory.get("/", {"page_size": page_size}))
         pagination = BlogArticlePagination()
         pagination.request = request
 
-        # Применяем пагинацию к queryset
         page = pagination.paginate_queryset(queryset, request)
         self.assertIsNotNone(page)
 
         response = pagination.get_paginated_response(cast("list[Article]", page))
 
-        self.assertEqual(response.data["count"], 30)
-        self.assertEqual(response.data["total_pages"], 3)
-        self.assertEqual(len(response.data["results"]), 10)  # Первая страница
+        self.assertEqual(response.data["count"], total_articles)
+        self.assertEqual(response.data["total_pages"], total_articles // page_size)
+        self.assertEqual(len(response.data["results"]), page_size)
