@@ -30,12 +30,10 @@ class TestPhotoSerializer(TestCase):
         other = PhotoFactory(album=self.album, public=True)
         # taken_at фиксируем через update(): фабрика задает случайные даты,
         # а Photo.save() перезаписывает поле из EXIF при создании
-        Photo.objects.filter(pk=self.photo.pk).update(
-            taken_at=datetime.datetime(2024, 1, 1, 10, 0, tzinfo=datetime.timezone.utc),
-        )
-        Photo.objects.filter(pk=other.pk).update(
-            taken_at=datetime.datetime(2024, 1, 1, 11, 0, tzinfo=datetime.timezone.utc),
-        )
+        taken_at = datetime.datetime(2024, 1, 1, 10, 0, tzinfo=datetime.timezone.utc)
+        other_taken_at = datetime.datetime(2024, 1, 1, 11, 0, tzinfo=datetime.timezone.utc)
+        Photo.objects.filter(pk=self.photo.pk).update(taken_at=taken_at)
+        Photo.objects.filter(pk=other.pk).update(taken_at=other_taken_at)
         self.photo.refresh_from_db()
 
         data = PhotoDetailSerializer(self.photo).data
@@ -60,9 +58,8 @@ class TestPhotoSerializer(TestCase):
         # taken_at фиксируем через update(): фабрика задает случайные даты,
         # а Photo.save() перезаписывает поле из EXIF при создании
         for offset, photo in enumerate([self.photo, first, second, third]):
-            Photo.objects.filter(pk=photo.pk).update(
-                taken_at=datetime.datetime(2024, 1, 1, 10 + offset, 0, tzinfo=datetime.timezone.utc),
-            )
+            taken_at = datetime.datetime(2024, 1, 1, 10 + offset, 0, tzinfo=datetime.timezone.utc)
+            Photo.objects.filter(pk=photo.pk).update(taken_at=taken_at)
             photo.refresh_from_db()
 
         data = PhotoDetailSerializer([self.photo, first], many=True).data
