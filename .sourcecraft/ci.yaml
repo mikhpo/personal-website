@@ -97,6 +97,10 @@ workflows:
               - echo "Сборка React фронтенда"
               - npm install
               - npm run build
+              # schema.yaml и api-schema.ts хранятся в репозитории и обновляются командой
+              # npm run api-types:generate вместе с изменениями сериализаторов. Если
+              # перегенерацию забыть, TypeScript проверяет код против устаревшей схемы;
+              # --exit-code превращает расхождение в ошибку сборки.
               - echo "Проверка свежести сгенерированных типов API"
               - npm run api-types:generate
               - git diff --exit-code frontend/src/types/schema.yaml frontend/src/types/api-schema.ts
