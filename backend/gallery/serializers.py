@@ -18,8 +18,10 @@ class TagSerializer(serializers.ModelSerializer):
 class PhotoSerializer(serializers.ModelSerializer):
     """Сериализатор для модели фотографии.
 
-    Поля соседей по альбому здесь отсутствуют: списочные данные их не
-    используют, детальному просмотру их добавляет PhotoDetailSerializer.
+    Поля соседей по альбому отсутствуют намеренно: их вычисление требует
+    двух запросов на фотографию, а списочные данные эти поля не показывают.
+    Соседи нужны только детальному просмотру с его навигацией, там их
+    добавляет PhotoDetailSerializer.
     """
 
     tags = TagSerializer(many=True, read_only=True)
