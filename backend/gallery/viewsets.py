@@ -97,9 +97,14 @@ class PhotoViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
-    """Набор представлений для работы с тегами."""
+    """Набор представлений для работы с тегами.
+
+    Пагинация отключена: панель тегов на фронтенде показывает полный
+    список за один запрос.
+    """
 
     queryset = Tag.objects.all()
+    pagination_class: ClassVar[None] = None
     serializer_class = TagSerializer
     permission_classes: ClassVar[list] = [IsAuthenticatedOrReadOnly]
     lookup_field = "slug"

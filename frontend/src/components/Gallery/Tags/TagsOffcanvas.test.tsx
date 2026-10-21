@@ -7,7 +7,6 @@ import type { components } from '../../../types/api-schema';
 import { galleryService as galleryServiceModule } from '@services';
 
 type Tag = components['schemas']['Tag'];
-type PaginatedTagList = components['schemas']['PaginatedTagList'];
 
 jest.mock('@services');
 
@@ -35,19 +34,11 @@ Object.defineProperty(window, 'matchMedia', {
 
 describe('TagsOffcanvas', () => {
   // Мок-данные тегов для тестирования
-  const mockTags = [
+  const mockTags: Tag[] = [
     { id: 1, name: 'Природа', slug: 'nature' },
     { id: 2, name: 'Пейзаж', slug: 'landscape' },
     { id: 3, name: 'Портрет', slug: 'portrait' },
   ];
-
-  const envelope = (results: Tag[]): PaginatedTagList => ({
-    count: results.length,
-    total_pages: 1,
-    next: null,
-    previous: null,
-    results,
-  });
 
   let galleryService: jest.Mocked<typeof galleryServiceModule>;
 
@@ -65,7 +56,7 @@ describe('TagsOffcanvas', () => {
 
   // Проверяет загрузку тегов при монтировании компонента с show=true
   test('загружает теги при монтировании если show=true', async () => {
-    galleryService.getTags.mockResolvedValueOnce(envelope(mockTags));
+    galleryService.getTags.mockResolvedValueOnce(mockTags);
 
     await act(async () => {
       render(<TagsOffcanvas show={true} onHide={jest.fn()} />);
@@ -94,7 +85,7 @@ describe('TagsOffcanvas', () => {
 
   // Проверяет отображение списка тегов после успешной загрузки данных
   test('отображает список тегов после загрузки', async () => {
-    galleryService.getTags.mockResolvedValueOnce(envelope(mockTags));
+    galleryService.getTags.mockResolvedValueOnce(mockTags);
 
     await act(async () => {
       render(<TagsOffcanvas show={true} onHide={jest.fn()} />);
@@ -135,7 +126,7 @@ describe('TagsOffcanvas', () => {
 
   // Проверяет отображение пустого состояния при получении пустого списка
   test('отображает пустое состояние если нет тегов', async () => {
-    galleryService.getTags.mockResolvedValueOnce(envelope([]));
+    galleryService.getTags.mockResolvedValueOnce([]);
 
     await act(async () => {
       render(<TagsOffcanvas show={true} onHide={jest.fn()} />);
@@ -148,7 +139,7 @@ describe('TagsOffcanvas', () => {
 
   // Проверяет отображение заголовка "Тэги"
   test('отображает заголовок "Тэги"', async () => {
-    galleryService.getTags.mockResolvedValueOnce(envelope([]));
+    galleryService.getTags.mockResolvedValueOnce([]);
 
     await act(async () => {
       render(<TagsOffcanvas show={true} onHide={jest.fn()} />);
@@ -159,7 +150,7 @@ describe('TagsOffcanvas', () => {
 
   // Проверяет отображение кнопки закрытия Offcanvas
   test('отображает кнопку закрытия', async () => {
-    galleryService.getTags.mockResolvedValueOnce(envelope([]));
+    galleryService.getTags.mockResolvedValueOnce([]);
 
     await act(async () => {
       render(<TagsOffcanvas show={true} onHide={jest.fn()} />);
@@ -174,7 +165,7 @@ describe('TagsOffcanvas', () => {
     const user = userEvent.setup();
     const handleHide = jest.fn();
 
-    galleryService.getTags.mockResolvedValueOnce(envelope([]));
+    galleryService.getTags.mockResolvedValueOnce([]);
 
     await act(async () => {
       render(<TagsOffcanvas show={true} onHide={handleHide} />);
@@ -193,9 +184,7 @@ describe('TagsOffcanvas', () => {
 
   // Проверяет возможность повторной загрузки данных после отображения ошибки
   test('повторная загрузка работает после ошибки', async () => {
-    galleryService.getTags
-      .mockRejectedValueOnce(new Error('Ошибка загрузки: 500'))
-      .mockResolvedValueOnce(envelope(mockTags));
+    galleryService.getTags.mockRejectedValueOnce(new Error('Ошибка загрузки: 500')).mockResolvedValueOnce(mockTags);
 
     const user = userEvent.setup();
 
@@ -217,7 +206,7 @@ describe('TagsOffcanvas', () => {
 
   // Проверяет загрузку данных при изменении show с false на true
   test('загружает данные при изменении show с false на true', async () => {
-    galleryService.getTags.mockResolvedValue(envelope(mockTags));
+    galleryService.getTags.mockResolvedValue(mockTags);
 
     let container: HTMLElement | undefined;
     await act(async () => {

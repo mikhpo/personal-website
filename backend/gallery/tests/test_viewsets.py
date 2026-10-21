@@ -11,6 +11,7 @@ from PIL import Image
 from rest_framework.test import APITestCase
 
 from gallery.factories import AlbumFactory, PhotoFactory, TagFactory
+from gallery.models import Tag
 
 User = get_user_model()
 
@@ -31,11 +32,10 @@ class TestTagViewSet(APITestCase):
         url = "/api/gallery/tags/"
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data["count"], 3)
-        self.assertEqual(len(response.data["results"]), 3)
+        self.assertEqual(len(response.data), 3)
 
         # Проверка структуры данных
-        tag_data = response.data["results"][0]
+        tag_data = response.data[0]
         self.assertIn("name", tag_data)
         self.assertIn("slug", tag_data)
         self.assertIn("description", tag_data)
@@ -54,17 +54,25 @@ class TestTagViewSet(APITestCase):
         url = "/api/gallery/tags/"
         response = self.client.get(url, {"search": "природа"})
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data["count"], 1)
-        self.assertEqual(response.data["results"][0]["name"], "природа")
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["name"], "природа")
 
     def test_ordering_tags(self) -> None:
         """Сортировка тегов по имени."""
         url = "/api/gallery/tags/"
         response = self.client.get(url, {"ordering": "name"})
         self.assertEqual(response.status_code, 200)
-        results = response.data["results"]
-        names = [tag["name"] for tag in results]
+        names = [tag["name"] for tag in response.data]
         self.assertEqual(names, sorted(names))
+
+    def test_list_tags_without_pagination(self) -> None:
+        """Список отдает все теги одной выдачей, без разбиения на страницы."""
+        for number in range(25):
+            TagFactory(name=f"тег-{number}")
+        response = self.client.get("/api/gallery/tags/")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data), Tag.objects.count())
+        self.assertEqual(Tag.objects.count(), 28)
 
 
 class TestPhotoViewSet(APITestCase):

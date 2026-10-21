@@ -128,12 +128,13 @@ export const galleryService = {
   },
 
   /**
-   * Получает список тегов.
+   * Получает полный список тегов: эндпоинт отдает все теги одной выдачей
+   * без пагинации.
    *
    * @example
    * const tags = await galleryService.getTags();
    */
-  async getTags(): Promise<Paginated<Tag>> {
+  async getTags(): Promise<Tag[]> {
     return api.get(`${BASE_URL}/tags/`);
   },
 
