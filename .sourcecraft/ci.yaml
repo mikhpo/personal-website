@@ -97,6 +97,9 @@ workflows:
               - echo "Сборка React фронтенда"
               - npm install
               - npm run build
+              - echo "Проверка свежести сгенерированных типов API"
+              - npm run api-types:generate
+              - git diff --exit-code frontend/src/types/schema.yaml frontend/src/types/api-schema.ts
               - echo "Компиляция каталогов переводов"
               - cd backend && poetry run python manage.py compilemessages && cd ..
               - echo "Запуск тестов Python с помощью Pytest"

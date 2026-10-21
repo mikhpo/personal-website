@@ -288,6 +288,11 @@ jobs:
       - name: Build React frontend
         run: npm run build
 
+      - name: Проверка свежести сгенерированных типов API
+        run: |
+          npm run api-types:generate
+          git diff --exit-code frontend/src/types/schema.yaml frontend/src/types/api-schema.ts
+
       - name: Check Django migrations
         run: poetry run python backend/manage.py makemigrations --dry-run --check
 
