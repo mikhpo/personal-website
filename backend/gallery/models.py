@@ -211,7 +211,9 @@ class Photo(models.Model):
         ordering = ("-taken_at",)
         verbose_name = "Фотография"
         verbose_name_plural = "Фотографии"
-        indexes: ClassVar[list] = [models.Index(fields=["album", "taken_at"], name="gallery_photo_album_taken_idx")]
+        indexes: ClassVar[list[models.Index]] = [
+            models.Index(fields=["album", "taken_at"], name="gallery_photo_album_taken_idx"),
+        ]
 
     def __str__(self) -> str:
         """Строковое представление фотографии является наименованием фотографии."""

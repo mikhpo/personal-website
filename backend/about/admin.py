@@ -1,6 +1,6 @@
 """Представление страницы Обо мне в административном сайте Django."""
 
-from typing import ClassVar
+from typing import Any, ClassVar
 
 from django.contrib import admin
 from django.db import models
@@ -21,7 +21,9 @@ class AboutAdmin(admin.ModelAdmin):
     model = About
 
     # Стандартная форма текстового поля заменена на HTML форму TinyMCE.
-    formfield_overrides: ClassVar[dict] = {models.TextField: {"widget": TinyMCE()}}  # type: ignore[assignment]
+    formfield_overrides: ClassVar[dict[type[models.Field], dict[str, Any]]] = {
+        models.TextField: {"widget": TinyMCE()},
+    }  # type: ignore[assignment]
 
     def has_add_permission(self, request: HttpRequest) -> bool:  # noqa: ARG002
         """Добавление записи запрещено - страница Обо мне всегда одна."""

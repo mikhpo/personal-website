@@ -9,7 +9,7 @@ from drf_spectacular.utils import extend_schema, inline_serializer
 from PIL import UnidentifiedImageError
 from rest_framework import filters, serializers, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAdminUser, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import BasePermission, IsAdminUser, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 
 from api.filters import DatabaseSearchFilter
@@ -33,15 +33,19 @@ class AlbumViewSet(viewsets.ReadOnlyModelViewSet):
     """Набор представлений для работы с альбомами."""
 
     serializer_class = AlbumListSerializer
-    permission_classes: ClassVar[list] = [IsPublicOrAuthor]
+    permission_classes: ClassVar[list[type[BasePermission]]] = [IsPublicOrAuthor]
     lookup_field = "pk"
     # DatabaseSearchFilter после OrderingFilter: сортировка по релевантности
     # (-rank) не должна перезаписываться дефолтным ordering вьюхи.
-    filter_backends: ClassVar[list] = [DjangoFilterBackend, filters.OrderingFilter, DatabaseSearchFilter]
-    filterset_fields: ClassVar[list] = ["tags__slug"]
-    search_fields: ClassVar[list] = ["name", "description"]
-    ordering_fields: ClassVar[list] = ["created_at", "name", "order"]
-    ordering: ClassVar[list] = ["-order", "-created_at"]
+    filter_backends: ClassVar[list[type[filters.BaseFilterBackend] | type[DjangoFilterBackend]]] = [
+        DjangoFilterBackend,
+        filters.OrderingFilter,
+        DatabaseSearchFilter,
+    ]
+    filterset_fields: ClassVar[list[str]] = ["tags__slug"]
+    search_fields: ClassVar[list[str]] = ["name", "description"]
+    ordering_fields: ClassVar[list[str]] = ["created_at", "name", "order"]
+    ordering: ClassVar[list[str]] = ["-order", "-created_at"]
 
     def get_serializer_class(self) -> type:
         """Возвращает сериализатор в зависимости от action."""
@@ -69,15 +73,19 @@ class PhotoViewSet(viewsets.ReadOnlyModelViewSet):
     """Набор представлений для работы с фотографиями."""
 
     serializer_class = PhotoSerializer
-    permission_classes: ClassVar[list] = [IsPublicOrAuthor]
+    permission_classes: ClassVar[list[type[BasePermission]]] = [IsPublicOrAuthor]
     pagination_class = GalleryPhotoPagination
     lookup_field = "pk"
     # DatabaseSearchFilter после OrderingFilter: сортировка по релевантности
     # (-rank) не должна перезаписываться дефолтным ordering вьюхи.
     # Теги не входят в search_fields: M2M-связь не ложится на SearchVector.
-    filter_backends: ClassVar[list] = [DjangoFilterBackend, filters.OrderingFilter, DatabaseSearchFilter]
-    filterset_fields: ClassVar[list] = ["tags__slug"]
-    search_fields: ClassVar[list] = ["name", "description"]
+    filter_backends: ClassVar[list[type[filters.BaseFilterBackend] | type[DjangoFilterBackend]]] = [
+        DjangoFilterBackend,
+        filters.OrderingFilter,
+        DatabaseSearchFilter,
+    ]
+    filterset_fields: ClassVar[list[str]] = ["tags__slug"]
+    search_fields: ClassVar[list[str]] = ["name", "description"]
 
     def get_serializer_class(self) -> type[PhotoSerializer]:
         """Детальный ответ дополняется соседями по альбому."""
@@ -85,8 +93,8 @@ class PhotoViewSet(viewsets.ReadOnlyModelViewSet):
             return PhotoDetailSerializer
         return PhotoSerializer
 
-    ordering_fields: ClassVar[list] = ["taken_at", "uploaded_at", "name"]
-    ordering: ClassVar[list] = ["-taken_at"]
+    ordering_fields: ClassVar[list[str]] = ["taken_at", "uploaded_at", "name"]
+    ordering: ClassVar[list[str]] = ["-taken_at"]
 
     def get_queryset(self) -> "QuerySet[Photo]":
         """В list отдаёт только public=True, в retrieve - любую фотографию."""
@@ -106,18 +114,18 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
     pagination_class: ClassVar[None] = None
     serializer_class = TagSerializer
-    permission_classes: ClassVar[list] = [IsAuthenticatedOrReadOnly]
+    permission_classes: ClassVar[list[type[BasePermission]]] = [IsAuthenticatedOrReadOnly]
     lookup_field = "slug"
-    filter_backends: ClassVar[list] = [filters.SearchFilter, filters.OrderingFilter]
-    search_fields: ClassVar[list] = ["name"]
-    ordering_fields: ClassVar[list] = ["name"]
-    ordering: ClassVar[list] = ["name"]
+    filter_backends: ClassVar[list[type[filters.BaseFilterBackend]]] = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields: ClassVar[list[str]] = ["name"]
+    ordering_fields: ClassVar[list[str]] = ["name"]
+    ordering: ClassVar[list[str]] = ["name"]
 
 
 class UploadViewSet(viewsets.ViewSet):
     """Набор представлений для загрузки фотографий."""
 
-    permission_classes: ClassVar[list] = [IsAdminUser]
+    permission_classes: ClassVar[list[type[BasePermission]]] = [IsAdminUser]
 
     @extend_schema(
         request={

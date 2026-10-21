@@ -4,7 +4,7 @@ from typing import ClassVar
 
 from drf_spectacular.utils import extend_schema
 from rest_framework import viewsets
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, BasePermission
 from rest_framework.request import Request
 from rest_framework.response import Response
 
@@ -19,7 +19,7 @@ class AboutViewSet(viewsets.ViewSet):
     содержимого записи-синглтона без детализации.
     """
 
-    permission_classes: ClassVar[list] = [AllowAny]
+    permission_classes: ClassVar[list[type[BasePermission]]] = [AllowAny]
 
     @extend_schema(responses=AboutSerializer)
     def list(self, request: Request) -> Response:  # noqa: ARG002
