@@ -5,7 +5,7 @@ import logging
 from datetime import datetime
 from fractions import Fraction
 from pathlib import Path
-from typing import Self
+from typing import ClassVar, Self
 
 from django.conf import settings
 from django.db import models
@@ -211,6 +211,7 @@ class Photo(models.Model):
         ordering = ("-taken_at",)
         verbose_name = "Фотография"
         verbose_name_plural = "Фотографии"
+        indexes: ClassVar[list] = [models.Index(fields=["album", "taken_at"], name="gallery_photo_album_taken_idx")]
 
     def __str__(self) -> str:
         """Строковое представление фотографии является наименованием фотографии."""
