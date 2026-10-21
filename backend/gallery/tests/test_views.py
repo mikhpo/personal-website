@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 
 from gallery.apps import GalleryConfig
 from gallery.factories import AlbumFactory, PhotoFactory, TagFactory
-from gallery.models import Album, Photo, Tag
+from gallery.models import Album, Photo
 from gallery.services import find_embed_preview
 from gallery.utils import is_image
 from gallery.views import (
@@ -123,10 +123,6 @@ class TestGalleryHomeView(TestCase):
             albums = Album.objects.all()
             self.assertEqual(albums.count(), len(context["albums"]))
 
-        with self.subTest("Тэги галереи содержатся в контексте представления"):
-            tags = Tag.objects.all()
-            self.assertEqual(tags.count(), len(context["tags"]))
-
     def test_gallery_home_search_parameter(self) -> None:
         """Тестирование передачи поискового запроса в React компоненты страницы."""
         response = self.client.get(GALLERY_URL, {"search": "sunset"})
@@ -136,13 +132,6 @@ class TestGalleryHomeView(TestCase):
 
         # Форма поиска смонтирована с targetUrl страницы результатов
         self.assertContains(response, 'data-component-name="Search/SearchForm"')
-
-    def test_gallery_home_search_does_not_filter_tags(self) -> None:
-        """Поисковый запрос не фильтрует набор тэгов на странице галереи."""
-        response = self.client.get(GALLERY_URL, {"search": "sunset"})
-        context = response.context
-        tags = Tag.objects.all()
-        self.assertEqual(tags.count(), len(context["tags"]))
 
 
 class TestPhotoListView(TestCase):
@@ -230,11 +219,6 @@ class TestPhotoListView(TestCase):
 
         with self.subTest("Страница содержит React компонент PhotoList"):
             self.assertContains(response, "Gallery/PhotoList")
-
-        with self.subTest("Представление содержит полный набор тэгов галереи в контексте"):
-            context = response.context
-            tags = Tag.objects.all()
-            self.assertEqual(tags.count(), len(context["tags"]))
 
     def test_photo_list_search_parameter(self) -> None:
         """Тестирование передачи поискового запроса в React компоненты страницы."""
@@ -569,11 +553,6 @@ class TestAlbumListView(TestCase):
 
         with self.subTest("Страница содержит React компонент AlbumList"):
             self.assertContains(response, "Gallery/AlbumList")
-
-        with self.subTest("Представление содержит полный набор тэгов галереи в контексте"):
-            context = response.context
-            tags = Tag.objects.all()
-            self.assertEqual(tags.count(), len(context["tags"]))
 
     def test_album_list_search_parameter(self) -> None:
         """Тестирование передачи поискового запроса в React компоненты страницы."""
@@ -989,10 +968,3 @@ class TestUploadFormView(TestCase):
 
         photos = Photo.objects.filter(album=self.album)
         self.assertFalse(photos.exists())
-
-    def test_upload_view_context(self) -> None:
-        """Представление содержит полный набор тэгов галереи в контексте."""
-        response = self.client.get(UPLOAD_URL)
-        context = response.context
-        tags = Tag.objects.all()
-        self.assertEqual(tags.count(), len(context["tags"]))

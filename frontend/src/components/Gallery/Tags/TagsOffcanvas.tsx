@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Offcanvas } from 'react-bootstrap';
 import TagButton from '@components/Gallery/Tags/TagButton';
 import SpinnerComponent from '@components/Spinner/Spinner';
@@ -20,87 +20,43 @@ export interface TagsOffcanvasProps {
 /**
  * Компонент боковой панели с тегами.
  *
- * Загружает и отображает список всех тегов галереи в боковой панели.
+ * Загружает и отображает полный список тегов галереи в боковой панели.
  */
 const TagsOffcanvas = ({ show, onHide }: TagsOffcanvasProps) => {
   const [tags, setTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!show) return;
-
-    let isMounted = true;
-
-    /**
-     * Загружает список тегов из API и обновляет состояние компонента.
-     * Флаг isMounted предотвращает обновление состояния после размонтирования.
-     */
-    const loadTags = async () => {
-      try {
-        if (!isMounted) return;
-
-        setLoading(true);
-        setError(null);
-
-        const data = await galleryService.getTags();
-        const { items } = parseListResponse(data);
-
-        if (isMounted) {
-          setTags(items);
-          setLoading(false);
-        }
-      } catch (err) {
-        if (isMounted) {
-          setError(err instanceof Error ? err.message : String(err));
-          setLoading(false);
-        }
-      }
-    };
-
-    loadTags();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [show]);
-
   /**
-   * Повторная загрузка тегов после ошибки с собственным флагом isMounted
-   * для предотвращения утечек памяти.
+   * Загружает список тегов из API и обновляет состояние компонента.
+   *
+   * Стабильность ссылки критична для корректной работы useEffect: функция
+   * не меняется все время жизни компонента.
    */
-  const handleRetry = () => {
-    let isMounted = true;
+  const loadTags = useCallback(async () => {
+    setLoading(true);
+    setError(null);
 
-    /** Повторно загружает список тегов из API. */
-    const retryLoadTags = async () => {
-      try {
-        if (!isMounted) return;
+    try {
+      const data = await galleryService.getTags();
+      const { items } = parseListResponse(data);
 
-        setLoading(true);
-        setError(null);
+      setTags(items);
+      setLoading(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+      setLoading(false);
+    }
+  }, []);
 
-        const data = await galleryService.getTags();
-        const { items } = parseListResponse(data);
+  useEffect(() => {
+    if (show) {
+      loadTags();
+    }
+  }, [show, loadTags]);
 
-        if (isMounted) {
-          setTags(items);
-          setLoading(false);
-        }
-      } catch (err) {
-        if (isMounted) {
-          setError(err instanceof Error ? err.message : String(err));
-          setLoading(false);
-        }
-      }
-    };
-
-    retryLoadTags();
-
-    return () => {
-      isMounted = false;
-    };
-  };
+  /** Повторная загрузка тегов после ошибки. */
+  const handleRetry = () => loadTags();
 
   return (
     <Offcanvas show={show} onHide={onHide} placement="start">

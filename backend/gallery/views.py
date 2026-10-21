@@ -31,16 +31,14 @@ class GalleryHomeView(TemplateView):
     template_name = "gallery/gallery_home.html"
 
     def get_context_data(self, **kwargs) -> dict:
-        """Добавить поисковый запрос, альбомы и тэги в контекст.
+        """Добавить поисковый запрос и альбомы в контекст.
 
         Поисковый запрос попадает в пропы SearchForm и AlbumList; набор
-        альбомов фильтруется на клиенте через API (?search=), тэги
-        не фильтруются.
+        альбомов фильтруется на клиенте через API (?search=).
         """
         context = super().get_context_data(**kwargs)
         context["search"] = self.request.GET.get("search", "")
         context["albums"] = Album.published.all()
-        context["tags"] = Tag.objects.all()
         return context
 
 
@@ -52,9 +50,8 @@ class AlbumListView(ListView):
     queryset = Album.published.all()
 
     def get_context_data(self, **kwargs) -> dict[str, Any]:
-        """Добавить все тэги и поисковый запрос в контекст ответа."""
+        """Добавить поисковый запрос в контекст ответа."""
         context = super().get_context_data(**kwargs)
-        context["tags"] = Tag.objects.all()
         context["search"] = self.request.GET.get("search", "")
         return context
 
@@ -88,9 +85,8 @@ class PhotoListView(ListView):
         return Photo.published.all().order_by("-taken_at")
 
     def get_context_data(self, **kwargs) -> dict[str, Any]:
-        """Добавить в контекст набор всех тэгов и поисковый запрос фотографии."""
+        """Добавить поисковый запрос фотографии в контекст."""
         context = super().get_context_data(**kwargs)
-        context["tags"] = Tag.objects.all()
         context["search"] = self.request.GET.get("search", "")
         return context
 
@@ -174,12 +170,6 @@ class UploadFormView(FormView):
     template_name = "gallery/upload.html"
     form_class = UploadForm
     success_url = reverse_lazy("gallery:gallery")
-
-    def get_context_data(self, **kwargs) -> dict[str, Any]:
-        """Добавить тэги в контекст."""
-        context = super().get_context_data(**kwargs)
-        context["tags"] = Tag.objects.all()
-        return context
 
     def post(self, request: HttpRequest, *args: tuple, **kwargs: dict) -> HttpResponse:  # noqa: ARG002
         """Проверить форму на валидность после отправки."""
