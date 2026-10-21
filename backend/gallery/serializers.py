@@ -16,7 +16,11 @@ class TagSerializer(serializers.ModelSerializer):
 
 
 class PhotoSerializer(serializers.ModelSerializer):
-    """Сериализатор для модели фотографии."""
+    """Сериализатор для модели фотографии.
+
+    Поля соседей по альбому здесь отсутствуют: списочные данные их не
+    используют, детальному просмотру их добавляет PhotoDetailSerializer.
+    """
 
     tags = TagSerializer(many=True, read_only=True)
     album_name = serializers.CharField(source="album.name", read_only=True)
