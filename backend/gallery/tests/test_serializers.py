@@ -43,13 +43,13 @@ class TestPhotoSerializer(TestCase):
         self.assertEqual(data["next_id"], other.pk)
 
     def test_list_serializer_has_no_neighbor_ids(self) -> None:
-        """Базовый сериализатор не вычисляет соседей: в списке они не нужны."""
+        """Базовый сериализатор не содержит полей соседей: они есть только в детальном."""
         data = PhotoSerializer(self.photo).data
         self.assertNotIn("previous_id", data)
         self.assertNotIn("next_id", data)
 
     def test_detail_serializer_many_keeps_neighbors_per_object(self) -> None:
-        """При сериализации списка каждая фотография получает собственных соседей."""
+        """Детальный сериализатор при many=True вычисляет соседей для каждой фотографии отдельно."""
         first, second, third = (
             PhotoFactory(album=self.album, public=True),
             PhotoFactory(album=self.album, public=True),
