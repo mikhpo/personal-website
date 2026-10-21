@@ -1,6 +1,5 @@
 """Кастомные классы пагинации для REST API."""
 
-from math import ceil
 from typing import Any
 
 from rest_framework.pagination import PageNumberPagination
@@ -14,38 +13,22 @@ class BasePagination(PageNumberPagination):
     page_size_query_param = "page_size"
     max_page_size = 100
 
+    def get_paginated_response(self, data: list[Any]) -> Response:
+        """Возвращает ответ пагинации с полем total_pages."""
+        if self.page is None:
+            msg = "Объект страницы не задан. Сначала вызовите paginate_queryset."
+            raise ValueError(msg)
+
+        response = super().get_paginated_response(data)
+        response.data["total_pages"] = self.page.paginator.num_pages
+        return response
+
     def get_paginated_response_schema(self, schema: dict[str, Any]) -> dict[str, Any]:
-        """Дополняет схему конверта пагинации OpenAPI полем total_pages."""
+        """Дополняет OpenAPI-схему ответа пагинации полем total_pages."""
         result = super().get_paginated_response_schema(schema)
         result["properties"]["total_pages"] = {"type": "integer", "example": 7}
-        result["required"] = [*result.get("required", []), "total_pages"]
+        result["required"].append("total_pages")
         return result
-
-    def get_paginated_response(self, data: list[Any]) -> Response:
-        """Возвращает ответ с дополнительным полем total_pages."""
-        if self.page is None:
-            msg = "Page object is not set. Call paginate_queryset first."
-            raise ValueError(msg)
-
-        request = self.request
-        if request is None:
-            msg = "Request object is not set."
-            raise ValueError(msg)
-
-        page_size = self.get_page_size(request)
-        if page_size is None:
-            msg = "Page size is not set."
-            raise ValueError(msg)
-
-        return Response(
-            {
-                "count": self.page.paginator.count,
-                "total_pages": ceil(self.page.paginator.count / page_size),
-                "next": self.get_next_link(),
-                "previous": self.get_previous_link(),
-                "results": data,
-            },
-        )
 
 
 class GalleryPhotoPagination(BasePagination):

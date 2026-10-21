@@ -79,7 +79,7 @@ const PhotoList = ({ albumId = null, tagSlug, search }: PhotoListProps) => {
     try {
       if (albumId !== null) {
         const album = await galleryService.getAlbum(albumId);
-        // Фотографии альбома приходят готовым массивом без конверта пагинации
+        // Фотографии альбома приходят готовым массивом без пагинации
         const parsed = parseListResponse(album.photos);
         setPhotos(parsed.items);
         setPagination({ ...EMPTY_PAGINATION, count: parsed.count });

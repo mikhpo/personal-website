@@ -1,7 +1,6 @@
 """Тесты для кастомных классов пагинации API."""
 
 from typing import TYPE_CHECKING, cast
-from unittest.mock import Mock
 
 from rest_framework.request import Request
 from rest_framework.test import APIRequestFactory, APITestCase
@@ -41,15 +40,18 @@ class TestBasePagination(APITestCase):
 
     def test_paginated_response_includes_total_pages(self) -> None:
         """Тест проверки наличия поля total_pages в ответе пагинации."""
+        for _ in range(100):
+            PhotoFactory.create()
+        queryset: QuerySet[Photo] = Photo.objects.all()
+
         request = Request(self.factory.get("/"))
         pagination = BasePagination()
-
-        mock_page = Mock()
-        mock_page.paginator.count = 100
-        pagination.page = mock_page
         pagination.request = request
 
-        response = pagination.get_paginated_response([{"id": 1}, {"id": 2}])
+        page = pagination.paginate_queryset(queryset, request)
+        self.assertIsNotNone(page)
+
+        response = pagination.get_paginated_response(cast("list[Photo]", page))
 
         self.assertIn("count", response.data)
         self.assertIn("total_pages", response.data)
@@ -59,21 +61,26 @@ class TestBasePagination(APITestCase):
 
         self.assertEqual(response.data["count"], 100)
         self.assertEqual(response.data["total_pages"], 5)
-        self.assertEqual(response.data["results"], [{"id": 1}, {"id": 2}])
+        self.assertEqual(len(response.data["results"]), 20)
 
     def test_paginated_response_with_custom_page_size(self) -> None:
         """Тест проверки total_pages с кастомным размером страницы."""
+        for _ in range(100):
+            PhotoFactory.create()
+        queryset: QuerySet[Photo] = Photo.objects.all()
+
         request = Request(self.factory.get("/", {"page_size": 10}))
         pagination = BasePagination()
         pagination.request = request
 
-        mock_page = Mock()
-        mock_page.paginator.count = 100
-        pagination.page = mock_page
+        page = pagination.paginate_queryset(queryset, request)
+        self.assertIsNotNone(page)
 
-        response = pagination.get_paginated_response([{"id": 1}])
+        response = pagination.get_paginated_response(cast("list[Photo]", page))
 
+        self.assertEqual(response.data["count"], 100)
         self.assertEqual(response.data["total_pages"], 10)
+        self.assertEqual(len(response.data["results"]), 10)
 
 
 class TestGalleryPhotoPagination(APITestCase):
