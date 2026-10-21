@@ -91,13 +91,12 @@ const PhotoList = ({ albumId = null, tagSlug, search }: PhotoListProps) => {
         });
         const parsed = parseListResponse(data);
         setPhotos(parsed.items);
-        const totalPages = parsed.count ? Math.ceil(parsed.count / (parsed.items.length || 1)) : 0;
         setPagination({
           count: parsed.count,
           next: parsed.next,
           previous: parsed.previous,
           currentPage: 1,
-          totalPages,
+          totalPages: parsed.totalPages,
         });
       }
     } catch (err) {
@@ -121,7 +120,7 @@ const PhotoList = ({ albumId = null, tagSlug, search }: PhotoListProps) => {
       next: parsed.next,
       previous: parsed.previous,
       currentPage,
-      totalPages: pagination.totalPages,
+      totalPages: parsed.totalPages,
     });
   };
 

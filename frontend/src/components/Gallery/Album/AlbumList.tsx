@@ -59,13 +59,9 @@ const AlbumList = ({ tagSlug, search }: AlbumListProps) => {
           ...(search ? { search } : {}),
           page,
         });
-        const { items } = parseListResponse(data);
+        const { items, totalPages } = parseListResponse(data);
         setAlbums(items);
-
-        // total_pages отдает сам конверт альбомов: размер страницы знает только API
-        if (data.total_pages) {
-          setTotalPages(data.total_pages);
-        }
+        setTotalPages(totalPages);
 
         setLoading(false);
       } catch (err) {

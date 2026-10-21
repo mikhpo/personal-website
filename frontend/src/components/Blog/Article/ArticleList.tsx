@@ -87,10 +87,9 @@ const ArticleList = ({ categorySlug, seriesSlug, topicSlug, search }: ArticleLis
 
       try {
         const data = await fetchArticles(currentPage);
-        const { items, count, next, previous } = parseListResponse(data);
+        const { items, totalPages, next, previous } = parseListResponse(data);
         setArticles(items);
-        const pageSize = items.length || 10;
-        setTotalPages(Math.ceil(count / pageSize));
+        setTotalPages(totalPages);
         setHasNext(!!next);
         setHasPrevious(!!previous);
       } catch (err) {

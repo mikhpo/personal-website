@@ -50,6 +50,27 @@ class TestPhotoSerializer(TestCase):
         self.assertNotIn("previous_id", data)
         self.assertNotIn("next_id", data)
 
+    def test_detail_serializer_many_keeps_neighbors_per_object(self) -> None:
+        """При сериализации списка каждая фотография получает собственных соседей."""
+        first, second, third = (
+            PhotoFactory(album=self.album, public=True),
+            PhotoFactory(album=self.album, public=True),
+            PhotoFactory(album=self.album, public=True),
+        )
+        # taken_at фиксируем через update(): фабрика задает случайные даты,
+        # а Photo.save() перезаписывает поле из EXIF при создании
+        for offset, photo in enumerate([self.photo, first, second, third]):
+            Photo.objects.filter(pk=photo.pk).update(
+                taken_at=datetime.datetime(2024, 1, 1, 10 + offset, 0, tzinfo=datetime.timezone.utc),
+            )
+            photo.refresh_from_db()
+
+        data = PhotoDetailSerializer([self.photo, first], many=True).data
+        self.assertIsNone(data[0]["previous_id"])
+        self.assertEqual(data[0]["next_id"], first.pk)
+        self.assertEqual(data[1]["previous_id"], self.photo.pk)
+        self.assertEqual(data[1]["next_id"], second.pk)
+
 
 class TestAlbumDetailSerializer(TestCase):
     """Тесты для AlbumDetailSerializer."""

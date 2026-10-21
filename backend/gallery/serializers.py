@@ -76,26 +76,27 @@ class PhotoSerializer(serializers.ModelSerializer):
 class PhotoDetailSerializer(PhotoSerializer):
     """Сериализатор детального просмотра фотографии с соседями по альбому.
 
-    Соседи вычисляются один раз на ответ: детальный эндпоинт отдает одну
-    фотографию, списковый обходит их стороной.
+    Соседи вычисляются один раз на объект и хранятся по его ключу: списковая
+    выдача с many=True не смешает соседей разных фотографий.
     """
 
     previous_id = serializers.SerializerMethodField()
     next_id = serializers.SerializerMethodField()
 
-    _neighbors: tuple[int | None, int | None] | None = None
+    def _get_neighbors(self, obj: Photo) -> tuple[int | None, int | None]:
+        """Получить соседей фотографии, кэшируя выборку по ключу объекта."""
+        cache = self.__dict__.setdefault("_neighbors", {})
+        if obj.pk not in cache:
+            cache[obj.pk] = obj.get_neighbor_ids()
+        return cache[obj.pk]
 
     def get_previous_id(self, obj: Photo) -> int | None:
         """Получить id предыдущей публичной фотографии альбома."""
-        if self._neighbors is None:
-            self._neighbors = obj.get_neighbor_ids()
-        return self._neighbors[0]
+        return self._get_neighbors(obj)[0]
 
     def get_next_id(self, obj: Photo) -> int | None:
         """Получить id следующей публичной фотографии альбома."""
-        if self._neighbors is None:
-            self._neighbors = obj.get_neighbor_ids()
-        return self._neighbors[1]
+        return self._get_neighbors(obj)[1]
 
 
 class AlbumBaseSerializer(serializers.ModelSerializer):

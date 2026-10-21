@@ -12,6 +12,8 @@ import type { Paginated } from '../types/pagination';
 export interface ParsedList<T> {
   items: T[];
   count: number;
+  /** Число страниц из конверта; для готового массива - одна страница. */
+  totalPages: number;
   next: string | null;
   previous: string | null;
 }
@@ -20,15 +22,16 @@ export interface ParsedList<T> {
  * Разбирает списочный ответ API: конверт пагинации или готовый массив.
  *
  * @example
- * const { items, count, next } = parseListResponse(await galleryService.getPhotos());
+ * const { items, count, totalPages } = parseListResponse(await galleryService.getPhotos());
  */
 export function parseListResponse<T>(data: Paginated<T> | T[]): ParsedList<T> {
   if (Array.isArray(data)) {
-    return { items: data, count: data.length, next: null, previous: null };
+    return { items: data, count: data.length, totalPages: 1, next: null, previous: null };
   }
   return {
     items: data.results,
     count: data.count,
+    totalPages: data.total_pages,
     next: data.next ?? null,
     previous: data.previous ?? null,
   };
