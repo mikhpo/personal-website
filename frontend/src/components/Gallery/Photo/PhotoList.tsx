@@ -39,6 +39,12 @@ const EMPTY_PAGINATION: PaginationState = {
   totalPages: 0,
 };
 
+/** Вычисляет номер страницы из параметра page ссылки пагинации. */
+const currentPageFromUrl = (pageUrl: string): number => {
+  const url = new URL(pageUrl);
+  return parseInt(url.searchParams.get('page') || '1', 10);
+};
+
 /**
  * Компонент списка фотографий галереи.
  *
@@ -242,12 +248,6 @@ const PhotoList = ({ albumId = null, tagSlug, search }: PhotoListProps) => {
       />
     </Container>
   );
-};
-
-/** Вычисляет номер страницы из параметра page ссылки пагинации. */
-const currentPageFromUrl = (pageUrl: string): number => {
-  const url = new URL(pageUrl);
-  return parseInt(url.searchParams.get('page') || '1', 10);
 };
 
 export default PhotoList;

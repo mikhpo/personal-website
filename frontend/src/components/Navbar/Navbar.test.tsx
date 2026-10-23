@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
 import Navbar from '@components/Navbar/Navbar';
+import type { NavbarProps } from '@components/Navbar/Navbar';
 import UserAuthSection from './UserAuthSection';
 import { navigateTo } from '../../utils/navigate';
 
@@ -40,7 +41,7 @@ describe('Navbar', () => {
    * @property {boolean} userAuthenticated - Признак аутентификации пользователя
    * @property {boolean} userIsStaff - Признак принадлежности пользователя к staff
    */
-  const defaultProps = {
+  const defaultProps: NavbarProps = {
     brandName: 'Мой сайт',
     brandUrl: '/',
     links: [
@@ -53,7 +54,7 @@ describe('Navbar', () => {
         dropdown: [
           { url: '/gallery/albums/', text: 'Альбомы' },
           { url: '/gallery/photos/', text: 'Фотографии' },
-          { url: '#', text: 'Тэги', offcanvas: true },
+          { text: 'Тэги', offcanvas: true },
         ],
       },
     ],
@@ -179,12 +180,12 @@ describe('Navbar', () => {
    * @name submits-search-form-to-search-page
    */
   test('отправляет форму поиска на страницу /main/search/', () => {
-    const { container } = render(<Navbar {...defaultProps} />);
+    render(<Navbar {...defaultProps} />);
 
     fireEvent.change(screen.getByPlaceholderText('Поиск по сайту...'), {
       target: { value: 'react' },
     });
-    fireEvent.submit(container.querySelector('form[role="search"]') as Element);
+    fireEvent.submit(screen.getByRole('search'));
 
     expect(navigateTo).toHaveBeenCalledWith('/main/search/?search=react');
   });
@@ -197,7 +198,7 @@ describe('Navbar', () => {
    * @name handles-tags-offcanvas-button-correctly
    */
   test('корректно обрабатывает кнопку offcanvas для тегов', async () => {
-    const galleryProps = {
+    const galleryProps: NavbarProps = {
       ...defaultProps,
       links: defaultProps.links.map((link) =>
         link.text === 'Галерея'
@@ -207,7 +208,7 @@ describe('Navbar', () => {
               dropdown: [
                 { url: '/gallery/albums/', text: 'Альбомы' },
                 { url: '/gallery/photos/', text: 'Фотографии' },
-                { url: '#', text: 'Тэги', offcanvas: true },
+                { text: 'Тэги', offcanvas: true },
               ],
             }
           : link,

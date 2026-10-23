@@ -1,14 +1,12 @@
 import React from 'react';
 import { Nav, NavDropdown } from 'react-bootstrap';
 
-/** Элемент выпадающего меню навигации. */
-export interface NavDropdownItem {
-  /** URL элемента меню; отсутствует у элементов, открывающих offcanvas-панель. */
-  url?: string;
-  text: string;
-  /** Открывает offcanvas-панель вместо перехода по ссылке. */
-  offcanvas?: boolean;
-}
+/**
+ * Элемент выпадающего меню навигации: обычная ссылка или кнопка
+ * открытия offcanvas-панели.
+ */
+export type NavDropdownItem =
+  { text: string; url: string; offcanvas?: undefined } | { text: string; offcanvas: true; url?: undefined };
 
 /** Ссылка навигационной панели: обычная или с выпадающим меню. */
 export interface NavLink {
@@ -40,17 +38,11 @@ const NavItems = ({ links, userIsStaff = false, onOpenOffcanvas }: NavItemsProps
         return (
           <NavDropdown key={link.url} title={link.text} id={`nav-dropdown-${link.url}`} active={link.active}>
             {link.dropdown.map((item) => {
-              // Элемент для открытия offcanvas панели
+              // Элемент для открытия offcanvas панели; закрытие меню
+              // выполняет сам Dropdown по факту выбора пункта
               if (item.offcanvas) {
                 return (
-                  <NavDropdown.Item
-                    key={item.text}
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      onOpenOffcanvas?.();
-                    }}
-                  >
+                  <NavDropdown.Item key={item.text} as="button" onClick={() => onOpenOffcanvas?.()}>
                     {item.text}
                   </NavDropdown.Item>
                 );

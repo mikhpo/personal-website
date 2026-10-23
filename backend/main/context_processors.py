@@ -102,7 +102,7 @@ def navbar_data(request: HttpRequest) -> ContextNavbarData:
             dropdown=[
                 NavbarLinkDropdown(url="/gallery/albums/", text="Альбомы"),
                 NavbarLinkDropdown(url="/gallery/photos/", text="Фотографии"),
-                NavbarLinkDropdown(url="#", text="Тэги", offcanvas=True),
+                NavbarLinkDropdown(text="Тэги", offcanvas=True),
             ],
         )
         links.append(gallery_link_with_dropdown)

@@ -99,8 +99,7 @@ const PhotoDetail = ({ photoId, isStaff = false, embedSizes = [] }: PhotoDetailP
             />
           </a>
         )}
-        {/* align - устаревший HTML-атрибут; приведение сохраняет прежний DOM */}
-        <div className="card-footer" {...({ align: 'center' } as React.HTMLAttributes<HTMLDivElement>)}>
+        <div className="card-footer text-center">
           <div className="btn-group" role="group" aria-label="Навигация по фотографиям">
             <PhotoNavigation previousUrl={previousUrl} nextUrl={nextUrl}>
               <Button variant="outline-dark" onClick={() => setShowAboutModal(true)}>

@@ -30,13 +30,19 @@ const useLocalStorage = <T>(key: string, initialValue: T | null) => {
     }
   }, [initialValue, key]);
 
-  const [storedValue, setStoredValue] = useState<T | null>(readValue);
+  const [storedValue, setStoredValue] = useState<T | null | undefined>(readValue);
 
-  /** Сохраняет значение в localStorage и обновляет состояние; null и undefined удаляют ключ. */
+  /**
+   * Сохраняет значение в localStorage и обновляет состояние; null и undefined
+   * удаляют ключ, а состояние принимает переданное значение как есть.
+   */
   const setValue = useCallback(
-    (value: T | null | ((prev: T | null) => T | null)) => {
+    (value: T | null | undefined | ((prev: T | null | undefined) => T | null | undefined)) => {
       try {
-        const valueToStore = typeof value === 'function' ? (value as (prev: T | null) => T | null)(storedValue) : value;
+        const valueToStore =
+          typeof value === 'function'
+            ? (value as (prev: T | null | undefined) => T | null | undefined)(storedValue)
+            : value;
         setStoredValue(valueToStore);
 
         if (typeof window !== 'undefined') {

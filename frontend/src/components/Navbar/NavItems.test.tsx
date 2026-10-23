@@ -2,6 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import NavItems from './NavItems';
+import type { NavItemsProps } from './NavItems';
 
 /**
  * Тесты для компонента NavItems
@@ -32,7 +33,7 @@ describe('NavItems', () => {
    * @property {Array} links[].dropdown - Массив элементов выпадающего меню (для галереи)
    * @property {boolean} userIsStaff - Признак принадлежности пользователя к staff
    */
-  const defaultProps = {
+  const defaultProps: NavItemsProps = {
     links: [
       { url: '/', text: 'Главная', active: true },
       { url: '/blog/', text: 'Блог', active: false },
@@ -43,7 +44,7 @@ describe('NavItems', () => {
         dropdown: [
           { url: '/gallery/albums/', text: 'Альбомы' },
           { url: '/gallery/photos/', text: 'Фотографии' },
-          { url: '#', text: 'Тэги', offcanvas: true },
+          { text: 'Тэги', offcanvas: true },
         ],
       },
     ],
@@ -128,7 +129,8 @@ describe('NavItems', () => {
     // Теперь кнопка "Тэги" должна стать видимой
     const tagsButton = screen.getByText('Тэги');
     expect(tagsButton).toBeInTheDocument();
-    expect(tagsButton).toHaveAttribute('href', '#');
+    // Элемент offcanvas рендерится семантичной кнопкой без ссылки-заглушки
+    expect(tagsButton.tagName).toBe('BUTTON');
 
     // Симулируем клик по кнопке
     fireEvent.click(tagsButton);

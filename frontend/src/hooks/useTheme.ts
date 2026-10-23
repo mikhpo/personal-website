@@ -88,7 +88,9 @@ const useTheme = (): UseThemeResult => {
     setTheme(theme === DARK_THEME ? LIGHT_THEME : DARK_THEME);
   }, [setTheme, theme]);
 
-  return { theme, systemTheme, storedTheme, setTheme, toggleTheme };
+  // storedTheme хранилища не бывает undefined (чтение возвращает значение
+  // или начальное), поэтому публичный контракт сужается обратно до null
+  return { theme, systemTheme, storedTheme: storedTheme ?? null, setTheme, toggleTheme };
 };
 
 export default useTheme;

@@ -6,8 +6,8 @@ type AlbumList = components['schemas']['AlbumList'];
 
 /** Свойства компонента выбора альбома. */
 export interface AlbumSelectorProps {
-  /** Массив объектов альбомов. */
-  albums: AlbumList[];
+  /** Массив альбомов; компонент читает только id и наименование. */
+  albums: Pick<AlbumList, 'id' | 'name'>[];
   /** ID выбранного альбома. */
   selectedAlbum: number | null;
   /** Обработчик изменения выбора. */
