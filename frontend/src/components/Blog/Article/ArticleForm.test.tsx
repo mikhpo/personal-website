@@ -11,13 +11,7 @@ import { render, screen, fireEvent, act } from '@testing-library/react';
 import ArticleForm from './ArticleForm';
 import { blogService as realBlogService, navigateTo } from '@services';
 import type { AlertMessage } from '@components/Alert/AlertList';
-import type { components } from '../../../types/api-schema';
-import type { Paginated } from '../../../types/pagination';
-
-type Category = components['schemas']['Category'];
-type Series = components['schemas']['Series'];
-type Topic = components['schemas']['Topic'];
-type Article = components['schemas']['Article'];
+import { makeArticle, makeCategory, makeSeries, makeTopic, paginate } from '@test-utils';
 
 // Мок для blogService и navigateTo
 jest.mock('@services');
@@ -73,15 +67,12 @@ describe('ArticleForm', () => {
   /** FormData первого вызова updateArticle. */
   const getUpdateFormData = (): FormData => blogService.updateArticle.mock.calls.at(0)?.at(1) as FormData;
   const taxonomies = {
-    categories: [
-      { id: 1, name: 'Разработка' },
-      { id: 2, name: 'Путешествия' },
-    ] as unknown as Category[],
-    series: [{ id: 3, name: 'Серия А' }] as unknown as Series[],
-    topics: [{ id: 4, name: 'Тема Б' }] as unknown as Topic[],
+    categories: [makeCategory({ id: 1, name: 'Разработка' }), makeCategory({ id: 2, name: 'Путешествия' })],
+    series: [makeSeries({ id: 3, name: 'Серия А' })],
+    topics: [makeTopic({ id: 4, name: 'Тема Б' })],
   };
 
-  const createdArticle = { id: 10, url: '/blog/article/test/', slug: 'test' } as unknown as Article;
+  const createdArticle = makeArticle({ id: 10, url: '/blog/article/test/', slug: 'test' });
 
   /**
    * Рендерит форму и дожидается загрузки справочников
@@ -119,27 +110,9 @@ describe('ArticleForm', () => {
   });
 
   beforeEach(() => {
-    blogService.getCategories.mockResolvedValue({
-      count: 2,
-      total_pages: 1,
-      next: null,
-      previous: null,
-      results: taxonomies.categories,
-    } as Paginated<Category>);
-    blogService.getSeries.mockResolvedValue({
-      count: 1,
-      total_pages: 1,
-      next: null,
-      previous: null,
-      results: taxonomies.series,
-    } as Paginated<Series>);
-    blogService.getTopics.mockResolvedValue({
-      count: 1,
-      total_pages: 1,
-      next: null,
-      previous: null,
-      results: taxonomies.topics,
-    } as Paginated<Topic>);
+    blogService.getCategories.mockResolvedValue(paginate(taxonomies.categories, { count: 2 }));
+    blogService.getSeries.mockResolvedValue(paginate(taxonomies.series, { count: 1 }));
+    blogService.getTopics.mockResolvedValue(paginate(taxonomies.topics, { count: 1 }));
     Object.defineProperty(document, 'cookie', {
       writable: true,
       value: 'csrftoken=test-csrf-token-12345',
@@ -195,11 +168,8 @@ describe('ArticleForm', () => {
      */
     test('загружает все страницы справочника', async () => {
       blogService.getCategories
-        .mockResolvedValueOnce({
-          results: [taxonomies.categories[0] as Category],
-          next: '/api/blog/categories/?page=2',
-        } as Paginated<Category>)
-        .mockResolvedValueOnce({ results: [taxonomies.categories[1] as Category], next: null } as Paginated<Category>);
+        .mockResolvedValueOnce(paginate([taxonomies.categories[0]!], { next: '/api/blog/categories/?page=2' }))
+        .mockResolvedValueOnce(paginate([taxonomies.categories[1]!], { next: null }));
       await renderForm();
       expect(blogService.getCategories).toHaveBeenCalledTimes(2);
       expect(blogService.getCategories).toHaveBeenLastCalledWith({ page: 2 });
@@ -268,7 +238,7 @@ describe('ArticleForm', () => {
       blogService.createArticle.mockResolvedValue(createdArticle);
       await renderForm();
       fillRequiredFields();
-      const select = screen.getByLabelText('Категории') as unknown as HTMLSelectElement;
+      const select = screen.getByLabelText<HTMLSelectElement>('Категории');
       Array.from(select.options).forEach((option: HTMLOptionElement) => {
         option.selected = option.value === '1' || option.value === '2';
       });
@@ -309,18 +279,18 @@ describe('ArticleForm', () => {
   });
 
   describe('редактирование статьи', () => {
-    const existingArticle = {
+    const existingArticle = makeArticle({
       id: 5,
       title: 'Существующая статья',
       description: 'Описание статьи',
       content: '<p>Существующий текст</p>',
       public: true,
-      categories: [{ id: 1, name: 'Разработка' }],
+      categories: [makeCategory({ id: 1, name: 'Разработка' })],
       series: [],
       topics: [],
       image: '/media/blog/articles/cover.jpg',
       url: '/blog/article/existing/',
-    } as unknown as Article;
+    });
 
     beforeEach(() => {
       blogService.getArticle.mockResolvedValue(existingArticle);
@@ -477,17 +447,16 @@ describe('ArticleForm', () => {
      * Проверяет, что при редактировании без изменений автосохранение не срабатывает.
      */
     test('не автосохраняет неизмененную статью', async () => {
-      blogService.getArticle.mockResolvedValue({
-        id: 5,
-        title: 'Существующая статья',
-        description: '',
-        content: '<p>Текст</p>',
-        public: false,
-        categories: [],
-        series: [],
-        topics: [],
-        url: '/blog/article/existing/',
-      } as unknown as Article);
+      blogService.getArticle.mockResolvedValue(
+        makeArticle({
+          id: 5,
+          title: 'Существующая статья',
+          description: '',
+          content: '<p>Текст</p>',
+          public: false,
+          url: '/blog/article/existing/',
+        }),
+      );
       await renderForm({ articleId: 5 });
       await advanceAutosave();
       expect(blogService.updateArticle).not.toHaveBeenCalled();
@@ -497,18 +466,17 @@ describe('ArticleForm', () => {
      * Проверяет, что изменения черновика при редактировании автосохраняются.
      */
     test('автосохраняет изменения черновика', async () => {
-      blogService.getArticle.mockResolvedValue({
-        id: 5,
-        title: 'Черновик статьи',
-        description: '',
-        content: '<p>Текст</p>',
-        public: false,
-        categories: [],
-        series: [],
-        topics: [],
-        url: '/blog/article/existing/',
-      } as unknown as Article);
-      blogService.updateArticle.mockResolvedValue({ id: 5, url: '/blog/article/existing/' } as unknown as Article);
+      blogService.getArticle.mockResolvedValue(
+        makeArticle({
+          id: 5,
+          title: 'Черновик статьи',
+          description: '',
+          content: '<p>Текст</p>',
+          public: false,
+          url: '/blog/article/existing/',
+        }),
+      );
+      blogService.updateArticle.mockResolvedValue(makeArticle({ id: 5, url: '/blog/article/existing/' }));
       await renderForm({ articleId: 5 });
       fireEvent.change(screen.getByLabelText('Заголовок'), { target: { value: 'Правка черновика' } });
       await advanceAutosave();
@@ -522,17 +490,16 @@ describe('ArticleForm', () => {
      * изменения сохраняются только явной кнопкой "Сохранить".
      */
     test('не автосохраняет опубликованную статью', async () => {
-      blogService.getArticle.mockResolvedValue({
-        id: 5,
-        title: 'Опубликованная статья',
-        description: '',
-        content: '<p>Текст</p>',
-        public: true,
-        categories: [],
-        series: [],
-        topics: [],
-        url: '/blog/article/existing/',
-      } as unknown as Article);
+      blogService.getArticle.mockResolvedValue(
+        makeArticle({
+          id: 5,
+          title: 'Опубликованная статья',
+          description: '',
+          content: '<p>Текст</p>',
+          public: true,
+          url: '/blog/article/existing/',
+        }),
+      );
       await renderForm({ articleId: 5 });
       fireEvent.change(screen.getByLabelText('Заголовок'), { target: { value: 'Правки без сохранения' } });
       await advanceAutosave();
@@ -545,7 +512,7 @@ describe('ArticleForm', () => {
      * запросы не пересекаются и не дублируются, статья остается опубликованной.
      */
     test('публикация дожидается автосохранения', async () => {
-      let resolveCreate: ((value: Article) => void) | undefined;
+      let resolveCreate: ((value: ReturnType<typeof makeArticle>) => void) | undefined;
       blogService.createArticle.mockImplementation(
         () =>
           new Promise((resolve) => {

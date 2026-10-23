@@ -13,10 +13,8 @@ import type { CommentListProps } from '@components/Blog/Comment/CommentList';
 import type { CommentFormProps } from '@components/Blog/Comment/CommentForm';
 import type { SpinnerProps } from '@components/Spinner/Spinner';
 import type { AlertListProps } from '@components/Alert/AlertList';
-import type { components } from '../../../types/api-schema';
+import { makeArticle, makeComment } from '@test-utils';
 import { blogService } from '@services';
-
-type Article = components['schemas']['Article'];
 
 jest.mock('@services');
 
@@ -82,14 +80,14 @@ describe('ArticleDetail', () => {
     loginUrl: '/accounts/login/?next=/blog/1/',
   };
 
-  const mockArticle = {
+  const mockArticle = makeArticle({
     id: 1,
     title: 'Тестовая статья',
     content: '<p>Полный текст статьи</p>',
     published_at: '01 янв. 2024 г.',
     modified_at: '02 янв. 2024 г.',
-    comments: [{ id: 1, author_username: 'user1', content: 'Отлично!', posted: '01 янв. 2024 г.' }],
-  } as unknown as Article;
+    comments: [makeComment({ id: 1, author_username: 'user1', content: 'Отлично!', posted: '01 янв. 2024 г.' })],
+  });
 
   beforeEach(() => {
     mockedBlogService.getArticle.mockReset();

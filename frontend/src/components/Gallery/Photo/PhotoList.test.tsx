@@ -4,12 +4,8 @@ import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import PhotoList from './PhotoList';
 import type { PhotoCardProps } from './PhotoCard';
-import type { components } from '../../../types/api-schema';
+import { makePhoto, makeAlbumDetail, paginate } from '@test-utils';
 import { galleryService as galleryServiceModule, api as apiModule } from '@services';
-
-type Photo = components['schemas']['Photo'];
-type PaginatedPhotoList = components['schemas']['PaginatedPhotoList'];
-type AlbumDetail = components['schemas']['AlbumDetail'];
 
 jest.mock('@services');
 
@@ -28,19 +24,10 @@ jest.mock('./PhotoCard', () => ({
  */
 describe('PhotoList', () => {
   const mockPhotos = [
-    { id: 1, name: 'Фото 1', slug: 'photo-1', thumbnail_url: '/img1.jpg' },
-    { id: 2, name: 'Фото 2', slug: 'photo-2', thumbnail_url: '/img2.jpg' },
-    { id: 3, name: 'Фото 3', slug: 'photo-3', thumbnail_url: '/img3.jpg' },
-  ] as unknown as Photo[];
-
-  const envelope = (results: Photo[], extra: Partial<PaginatedPhotoList> = {}): PaginatedPhotoList => ({
-    count: results.length,
-    total_pages: 1,
-    next: null,
-    previous: null,
-    results,
-    ...extra,
-  });
+    makePhoto({ id: 1, name: 'Фото 1', slug: 'photo-1', thumbnail_url: '/img1.jpg' }),
+    makePhoto({ id: 2, name: 'Фото 2', slug: 'photo-2', thumbnail_url: '/img2.jpg' }),
+    makePhoto({ id: 3, name: 'Фото 3', slug: 'photo-3', thumbnail_url: '/img3.jpg' }),
+  ];
 
   let galleryService: jest.Mocked<typeof galleryServiceModule>;
   let api: jest.Mocked<typeof apiModule>;
@@ -57,7 +44,7 @@ describe('PhotoList', () => {
    * Проверяет, что компонент запрашивает фотографии через сервис при монтировании
    */
   test('загружает данные при монтировании', async () => {
-    galleryService.getPhotos.mockResolvedValueOnce(envelope(mockPhotos));
+    galleryService.getPhotos.mockResolvedValueOnce(paginate(mockPhotos));
     render(<PhotoList />);
     await waitFor(() => {
       expect(galleryService.getPhotos).toHaveBeenCalledWith({ page: 1 });
@@ -68,7 +55,7 @@ describe('PhotoList', () => {
    * Проверяет передачу слага тега в параметры запроса
    */
   test('передаёт слаг тега в параметры запроса', async () => {
-    galleryService.getPhotos.mockResolvedValueOnce(envelope(mockPhotos));
+    galleryService.getPhotos.mockResolvedValueOnce(paginate(mockPhotos));
     render(<PhotoList tagSlug="example-tag" />);
     await waitFor(() => {
       expect(galleryService.getPhotos).toHaveBeenCalledWith({ tags__slug: 'example-tag', page: 1 });
@@ -79,7 +66,7 @@ describe('PhotoList', () => {
    * Проверяет передачу поискового запроса в параметры выборки
    */
   test('передаёт поисковый запрос в параметры выборки', async () => {
-    galleryService.getPhotos.mockResolvedValueOnce(envelope(mockPhotos));
+    galleryService.getPhotos.mockResolvedValueOnce(paginate(mockPhotos));
     render(<PhotoList search="sunset" />);
     await waitFor(() => {
       expect(galleryService.getPhotos).toHaveBeenCalledWith({ search: 'sunset', page: 1 });
@@ -90,7 +77,7 @@ describe('PhotoList', () => {
    * Проверяет сообщение о пустом результате при активном поиске
    */
   test('отображает сообщение с запросом при пустом результате поиска', async () => {
-    galleryService.getPhotos.mockResolvedValueOnce(envelope([]));
+    galleryService.getPhotos.mockResolvedValueOnce(paginate([]));
     render(<PhotoList search="sunset" />);
     await waitFor(() => {
       expect(screen.getByText('По запросу "sunset" ничего не найдено')).toBeInTheDocument();
@@ -110,7 +97,7 @@ describe('PhotoList', () => {
    * Проверяет отображение списка фотографий после успешной загрузки
    */
   test('отображает список фотографий после загрузки', async () => {
-    galleryService.getPhotos.mockResolvedValueOnce(envelope(mockPhotos));
+    galleryService.getPhotos.mockResolvedValueOnce(paginate(mockPhotos));
     render(<PhotoList />);
     await waitFor(() => {
       expect(screen.getByText('Фото 1')).toBeInTheDocument();
@@ -134,7 +121,7 @@ describe('PhotoList', () => {
    * Проверяет отображение сообщения при отсутствии фотографий
    */
   test('отображает пустое состояние если нет фотографий', async () => {
-    galleryService.getPhotos.mockResolvedValueOnce(envelope([]));
+    galleryService.getPhotos.mockResolvedValueOnce(paginate([]));
     render(<PhotoList />);
     await waitFor(() => {
       expect(screen.getByText('Нет доступных фотографий')).toBeInTheDocument();
@@ -146,11 +133,7 @@ describe('PhotoList', () => {
    * ответа альбома, пагинация не запрашивается
    */
   test('загружает фотографии альбома через детальный эндпоинт', async () => {
-    galleryService.getAlbum.mockResolvedValueOnce({
-      id: 7,
-      name: 'Альбом',
-      photos: mockPhotos,
-    } as unknown as AlbumDetail);
+    galleryService.getAlbum.mockResolvedValueOnce(makeAlbumDetail({ id: 7, name: 'Альбом', photos: mockPhotos }));
     render(<PhotoList albumId={7} />);
     await waitFor(() => {
       expect(galleryService.getAlbum).toHaveBeenCalledWith(7);
@@ -167,7 +150,7 @@ describe('PhotoList', () => {
     const user = userEvent.setup();
     galleryService.getPhotos
       .mockRejectedValueOnce(new Error('Ошибка загрузки: 500'))
-      .mockResolvedValueOnce(envelope(mockPhotos));
+      .mockResolvedValueOnce(paginate(mockPhotos));
     render(<PhotoList />);
     await waitFor(() => {
       expect(screen.getByText(/Ошибка загрузки: 500/)).toBeInTheDocument();
@@ -188,7 +171,7 @@ describe('PhotoList', () => {
    * Проверяет перезагрузку данных при изменении фильтра
    */
   test('перезагружает данные при изменении фильтра', async () => {
-    galleryService.getPhotos.mockResolvedValue(envelope(mockPhotos));
+    galleryService.getPhotos.mockResolvedValue(paginate(mockPhotos));
     const { rerender } = render(<PhotoList tagSlug="first-tag" />);
     await waitFor(() => {
       expect(galleryService.getPhotos).toHaveBeenCalledWith({ tags__slug: 'first-tag', page: 1 });
@@ -203,12 +186,10 @@ describe('PhotoList', () => {
    * Проверяет работу с большим количеством фотографий
    */
   test('рендерит большое количество фотографий', async () => {
-    const manyPhotos = Array.from({ length: 50 }, (_, i) => ({
-      id: i + 1,
-      name: `Фото ${i + 1}`,
-      slug: `photo-${i + 1}`,
-    })) as unknown as Photo[];
-    galleryService.getPhotos.mockResolvedValueOnce(envelope(manyPhotos));
+    const manyPhotos = Array.from({ length: 50 }, (_, i) =>
+      makePhoto({ id: i + 1, name: `Фото ${i + 1}`, slug: `photo-${i + 1}` }),
+    );
+    galleryService.getPhotos.mockResolvedValueOnce(paginate(manyPhotos));
     const { container } = render(<PhotoList />);
     await waitFor(() => {
       const items = container.querySelectorAll('.masonry-item');
@@ -221,12 +202,12 @@ describe('PhotoList', () => {
    */
   test('переходит на следующую страницу по ссылке пагинации', async () => {
     const user = userEvent.setup();
-    const firstPage = envelope(mockPhotos.slice(0, 2), {
+    const firstPage = paginate(mockPhotos.slice(0, 2), {
       count: 3,
       total_pages: 2,
       next: 'http://localhost/api/gallery/photos/?page=2',
     });
-    const secondPage = envelope(mockPhotos.slice(2), {
+    const secondPage = paginate(mockPhotos.slice(2), {
       count: 3,
       total_pages: 2,
       previous: 'http://localhost/api/gallery/photos/?page=1',
@@ -261,8 +242,8 @@ describe('PhotoList', () => {
    * Проверяет работу с фотографиями без thumbnail_url
    */
   test('работает с фотографиями без thumbnail_url', async () => {
-    const photosWithoutThumbnails = mockPhotos.map((p) => ({ ...p, thumbnail_url: undefined })) as unknown as Photo[];
-    galleryService.getPhotos.mockResolvedValueOnce(envelope(photosWithoutThumbnails));
+    const photosWithoutThumbnails = mockPhotos.map((p) => makePhoto({ ...p, thumbnail_url: undefined }));
+    galleryService.getPhotos.mockResolvedValueOnce(paginate(photosWithoutThumbnails));
     render(<PhotoList />);
     await waitFor(() => {
       expect(screen.getByText('Фото 1')).toBeInTheDocument();

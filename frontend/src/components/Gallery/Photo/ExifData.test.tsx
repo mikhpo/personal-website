@@ -2,9 +2,7 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import ExifData from './ExifData';
-import type { components } from '../../../types/api-schema';
-
-type Photo = components['schemas']['Photo'];
+import { makePhoto } from '@test-utils';
 
 /**
  * Тесты для компонента ExifData
@@ -13,9 +11,9 @@ type Photo = components['schemas']['Photo'];
  * включая форматирование значений и обработку граничных случаев.
  */
 describe('ExifData', () => {
-  const emptyPhoto = {} as unknown as Photo;
+  const emptyPhoto = makePhoto();
 
-  const fullPhoto = {
+  const fullPhoto = makePhoto({
     camera: 'Canon EOS 5D Mark IV',
     lens_model: 'Canon EF 24-70mm f/2.8L II USM',
     aperture: 'f/2.8',
@@ -23,7 +21,7 @@ describe('ExifData', () => {
     iso: 400,
     focal_length: 50,
     taken_at: '2024-01-15T10:30:00Z',
-  } as unknown as Photo;
+  });
 
   /**
    * Проверяет, что компонент возвращает null, когда все поля фото пустые
@@ -57,10 +55,7 @@ describe('ExifData', () => {
    * Проверяет, что компонент рендерит только заполненные поля EXIF данных
    */
   test('рендерит только заполненные поля', () => {
-    const partialPhoto = {
-      camera: 'Nikon D850',
-      iso: 800,
-    } as unknown as Photo;
+    const partialPhoto = makePhoto({ camera: 'Nikon D850', iso: 800 });
     render(<ExifData photo={partialPhoto} />);
     expect(screen.getByText('Камера')).toBeInTheDocument();
     expect(screen.getByText('Nikon D850')).toBeInTheDocument();
@@ -74,7 +69,7 @@ describe('ExifData', () => {
    * Проверяет, что к значению выдержки добавляется суффикс " с"
    */
   test('добавляет суффикс " с" к выдержке', () => {
-    const photoWithExposure = { exposure: '1/1000' } as unknown as Photo;
+    const photoWithExposure = makePhoto({ exposure: '1/1000' });
     render(<ExifData photo={photoWithExposure} />);
     expect(screen.getByText('1/1000 с')).toBeInTheDocument();
   });
@@ -83,7 +78,7 @@ describe('ExifData', () => {
    * Проверяет, что к значению ISO добавляется префикс "ISO "
    */
   test('добавляет префикс "ISO " к ISO', () => {
-    const photoWithIso = { iso: 1600 } as unknown as Photo;
+    const photoWithIso = makePhoto({ iso: 1600 });
     render(<ExifData photo={photoWithIso} />);
     expect(screen.getByText('ISO 1600')).toBeInTheDocument();
   });
@@ -92,7 +87,7 @@ describe('ExifData', () => {
    * Проверяет, что к значению фокусного расстояния добавляется суффикс " мм"
    */
   test('добавляет суффикс " мм" к фокусному расстоянию', () => {
-    const photoWithFocalLength = { focal_length: 85 } as unknown as Photo;
+    const photoWithFocalLength = makePhoto({ focal_length: 85 });
     render(<ExifData photo={photoWithFocalLength} />);
     expect(screen.getByText('85 мм')).toBeInTheDocument();
   });
@@ -101,7 +96,7 @@ describe('ExifData', () => {
    * Проверяет, что дата форматируется в русской локали
    */
   test('форматирует дату в русской локали', () => {
-    const photoWithDate = { taken_at: '2024-12-25T15:45:30Z' } as unknown as Photo;
+    const photoWithDate = makePhoto({ taken_at: '2024-12-25T15:45:30Z' });
     render(<ExifData photo={photoWithDate} />);
     const dateText = screen.getByText(/25\.12\.2024/);
     expect(dateText).toBeInTheDocument();
@@ -111,7 +106,7 @@ describe('ExifData', () => {
    * Проверяет, что компонент возвращает null при некорректной дате
    */
   test('обрабатывает невалидную дату', () => {
-    const photoWithInvalidDate = { taken_at: 'invalid-date' } as unknown as Photo;
+    const photoWithInvalidDate = makePhoto({ taken_at: 'invalid-date' });
     const { container } = render(<ExifData photo={photoWithInvalidDate} />);
     expect(container.firstChild).toBeNull();
   });
@@ -130,7 +125,7 @@ describe('ExifData', () => {
    * Проверяет, что компонент возвращает null при ISO равном 0
    */
   test('обрабатывает ISO 0', () => {
-    const photoWithZeroIso = { iso: 0 } as unknown as Photo;
+    const photoWithZeroIso = makePhoto({ iso: 0 });
     const { container } = render(<ExifData photo={photoWithZeroIso} />);
     expect(container.firstChild).toBeNull();
   });
@@ -139,7 +134,7 @@ describe('ExifData', () => {
    * Проверяет, что компонент возвращает null при focal_length равном 0
    */
   test('обрабатывает focal_length 0', () => {
-    const photoWithZeroFocalLength = { focal_length: 0 } as unknown as Photo;
+    const photoWithZeroFocalLength = makePhoto({ focal_length: 0 });
     const { container } = render(<ExifData photo={photoWithZeroFocalLength} />);
     expect(container.firstChild).toBeNull();
   });
@@ -148,12 +143,12 @@ describe('ExifData', () => {
    * Проверяет, что компонент возвращает null при пустых строковых значениях
    */
   test('обрабатывает пустые строки', () => {
-    const photoWithEmptyStrings = {
+    const photoWithEmptyStrings = makePhoto({
       camera: '',
       lens_model: '',
       aperture: '',
       exposure: '',
-    } as unknown as Photo;
+    });
     const { container } = render(<ExifData photo={photoWithEmptyStrings} />);
     expect(container.firstChild).toBeNull();
   });
@@ -162,15 +157,16 @@ describe('ExifData', () => {
    * Проверяет, что компонент возвращает null при null значениях всех полей
    */
   test('рендерит с null значениями', () => {
-    const photoWithNulls = {
-      camera: null,
-      lens_model: null,
+    // null в текстовых полях нарушает схему, но проверяет защиту компонента
+    const photoWithNulls = makePhoto({
+      camera: null as unknown as string,
+      lens_model: null as unknown as string,
       aperture: null,
       exposure: null,
       iso: null,
       focal_length: null,
-      taken_at: null,
-    } as unknown as Photo;
+      taken_at: null as unknown as string,
+    });
     const { container } = render(<ExifData photo={photoWithNulls} />);
     expect(container.firstChild).toBeNull();
   });
@@ -179,10 +175,10 @@ describe('ExifData', () => {
    * Проверяет, что компонент корректно обрабатывает спецсимволы в текстовых полях
    */
   test('рендерит со спецсимволами в текстовых полях', () => {
-    const photoWithSpecialChars = {
+    const photoWithSpecialChars = makePhoto({
       camera: 'Canon <>&"\'',
       lens_model: 'Lens <>&"\'',
-    } as unknown as Photo;
+    });
     render(<ExifData photo={photoWithSpecialChars} />);
     expect(screen.getByText('Canon <>&"\'')).toBeInTheDocument();
     expect(screen.getByText('Lens <>&"\'')).toBeInTheDocument();

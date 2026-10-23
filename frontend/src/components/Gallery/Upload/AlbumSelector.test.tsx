@@ -2,9 +2,7 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import AlbumSelector from './AlbumSelector';
-import type { components } from '../../../types/api-schema';
-
-type AlbumList = components['schemas']['AlbumList'];
+import { makeAlbum } from '@test-utils';
 
 /**
  * Тесты для компонента AlbumSelector.
@@ -15,10 +13,10 @@ type AlbumList = components['schemas']['AlbumList'];
 describe('AlbumSelector', () => {
   // Мок-данные альбомов для тестирования
   const mockAlbums = [
-    { id: 1, name: 'Альбом 1' },
-    { id: 2, name: 'Альбом 2' },
-    { id: 3, name: 'Альбом 3' },
-  ] as unknown as AlbumList[];
+    makeAlbum({ id: 1, name: 'Альбом 1' }),
+    makeAlbum({ id: 2, name: 'Альбом 2' }),
+    makeAlbum({ id: 3, name: 'Альбом 3' }),
+  ];
 
   // Проверяет отображение заголовка селектора альбома
   test('рендерит с лейблом', () => {
@@ -103,10 +101,7 @@ describe('AlbumSelector', () => {
 
   // Проверяет корректную обработку большого количества альбомов
   test('рендерит с большим количеством альбомов', () => {
-    const manyAlbums = Array.from({ length: 50 }, (_, i) => ({
-      id: i + 1,
-      name: `Альбом ${i + 1}`,
-    })) as unknown as AlbumList[];
+    const manyAlbums = Array.from({ length: 50 }, (_, i) => makeAlbum({ id: i + 1, name: `Альбом ${i + 1}` }));
 
     render(<AlbumSelector albums={manyAlbums} selectedAlbum={null} onChange={jest.fn()} />);
 
@@ -118,8 +113,8 @@ describe('AlbumSelector', () => {
   // Проверяет отображение длинных названий альбомов
   test('рендерит с длинными названиями альбомов', () => {
     const albumsWithLongNames = [
-      { id: 1, name: 'Очень длинное название альбома которое может занимать много места' },
-    ] as unknown as AlbumList[];
+      makeAlbum({ id: 1, name: 'Очень длинное название альбома которое может занимать много места' }),
+    ];
 
     render(<AlbumSelector albums={albumsWithLongNames} selectedAlbum={null} onChange={jest.fn()} />);
 
@@ -128,7 +123,7 @@ describe('AlbumSelector', () => {
 
   // Проверяет корректную обработку спецсимволов в названиях альбомов
   test('рендерит со спецсимволами в названиях', () => {
-    const albumsWithSpecialChars = [{ id: 1, name: 'Альбом <>&"\'' }] as unknown as AlbumList[];
+    const albumsWithSpecialChars = [makeAlbum({ id: 1, name: 'Альбом <>&"\'' })];
 
     render(<AlbumSelector albums={albumsWithSpecialChars} selectedAlbum={null} onChange={jest.fn()} />);
 

@@ -10,10 +10,8 @@ import '@testing-library/jest-dom';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import CommentForm from './CommentForm';
 import type { AlertListProps } from '@components/Alert/AlertList';
-import type { components } from '../../../types/api-schema';
+import { makeComment } from '@test-utils';
 import { blogService } from '@services';
-
-type CommentData = components['schemas']['Comment'];
 
 // Мок для blogService
 jest.mock('@services');
@@ -135,7 +133,7 @@ describe('CommentForm', () => {
      * Данные должны быть отправлены на сервер с правильными заголовками.
      */
     test('отправляет комментарий при успешной отправке', async () => {
-      mockedBlogService.createComment.mockResolvedValue({ id: 1, content: 'Комментарий' } as unknown as CommentData);
+      mockedBlogService.createComment.mockResolvedValue(makeComment({ id: 1, content: 'Комментарий' }));
 
       render(<CommentForm {...mockProps} />);
 
@@ -221,7 +219,7 @@ describe('CommentForm', () => {
      * Заголовок X-CSRFToken должен содержать токен из cookie.
      */
     test('использует CSRF токен через сервис', async () => {
-      mockedBlogService.createComment.mockResolvedValue({ id: 1, content: 'Комментарий' } as unknown as CommentData);
+      mockedBlogService.createComment.mockResolvedValue(makeComment({ id: 1, content: 'Комментарий' }));
 
       render(<CommentForm {...mockProps} />);
 
@@ -242,7 +240,7 @@ describe('CommentForm', () => {
    */
   describe('callback onSuccess', () => {
     test('вызывает onSuccess после успешной отправки', async () => {
-      mockedBlogService.createComment.mockResolvedValue({ id: 1, content: 'Комментарий' } as unknown as CommentData);
+      mockedBlogService.createComment.mockResolvedValue(makeComment({ id: 1, content: 'Комментарий' }));
 
       render(<CommentForm {...mockProps} />);
 
@@ -257,7 +255,7 @@ describe('CommentForm', () => {
     });
 
     test('не вызывает onSuccess если он не передан', async () => {
-      mockedBlogService.createComment.mockResolvedValue({ id: 1, content: 'Комментарий' } as unknown as CommentData);
+      mockedBlogService.createComment.mockResolvedValue(makeComment({ id: 1, content: 'Комментарий' }));
 
       const onSuccess = jest.fn();
       render(<CommentForm {...mockProps} onSuccess={onSuccess} />);
@@ -296,10 +294,7 @@ describe('CommentForm', () => {
      * Компонент должен справляться с текстами произвольной длины.
      */
     test('обрабатывает длинные комментарии', async () => {
-      mockedBlogService.createComment.mockResolvedValue({
-        id: 1,
-        content: 'Длинный комментарий',
-      } as unknown as CommentData);
+      mockedBlogService.createComment.mockResolvedValue(makeComment({ id: 1, content: 'Длинный комментарий' }));
 
       const longComment = 'а'.repeat(1000);
       render(<CommentForm {...mockProps} />);
@@ -319,10 +314,7 @@ describe('CommentForm', () => {
      * Компонент должен корректно отправлять текст со спецсимволами.
      */
     test('обрабатывает специальные символы в комментарии', async () => {
-      mockedBlogService.createComment.mockResolvedValue({
-        id: 1,
-        content: 'Комментарий с символами',
-      } as unknown as CommentData);
+      mockedBlogService.createComment.mockResolvedValue(makeComment({ id: 1, content: 'Комментарий с символами' }));
 
       const specialComment = 'Текст с <символами> & "спецсимволами"';
       render(<CommentForm {...mockProps} />);

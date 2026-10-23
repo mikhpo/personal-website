@@ -207,7 +207,8 @@ describe('BaseCard', () => {
       };
       const { container } = render(<BaseCard {...propsWithHandlers} />);
       const img = container.querySelector('.card-img-top');
-      fireEvent.load(img as Element);
+      expect(img).not.toBeNull();
+      fireEvent.load(img!);
       expect(onImageLoad).toHaveBeenCalledTimes(1);
     });
   });

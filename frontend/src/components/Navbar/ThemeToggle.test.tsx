@@ -8,21 +8,7 @@
 import React from 'react';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import ThemeToggle from './ThemeToggle';
-
-/**
- * Создает управляемый стаб window.matchMedia.
- * @param {boolean} matchesDark - Совпадает ли запрос prefers-color-scheme: dark
- * @return {Function} Функция matchMedia
- */
-const stubMatchMedia = (matchesDark: boolean): ((query: string) => MediaQueryList) => {
-  const listeners = new Set();
-  const mediaQuery = {
-    matches: matchesDark,
-    addEventListener: jest.fn((event, listener) => listeners.add(listener)),
-    removeEventListener: jest.fn(),
-  };
-  return jest.fn(() => mediaQuery as unknown as MediaQueryList);
-};
+import { createMatchMediaStub } from '@test-utils';
 
 /**
  * Открывает выпадающее меню выбора темы кликом по кнопке.
@@ -39,7 +25,7 @@ describe('ThemeToggle', () => {
   beforeEach(() => {
     window.localStorage.clear();
     document.documentElement.removeAttribute('data-bs-theme');
-    window.matchMedia = stubMatchMedia(false);
+    window.matchMedia = createMatchMediaStub(false).query;
   });
 
   /**
@@ -138,7 +124,7 @@ describe('ThemeToggle', () => {
 
     test('выбор "Системная" удаляет явный выбор и следует системной теме', async () => {
       window.localStorage.setItem('theme', JSON.stringify('dark'));
-      window.matchMedia = stubMatchMedia(false);
+      window.matchMedia = createMatchMediaStub(false).query;
 
       render(<ThemeToggle />);
       await openMenu();

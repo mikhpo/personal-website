@@ -18,7 +18,8 @@
       "@services": ["./src/services/index"],
       "@hooks/*": ["./src/hooks/*"],
       "@hooks": ["./src/hooks/index"],
-      "@utils/*": ["./src/utils/*"]
+      "@utils/*": ["./src/utils/*"],
+      "@test-utils": ["./src/test-utils/index"]
     }
   },
   "include": ["src/**/*"]

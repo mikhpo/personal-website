@@ -15,10 +15,7 @@ import { galleryService as realGalleryService } from '@services';
 import type { AlbumCardProps } from './AlbumCard';
 import type { SpinnerProps } from '@components/Spinner/Spinner';
 import type { AlertListProps } from '@components/Alert/AlertList';
-import type { components } from '../../../types/api-schema';
-import type { Paginated } from '../../../types/pagination';
-
-type AlbumListSchema = components['schemas']['AlbumList'];
+import { makeAlbum, paginate } from '@test-utils';
 
 jest.mock('@services');
 
@@ -74,38 +71,26 @@ jest.mock('@components/Pagination/Pagination', () => ({
 describe('AlbumList', () => {
   // Тестовые данные альбомов
   const mockAlbums = [
-    {
+    makeAlbum({
       id: 1,
       name: 'Альбом 1',
       slug: 'album-1',
       description: 'Описание альбома 1',
       cover_thumbnail_url: '/media/album1.jpg',
-    },
-    {
+    }),
+    makeAlbum({
       id: 2,
       name: 'Альбом 2',
       slug: 'album-2',
       description: 'Описание альбома 2',
       cover_thumbnail_url: '/media/album2.jpg',
-    },
-    {
+    }),
+    makeAlbum({
       id: 3,
       name: 'Альбом 3',
       slug: 'album-3',
-    },
-  ] as unknown as AlbumListSchema[];
-
-  const envelope = (
-    results: AlbumListSchema[],
-    extra: { count?: number; total_pages?: number } = {},
-  ): Paginated<AlbumListSchema> => ({
-    count: results.length,
-    total_pages: 1,
-    next: null,
-    previous: null,
-    results,
-    ...extra,
-  });
+    }),
+  ];
 
   const galleryService = jest.mocked(realGalleryService);
 
@@ -133,7 +118,7 @@ describe('AlbumList', () => {
   test('отображает состояние ошибки', async () => {
     galleryService.getAlbums
       .mockRejectedValueOnce(new Error('Network error'))
-      .mockResolvedValueOnce(envelope(mockAlbums));
+      .mockResolvedValueOnce(paginate(mockAlbums));
 
     render(<AlbumList />);
 
@@ -156,7 +141,7 @@ describe('AlbumList', () => {
    * Проверить отображение пустого состояния.
    */
   test('отображает пустое состояние', async () => {
-    galleryService.getAlbums.mockResolvedValueOnce(envelope([]));
+    galleryService.getAlbums.mockResolvedValueOnce(paginate([]));
 
     render(<AlbumList />);
 
@@ -169,7 +154,7 @@ describe('AlbumList', () => {
    * Проверить отображение списка альбомов.
    */
   test('отображает список альбомов', async () => {
-    galleryService.getAlbums.mockResolvedValueOnce(envelope(mockAlbums));
+    galleryService.getAlbums.mockResolvedValueOnce(paginate(mockAlbums));
 
     render(<AlbumList />);
 
@@ -187,7 +172,7 @@ describe('AlbumList', () => {
    * Проверить запрос первой страницы без фильтров.
    */
   test('запрашивает первую страницу без фильтров', async () => {
-    galleryService.getAlbums.mockResolvedValueOnce(envelope([]));
+    galleryService.getAlbums.mockResolvedValueOnce(paginate([]));
 
     render(<AlbumList />);
 
@@ -200,7 +185,7 @@ describe('AlbumList', () => {
    * Проверить передачу слага тега в параметры запроса.
    */
   test('передаёт слаг тега в параметры запроса', async () => {
-    galleryService.getAlbums.mockResolvedValueOnce(envelope([]));
+    galleryService.getAlbums.mockResolvedValueOnce(paginate([]));
 
     render(<AlbumList tagSlug="example-tag" />);
 
@@ -213,7 +198,7 @@ describe('AlbumList', () => {
    * Проверить передачу поискового запроса в параметры выборки.
    */
   test('передаёт поисковый запрос в параметры выборки', async () => {
-    galleryService.getAlbums.mockResolvedValueOnce(envelope([]));
+    galleryService.getAlbums.mockResolvedValueOnce(paginate([]));
 
     render(<AlbumList search="sunset" />);
 
@@ -226,7 +211,7 @@ describe('AlbumList', () => {
    * Проверить сообщение о пустом результате при активном поиске.
    */
   test('отображает сообщение с запросом при пустом результате поиска', async () => {
-    galleryService.getAlbums.mockResolvedValueOnce(envelope([]));
+    galleryService.getAlbums.mockResolvedValueOnce(paginate([]));
 
     render(<AlbumList search="sunset" />);
 
@@ -239,7 +224,7 @@ describe('AlbumList', () => {
    * Проверить правильную структуру masonry-сетки.
    */
   test('использует правильную структуру masonry-сетки', async () => {
-    galleryService.getAlbums.mockResolvedValueOnce(envelope(mockAlbums));
+    galleryService.getAlbums.mockResolvedValueOnce(paginate(mockAlbums));
 
     const renderResult = render(<AlbumList />);
 
@@ -251,9 +236,9 @@ describe('AlbumList', () => {
     expect(container).toBeInTheDocument();
     expect(container).toHaveAttribute('data-testid', 'album-list-container');
 
-    const grid = renderResult.container.querySelector('.masonry-grid') as HTMLElement;
-    expect(grid).toBeInTheDocument();
-    expect(grid.querySelector('.masonry-sizer')).toBeInTheDocument();
+    const grid = renderResult.container.querySelector('.masonry-grid');
+    expect(grid).not.toBeNull();
+    expect(grid!.querySelector('.masonry-sizer')).toBeInTheDocument();
 
     const items = renderResult.container.querySelectorAll('.masonry-item');
     expect(items).toHaveLength(mockAlbums.length);
@@ -276,7 +261,7 @@ describe('AlbumList', () => {
    * Проверить использование total_pages из ответа API.
    */
   test('использует total_pages из ответа API', async () => {
-    galleryService.getAlbums.mockResolvedValueOnce(envelope(mockAlbums, { count: 100, total_pages: 5 }));
+    galleryService.getAlbums.mockResolvedValueOnce(paginate(mockAlbums, { count: 100, total_pages: 5 }));
 
     render(<AlbumList />);
 
@@ -293,7 +278,7 @@ describe('AlbumList', () => {
    * Проверить работу с одной страницей.
    */
   test('корректно работает с разным количеством страниц', async () => {
-    galleryService.getAlbums.mockResolvedValueOnce(envelope(mockAlbums.slice(0, 1), { count: 5, total_pages: 1 }));
+    galleryService.getAlbums.mockResolvedValueOnce(paginate(mockAlbums.slice(0, 1), { count: 5, total_pages: 1 }));
 
     render(<AlbumList />);
 

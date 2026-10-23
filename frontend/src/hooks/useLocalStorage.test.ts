@@ -106,9 +106,9 @@ describe('useLocalStorage', () => {
 
       const { result } = renderHook(() => useLocalStorage('theme', 'light'));
 
-      // Хук удаляет ключ и при undefined, но тип setValue его не описывает,
-      // поэтому значение передается приведением
-      act(() => result.current[1](undefined as unknown as string | null));
+      // undefined входит в тип setValue: состояние принимает его как есть,
+      // ключ удаляется
+      act(() => result.current[1](undefined));
 
       expect(result.current[0]).toBeUndefined();
       expect(window.localStorage.getItem('theme')).toBeNull();

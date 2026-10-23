@@ -28,12 +28,19 @@ module.exports = {
     '^@utils/(.*)$': '<rootDir>/src/utils/$1',
     '^@hooks/(.*)$': '<rootDir>/src/hooks/$1',
     '^@hooks$': '<rootDir>/src/hooks/index.ts',
+    '^@test-utils$': '<rootDir>/src/test-utils/index.ts',
   },
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   // Исключаем результат collectstatic: backend/static
   // содержит дубликаты пакетов из node_modules.
   modulePathIgnorePatterns: ['<rootDir>/../backend/static'],
-  collectCoverageFrom: ['src/**/*.{js,jsx,ts,tsx}', '!src/**/*.test.{js,jsx,ts,tsx}', '!src/**/__tests__/**'],
+  collectCoverageFrom: [
+    'src/**/*.{js,jsx,ts,tsx}',
+    '!src/**/*.test.{js,jsx,ts,tsx}',
+    '!src/**/__tests__/**',
+    // Фабрики тестовых данных не входят в покрываемый код
+    '!src/test-utils/**',
+  ],
   coverageThreshold: {
     global: {
       statements: 70,

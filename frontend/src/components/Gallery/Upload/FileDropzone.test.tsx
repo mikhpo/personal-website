@@ -10,6 +10,19 @@ import FileDropzone from './FileDropzone';
  */
 
 describe('FileDropzone', () => {
+  /** Корневой элемент зоны перетаскивания: проверка присутствия вместо молчаливого каста. */
+  const getDropzone = (container: HTMLElement): HTMLElement => {
+    const dropzone = container.querySelector('.card');
+    expect(dropzone).not.toBeNull();
+    return dropzone as HTMLElement;
+  };
+
+  /** Скрытый file input: проверка присутствия вместо молчаливого каста. */
+  const getFileInput = (container: HTMLElement): HTMLInputElement => {
+    const input = container.querySelector('input[type="file"]');
+    expect(input).not.toBeNull();
+    return input as HTMLInputElement;
+  };
   // Вспомогательная функция для создания mock файла
   const createMockFile = (name: string, type: string): File => {
     return new File(['content'], name, { type });
@@ -40,7 +53,7 @@ describe('FileDropzone', () => {
   test('активируется при dragenter', () => {
     const { container } = render(<FileDropzone onFilesSelect={jest.fn()} />);
 
-    const dropzone = container.querySelector('.card') as Element;
+    const dropzone = getDropzone(container);
     fireEvent.dragEnter(dropzone);
 
     expect(screen.getByText('Отпустите файлы здесь')).toBeInTheDocument();
@@ -50,7 +63,7 @@ describe('FileDropzone', () => {
   test('деактивируется при dragleave', () => {
     const { container } = render(<FileDropzone onFilesSelect={jest.fn()} />);
 
-    const dropzone = container.querySelector('.card') as Element;
+    const dropzone = getDropzone(container);
     fireEvent.dragEnter(dropzone);
     fireEvent.dragLeave(dropzone);
 
@@ -62,7 +75,7 @@ describe('FileDropzone', () => {
     const handleFilesSelect = jest.fn();
     const { container } = render(<FileDropzone onFilesSelect={handleFilesSelect} />);
 
-    const dropzone = container.querySelector('.card') as Element;
+    const dropzone = getDropzone(container);
     const files = [createMockFile('test.jpg', 'image/jpeg')];
 
     fireEvent.drop(dropzone, {
@@ -77,8 +90,8 @@ describe('FileDropzone', () => {
     const user = userEvent.setup();
     const { container } = render(<FileDropzone onFilesSelect={jest.fn()} />);
 
-    const dropzone = container.querySelector('.card') as HTMLElement;
-    const input = container.querySelector('input[type="file"]') as HTMLInputElement;
+    const dropzone = getDropzone(container);
+    const input = getFileInput(container);
 
     const clickSpy = jest.spyOn(input, 'click');
 
@@ -91,7 +104,7 @@ describe('FileDropzone', () => {
   test('доступна с клавиатуры: role="button" и tabindex', () => {
     const { container } = render(<FileDropzone onFilesSelect={jest.fn()} />);
 
-    const dropzone = container.querySelector('.card') as Element;
+    const dropzone = getDropzone(container);
 
     expect(dropzone).toHaveAttribute('role', 'button');
     expect(dropzone).toHaveAttribute('tabindex', '0');
@@ -102,8 +115,8 @@ describe('FileDropzone', () => {
     const user = userEvent.setup();
     const { container } = render(<FileDropzone onFilesSelect={jest.fn()} />);
 
-    const dropzone = container.querySelector('.card') as HTMLElement;
-    const input = container.querySelector('input[type="file"]') as HTMLInputElement;
+    const dropzone = getDropzone(container);
+    const input = getFileInput(container);
 
     const clickSpy = jest.spyOn(input, 'click');
 
@@ -118,8 +131,8 @@ describe('FileDropzone', () => {
     const user = userEvent.setup();
     const { container } = render(<FileDropzone onFilesSelect={jest.fn()} />);
 
-    const dropzone = container.querySelector('.card') as HTMLElement;
-    const input = container.querySelector('input[type="file"]') as HTMLInputElement;
+    const dropzone = getDropzone(container);
+    const input = getFileInput(container);
 
     const clickSpy = jest.spyOn(input, 'click');
 
@@ -134,7 +147,7 @@ describe('FileDropzone', () => {
     const handleFilesSelect = jest.fn();
     const { container } = render(<FileDropzone onFilesSelect={handleFilesSelect} />);
 
-    const input = container.querySelector('input[type="file"]') as HTMLInputElement;
+    const input = getFileInput(container);
     const files = [createMockFile('test.jpg', 'image/jpeg')];
 
     fireEvent.change(input, { target: { files } });
@@ -147,7 +160,7 @@ describe('FileDropzone', () => {
     const handleFilesSelect = jest.fn();
     const { container } = render(<FileDropzone onFilesSelect={handleFilesSelect} accept="image/*" />);
 
-    const dropzone = container.querySelector('.card') as Element;
+    const dropzone = getDropzone(container);
     const files = [createMockFile('test.jpg', 'image/jpeg'), createMockFile('test.txt', 'text/plain')];
 
     fireEvent.drop(dropzone, {
@@ -162,7 +175,7 @@ describe('FileDropzone', () => {
     const handleFilesSelect = jest.fn();
     const { container } = render(<FileDropzone onFilesSelect={handleFilesSelect} multiple={false} />);
 
-    const dropzone = container.querySelector('.card') as Element;
+    const dropzone = getDropzone(container);
     const files = [createMockFile('test1.jpg', 'image/jpeg'), createMockFile('test2.jpg', 'image/jpeg')];
 
     fireEvent.drop(dropzone, {
@@ -176,7 +189,7 @@ describe('FileDropzone', () => {
   test('отображает список выбранных файлов', () => {
     const { container } = render(<FileDropzone onFilesSelect={jest.fn()} />);
 
-    const input = container.querySelector('input[type="file"]') as HTMLInputElement;
+    const input = getFileInput(container);
     const files = [createMockFile('test1.jpg', 'image/jpeg'), createMockFile('test2.jpg', 'image/jpeg')];
 
     fireEvent.change(input, { target: { files } });
@@ -192,13 +205,15 @@ describe('FileDropzone', () => {
     const handleFilesSelect = jest.fn();
     const { container } = render(<FileDropzone onFilesSelect={handleFilesSelect} />);
 
-    const input = container.querySelector('input[type="file"]') as HTMLInputElement;
+    const input = getFileInput(container);
     const files = [createMockFile('test1.jpg', 'image/jpeg'), createMockFile('test2.jpg', 'image/jpeg')];
 
     fireEvent.change(input, { target: { files } });
 
     const deleteButtons = screen.getAllByText('Удалить');
-    await user.click(deleteButtons[0] as HTMLElement);
+    const deleteButton = deleteButtons[0];
+    expect(deleteButton).toBeDefined();
+    await user.click(deleteButton!);
 
     expect(handleFilesSelect).toHaveBeenLastCalledWith([files[1]]);
   });
@@ -216,7 +231,7 @@ describe('FileDropzone', () => {
     const handleFilesSelect = jest.fn();
     const { container } = render(<FileDropzone onFilesSelect={handleFilesSelect} />);
 
-    const dropzone = container.querySelector('.card') as Element;
+    const dropzone = getDropzone(container);
 
     fireEvent.drop(dropzone, {
       dataTransfer: { files: [] },
@@ -230,7 +245,7 @@ describe('FileDropzone', () => {
     const handleFilesSelect = jest.fn();
     const { container } = render(<FileDropzone onFilesSelect={handleFilesSelect} accept="image/*" />);
 
-    const dropzone = container.querySelector('.card') as Element;
+    const dropzone = getDropzone(container);
     const fileWithoutType = new File(['content'], 'test.jpg', { type: '' });
 
     fireEvent.drop(dropzone, {
@@ -245,7 +260,7 @@ describe('FileDropzone', () => {
     const handleFilesSelect = jest.fn();
     const { container } = render(<FileDropzone onFilesSelect={handleFilesSelect} accept=".jpg,.png" />);
 
-    const dropzone = container.querySelector('.card') as Element;
+    const dropzone = getDropzone(container);
     const files = [createMockFile('test.jpg', 'image/jpeg'), createMockFile('test.gif', 'image/gif')];
 
     fireEvent.drop(dropzone, {
@@ -261,7 +276,7 @@ describe('FileDropzone', () => {
     const handleFilesSelect = jest.fn();
     const { container } = render(<FileDropzone onFilesSelect={handleFilesSelect} />);
 
-    const input = container.querySelector('input[type="file"]') as HTMLInputElement;
+    const input = getFileInput(container);
     const files = [createMockFile('test.jpg', 'image/jpeg')];
 
     fireEvent.change(input, { target: { files } });

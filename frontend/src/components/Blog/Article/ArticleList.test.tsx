@@ -13,11 +13,9 @@ import type { ArticleCardProps } from '@components/Blog/Article/ArticleCard';
 import type { PaginationProps } from '@components/Pagination/Pagination';
 import type { SpinnerProps } from '@components/Spinner/Spinner';
 import type { AlertListProps } from '@components/Alert/AlertList';
-import type { components } from '../../../types/api-schema';
 import type { Paginated } from '../../../types/pagination';
+import { makeArticle, paginate } from '@test-utils';
 import { blogService } from '@services';
-
-type Article = components['schemas']['Article'];
 
 // Мок для blogService
 jest.mock('@services');
@@ -85,32 +83,27 @@ describe('ArticleList', () => {
   /**
    * Мок успешного ответа API с результатами
    */
-  const mockApiResponse = {
-    count: 25,
-    next: '/api/blog/articles/?page=2',
-    previous: null,
-    results: [
-      { id: 1, slug: 'article-1', title: 'Статья 1', content: 'Контент 1' },
-      { id: 2, slug: 'article-2', title: 'Статья 2', content: 'Контент 2' },
+  const mockApiResponse = paginate(
+    [
+      makeArticle({ id: 1, slug: 'article-1', title: 'Статья 1', content: 'Контент 1' }),
+      makeArticle({ id: 2, slug: 'article-2', title: 'Статья 2', content: 'Контент 2' }),
     ],
-  } as unknown as Paginated<Article>;
+    { count: 25, next: '/api/blog/articles/?page=2' },
+  );
 
   /**
    * Мок успешного ответа API без results (плоский список)
    */
+  // Плоский список вместо конверта нарушает тип сервиса сознательно:
+  // компонент должен переживать устаревший формат ответа
   const mockFlatApiResponse = [
-    { id: 1, slug: 'article-1', title: 'Статья 1', content: 'Контент 1' },
-  ] as unknown as Paginated<Article>;
+    makeArticle({ id: 1, slug: 'article-1', title: 'Статья 1', content: 'Контент 1' }),
+  ] as unknown as Paginated<ReturnType<typeof makeArticle>>;
 
   /**
    * Мок пустого ответа API
    */
-  const mockEmptyApiResponse = {
-    count: 0,
-    next: null,
-    previous: null,
-    results: [],
-  } as unknown as Paginated<Article>;
+  const mockEmptyApiResponse = paginate([], { count: 0 });
 
   beforeEach(() => {
     mockedBlogService.getArticles.mockClear();

@@ -2,9 +2,7 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import AboutPhoto from './AboutPhoto';
-import type { components } from '../../../types/api-schema';
-
-type Photo = components['schemas']['Photo'];
+import { makePhoto } from '@test-utils';
 
 /**
  * Тесты для компонента AboutPhoto
@@ -13,7 +11,7 @@ type Photo = components['schemas']['Photo'];
  * описание и таблицу EXIF данных, а также скрытие пустых блоков.
  */
 describe('AboutPhoto', () => {
-  const fullPhoto = {
+  const fullPhoto = makePhoto({
     album: 3,
     album_name: 'Путешествия',
     description: 'Описание тестовой фотографии',
@@ -24,7 +22,7 @@ describe('AboutPhoto', () => {
     iso: 400,
     focal_length: 50,
     taken_at: '2024-01-15T10:30:00Z',
-  } as unknown as Photo;
+  });
 
   /**
    * Проверяет, что название альбома отображается ссылкой
@@ -41,7 +39,7 @@ describe('AboutPhoto', () => {
    * Проверяет, что строка альбома не отображается, если album_name отсутствует
    */
   test('не рендерит альбом без album_name', () => {
-    const photoWithoutAlbum = { ...fullPhoto, album: undefined, album_name: undefined } as unknown as Photo;
+    const photoWithoutAlbum = makePhoto({ ...fullPhoto, album: undefined, album_name: undefined });
     render(<AboutPhoto photo={photoWithoutAlbum} />);
     expect(screen.queryByText('Путешествия')).not.toBeInTheDocument();
   });
@@ -78,11 +76,11 @@ describe('AboutPhoto', () => {
    * даже если заполнены альбом и описание
    */
   test('не рендерит EXIF таблицу без данных', () => {
-    const photoWithoutExif = {
+    const photoWithoutExif = makePhoto({
       album: 3,
       album_name: 'Путешествия',
       description: 'Описание тестовой фотографии',
-    } as unknown as Photo;
+    });
     render(<AboutPhoto photo={photoWithoutExif} />);
     expect(screen.queryByText('Камера')).not.toBeInTheDocument();
     expect(screen.getByText('Путешествия')).toBeInTheDocument();
@@ -93,7 +91,9 @@ describe('AboutPhoto', () => {
    * компонент не отображает никакого содержимого
    */
   test('не рендерит ничего без данных', () => {
-    const { container } = render(<AboutPhoto photo={{} as unknown as Photo} />);
+    // album_name undefined скрывает строку альбома; описание и EXIF в
+    // фабрике по умолчанию пустые
+    const { container } = render(<AboutPhoto photo={makePhoto({ album_name: undefined })} />);
     expect(container.firstChild).toBeNull();
   });
 });

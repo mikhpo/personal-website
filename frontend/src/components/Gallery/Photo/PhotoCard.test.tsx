@@ -2,9 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import PhotoCard from './PhotoCard';
-import type { components } from '../../../types/api-schema';
-
-type Photo = components['schemas']['Photo'];
+import { makePhoto } from '@test-utils';
 
 /**
  * Набор тестов для компонента PhotoCard.
@@ -12,18 +10,19 @@ type Photo = components['schemas']['Photo'];
  * со старой Django-реализацией (только изображение без текста).
  */
 describe('PhotoCard', () => {
-  const minimalPhoto = {
+  const minimalPhoto = makePhoto({
     id: 1,
     name: 'Тестовое фото',
     slug: 'test-photo',
-  } as unknown as Photo;
+    thumbnail_url: '',
+  });
 
-  const fullPhoto = {
+  const fullPhoto = makePhoto({
     id: 1,
     name: 'Тестовое фото',
     slug: 'test-photo',
     thumbnail_url: '/media/test-thumbnail.jpg',
-  } as unknown as Photo;
+  });
 
   /**
    * Проверяет, что компонент корректно рендерится с минимальным набором пропсов.

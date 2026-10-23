@@ -10,24 +10,22 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import AlbumCard from '@components/Gallery/Album/AlbumCard';
-import type { components } from '../../../types/api-schema';
-
-type AlbumList = components['schemas']['AlbumList'];
+import { makeAlbum } from '@test-utils';
 
 describe('AlbumCard', () => {
-  const minimalAlbum = {
+  const minimalAlbum = makeAlbum({
     id: 1,
     name: 'Тестовый альбом',
     slug: 'test-album',
-  } as unknown as AlbumList;
+  });
 
-  const fullAlbum = {
+  const fullAlbum = makeAlbum({
     id: 1,
     name: 'Тестовый альбом',
     slug: 'test-album',
     description: 'Описание тестового альбома',
     cover_thumbnail_url: '/media/test-cover.jpg',
-  } as unknown as AlbumList;
+  });
 
   /**
    * Проверяет, что компонент корректно рендерится с минимальным набором свойств.

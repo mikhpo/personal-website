@@ -9,30 +9,7 @@ import { renderHook, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import useTheme from './useTheme';
 import type { ThemeName } from './useTheme';
-
-/** Слушатель события смены системной темы. */
-type ChangeListener = (event: MediaQueryListEvent) => void;
-
-/**
- * Создает управляемый стаб window.matchMedia с возможностью
- * эмулировать смену системной темы событием change:
- * возвращает стаб с функцией query и функцией triggerChange.
- */
-const createMatchMediaStub = (initialMatches: boolean) => {
-  const listeners = new Set<ChangeListener>();
-  const mediaQuery = {
-    matches: initialMatches,
-    addEventListener: jest.fn((event: string, listener: ChangeListener) => listeners.add(listener)),
-    removeEventListener: jest.fn((event: string, listener: ChangeListener) => listeners.delete(listener)),
-  };
-  return {
-    query: jest.fn((): MediaQueryList => mediaQuery as unknown as MediaQueryList),
-    triggerChange: (matches: boolean) => {
-      mediaQuery.matches = matches;
-      listeners.forEach((listener) => listener({ matches } as MediaQueryListEvent));
-    },
-  };
-};
+import { createMatchMediaStub } from '@test-utils';
 
 describe('useTheme', () => {
   beforeEach(() => {

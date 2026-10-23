@@ -10,9 +10,7 @@ import '@testing-library/jest-dom';
 import { render, screen } from '@testing-library/react';
 import CommentList from './CommentList';
 import type { CommentProps } from '@components/Blog/Comment/Comment';
-import type { components } from '../../../types/api-schema';
-
-type CommentData = components['schemas']['Comment'];
+import { makeComment } from '@test-utils';
 
 // Мок для компонента Comment
 jest.mock('@components/Blog/Comment/Comment', () => {
@@ -27,10 +25,10 @@ jest.mock('@components/Blog/Comment/Comment', () => {
 
 describe('CommentList', () => {
   const mockComments = [
-    { id: 1, author_username: 'user1', content: 'Отлично!', posted: '15 янв. 2024 г.' },
-    { id: 2, author_username: 'user2', content: 'Согласен', posted: '15 янв. 2024 г.' },
-    { id: 3, author_username: 'user3', content: 'Полезно', posted: '16 янв. 2024 г.' },
-  ] as unknown as CommentData[];
+    makeComment({ id: 1, author_username: 'user1', content: 'Отлично!', posted: '15 янв. 2024 г.' }),
+    makeComment({ id: 2, author_username: 'user2', content: 'Согласен', posted: '15 янв. 2024 г.' }),
+    makeComment({ id: 3, author_username: 'user3', content: 'Полезно', posted: '16 янв. 2024 г.' }),
+  ];
 
   /**
    * Проверяет, что компонент корректно отображает список комментариев.
@@ -76,8 +74,8 @@ describe('CommentList', () => {
    * Проверяет, что компонент возвращает null при null.
    * Null значение не должно вызывать ошибок рендеринга.
    */
-  test('возвращает null при null', () => {
-    const { container } = render(<CommentList comments={null as unknown as CommentData[]} />);
+  test('возвращает null без списка комментариев', () => {
+    const { container } = render(<CommentList />);
     expect(container.firstChild).toBeNull();
   });
 
@@ -86,7 +84,7 @@ describe('CommentList', () => {
    * Компонент должен обрабатывать единичные элементы.
    */
   test('обрабатывает один комментарий', () => {
-    const singleComment = [mockComments[0] as CommentData];
+    const singleComment = [mockComments[0]!];
     render(<CommentList comments={singleComment} />);
     expect(screen.getAllByTestId('comment')).toHaveLength(1);
   });
@@ -98,12 +96,14 @@ describe('CommentList', () => {
   test('обрабатывает большое количество комментариев', () => {
     const manyComments = Array(50)
       .fill(null)
-      .map((_, i) => ({
-        id: i + 1,
-        author_username: `user${i + 1}`,
-        content: `Комментарий ${i + 1}`,
-        posted: '15 янв. 2024 г.',
-      })) as unknown as CommentData[];
+      .map((_, i) =>
+        makeComment({
+          id: i + 1,
+          author_username: `user${i + 1}`,
+          content: `Комментарий ${i + 1}`,
+          posted: '15 янв. 2024 г.',
+        }),
+      );
     render(<CommentList comments={manyComments} />);
     expect(screen.getAllByTestId('comment')).toHaveLength(50);
   });
@@ -114,9 +114,9 @@ describe('CommentList', () => {
    */
   test('обрабатывает комментарии с одинаковыми авторами', () => {
     const commentsWithSameAuthor = [
-      { id: 1, author_username: 'user1', content: 'Первый', posted: '15 янв. 2024 г.' },
-      { id: 2, author_username: 'user1', content: 'Второй', posted: '16 янв. 2024 г.' },
-    ] as unknown as CommentData[];
+      makeComment({ id: 1, author_username: 'user1', content: 'Первый', posted: '15 янв. 2024 г.' }),
+      makeComment({ id: 2, author_username: 'user1', content: 'Второй', posted: '16 янв. 2024 г.' }),
+    ];
     render(<CommentList comments={commentsWithSameAuthor} />);
     expect(screen.getAllByTestId('comment')).toHaveLength(2);
   });

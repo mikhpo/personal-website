@@ -19,18 +19,13 @@ Object.defineProperty(document, 'cookie', {
   value: 'csrftoken=test-csrf-token',
 });
 
-import type { components } from '../../../types/api-schema';
-
-type AlbumList = components['schemas']['AlbumList'];
+import { makeAlbum, paginate } from '@test-utils';
 
 describe('PhotoUploadForm', () => {
   const galleryService = jest.mocked(realGalleryService);
 
   // Мок-данные альбомов для тестирования
-  const mockAlbums = [
-    { id: 1, name: 'Альбом 1' },
-    { id: 2, name: 'Альбом 2' },
-  ] as unknown as AlbumList[];
+  const mockAlbums = [makeAlbum({ id: 1, name: 'Альбом 1' }), makeAlbum({ id: 2, name: 'Альбом 2' })];
 
   // Настройка mock перед каждым тестом
   beforeEach(() => {
@@ -45,13 +40,7 @@ describe('PhotoUploadForm', () => {
 
   // Проверяет автоматическую загрузку списка альбомов при монтировании компонента
   test('загружает список альбомов при монтировании', async () => {
-    galleryService.getAlbums.mockResolvedValue({
-      count: mockAlbums.length,
-      total_pages: 1,
-      next: null,
-      previous: null,
-      results: mockAlbums,
-    });
+    galleryService.getAlbums.mockResolvedValue(paginate(mockAlbums));
 
     render(<PhotoUploadForm />);
 
@@ -72,13 +61,7 @@ describe('PhotoUploadForm', () => {
 
   // Проверяет отображение формы после успешной загрузки альбомов
   test('отображает форму после загрузки альбомов', async () => {
-    galleryService.getAlbums.mockResolvedValue({
-      count: mockAlbums.length,
-      total_pages: 1,
-      next: null,
-      previous: null,
-      results: mockAlbums,
-    });
+    galleryService.getAlbums.mockResolvedValue(paginate(mockAlbums));
 
     render(<PhotoUploadForm />);
 
@@ -103,13 +86,9 @@ describe('PhotoUploadForm', () => {
   test('повторная загрузка альбомов работает после ошибки', async () => {
     const user = userEvent.setup();
 
-    galleryService.getAlbums.mockRejectedValueOnce(new Error('Ошибка загрузки альбомов')).mockResolvedValueOnce({
-      count: mockAlbums.length,
-      total_pages: 1,
-      next: null,
-      previous: null,
-      results: mockAlbums,
-    });
+    galleryService.getAlbums
+      .mockRejectedValueOnce(new Error('Ошибка загрузки альбомов'))
+      .mockResolvedValueOnce(paginate(mockAlbums));
 
     render(<PhotoUploadForm />);
 
@@ -127,13 +106,7 @@ describe('PhotoUploadForm', () => {
 
   // Проверяет блокировку кнопки загрузки при отсутствии выбранного альбома
   test('кнопка загрузки отключена без выбранного альбома', async () => {
-    galleryService.getAlbums.mockResolvedValue({
-      count: mockAlbums.length,
-      total_pages: 1,
-      next: null,
-      previous: null,
-      results: mockAlbums,
-    });
+    galleryService.getAlbums.mockResolvedValue(paginate(mockAlbums));
 
     render(<PhotoUploadForm />);
 
@@ -147,13 +120,7 @@ describe('PhotoUploadForm', () => {
   test('кнопка загрузки отключена без файлов', async () => {
     const user = userEvent.setup();
 
-    galleryService.getAlbums.mockResolvedValue({
-      count: mockAlbums.length,
-      total_pages: 1,
-      next: null,
-      previous: null,
-      results: mockAlbums,
-    });
+    galleryService.getAlbums.mockResolvedValue(paginate(mockAlbums));
 
     render(<PhotoUploadForm />);
 
@@ -170,13 +137,7 @@ describe('PhotoUploadForm', () => {
 
   // Проверяет блокировку кнопки загрузки при наличии файлов, но отсутствии выбранного альбома
   test('кнопка disabled если альбом не выбран', async () => {
-    galleryService.getAlbums.mockResolvedValue({
-      count: mockAlbums.length,
-      total_pages: 1,
-      next: null,
-      previous: null,
-      results: mockAlbums,
-    });
+    galleryService.getAlbums.mockResolvedValue(paginate(mockAlbums));
 
     render(<PhotoUploadForm />);
 
@@ -201,13 +162,7 @@ describe('PhotoUploadForm', () => {
   test('успешная загрузка файлов', async () => {
     const user = userEvent.setup();
 
-    galleryService.getAlbums.mockResolvedValue({
-      count: mockAlbums.length,
-      total_pages: 1,
-      next: null,
-      previous: null,
-      results: mockAlbums,
-    });
+    galleryService.getAlbums.mockResolvedValue(paginate(mockAlbums));
     galleryService.uploadPhotos.mockResolvedValue([{ file: 'test.jpg', success: true }]);
 
     render(<PhotoUploadForm />);
@@ -240,13 +195,7 @@ describe('PhotoUploadForm', () => {
   test('отображает прогресс загрузки', async () => {
     const user = userEvent.setup();
 
-    galleryService.getAlbums.mockResolvedValue({
-      count: mockAlbums.length,
-      total_pages: 1,
-      next: null,
-      previous: null,
-      results: mockAlbums,
-    });
+    galleryService.getAlbums.mockResolvedValue(paginate(mockAlbums));
 
     // Mock uploadPhotos with callback support - use a promise to control timing
     let resolveUpload: ((value: Awaited<ReturnType<typeof galleryService.uploadPhotos>>) => void) | undefined;
@@ -307,13 +256,7 @@ describe('PhotoUploadForm', () => {
   test('обрабатывает ошибку загрузки файла', async () => {
     const user = userEvent.setup();
 
-    galleryService.getAlbums.mockResolvedValue({
-      count: mockAlbums.length,
-      total_pages: 1,
-      next: null,
-      previous: null,
-      results: mockAlbums,
-    });
+    galleryService.getAlbums.mockResolvedValue(paginate(mockAlbums));
     galleryService.uploadPhotos.mockResolvedValue([{ file: 'test.jpg', success: false, error: 'Upload failed' }]);
 
     render(<PhotoUploadForm />);
@@ -346,13 +289,7 @@ describe('PhotoUploadForm', () => {
   test('кнопка отключена во время загрузки', async () => {
     const user = userEvent.setup();
 
-    galleryService.getAlbums.mockResolvedValue({
-      count: mockAlbums.length,
-      total_pages: 1,
-      next: null,
-      previous: null,
-      results: mockAlbums,
-    });
+    galleryService.getAlbums.mockResolvedValue(paginate(mockAlbums));
     galleryService.uploadPhotos.mockImplementation(() => new Promise(() => {}));
 
     render(<PhotoUploadForm />);
@@ -384,13 +321,7 @@ describe('PhotoUploadForm', () => {
   test('использует galleryService для загрузки', async () => {
     const user = userEvent.setup();
 
-    galleryService.getAlbums.mockResolvedValue({
-      count: mockAlbums.length,
-      total_pages: 1,
-      next: null,
-      previous: null,
-      results: mockAlbums,
-    });
+    galleryService.getAlbums.mockResolvedValue(paginate(mockAlbums));
     galleryService.uploadPhotos.mockResolvedValue([{ file: 'test.jpg', success: true }]);
 
     render(<PhotoUploadForm />);
@@ -421,13 +352,7 @@ describe('PhotoUploadForm', () => {
 
   // Проверяет использование galleryService для загрузки альбомов
   test('использует galleryService для загрузки альбомов', async () => {
-    galleryService.getAlbums.mockResolvedValue({
-      count: mockAlbums.length,
-      total_pages: 1,
-      next: null,
-      previous: null,
-      results: mockAlbums,
-    });
+    galleryService.getAlbums.mockResolvedValue(paginate(mockAlbums));
 
     render(<PhotoUploadForm />);
 
@@ -440,13 +365,7 @@ describe('PhotoUploadForm', () => {
   test('сбрасывает форму после успешной загрузки', async () => {
     const user = userEvent.setup();
 
-    galleryService.getAlbums.mockResolvedValue({
-      count: mockAlbums.length,
-      total_pages: 1,
-      next: null,
-      previous: null,
-      results: mockAlbums,
-    });
+    galleryService.getAlbums.mockResolvedValue(paginate(mockAlbums));
     galleryService.uploadPhotos.mockResolvedValue([{ file: 'test.jpg', success: true }]);
 
     render(<PhotoUploadForm />);
@@ -491,13 +410,7 @@ describe('PhotoUploadForm', () => {
   test('очищает ошибки и успех при выборе новых файлов', async () => {
     const user = userEvent.setup();
 
-    galleryService.getAlbums.mockResolvedValue({
-      count: mockAlbums.length,
-      total_pages: 1,
-      next: null,
-      previous: null,
-      results: mockAlbums,
-    });
+    galleryService.getAlbums.mockResolvedValue(paginate(mockAlbums));
 
     render(<PhotoUploadForm />);
 

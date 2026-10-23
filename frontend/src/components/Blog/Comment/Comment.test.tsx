@@ -9,17 +9,15 @@ import React from 'react';
 import '@testing-library/jest-dom';
 import { render, screen } from '@testing-library/react';
 import Comment from './Comment';
-import type { components } from '../../../types/api-schema';
-
-type CommentData = components['schemas']['Comment'];
+import { makeComment } from '@test-utils';
 
 describe('Comment', () => {
-  const mockComment = {
+  const mockComment = makeComment({
     id: 1,
     author_username: 'user123',
     content: 'Отличный комментарий!',
     posted: '15 янв. 2024 г., 10:00:00',
-  } as unknown as CommentData;
+  });
 
   /**
    * Проверяет, что компонент корректно отображает имя автора комментария.

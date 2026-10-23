@@ -9,32 +9,33 @@ import React from 'react';
 import '@testing-library/jest-dom';
 import { render, screen } from '@testing-library/react';
 import ArticleCard from './ArticleCard';
-import type { components } from '../../../types/api-schema';
-
-type Article = components['schemas']['Article'];
+import { makeArticle } from '@test-utils';
 
 describe('ArticleCard', () => {
-  const minimalArticle = {
+  // url undefined проверяет fallback карточки на /blog/{id}/
+  const minimalArticle = makeArticle({
     id: 1,
     title: 'Тестовая статья',
-  } as unknown as Article;
+    url: undefined,
+  });
 
-  const articleWithShortContent = {
+  const articleWithShortContent = makeArticle({
     id: 2,
     title: 'Короткая статья',
     content: '<p>Это короткий текст статьи.</p>',
-  } as unknown as Article;
+  });
 
   const generateLongContent = () => {
     const words = Array(250).fill('слово').join(' ');
     return `<p>${words}</p>`;
   };
 
-  const articleWithLongContent = {
+  const articleWithLongContent = makeArticle({
     id: 3,
     title: 'Длинная статья',
     content: generateLongContent(),
-  } as unknown as Article;
+    url: undefined,
+  });
 
   /**
    * Проверяет, что компонент корректно рендерится с минимальным набором свойств.
@@ -106,11 +107,11 @@ describe('ArticleCard', () => {
    * Компонент должен корректно обрабатывать пустую строку в поле content.
    */
   test('рендерит с пустым контентом', () => {
-    const articleWithEmptyContent = {
+    const articleWithEmptyContent = makeArticle({
       id: 4,
       title: 'Пустая статья',
       content: '',
-    } as unknown as Article;
+    });
     render(<ArticleCard article={articleWithEmptyContent} />);
     expect(screen.queryByText('Читать дальше')).not.toBeInTheDocument();
   });
@@ -120,10 +121,10 @@ describe('ArticleCard', () => {
    * Компонент должен корректно экранировать и отображать специальные символы.
    */
   test('рендерит со спецсимволами в заголовке', () => {
-    const articleWithSpecialChars = {
+    const articleWithSpecialChars = makeArticle({
       id: 5,
       title: 'Статья с <символами> & "спецсимволами"',
-    } as unknown as Article;
+    });
     render(<ArticleCard article={articleWithSpecialChars} />);
     expect(screen.getByText('Статья с <символами> & "спецсимволами"')).toBeInTheDocument();
   });
@@ -134,10 +135,10 @@ describe('ArticleCard', () => {
    */
   test('рендерит с длинным заголовком', () => {
     const longTitle = 'О'.repeat(200);
-    const articleWithLongTitle = {
+    const articleWithLongTitle = makeArticle({
       id: 6,
       title: longTitle,
-    } as unknown as Article;
+    });
     render(<ArticleCard article={articleWithLongTitle} />);
     expect(screen.getByText(longTitle)).toBeInTheDocument();
   });

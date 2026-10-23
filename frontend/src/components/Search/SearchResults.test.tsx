@@ -15,12 +15,8 @@ import type { ArticleCardProps } from '@components/Blog/Article/ArticleCard';
 import type { AlbumCardProps } from '@components/Gallery/Album/AlbumCard';
 import type { SpinnerProps } from '@components/Spinner/Spinner';
 import type { AlertListProps } from '@components/Alert/AlertList';
-import type { components } from '../../types/api-schema';
-import type { Paginated } from '../../types/pagination';
+import { makeAlbum, makeArticle, paginate } from '@test-utils';
 import { blogService, galleryService } from '@services';
-
-type Article = components['schemas']['Article'];
-type AlbumList = components['schemas']['AlbumList'];
 
 // Мок для сервисов API
 jest.mock('@services');
@@ -70,24 +66,24 @@ describe('SearchResults', () => {
   /**
    * Мок ответа API статей
    */
-  const mockArticles = {
-    count: 12,
-    results: [
-      { id: 1, title: 'Статья о Django', content: 'Контент' },
-      { id: 2, title: 'Статья о React', content: 'Контент' },
+  const mockArticles = paginate(
+    [
+      makeArticle({ id: 1, title: 'Статья о Django', content: 'Контент' }),
+      makeArticle({ id: 2, title: 'Статья о React', content: 'Контент' }),
     ],
-  } as unknown as Paginated<Article>;
+    { count: 12 },
+  );
 
   /**
    * Мок ответа API альбомов
    */
-  const mockAlbums = {
-    count: 3,
-    results: [
-      { id: 1, name: 'Горы', description: 'Описание' },
-      { id: 2, name: 'Море', description: 'Описание' },
+  const mockAlbums = paginate(
+    [
+      makeAlbum({ id: 1, name: 'Горы', description: 'Описание' }),
+      makeAlbum({ id: 2, name: 'Море', description: 'Описание' }),
     ],
-  } as unknown as Paginated<AlbumList>;
+    { count: 3 },
+  );
 
   afterEach(() => {
     jest.resetAllMocks();
@@ -153,8 +149,8 @@ describe('SearchResults', () => {
    * Пустая секция показывает сообщение "Ничего не найдено".
    */
   test('пустые секции показывают сообщение об отсутствии результатов', async () => {
-    mockedBlogService.getArticles.mockResolvedValue({ count: 0, results: [] } as unknown as Paginated<Article>);
-    mockedGalleryService.getAlbums.mockResolvedValue({ count: 0, results: [] } as unknown as Paginated<AlbumList>);
+    mockedBlogService.getArticles.mockResolvedValue(paginate([], { count: 0 }));
+    mockedGalleryService.getAlbums.mockResolvedValue(paginate([], { count: 0 }));
 
     render(<SearchResults search="react" />);
 

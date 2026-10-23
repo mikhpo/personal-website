@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import PhotoDetail from './PhotoDetail';
 import type { UsePhotoDataResult } from '@hooks/usePhotoData';
+import { makePhotoDetail } from '@test-utils';
 import type { components } from '../../../types/api-schema';
 
 jest.mock('@hooks/usePhotoData');
@@ -12,7 +13,7 @@ jest.mock('@services/navigation');
 import { usePhotoData } from '@hooks';
 import { navigateTo } from '@services';
 
-type Photo = components['schemas']['Photo'];
+type PhotoDetail = components['schemas']['PhotoDetail'];
 
 const mockUsePhotoData = jest.mocked(usePhotoData);
 
@@ -24,7 +25,7 @@ const mockUsePhotoData = jest.mocked(usePhotoData);
  * с альбомом, описанием и EXIF данными.
  */
 describe('PhotoDetail', () => {
-  const mockPhoto = {
+  const mockPhoto = makePhotoDetail({
     id: 2,
     name: 'Тестовое фото',
     slug: 'test-photo',
@@ -42,16 +43,21 @@ describe('PhotoDetail', () => {
     taken_at: '2024-01-15T10:00:00Z',
     previous_id: 1,
     next_id: 3,
-  } as unknown as Photo;
+  });
+
+  /** Собирает результат хука usePhotoData с фотографией и переопределениями. */
+  const mockResult = (photo: PhotoDetail | null, overrides: Partial<UsePhotoDataResult> = {}): UsePhotoDataResult => ({
+    photo,
+    loading: false,
+    error: null,
+    refetch: jest.fn(),
+    ...overrides,
+  });
 
   // Настройка: изолируем тесты от реальных API запросов
   // PhotoDetail использует хук usePhotoData для загрузки данных
   beforeEach(() => {
-    mockUsePhotoData.mockReturnValue({
-      photo: mockPhoto,
-      loading: false,
-      error: null,
-    } as unknown as UsePhotoDataResult);
+    mockUsePhotoData.mockReturnValue(mockResult(mockPhoto));
     jest.mocked(navigateTo).mockClear();
   });
 
@@ -105,11 +111,8 @@ describe('PhotoDetail', () => {
    * генерируется сервером при первом обращении к API.
    */
   test('не отображает изображение если превью отсутствует', () => {
-    mockUsePhotoData.mockReturnValueOnce({
-      photo: { ...mockPhoto, preview_url: null },
-      loading: false,
-      error: null,
-    } as unknown as UsePhotoDataResult);
+    // API может вернуть null превью вопреки схеме; компонент защищается проверкой
+    mockUsePhotoData.mockReturnValueOnce(mockResult({ ...mockPhoto, preview_url: null as unknown as string }));
     render(<PhotoDetail photoId={2} />);
     expect(screen.queryByRole('img')).not.toBeInTheDocument();
   });
@@ -139,11 +142,7 @@ describe('PhotoDetail', () => {
    * индикатор загрузки с соответствующим сообщением.
    */
   test('отображает индикатор загрузки', () => {
-    mockUsePhotoData.mockReturnValueOnce({
-      photo: null,
-      loading: true,
-      error: null,
-    } as unknown as UsePhotoDataResult);
+    mockUsePhotoData.mockReturnValueOnce(mockResult(null, { loading: true }));
     render(<PhotoDetail photoId={2} />);
     expect(screen.getByText('Загрузка фотографии...')).toBeInTheDocument();
   });
@@ -153,11 +152,7 @@ describe('PhotoDetail', () => {
    * сообщение об ошибке с переданным текстом.
    */
   test('отображает ошибку загрузки', () => {
-    mockUsePhotoData.mockReturnValueOnce({
-      photo: null,
-      loading: false,
-      error: 'Ошибка загрузки фото: 404',
-    } as unknown as UsePhotoDataResult);
+    mockUsePhotoData.mockReturnValueOnce(mockResult(null, { error: 'Ошибка загрузки фото: 404' }));
     render(<PhotoDetail photoId={2} />);
     expect(screen.getByText('Ошибка загрузки фото: 404')).toBeInTheDocument();
   });
@@ -167,11 +162,7 @@ describe('PhotoDetail', () => {
    * отображается соответствующее сообщение.
    */
   test('отображает сообщение если фото не найдено', () => {
-    mockUsePhotoData.mockReturnValueOnce({
-      photo: null,
-      loading: false,
-      error: null,
-    } as unknown as UsePhotoDataResult);
+    mockUsePhotoData.mockReturnValueOnce(mockResult(null));
     render(<PhotoDetail photoId={2} />);
     expect(screen.getByText('Фотография не найдена')).toBeInTheDocument();
   });
@@ -181,11 +172,7 @@ describe('PhotoDetail', () => {
    * если previousPhotoId равен null.
    */
   test('нет кнопки "Предыдущая" если previous_id null', () => {
-    mockUsePhotoData.mockReturnValue({
-      photo: { ...mockPhoto, previous_id: null },
-      loading: false,
-      error: null,
-    } as unknown as UsePhotoDataResult);
+    mockUsePhotoData.mockReturnValue(mockResult({ ...mockPhoto, previous_id: null }));
     render(<PhotoDetail photoId={2} />);
     expect(screen.queryByText('<')).not.toBeInTheDocument();
   });
@@ -195,11 +182,7 @@ describe('PhotoDetail', () => {
    * если nextPhotoId равен null.
    */
   test('нет кнопки "Следующая" если next_id null', () => {
-    mockUsePhotoData.mockReturnValue({
-      photo: { ...mockPhoto, next_id: null },
-      loading: false,
-      error: null,
-    } as unknown as UsePhotoDataResult);
+    mockUsePhotoData.mockReturnValue(mockResult({ ...mockPhoto, next_id: null }));
     render(<PhotoDetail photoId={2} />);
     expect(screen.queryByText('>')).not.toBeInTheDocument();
   });
@@ -290,11 +273,13 @@ describe('PhotoDetail', () => {
    * элемент img не рендерится.
    */
   test('не отображает изображение если нет превью и оригинала', () => {
-    mockUsePhotoData.mockReturnValueOnce({
-      photo: { ...mockPhoto, image_url: null, preview_url: null },
-      loading: false,
-      error: null,
-    } as unknown as UsePhotoDataResult);
+    mockUsePhotoData.mockReturnValueOnce(
+      mockResult({
+        ...mockPhoto,
+        image_url: null as unknown as string,
+        preview_url: null as unknown as string,
+      }),
+    );
     render(<PhotoDetail photoId={2} />);
     expect(screen.queryByRole('img')).not.toBeInTheDocument();
   });
@@ -413,11 +398,7 @@ describe('PhotoDetail', () => {
      * не выполняет переход.
      */
     test('ArrowLeft игнорируется без предыдущей фотографии', () => {
-      mockUsePhotoData.mockReturnValue({
-        photo: { ...mockPhoto, previous_id: null },
-        loading: false,
-        error: null,
-      } as unknown as UsePhotoDataResult);
+      mockUsePhotoData.mockReturnValue(mockResult({ ...mockPhoto, previous_id: null }));
       render(<PhotoDetail photoId={2} />);
 
       fireEvent.keyDown(document, { key: 'ArrowLeft' });
@@ -430,11 +411,7 @@ describe('PhotoDetail', () => {
      * не выполняет переход.
      */
     test('ArrowRight игнорируется без следующей фотографии', () => {
-      mockUsePhotoData.mockReturnValue({
-        photo: { ...mockPhoto, next_id: null },
-        loading: false,
-        error: null,
-      } as unknown as UsePhotoDataResult);
+      mockUsePhotoData.mockReturnValue(mockResult({ ...mockPhoto, next_id: null }));
       render(<PhotoDetail photoId={2} />);
 
       fireEvent.keyDown(document, { key: 'ArrowRight' });
