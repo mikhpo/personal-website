@@ -3,10 +3,7 @@
 from typing import TYPE_CHECKING, TypedDict
 
 from django.contrib.messages import get_messages
-from django.db.models import QuerySet
 from django.http import HttpRequest
-
-from gallery.models import Tag
 
 if TYPE_CHECKING:
     from django.contrib.messages.storage.base import Message
@@ -62,12 +59,6 @@ class ContextNavbarData(TypedDict):
     navbar_data: NavbarData
 
 
-class ContextTagsData(TypedDict):
-    """Тип для контекста тегов."""
-
-    tags: QuerySet[Tag]
-
-
 class ContextAlertsData(TypedDict):
     """Тип для контекста системы оповещения."""
 
@@ -111,7 +102,7 @@ def navbar_data(request: HttpRequest) -> ContextNavbarData:
             dropdown=[
                 NavbarLinkDropdown(url="/gallery/albums/", text="Альбомы"),
                 NavbarLinkDropdown(url="/gallery/photos/", text="Фотографии"),
-                NavbarLinkDropdown(url="#", text="Тэги", offcanvas=True),
+                NavbarLinkDropdown(text="Тэги", offcanvas=True),
             ],
         )
         links.append(gallery_link_with_dropdown)
@@ -141,19 +132,6 @@ def navbar_data(request: HttpRequest) -> ContextNavbarData:
             userIsStaff=request.user.is_staff if request.user.is_authenticated else False,
         ),
     )
-
-
-def tags_data(request: HttpRequest) -> ContextTagsData:  # noqa: ARG001
-    """
-    Процессор контекста для данных тегов.
-
-    Args:
-        request: HTTP запрос
-
-    Returns:
-        Словарь с тегами для offcanvas панели
-    """
-    return ContextTagsData(tags=Tag.objects.all())  # type: ignore[arg-type]
 
 
 def alerts_data(request: HttpRequest) -> ContextAlertsData:

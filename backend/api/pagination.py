@@ -1,6 +1,5 @@
 """Кастомные классы пагинации для REST API."""
 
-from math import ceil
 from typing import Any
 
 from rest_framework.pagination import PageNumberPagination
@@ -15,30 +14,21 @@ class BasePagination(PageNumberPagination):
     max_page_size = 100
 
     def get_paginated_response(self, data: list[Any]) -> Response:
-        """Возвращает ответ с дополнительным полем total_pages."""
+        """Возвращает ответ пагинации с полем total_pages."""
         if self.page is None:
-            msg = "Page object is not set. Call paginate_queryset first."
+            msg = "Объект страницы не задан. Сначала вызовите paginate_queryset."
             raise ValueError(msg)
 
-        request = self.request
-        if request is None:
-            msg = "Request object is not set."
-            raise ValueError(msg)
+        response = super().get_paginated_response(data)
+        response.data["total_pages"] = self.page.paginator.num_pages
+        return response
 
-        page_size = self.get_page_size(request)
-        if page_size is None:
-            msg = "Page size is not set."
-            raise ValueError(msg)
-
-        return Response(
-            {
-                "count": self.page.paginator.count,
-                "total_pages": ceil(self.page.paginator.count / page_size),
-                "next": self.get_next_link(),
-                "previous": self.get_previous_link(),
-                "results": data,
-            },
-        )
+    def get_paginated_response_schema(self, schema: dict[str, Any]) -> dict[str, Any]:
+        """Дополняет OpenAPI-схему ответа пагинации полем total_pages."""
+        result = super().get_paginated_response_schema(schema)
+        result["properties"]["total_pages"] = {"type": "integer", "example": 7}
+        result["required"].append("total_pages")
+        return result
 
 
 class GalleryPhotoPagination(BasePagination):

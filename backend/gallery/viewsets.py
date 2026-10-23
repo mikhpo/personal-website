@@ -5,10 +5,11 @@ from typing import TYPE_CHECKING, ClassVar
 from auditlog.context import set_actor
 from django.db.models import Prefetch
 from django_filters.rest_framework import DjangoFilterBackend
+from drf_spectacular.utils import extend_schema, inline_serializer
 from PIL import UnidentifiedImageError
-from rest_framework import filters, status, viewsets
+from rest_framework import filters, serializers, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAdminUser, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import BasePermission, IsAdminUser, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 
 from api.filters import DatabaseSearchFilter
@@ -18,6 +19,7 @@ from gallery.models import Album, Photo, Tag
 from gallery.serializers import (
     AlbumDetailSerializer,
     AlbumListSerializer,
+    PhotoDetailSerializer,
     PhotoSerializer,
     TagSerializer,
 )
@@ -31,15 +33,19 @@ class AlbumViewSet(viewsets.ReadOnlyModelViewSet):
     """Набор представлений для работы с альбомами."""
 
     serializer_class = AlbumListSerializer
-    permission_classes: ClassVar[list] = [IsPublicOrAuthor]
+    permission_classes: ClassVar[list[type[BasePermission]]] = [IsPublicOrAuthor]
     lookup_field = "pk"
     # DatabaseSearchFilter после OrderingFilter: сортировка по релевантности
     # (-rank) не должна перезаписываться дефолтным ordering вьюхи.
-    filter_backends: ClassVar[list] = [DjangoFilterBackend, filters.OrderingFilter, DatabaseSearchFilter]
-    filterset_fields: ClassVar[list] = ["tags__slug"]
-    search_fields: ClassVar[list] = ["name", "description"]
-    ordering_fields: ClassVar[list] = ["created_at", "name", "order"]
-    ordering: ClassVar[list] = ["-order", "-created_at"]
+    filter_backends: ClassVar[list[type[filters.BaseFilterBackend] | type[DjangoFilterBackend]]] = [
+        DjangoFilterBackend,
+        filters.OrderingFilter,
+        DatabaseSearchFilter,
+    ]
+    filterset_fields: ClassVar[list[str]] = ["tags__slug"]
+    search_fields: ClassVar[list[str]] = ["name", "description"]
+    ordering_fields: ClassVar[list[str]] = ["created_at", "name", "order"]
+    ordering: ClassVar[list[str]] = ["-order", "-created_at"]
 
     def get_serializer_class(self) -> type:
         """Возвращает сериализатор в зависимости от action."""
@@ -67,17 +73,28 @@ class PhotoViewSet(viewsets.ReadOnlyModelViewSet):
     """Набор представлений для работы с фотографиями."""
 
     serializer_class = PhotoSerializer
-    permission_classes: ClassVar[list] = [IsPublicOrAuthor]
+    permission_classes: ClassVar[list[type[BasePermission]]] = [IsPublicOrAuthor]
     pagination_class = GalleryPhotoPagination
     lookup_field = "pk"
     # DatabaseSearchFilter после OrderingFilter: сортировка по релевантности
     # (-rank) не должна перезаписываться дефолтным ordering вьюхи.
     # Теги не входят в search_fields: M2M-связь не ложится на SearchVector.
-    filter_backends: ClassVar[list] = [DjangoFilterBackend, filters.OrderingFilter, DatabaseSearchFilter]
-    filterset_fields: ClassVar[list] = ["tags__slug"]
-    search_fields: ClassVar[list] = ["name", "description"]
-    ordering_fields: ClassVar[list] = ["taken_at", "uploaded_at", "name"]
-    ordering: ClassVar[list] = ["-taken_at"]
+    filter_backends: ClassVar[list[type[filters.BaseFilterBackend] | type[DjangoFilterBackend]]] = [
+        DjangoFilterBackend,
+        filters.OrderingFilter,
+        DatabaseSearchFilter,
+    ]
+    filterset_fields: ClassVar[list[str]] = ["tags__slug"]
+    search_fields: ClassVar[list[str]] = ["name", "description"]
+
+    def get_serializer_class(self) -> type[PhotoSerializer]:
+        """Детальный ответ дополняется соседями по альбому."""
+        if self.action == "retrieve":
+            return PhotoDetailSerializer
+        return PhotoSerializer
+
+    ordering_fields: ClassVar[list[str]] = ["taken_at", "uploaded_at", "name"]
+    ordering: ClassVar[list[str]] = ["-taken_at"]
 
     def get_queryset(self) -> "QuerySet[Photo]":
         """В list отдаёт только public=True, в retrieve - любую фотографию."""
@@ -88,23 +105,57 @@ class PhotoViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
-    """Набор представлений для работы с тегами."""
+    """Набор представлений для работы с тегами.
+
+    Пагинация отключена: панель тегов на фронтенде показывает полный
+    список за один запрос.
+    """
 
     queryset = Tag.objects.all()
+    pagination_class: ClassVar[None] = None
     serializer_class = TagSerializer
-    permission_classes: ClassVar[list] = [IsAuthenticatedOrReadOnly]
+    permission_classes: ClassVar[list[type[BasePermission]]] = [IsAuthenticatedOrReadOnly]
     lookup_field = "slug"
-    filter_backends: ClassVar[list] = [filters.SearchFilter, filters.OrderingFilter]
-    search_fields: ClassVar[list] = ["name"]
-    ordering_fields: ClassVar[list] = ["name"]
-    ordering: ClassVar[list] = ["name"]
+    filter_backends: ClassVar[list[type[filters.BaseFilterBackend]]] = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields: ClassVar[list[str]] = ["name"]
+    ordering_fields: ClassVar[list[str]] = ["name"]
+    ordering: ClassVar[list[str]] = ["name"]
 
 
 class UploadViewSet(viewsets.ViewSet):
     """Набор представлений для загрузки фотографий."""
 
-    permission_classes: ClassVar[list] = [IsAdminUser]
+    permission_classes: ClassVar[list[type[BasePermission]]] = [IsAdminUser]
 
+    @extend_schema(
+        request={
+            "multipart/form-data": {
+                "type": "object",
+                "properties": {
+                    "album_id": {"type": "integer"},
+                    "photos": {"type": "array", "items": {"type": "string", "format": "binary"}},
+                },
+                "required": ["album_id", "photos"],
+            },
+        },
+        responses={
+            201: inline_serializer(
+                name="UploadResponse",
+                fields={
+                    "results": inline_serializer(
+                        name="UploadResult",
+                        many=True,
+                        fields={
+                            "success": serializers.BooleanField(),
+                            "filename": serializers.CharField(),
+                            "id": serializers.IntegerField(required=False),
+                            "error": serializers.CharField(required=False),
+                        },
+                    ),
+                },
+            ),
+        },
+    )
     @action(detail=False, methods=["post"])
     def upload(self, request):  # noqa: ANN001, ANN201
         """Загрузить одну или несколько фотографий в альбом."""

@@ -11,7 +11,7 @@
 <div class="container-fluid">
     <h1 class="fs-4 text-center">{{ album.name }}</h1>
     <p>
-        {% react_component "Gallery/PhotoList" apiUrl=album_api_url %}
+        {% react_component "Gallery/PhotoList" albumId=album.pk %}
     </p>
 </div>
 {% endblock gallery %}

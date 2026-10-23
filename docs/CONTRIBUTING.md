@@ -113,7 +113,7 @@ Poetry сконфигурирован таким образом, чтобы ви
 
 ## Статический анализ
 
-Проект применяет Ruff для статического анализа кода Python и ESLint для статического анализа кода JavaScript. Для конфигурации Ruff используется [pyproject.toml](../pyproject.toml), для конфигурации ESLint - [eslint.config.mjs](../eslint.config.mjs). Проверки Ruff включены в CI/CD пайплайн. Для вызова проверок Ruff вручную можно использовать команду:
+Проект применяет Ruff для статического анализа кода Python, ESLint и tsc для статического анализа кода TypeScript. Для конфигурации Ruff используется [pyproject.toml](../pyproject.toml), для конфигурации ESLint - [eslint.config.mjs](../eslint.config.mjs). Проверки Ruff включены в CI/CD пайплайн. Для вызова проверок Ruff вручную можно использовать команду:
 
     ruff check --fix
 
@@ -206,27 +206,27 @@ Workflows:
 
 #### 1. lint-workflow - статический анализ и линтинг
 
-Проверка качества кода: Ruff и Mypy для Python, ESLint и markdownlint для JavaScript и Markdown.
+Проверка качества кода: Ruff и Mypy для Python, tsc, ESLint и markdownlint для TypeScript и Markdown.
 
 Задачи (tasks):
 
-| Задача         | Описание                                                 |
-| -------------- | -------------------------------------------------------- |
-| `python-check` | Проверка Python кода с помощью Ruff и Mypy               |
-| `node-check`   | Проверка JavaScript кода с помощью ESLint и markdownlint |
+| Задача         | Описание                                                      |
+| -------------- | ------------------------------------------------------------- |
+| `python-check` | Проверка Python кода с помощью Ruff и Mypy                    |
+| `node-check`   | Проверка TypeScript кода с помощью tsc, ESLint и markdownlint |
 
 Условия запуска: при создании pull request в ветку `main` или `master`.
 
 #### 2. test-workflow - тестирование
 
-Тестирование Python и JavaScript кода в изолированном окружении с предварительной сборкой React фронтенда.
+Тестирование Python и TypeScript кода в изолированном окружении с предварительной сборкой React фронтенда.
 
 Задачи (tasks):
 
 | Задача        | Описание                                                               |
 | ------------- | ---------------------------------------------------------------------- |
 | `python-test` | Тестирование Python кода с помощью Pytest (со сборкой React фронтенда) |
-| `node-test`   | Тестирование JavaScript кода с помощью Jest                            |
+| `node-test`   | Тестирование TypeScript кода с помощью Jest                            |
 
 Условия запуска: при создании pull request в ветку `main` или `master`.
 
@@ -319,7 +319,7 @@ Workflows:
 | ------------------------- | ------------------------------------------------------------- |
 | `ruff_check`              | Проверка кода с помощью Ruff                                  |
 | `mypy_check`              | Статический анализ типов Mypy                                 |
-| `eslint_check`            | Статический анализ JavaScript кода ESLint                     |
+| `eslint_check`            | Статический анализ TypeScript кода ESLint                     |
 | `markdownlint_check`      | Проверка Markdown файлов                                      |
 | `jest_check`              | Тестирование React компонентов с Jest                         |
 | `test_python_with_pytest` | Запуск тестов Python с помощью Pytest                         |
@@ -403,7 +403,7 @@ Workflows:
 * task test-backend - тестирование Django с собранным фронтендом
 * task test-integration - интеграционные тесты локального стека (приложение, PostgreSQL, S3-сервер, nginx)
 * task dev-cert - self-signed сертификат для локального nginx
-* task check - статический анализ (Ruff, Mypy, ESLint, markdownlint)
+* task check - статический анализ (Ruff, Mypy, ESLint, TypeScript, markdownlint)
 * task build-frontend - сборка React фронтенда
 * task migrate - создание и применение миграций
 * task install - установка зависимостей Python и Node.js
@@ -427,9 +427,13 @@ Workflows:
 
     npm run test:watch
 
-### Линтинг
+### Линтинг и типы
 
-Проверка JavaScript/React кода:
+Проверка типов TypeScript:
+
+    npm run typecheck
+
+Проверка React/TypeScript кода:
 
     npm run eslint
 

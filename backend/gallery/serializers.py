@@ -16,7 +16,13 @@ class TagSerializer(serializers.ModelSerializer):
 
 
 class PhotoSerializer(serializers.ModelSerializer):
-    """Сериализатор для модели фотографии."""
+    """Сериализатор для модели фотографии.
+
+    Поля соседей по альбому отсутствуют намеренно: их вычисление требует
+    двух запросов на фотографию, а списочные данные эти поля не показывают.
+    Соседи нужны только детальному просмотру с его навигацией, там их
+    добавляет PhotoDetailSerializer.
+    """
 
     tags = TagSerializer(many=True, read_only=True)
     album_name = serializers.CharField(source="album.name", read_only=True)
@@ -71,6 +77,32 @@ class PhotoSerializer(serializers.ModelSerializer):
     def get_focal_length(self, obj: Photo) -> int | None:
         """Получить фокусное расстояние."""
         return obj.focal_length
+
+
+class PhotoDetailSerializer(PhotoSerializer):
+    """Сериализатор детального просмотра фотографии с соседями по альбому.
+
+    Соседи вычисляются один раз на объект и хранятся по его ключу: списковая
+    выдача с many=True не смешает соседей разных фотографий.
+    """
+
+    previous_id = serializers.SerializerMethodField()
+    next_id = serializers.SerializerMethodField()
+
+    def _get_neighbors(self, obj: Photo) -> tuple[int | None, int | None]:
+        """Получить соседей фотографии, кэшируя выборку по ключу объекта."""
+        cache = self.__dict__.setdefault("_neighbors", {})
+        if obj.pk not in cache:
+            cache[obj.pk] = obj.get_neighbor_ids()
+        return cache[obj.pk]
+
+    def get_previous_id(self, obj: Photo) -> int | None:
+        """Получить id предыдущей публичной фотографии альбома."""
+        return self._get_neighbors(obj)[0]
+
+    def get_next_id(self, obj: Photo) -> int | None:
+        """Получить id следующей публичной фотографии альбома."""
+        return self._get_neighbors(obj)[1]
 
 
 class AlbumBaseSerializer(serializers.ModelSerializer):

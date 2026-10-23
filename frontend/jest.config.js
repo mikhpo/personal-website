@@ -19,23 +19,28 @@ module.exports = {
   testEnvironment: 'jsdom',
   rootDir: frontendDir,
   roots: ['<rootDir>/src'],
-  testMatch: ['**/__tests__/**/*.js', '**/?(*.)+(spec|test).js'],
+  testMatch: ['**/__tests__/**/*.ts', '**/__tests__/**/*.tsx', '**/?(*.)+(spec|test).ts', '**/?(*.)+(spec|test).tsx'],
   moduleNameMapper: {
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
     '^@components/(.*)$': '<rootDir>/src/components/$1',
-    '^@components$': '<rootDir>/src/components/index.js',
     '^@services/(.*)$': '<rootDir>/src/services/$1',
-    '^@services$': '<rootDir>/src/services/index.js',
+    '^@services$': '<rootDir>/src/services/index.ts',
     '^@utils/(.*)$': '<rootDir>/src/utils/$1',
-    '^@utils$': '<rootDir>/src/utils/index.js',
     '^@hooks/(.*)$': '<rootDir>/src/hooks/$1',
-    '^@hooks$': '<rootDir>/src/hooks/index.js',
+    '^@hooks$': '<rootDir>/src/hooks/index.ts',
+    '^@test-utils$': '<rootDir>/src/test-utils/index.ts',
   },
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   // Исключаем результат collectstatic: backend/static
   // содержит дубликаты пакетов из node_modules.
   modulePathIgnorePatterns: ['<rootDir>/../backend/static'],
-  collectCoverageFrom: ['src/**/*.{js,jsx}', '!src/**/*.test.{js,jsx}', '!src/**/__tests__/**'],
+  collectCoverageFrom: [
+    'src/**/*.{js,jsx,ts,tsx}',
+    '!src/**/*.test.{js,jsx,ts,tsx}',
+    '!src/**/__tests__/**',
+    // Фабрики тестовых данных не входят в покрываемый код
+    '!src/test-utils/**',
+  ],
   coverageThreshold: {
     global: {
       statements: 70,

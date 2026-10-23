@@ -1,0 +1,165 @@
+import React from 'react';
+import { render, screen, fireEvent } from '@testing-library/react';
+import '@testing-library/jest-dom';
+import PhotoCard from './PhotoCard';
+import { makePhoto } from '@test-utils';
+
+/**
+ * Набор тестов для компонента PhotoCard.
+ * Проверяет корректность отображения карточки фотографии в соответствии
+ * со старой Django-реализацией (только изображение без текста).
+ */
+describe('PhotoCard', () => {
+  const minimalPhoto = makePhoto({
+    id: 1,
+    name: 'Тестовое фото',
+    slug: 'test-photo',
+    thumbnail_url: '',
+  });
+
+  const fullPhoto = makePhoto({
+    id: 1,
+    name: 'Тестовое фото',
+    slug: 'test-photo',
+    thumbnail_url: '/media/test-thumbnail.jpg',
+  });
+
+  /**
+   * Проверяет, что компонент корректно рендерится с минимальным набором пропсов.
+   * В старой реализации карточка содержит только изображение.
+   */
+  test('рендерит с минимальными props', () => {
+    render(<PhotoCard photo={minimalPhoto} />);
+    const link = screen.getByRole('link');
+    expect(link).toHaveAttribute('href', '/gallery/photo/1/');
+  });
+
+  /**
+   * Проверяет, что компонент корректно рендерится с полным набором пропсов.
+   * Включает проверку отображения миниатюры.
+   */
+  test('рендерит с полными props', () => {
+    render(<PhotoCard photo={fullPhoto} />);
+    expect(screen.getByAltText('Тестовое фото')).toBeInTheDocument();
+  });
+
+  /**
+   * Проверяет, что миниатюра не отображается, если thumbnail_url не задан.
+   */
+  test('не отображает миниатюру если thumbnail_url пустой', () => {
+    render(<PhotoCard photo={minimalPhoto} />);
+    expect(screen.queryByRole('img')).not.toBeInTheDocument();
+  });
+
+  /**
+   * Проверяет, что ссылка на страницу фотографии имеет правильный URL.
+   */
+  test('ссылка на фото имеет правильный URL', () => {
+    render(<PhotoCard photo={fullPhoto} />);
+    const links = screen.getAllByRole('link');
+    links.forEach((link) => {
+      expect(link).toHaveAttribute('href', '/gallery/photo/1/');
+    });
+  });
+
+  /**
+   * Проверяет, что изображение имеет правильный источник.
+   */
+  test('изображение имеет правильный src', () => {
+    render(<PhotoCard photo={fullPhoto} />);
+    const image = screen.getByAltText('Тестовое фото');
+    expect(image).toHaveAttribute('src', '/media/test-thumbnail.jpg');
+  });
+
+  /**
+   * Проверяет, что изображение загружается с атрибутом loading="lazy".
+   */
+  test('изображение имеет loading="lazy"', () => {
+    render(<PhotoCard photo={fullPhoto} />);
+    const image = screen.getByAltText('Тестовое фото');
+    expect(image).toHaveAttribute('loading', 'lazy');
+  });
+
+  /**
+   * Проверяет, что к элементу Card применены правильные CSS классы.
+   */
+  test('применяет правильные CSS классы к Card', () => {
+    const { container } = render(<PhotoCard photo={fullPhoto} />);
+    const card = container.querySelector('.card');
+    expect(card).toHaveClass('shadow', 'rounded', 'text-center');
+  });
+
+  /**
+   * Проверяет, что изображение имеет класс card-img как в старой реализации.
+   */
+  test('изображение имеет класс card-img', () => {
+    const { container } = render(<PhotoCard photo={fullPhoto} />);
+    const img = container.querySelector('img');
+    expect(img).toHaveClass('card-img');
+  });
+
+  /**
+   * Проверяет поведение при пустой строке в thumbnail_url.
+   */
+  test('рендерит с пустой строкой в thumbnail_url', () => {
+    const photoWithEmptyThumbnail = {
+      ...fullPhoto,
+      thumbnail_url: '',
+    };
+    render(<PhotoCard photo={photoWithEmptyThumbnail} />);
+    expect(screen.queryByRole('img')).not.toBeInTheDocument();
+  });
+
+  /**
+   * Проверяет, что карточка скрыта, пока проявление не разрешено:
+   * masonry-сетка раскрывает карточки только после пересчета.
+   */
+  test('скрыта при revealed=false', () => {
+    const { container } = render(<PhotoCard photo={fullPhoto} revealed={false} />);
+    const card = container.querySelector('.card');
+    expect(card).toHaveClass('card-entrance');
+    expect(card).not.toHaveClass('is-visible');
+  });
+
+  /**
+   * Проверяет, что карточка видима при разрешенном проявлении.
+   */
+  test('видима при revealed=true', () => {
+    const { container } = render(<PhotoCard photo={fullPhoto} revealed />);
+    const card = container.querySelector('.card');
+    expect(card).toHaveClass('card-entrance', 'is-visible');
+  });
+
+  /**
+   * Проверяет, что карточка видна сразу без миниатюры, даже если
+   * проявление не разрешено: ей нечего ждать.
+   */
+  test('видна сразу без миниатюры', () => {
+    const { container } = render(<PhotoCard photo={minimalPhoto} revealed={false} />);
+    const card = container.querySelector('.card');
+    expect(card).toHaveClass('card-entrance', 'is-visible');
+  });
+
+  /**
+   * Проверяет, что загрузка миниатюры вызывает обработчик onImageLoad.
+   * Обработчик используется masonry-сеткой для учета высоты карточки.
+   */
+  test('вызывает onImageLoad при загрузке миниатюры', () => {
+    const onImageLoad = jest.fn();
+    render(<PhotoCard photo={fullPhoto} onImageLoad={onImageLoad} />);
+    const image = screen.getByAltText('Тестовое фото');
+    fireEvent.load(image);
+    expect(onImageLoad).toHaveBeenCalledTimes(1);
+  });
+
+  /**
+   * Проверяет, что ошибка загрузки миниатюры также вызывает обработчик.
+   */
+  test('вызывает onImageLoad при ошибке загрузки миниатюры', () => {
+    const onImageLoad = jest.fn();
+    render(<PhotoCard photo={fullPhoto} onImageLoad={onImageLoad} />);
+    const image = screen.getByAltText('Тестовое фото');
+    fireEvent.error(image);
+    expect(onImageLoad).toHaveBeenCalledTimes(1);
+  });
+});

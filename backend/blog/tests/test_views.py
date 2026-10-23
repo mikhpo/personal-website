@@ -80,7 +80,6 @@ class TestBlogIndexPage(TestCase):
         response = self.client.get(ARTICLE_LIST_URL)
         # Проверяем наличие React компонента Blog/ArticleList
         self.assertContains(response, 'data-component-name="Blog/ArticleList"')
-        self.assertContains(response, "/api/blog/articles/")
 
     def test_article_list_content_filter(self) -> None:
         """Тест на фильтрацию контента на главной странице блога."""

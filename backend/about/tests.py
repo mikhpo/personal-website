@@ -38,10 +38,9 @@ class TestAboutView(TestCase):
         self.assertRegex(response.content.decode(), r"<h1[^>]*>\s*Обо мне\s*</h1>")
 
     def test_about_page_react_component(self) -> None:
-        """Проверяет монтирование React компонента страницы и адрес API в пропах."""
+        """Проверяет монтирование React компонента страницы."""
         response = self.client.get(self.about_url)
         self.assertContains(response, 'data-component-name="About/AboutPage"')
-        self.assertContains(response, '"apiUrl": "/api/about/"')
 
 
 class TestAboutViewSet(APITestCase):

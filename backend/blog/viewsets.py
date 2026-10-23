@@ -6,7 +6,7 @@ from auditlog.context import set_actor
 from django.contrib.auth.base_user import AbstractBaseUser
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, viewsets
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.permissions import BasePermission, IsAuthenticatedOrReadOnly
 
 from api.filters import DatabaseSearchFilter
 from api.mixins import AuditlogActorMixin
@@ -29,12 +29,12 @@ class CategoryViewSet(AuditlogActorMixin, viewsets.ModelViewSet):
     """Набор представлений для работы с категориями (полный CRUD)."""
 
     serializer_class = CategorySerializer
-    permission_classes: ClassVar[list] = [IsPublicOrAuthor]
+    permission_classes: ClassVar[list[type[BasePermission]]] = [IsPublicOrAuthor]
     lookup_field = "pk"
-    filter_backends: ClassVar[list] = [filters.SearchFilter, filters.OrderingFilter]
-    search_fields: ClassVar[list] = ["name", "description"]
-    ordering_fields: ClassVar[list] = ["name"]
-    ordering: ClassVar[list] = ["name"]
+    filter_backends: ClassVar[list[type[filters.BaseFilterBackend]]] = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields: ClassVar[list[str]] = ["name", "description"]
+    ordering_fields: ClassVar[list[str]] = ["name"]
+    ordering: ClassVar[list[str]] = ["name"]
 
     def get_queryset(self) -> "QuerySet[Category]":
         """В list отдаёт публичные категории, а администратору - все.
@@ -55,12 +55,12 @@ class TopicViewSet(AuditlogActorMixin, viewsets.ModelViewSet):
     """Набор представлений для работы с темами (полный CRUD)."""
 
     serializer_class = TopicSerializer
-    permission_classes: ClassVar[list] = [IsPublicOrAuthor]
+    permission_classes: ClassVar[list[type[BasePermission]]] = [IsPublicOrAuthor]
     lookup_field = "pk"
-    filter_backends: ClassVar[list] = [filters.SearchFilter, filters.OrderingFilter]
-    search_fields: ClassVar[list] = ["name", "description"]
-    ordering_fields: ClassVar[list] = ["name"]
-    ordering: ClassVar[list] = ["name"]
+    filter_backends: ClassVar[list[type[filters.BaseFilterBackend]]] = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields: ClassVar[list[str]] = ["name", "description"]
+    ordering_fields: ClassVar[list[str]] = ["name"]
+    ordering: ClassVar[list[str]] = ["name"]
 
     def get_queryset(self) -> "QuerySet[Topic]":
         """В list отдаёт публичные темы, а администратору - все."""
@@ -77,12 +77,12 @@ class SeriesViewSet(AuditlogActorMixin, viewsets.ModelViewSet):
     """Набор представлений для работы с сериями (полный CRUD)."""
 
     serializer_class = SeriesSerializer
-    permission_classes: ClassVar[list] = [IsPublicOrAuthor]
+    permission_classes: ClassVar[list[type[BasePermission]]] = [IsPublicOrAuthor]
     lookup_field = "pk"
-    filter_backends: ClassVar[list] = [filters.SearchFilter, filters.OrderingFilter]
-    search_fields: ClassVar[list] = ["name", "description"]
-    ordering_fields: ClassVar[list] = ["name"]
-    ordering: ClassVar[list] = ["name"]
+    filter_backends: ClassVar[list[type[filters.BaseFilterBackend]]] = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields: ClassVar[list[str]] = ["name", "description"]
+    ordering_fields: ClassVar[list[str]] = ["name"]
+    ordering: ClassVar[list[str]] = ["name"]
 
     def get_queryset(self) -> "QuerySet[Series]":
         """В list отдаёт публичные серии, а администратору - все."""
@@ -99,15 +99,19 @@ class ArticleViewSet(AuditlogActorMixin, viewsets.ModelViewSet):
     """Набор представлений для работы со статьями (полный CRUD)."""
 
     serializer_class = ArticleSerializer
-    permission_classes: ClassVar[list] = [IsPublicOrAuthor]
+    permission_classes: ClassVar[list[type[BasePermission]]] = [IsPublicOrAuthor]
     lookup_field = "pk"
     # DatabaseSearchFilter после OrderingFilter: сортировка по релевантности
     # (-rank) не должна перезаписываться дефолтным ordering вьюхи.
-    filter_backends: ClassVar[list] = [DjangoFilterBackend, filters.OrderingFilter, DatabaseSearchFilter]
-    filterset_fields: ClassVar[list] = ["categories__slug", "topics__slug", "series__slug"]
-    search_fields: ClassVar[list] = ["title", "description", "content"]
-    ordering_fields: ClassVar[list] = ["published_at", "modified_at", "title"]
-    ordering: ClassVar[list] = ["-published_at"]
+    filter_backends: ClassVar[list[type[filters.BaseFilterBackend] | type[DjangoFilterBackend]]] = [
+        DjangoFilterBackend,
+        filters.OrderingFilter,
+        DatabaseSearchFilter,
+    ]
+    filterset_fields: ClassVar[list[str]] = ["categories__slug", "topics__slug", "series__slug"]
+    search_fields: ClassVar[list[str]] = ["title", "description", "content"]
+    ordering_fields: ClassVar[list[str]] = ["published_at", "modified_at", "title"]
+    ordering: ClassVar[list[str]] = ["-published_at"]
 
     def get_serializer_class(self) -> type:
         """Для записи - сериализатор с первичными ключами M2M, для чтения - полный."""
@@ -145,10 +149,13 @@ class CommentViewSet(AuditlogActorMixin, viewsets.ModelViewSet):
     """Набор представлений для работы с комментариями (полный CRUD)."""
 
     serializer_class = CommentSerializer
-    permission_classes: ClassVar[list] = [IsAuthenticatedOrReadOnly]
-    filter_backends: ClassVar[list] = [DjangoFilterBackend, filters.OrderingFilter]
-    filterset_fields: ClassVar[list] = ["article__slug", "author__username", "article"]
-    ordering: ClassVar[list] = ["posted"]
+    permission_classes: ClassVar[list[type[BasePermission]]] = [IsAuthenticatedOrReadOnly]
+    filter_backends: ClassVar[list[type[filters.BaseFilterBackend] | type[DjangoFilterBackend]]] = [
+        DjangoFilterBackend,
+        filters.OrderingFilter,
+    ]
+    filterset_fields: ClassVar[list[str]] = ["article__slug", "author__username", "article"]
+    ordering: ClassVar[list[str]] = ["posted"]
 
     def get_queryset(self) -> "QuerySet[Comment]":
         """Возвращать все комментарии с оптимизированными запросами к базе данных."""

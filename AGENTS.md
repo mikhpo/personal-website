@@ -50,6 +50,8 @@
 - `npm test` - тесты
 - `npm run test:watch` - тесты в режиме наблюдения
 - `npm run eslint` - проверка ESLint
+- `npm run typecheck` - проверка типов TypeScript
+- `npm run api-types:generate` - перегенерация типов API из OpenAPI-схемы (при изменении сериализаторов)
 
 ## Структура проекта
 
@@ -81,17 +83,21 @@
 
 - `src/components/` - компоненты: Alert, Blog, Gallery, Main, Navbar, Card, Pagination, Spinner
 - `src/hooks/` - кастомные хуки (useApiData, useMasonry, usePagination, usePhotoData, usePhotoNavigation, useToggle)
-- `src/services/` - API сервисы (api.js, blogService.js, galleryService.js)
+- `src/services/` - API сервисы (api.ts, blogService.ts, galleryService.ts, aboutService.ts); все HTTP-запросы идут через ApiClient
+- `src/types/` - типы API: OpenAPI-схема, сгенерированный api-schema.ts, типы пагинированных ответов
+- `src/utils/` - утилиты (apiUrl, cookies, navigate, photoNavigation, tinymce, pagination)
 - `dist/` - production бандл
 
 ## Frontend стек
 
+- TypeScript (строгий режим) - язык фронтенда
 - React 19.2.7 - UI библиотека
 - Bootstrap 5.3.8 - стили
 - Webpack 5 - сборка
-- Babel - транспиляция JSX и ES6+
+- Babel - транспиляция TypeScript и JSX
 - Jest - тестирование компонентов
 - django-webpack-loader - интеграция бандлов с Django
+- openapi-typescript - генерация типов API из OpenAPI-схемы
 
 ## Архитектура
 
@@ -242,6 +248,7 @@
 
 - Ruff: `poetry run ruff check . --fix`
 - Mypy: `poetry run mypy .`
+- TypeScript: `npm run typecheck` (tsc --noEmit)
 - ESLint: `npm run eslint`
 - Markdown: `npx markdownlint-cli '**/*.md' --ignore-path .gitignore`
 - Стиль кода поддерживают ruff, black, isort

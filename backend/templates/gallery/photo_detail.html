@@ -10,6 +10,6 @@
 {% endblock meta %}
 {% block gallery %}
 <div class="container">
-    {% react_component "Gallery/PhotoDetail" photoId=photo.id previousPhotoId=previous_photo_id nextPhotoId=next_photo_id isStaff=user.is_staff embedSizes=embed_sizes %}
+    {% react_component "Gallery/PhotoDetail" photoId=photo.id isStaff=user.is_staff embedSizes=embed_sizes %}
 </div>
 {% endblock gallery %}

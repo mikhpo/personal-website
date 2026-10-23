@@ -161,6 +161,9 @@ jobs:
       - name: Run ESLint
         run: npm run eslint
 
+      - name: Проверка типов TypeScript
+        run: npm run typecheck
+
   # Проверка Markdown файлов при помощи markdownlint.
   markdownlint_check:
     name: Markdownlint check
@@ -284,6 +287,15 @@ jobs:
 
       - name: Build React frontend
         run: npm run build
+
+      # schema.yaml и api-schema.ts хранятся в репозитории и обновляются командой
+      # npm run api-types:generate вместе с изменениями сериализаторов. Если
+      # перегенерацию забыть, TypeScript проверяет код против устаревшей схемы;
+      # --exit-code превращает расхождение в ошибку сборки.
+      - name: Проверка свежести сгенерированных типов API
+        run: |
+          npm run api-types:generate
+          git diff --exit-code frontend/src/types/schema.yaml frontend/src/types/api-schema.ts
 
       - name: Check Django migrations
         run: poetry run python backend/manage.py makemigrations --dry-run --check

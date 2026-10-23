@@ -60,6 +60,8 @@ workflows:
               - npm install
               - echo "Запуск ESLint для проверки JavaScript/TypeScript кода"
               - npm run eslint
+              - echo "Проверка типов TypeScript при помощи tsc"
+              - npm run typecheck
               - echo "Проверка Markdown файлов с помощью markdownlint"
               - npx markdownlint-cli '**/*.md' --ignore-path .gitignore
 
@@ -95,6 +97,13 @@ workflows:
               - echo "Сборка React фронтенда"
               - npm install
               - npm run build
+              # schema.yaml и api-schema.ts хранятся в репозитории и обновляются командой
+              # npm run api-types:generate вместе с изменениями сериализаторов. Если
+              # перегенерацию забыть, TypeScript проверяет код против устаревшей схемы;
+              # --exit-code превращает расхождение в ошибку сборки.
+              - echo "Проверка свежести сгенерированных типов API"
+              - npm run api-types:generate
+              - git diff --exit-code frontend/src/types/schema.yaml frontend/src/types/api-schema.ts
               - echo "Компиляция каталогов переводов"
               - cd backend && poetry run python manage.py compilemessages && cd ..
               - echo "Запуск тестов Python с помощью Pytest"

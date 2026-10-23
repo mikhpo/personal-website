@@ -1,0 +1,2617 @@
+openapi: 3.0.3
+info:
+  title: Personal Website API
+  version: 1.0.0
+  description: REST API для персонального сайта с блогом и галереей
+paths:
+  /api/about/:
+    get:
+      operationId: about_list
+      description: Возвращает содержимое страницы Обо мне.
+      tags:
+      - about
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/About'
+          description: ''
+  /api/accounts/users/:
+    get:
+      operationId: accounts_users_list
+      description: ViewSet для управления пользователями.
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - accounts
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedUserList'
+          description: ''
+    post:
+      operationId: accounts_users_create
+      description: ViewSet для управления пользователями.
+      tags:
+      - accounts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/User'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/User'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+  /api/accounts/users/{id}/:
+    get:
+      operationId: accounts_users_retrieve
+      description: ViewSet для управления пользователями.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this пользователь.
+        required: true
+      tags:
+      - accounts
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+    put:
+      operationId: accounts_users_update
+      description: ViewSet для управления пользователями.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this пользователь.
+        required: true
+      tags:
+      - accounts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/User'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/User'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+    patch:
+      operationId: accounts_users_partial_update
+      description: ViewSet для управления пользователями.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this пользователь.
+        required: true
+      tags:
+      - accounts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUser'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUser'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUser'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+    delete:
+      operationId: accounts_users_destroy
+      description: ViewSet для управления пользователями.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this пользователь.
+        required: true
+      tags:
+      - accounts
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/auth/token/:
+    post:
+      operationId: auth_token_create
+      description: Выдать пару токенов и записать событие в журнал.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPair'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPair'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPair'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenObtainPair'
+          description: ''
+  /api/auth/token/refresh/:
+    post:
+      operationId: auth_token_refresh_create
+      description: |-
+        Takes a refresh type JSON web token and returns an access type JSON web
+        token if the refresh token is valid.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefresh'
+          description: ''
+  /api/auth/token/verify/:
+    post:
+      operationId: auth_token_verify_create
+      description: |-
+        Takes a token and indicates if it is valid.  This view provides no
+        information about a token's fitness for a particular use.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenVerify'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenVerify'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenVerify'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenVerify'
+          description: ''
+  /api/blog/articles/:
+    get:
+      operationId: blog_articles_list
+      description: Набор представлений для работы со статьями (полный CRUD).
+      parameters:
+      - in: query
+        name: categories__slug
+        schema:
+          type: string
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: query
+        name: series__slug
+        schema:
+          type: string
+      - in: query
+        name: topics__slug
+        schema:
+          type: string
+      tags:
+      - blog
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedArticleList'
+          description: ''
+    post:
+      operationId: blog_articles_create
+      description: Набор представлений для работы со статьями (полный CRUD).
+      tags:
+      - blog
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ArticleWrite'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ArticleWrite'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ArticleWrite'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArticleWrite'
+          description: ''
+  /api/blog/articles/{id}/:
+    get:
+      operationId: blog_articles_retrieve
+      description: Набор представлений для работы со статьями (полный CRUD).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this article.
+        required: true
+      tags:
+      - blog
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Article'
+          description: ''
+    put:
+      operationId: blog_articles_update
+      description: Набор представлений для работы со статьями (полный CRUD).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this article.
+        required: true
+      tags:
+      - blog
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ArticleWrite'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ArticleWrite'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ArticleWrite'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArticleWrite'
+          description: ''
+    patch:
+      operationId: blog_articles_partial_update
+      description: Набор представлений для работы со статьями (полный CRUD).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this article.
+        required: true
+      tags:
+      - blog
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedArticleWrite'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedArticleWrite'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedArticleWrite'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArticleWrite'
+          description: ''
+    delete:
+      operationId: blog_articles_destroy
+      description: Набор представлений для работы со статьями (полный CRUD).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this article.
+        required: true
+      tags:
+      - blog
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/blog/categories/:
+    get:
+      operationId: blog_categories_list
+      description: Набор представлений для работы с категориями (полный CRUD).
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - blog
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCategoryList'
+          description: ''
+    post:
+      operationId: blog_categories_create
+      description: Набор представлений для работы с категориями (полный CRUD).
+      tags:
+      - blog
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Category'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Category'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Category'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+          description: ''
+  /api/blog/categories/{id}/:
+    get:
+      operationId: blog_categories_retrieve
+      description: Набор представлений для работы с категориями (полный CRUD).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this category.
+        required: true
+      tags:
+      - blog
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+          description: ''
+    put:
+      operationId: blog_categories_update
+      description: Набор представлений для работы с категориями (полный CRUD).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this category.
+        required: true
+      tags:
+      - blog
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Category'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Category'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Category'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+          description: ''
+    patch:
+      operationId: blog_categories_partial_update
+      description: Набор представлений для работы с категориями (полный CRUD).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this category.
+        required: true
+      tags:
+      - blog
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCategory'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedCategory'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedCategory'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+          description: ''
+    delete:
+      operationId: blog_categories_destroy
+      description: Набор представлений для работы с категориями (полный CRUD).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this category.
+        required: true
+      tags:
+      - blog
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/blog/comments/:
+    get:
+      operationId: blog_comments_list
+      description: Набор представлений для работы с комментариями (полный CRUD).
+      parameters:
+      - in: query
+        name: article
+        schema:
+          type: integer
+      - in: query
+        name: article__slug
+        schema:
+          type: string
+      - in: query
+        name: author__username
+        schema:
+          type: string
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      tags:
+      - blog
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCommentList'
+          description: ''
+    post:
+      operationId: blog_comments_create
+      description: Набор представлений для работы с комментариями (полный CRUD).
+      tags:
+      - blog
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Comment'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Comment'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Comment'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+          description: ''
+  /api/blog/comments/{id}/:
+    get:
+      operationId: blog_comments_retrieve
+      description: Набор представлений для работы с комментариями (полный CRUD).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this comment.
+        required: true
+      tags:
+      - blog
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+          description: ''
+    put:
+      operationId: blog_comments_update
+      description: Набор представлений для работы с комментариями (полный CRUD).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this comment.
+        required: true
+      tags:
+      - blog
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Comment'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Comment'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Comment'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+          description: ''
+    patch:
+      operationId: blog_comments_partial_update
+      description: Набор представлений для работы с комментариями (полный CRUD).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this comment.
+        required: true
+      tags:
+      - blog
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedComment'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedComment'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedComment'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+          description: ''
+    delete:
+      operationId: blog_comments_destroy
+      description: Набор представлений для работы с комментариями (полный CRUD).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this comment.
+        required: true
+      tags:
+      - blog
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/blog/series/:
+    get:
+      operationId: blog_series_list
+      description: Набор представлений для работы с сериями (полный CRUD).
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - blog
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedSeriesList'
+          description: ''
+    post:
+      operationId: blog_series_create
+      description: Набор представлений для работы с сериями (полный CRUD).
+      tags:
+      - blog
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Series'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Series'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Series'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Series'
+          description: ''
+  /api/blog/series/{id}/:
+    get:
+      operationId: blog_series_retrieve
+      description: Набор представлений для работы с сериями (полный CRUD).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this series.
+        required: true
+      tags:
+      - blog
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Series'
+          description: ''
+    put:
+      operationId: blog_series_update
+      description: Набор представлений для работы с сериями (полный CRUD).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this series.
+        required: true
+      tags:
+      - blog
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Series'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Series'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Series'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Series'
+          description: ''
+    patch:
+      operationId: blog_series_partial_update
+      description: Набор представлений для работы с сериями (полный CRUD).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this series.
+        required: true
+      tags:
+      - blog
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedSeries'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedSeries'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedSeries'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Series'
+          description: ''
+    delete:
+      operationId: blog_series_destroy
+      description: Набор представлений для работы с сериями (полный CRUD).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this series.
+        required: true
+      tags:
+      - blog
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/blog/topics/:
+    get:
+      operationId: blog_topics_list
+      description: Набор представлений для работы с темами (полный CRUD).
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - blog
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTopicList'
+          description: ''
+    post:
+      operationId: blog_topics_create
+      description: Набор представлений для работы с темами (полный CRUD).
+      tags:
+      - blog
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Topic'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Topic'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Topic'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Topic'
+          description: ''
+  /api/blog/topics/{id}/:
+    get:
+      operationId: blog_topics_retrieve
+      description: Набор представлений для работы с темами (полный CRUD).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this topic.
+        required: true
+      tags:
+      - blog
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Topic'
+          description: ''
+    put:
+      operationId: blog_topics_update
+      description: Набор представлений для работы с темами (полный CRUD).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this topic.
+        required: true
+      tags:
+      - blog
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Topic'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Topic'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Topic'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Topic'
+          description: ''
+    patch:
+      operationId: blog_topics_partial_update
+      description: Набор представлений для работы с темами (полный CRUD).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this topic.
+        required: true
+      tags:
+      - blog
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTopic'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedTopic'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedTopic'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Topic'
+          description: ''
+    delete:
+      operationId: blog_topics_destroy
+      description: Набор представлений для работы с темами (полный CRUD).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this topic.
+        required: true
+      tags:
+      - blog
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/gallery/albums/:
+    get:
+      operationId: gallery_albums_list
+      description: Набор представлений для работы с альбомами.
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: query
+        name: tags__slug
+        schema:
+          type: string
+      tags:
+      - gallery
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAlbumListList'
+          description: ''
+  /api/gallery/albums/{id}/:
+    get:
+      operationId: gallery_albums_retrieve
+      description: Набор представлений для работы с альбомами.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Альбом.
+        required: true
+      tags:
+      - gallery
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlbumDetail'
+          description: ''
+  /api/gallery/photos/:
+    get:
+      operationId: gallery_photos_list
+      description: Набор представлений для работы с фотографиями.
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: query
+        name: tags__slug
+        schema:
+          type: string
+      tags:
+      - gallery
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPhotoList'
+          description: ''
+  /api/gallery/photos/{id}/:
+    get:
+      operationId: gallery_photos_retrieve
+      description: Набор представлений для работы с фотографиями.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Фотография.
+        required: true
+      tags:
+      - gallery
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PhotoDetail'
+          description: ''
+  /api/gallery/tags/:
+    get:
+      operationId: gallery_tags_list
+      description: |-
+        Набор представлений для работы с тегами.
+
+        Пагинация отключена: панель тегов на фронтенде показывает полный
+        список за один запрос.
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - gallery
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Tag'
+          description: ''
+  /api/gallery/tags/{slug}/:
+    get:
+      operationId: gallery_tags_retrieve
+      description: |-
+        Набор представлений для работы с тегами.
+
+        Пагинация отключена: панель тегов на фронтенде показывает полный
+        список за один запрос.
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+          title: Слаг
+          description: Слаг тэга
+        required: true
+      tags:
+      - gallery
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tag'
+          description: ''
+  /api/gallery/upload/:
+    post:
+      operationId: gallery_upload_create
+      description: Загрузить одну или несколько фотографий в альбом.
+      tags:
+      - gallery
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                album_id:
+                  type: integer
+                photos:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+              required:
+              - album_id
+              - photos
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadResponse'
+          description: ''
+components:
+  schemas:
+    About:
+      type: object
+      description: Сериализатор страницы Обо мне.
+      properties:
+        content:
+          type: string
+          title: Содержимое
+    AlbumDetail:
+      type: object
+      description: Сериализатор для детального просмотра альбома (с фотографиями).
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tag'
+          readOnly: true
+        cover_thumbnail_url:
+          type: string
+          description: Получить URL миниатюры обложки альбома.
+          readOnly: true
+        photos:
+          type: array
+          items:
+            $ref: '#/components/schemas/Photo'
+          readOnly: true
+        name:
+          type: string
+          title: Наименование
+          description: Наименование альбома
+          maxLength: 255
+        description:
+          type: string
+          title: Описание
+          description: Описание альбома
+        slug:
+          type: string
+          title: Слаг
+          description: Слаг альбома
+          maxLength: 50
+          pattern: ^[-a-zA-Z0-9_]+$
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Создан
+          description: Дата и время создания альбома
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Обновлен
+          description: Дата и время последнего обновления альбома
+        public:
+          type: boolean
+          title: Публичный
+          description: Альбом публичный
+        order:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          title: Порядок
+        cover:
+          type: integer
+          nullable: true
+          title: Обложка
+          description: Обложка альбома
+      required:
+      - cover_thumbnail_url
+      - created_at
+      - id
+      - name
+      - photos
+      - tags
+      - updated_at
+    AlbumList:
+      type: object
+      description: Сериализатор для списка альбомов (без фотографий).
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tag'
+          readOnly: true
+        cover_thumbnail_url:
+          type: string
+          description: Получить URL миниатюры обложки альбома.
+          readOnly: true
+        photos_count:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: Наименование
+          description: Наименование альбома
+          maxLength: 255
+        description:
+          type: string
+          title: Описание
+          description: Описание альбома
+        slug:
+          type: string
+          title: Слаг
+          description: Слаг альбома
+          maxLength: 50
+          pattern: ^[-a-zA-Z0-9_]+$
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Создан
+          description: Дата и время создания альбома
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Обновлен
+          description: Дата и время последнего обновления альбома
+        public:
+          type: boolean
+          title: Публичный
+          description: Альбом публичный
+        order:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          title: Порядок
+        cover:
+          type: integer
+          nullable: true
+          title: Обложка
+          description: Обложка альбома
+      required:
+      - cover_thumbnail_url
+      - created_at
+      - id
+      - name
+      - photos_count
+      - tags
+      - updated_at
+    Article:
+      type: object
+      description: Сериализатор для модели статьи.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        author_username:
+          type: string
+          readOnly: true
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/Category'
+          readOnly: true
+        topics:
+          type: array
+          items:
+            $ref: '#/components/schemas/Topic'
+          readOnly: true
+        series:
+          type: array
+          items:
+            $ref: '#/components/schemas/Series'
+          readOnly: true
+        comments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Comment'
+          readOnly: true
+        url:
+          type: string
+          description: Возвращает абсолютный URL статьи.
+          readOnly: true
+        title:
+          type: string
+          title: Заголовок
+          maxLength: 255
+        description:
+          type: string
+          title: Описание
+          maxLength: 255
+        content:
+          type: string
+          title: Содержание
+        published_at:
+          type: string
+          format: date-time
+          nullable: true
+          title: Дата публикации
+        modified_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Дата последнего изменения
+        slug:
+          type: string
+          title: Слаг
+          maxLength: 50
+          pattern: ^[-a-zA-Z0-9_]+$
+        image:
+          type: string
+          format: uri
+          title: Картинка
+        public:
+          type: boolean
+          title: Опубликовано
+        author:
+          type: integer
+          nullable: true
+      required:
+      - author_username
+      - categories
+      - comments
+      - content
+      - id
+      - modified_at
+      - series
+      - title
+      - topics
+      - url
+    ArticleWrite:
+      type: object
+      description: |-
+        Сериализатор записи статьи (создание и обновление через форму редактора).
+
+        Автор, слаг и даты заполняются на сервере, поэтому в сериализатор
+        не включены. Категории, темы и серии передаются списками первичных
+        ключей; пустое значение ключа означает очистку связей. Ответ отдается
+        в полном представлении ArticleSerializer, чтобы клиент получал url
+        и вложенные объекты статьи.
+      properties:
+        title:
+          type: string
+          title: Заголовок
+          maxLength: 255
+        description:
+          type: string
+          title: Описание
+          maxLength: 255
+        content:
+          type: string
+          title: Содержание
+        public:
+          type: boolean
+          title: Опубликовано
+        image:
+          type: string
+          format: uri
+          title: Картинка
+        remove_image:
+          type: boolean
+          writeOnly: true
+        categories:
+          type: array
+          items:
+            type: integer
+        topics:
+          type: array
+          items:
+            type: integer
+        series:
+          type: array
+          items:
+            type: integer
+      required:
+      - content
+      - title
+    Category:
+      type: object
+      description: Сериализатор для модели категории.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: Категория
+          maxLength: 255
+        description:
+          type: string
+          title: Описание
+          maxLength: 255
+        slug:
+          type: string
+          title: Слаг
+          maxLength: 50
+          pattern: ^[-a-zA-Z0-9_]+$
+        image:
+          type: string
+          format: uri
+          title: Картинка
+        public:
+          type: boolean
+          title: Опубликовано
+      required:
+      - id
+      - name
+    Comment:
+      type: object
+      description: Сериализатор для модели комментария.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        article:
+          type: integer
+        author:
+          type: integer
+          readOnly: true
+        author_username:
+          type: string
+          readOnly: true
+        content:
+          type: string
+        posted:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - article
+      - author
+      - author_username
+      - content
+      - id
+      - posted
+    PaginatedAlbumListList:
+      type: object
+      required:
+      - count
+      - results
+      - total_pages
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/AlbumList'
+        total_pages:
+          type: integer
+          example: 7
+    PaginatedArticleList:
+      type: object
+      required:
+      - count
+      - results
+      - total_pages
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Article'
+        total_pages:
+          type: integer
+          example: 7
+    PaginatedCategoryList:
+      type: object
+      required:
+      - count
+      - results
+      - total_pages
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Category'
+        total_pages:
+          type: integer
+          example: 7
+    PaginatedCommentList:
+      type: object
+      required:
+      - count
+      - results
+      - total_pages
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Comment'
+        total_pages:
+          type: integer
+          example: 7
+    PaginatedPhotoList:
+      type: object
+      required:
+      - count
+      - results
+      - total_pages
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Photo'
+        total_pages:
+          type: integer
+          example: 7
+    PaginatedSeriesList:
+      type: object
+      required:
+      - count
+      - results
+      - total_pages
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Series'
+        total_pages:
+          type: integer
+          example: 7
+    PaginatedTopicList:
+      type: object
+      required:
+      - count
+      - results
+      - total_pages
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Topic'
+        total_pages:
+          type: integer
+          example: 7
+    PaginatedUserList:
+      type: object
+      required:
+      - count
+      - results
+      - total_pages
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+        total_pages:
+          type: integer
+          example: 7
+    PatchedArticleWrite:
+      type: object
+      description: |-
+        Сериализатор записи статьи (создание и обновление через форму редактора).
+
+        Автор, слаг и даты заполняются на сервере, поэтому в сериализатор
+        не включены. Категории, темы и серии передаются списками первичных
+        ключей; пустое значение ключа означает очистку связей. Ответ отдается
+        в полном представлении ArticleSerializer, чтобы клиент получал url
+        и вложенные объекты статьи.
+      properties:
+        title:
+          type: string
+          title: Заголовок
+          maxLength: 255
+        description:
+          type: string
+          title: Описание
+          maxLength: 255
+        content:
+          type: string
+          title: Содержание
+        public:
+          type: boolean
+          title: Опубликовано
+        image:
+          type: string
+          format: uri
+          title: Картинка
+        remove_image:
+          type: boolean
+          writeOnly: true
+        categories:
+          type: array
+          items:
+            type: integer
+        topics:
+          type: array
+          items:
+            type: integer
+        series:
+          type: array
+          items:
+            type: integer
+    PatchedCategory:
+      type: object
+      description: Сериализатор для модели категории.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: Категория
+          maxLength: 255
+        description:
+          type: string
+          title: Описание
+          maxLength: 255
+        slug:
+          type: string
+          title: Слаг
+          maxLength: 50
+          pattern: ^[-a-zA-Z0-9_]+$
+        image:
+          type: string
+          format: uri
+          title: Картинка
+        public:
+          type: boolean
+          title: Опубликовано
+    PatchedComment:
+      type: object
+      description: Сериализатор для модели комментария.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        article:
+          type: integer
+        author:
+          type: integer
+          readOnly: true
+        author_username:
+          type: string
+          readOnly: true
+        content:
+          type: string
+        posted:
+          type: string
+          format: date-time
+          readOnly: true
+    PatchedSeries:
+      type: object
+      description: Сериализатор для модели серии.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: Серия
+          maxLength: 255
+        description:
+          type: string
+          title: Описание
+          maxLength: 255
+        slug:
+          type: string
+          title: Слаг
+          maxLength: 50
+          pattern: ^[-a-zA-Z0-9_]+$
+        image:
+          type: string
+          format: uri
+          title: Картинка
+        public:
+          type: boolean
+          title: Опубликовано
+    PatchedTopic:
+      type: object
+      description: Сериализатор для модели темы.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: Тема
+          maxLength: 255
+        description:
+          type: string
+          title: Описание
+          maxLength: 255
+        slug:
+          type: string
+          title: Слаг
+          maxLength: 50
+          pattern: ^[-a-zA-Z0-9_]+$
+        image:
+          type: string
+          format: uri
+          title: Картинка
+        public:
+          type: boolean
+          title: Опубликовано
+    PatchedUser:
+      type: object
+      description: Сериализатор для модели пользователя.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        username:
+          type: string
+          title: Имя пользователя
+          description: Обязательное поле. Не более 150 символов. Только буквы, цифры
+            и символы @/./+/-/_.
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        password:
+          type: string
+          writeOnly: true
+    Photo:
+      type: object
+      description: Сериализатор для модели фотографии.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tag'
+          readOnly: true
+        album_name:
+          type: string
+          readOnly: true
+        thumbnail_url:
+          type: string
+          description: Получить URL миниатюры.
+          readOnly: true
+        preview_url:
+          type: string
+          description: Получить URL превью.
+          readOnly: true
+        image_url:
+          type: string
+          description: Получить URL оригинального изображения.
+          readOnly: true
+        camera:
+          type: string
+          description: Получить название камеры.
+          readOnly: true
+        lens_model:
+          type: string
+          description: Получить модель объектива.
+          readOnly: true
+        aperture:
+          type: string
+          nullable: true
+          description: Получить диафрагму.
+          readOnly: true
+        exposure:
+          type: string
+          nullable: true
+          description: Получить выдержку.
+          readOnly: true
+        iso:
+          type: integer
+          nullable: true
+          description: Получить ISO.
+          readOnly: true
+        focal_length:
+          type: integer
+          nullable: true
+          description: Получить фокусное расстояние.
+          readOnly: true
+        image:
+          type: string
+          format: uri
+          title: Изображение
+        name:
+          type: string
+          title: Наименование
+          description: Наименование фотографии
+          maxLength: 255
+        description:
+          type: string
+          title: Описание
+          description: Описание фотографии
+        slug:
+          type: string
+          title: Слаг
+          description: Слаг фотографии
+          maxLength: 50
+          pattern: ^[-a-zA-Z0-9_]+$
+        uploaded_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Загружена
+          description: Дата и время загрузки фотографии
+        taken_at:
+          type: string
+          format: date-time
+          title: Создана
+          description: Дата и время съемки фотографии
+        modified_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Изменена
+          description: Дата и время последнего изменения фотографии
+        public:
+          type: boolean
+          title: Публичная
+          description: Фотография публичная
+        exif:
+          readOnly: true
+          nullable: true
+          title: EXIF данные
+          description: EXIF данные изображения
+        album:
+          type: integer
+          title: Альбом
+          description: Альбом, в котором размещена фотография
+      required:
+      - album
+      - album_name
+      - aperture
+      - camera
+      - exif
+      - exposure
+      - focal_length
+      - id
+      - image
+      - image_url
+      - iso
+      - lens_model
+      - modified_at
+      - preview_url
+      - tags
+      - taken_at
+      - thumbnail_url
+      - uploaded_at
+    PhotoDetail:
+      type: object
+      description: |-
+        Сериализатор детального просмотра фотографии с соседями по альбому.
+
+        Соседи вычисляются один раз на объект и хранятся по его ключу: списковая
+        выдача с many=True не смешает соседей разных фотографий.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tag'
+          readOnly: true
+        album_name:
+          type: string
+          readOnly: true
+        thumbnail_url:
+          type: string
+          description: Получить URL миниатюры.
+          readOnly: true
+        preview_url:
+          type: string
+          description: Получить URL превью.
+          readOnly: true
+        image_url:
+          type: string
+          description: Получить URL оригинального изображения.
+          readOnly: true
+        camera:
+          type: string
+          description: Получить название камеры.
+          readOnly: true
+        lens_model:
+          type: string
+          description: Получить модель объектива.
+          readOnly: true
+        aperture:
+          type: string
+          nullable: true
+          description: Получить диафрагму.
+          readOnly: true
+        exposure:
+          type: string
+          nullable: true
+          description: Получить выдержку.
+          readOnly: true
+        iso:
+          type: integer
+          nullable: true
+          description: Получить ISO.
+          readOnly: true
+        focal_length:
+          type: integer
+          nullable: true
+          description: Получить фокусное расстояние.
+          readOnly: true
+        previous_id:
+          type: integer
+          nullable: true
+          description: Получить id предыдущей публичной фотографии альбома.
+          readOnly: true
+        next_id:
+          type: integer
+          nullable: true
+          description: Получить id следующей публичной фотографии альбома.
+          readOnly: true
+        image:
+          type: string
+          format: uri
+          title: Изображение
+        name:
+          type: string
+          title: Наименование
+          description: Наименование фотографии
+          maxLength: 255
+        description:
+          type: string
+          title: Описание
+          description: Описание фотографии
+        slug:
+          type: string
+          title: Слаг
+          description: Слаг фотографии
+          maxLength: 50
+          pattern: ^[-a-zA-Z0-9_]+$
+        uploaded_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Загружена
+          description: Дата и время загрузки фотографии
+        taken_at:
+          type: string
+          format: date-time
+          title: Создана
+          description: Дата и время съемки фотографии
+        modified_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Изменена
+          description: Дата и время последнего изменения фотографии
+        public:
+          type: boolean
+          title: Публичная
+          description: Фотография публичная
+        exif:
+          readOnly: true
+          nullable: true
+          title: EXIF данные
+          description: EXIF данные изображения
+        album:
+          type: integer
+          title: Альбом
+          description: Альбом, в котором размещена фотография
+      required:
+      - album
+      - album_name
+      - aperture
+      - camera
+      - exif
+      - exposure
+      - focal_length
+      - id
+      - image
+      - image_url
+      - iso
+      - lens_model
+      - modified_at
+      - next_id
+      - preview_url
+      - previous_id
+      - tags
+      - taken_at
+      - thumbnail_url
+      - uploaded_at
+    Series:
+      type: object
+      description: Сериализатор для модели серии.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: Серия
+          maxLength: 255
+        description:
+          type: string
+          title: Описание
+          maxLength: 255
+        slug:
+          type: string
+          title: Слаг
+          maxLength: 50
+          pattern: ^[-a-zA-Z0-9_]+$
+        image:
+          type: string
+          format: uri
+          title: Картинка
+        public:
+          type: boolean
+          title: Опубликовано
+      required:
+      - id
+      - name
+    Tag:
+      type: object
+      description: Сериализатор для модели тега.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: Наименование
+          description: Наименование тэга
+          maxLength: 255
+        slug:
+          type: string
+          title: Слаг
+          description: Слаг тэга
+          maxLength: 50
+          pattern: ^[-a-zA-Z0-9_]+$
+        description:
+          type: string
+          title: Описание
+          description: Описание тэга
+      required:
+      - id
+      - name
+    TokenObtainPair:
+      type: object
+      properties:
+        username:
+          type: string
+          writeOnly: true
+        password:
+          type: string
+          writeOnly: true
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+          readOnly: true
+      required:
+      - access
+      - password
+      - refresh
+      - username
+    TokenRefresh:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+      required:
+      - access
+      - refresh
+    TokenVerify:
+      type: object
+      properties:
+        token:
+          type: string
+          writeOnly: true
+      required:
+      - token
+    Topic:
+      type: object
+      description: Сериализатор для модели темы.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: Тема
+          maxLength: 255
+        description:
+          type: string
+          title: Описание
+          maxLength: 255
+        slug:
+          type: string
+          title: Слаг
+          maxLength: 50
+          pattern: ^[-a-zA-Z0-9_]+$
+        image:
+          type: string
+          format: uri
+          title: Картинка
+        public:
+          type: boolean
+          title: Опубликовано
+      required:
+      - id
+      - name
+    UploadResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/UploadResult'
+      required:
+      - results
+    UploadResult:
+      type: object
+      properties:
+        success:
+          type: boolean
+        filename:
+          type: string
+        id:
+          type: integer
+        error:
+          type: string
+      required:
+      - filename
+      - success
+    User:
+      type: object
+      description: Сериализатор для модели пользователя.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        username:
+          type: string
+          title: Имя пользователя
+          description: Обязательное поле. Не более 150 символов. Только буквы, цифры
+            и символы @/./+/-/_.
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        password:
+          type: string
+          writeOnly: true
+      required:
+      - id
+      - password
+      - username
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

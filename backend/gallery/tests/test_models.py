@@ -258,6 +258,36 @@ class GalleryModelsTests(TestCase):
             status_code = response.status_code
             self.assertEqual(status_code, HTTPStatus.OK)
 
+    def test_photo_get_neighbor_ids_skips_unpublished(self) -> None:
+        """Соседи фотографии - только публичные фотографии альбома по дате съемки.
+
+        Скрытые фотографии не предлагаются соседями ни при прямом заходе,
+        ни из списков.
+        """
+        album = Album.objects.create(name="Соседи")
+
+        # taken_at устанавливаем через update(), т.к. Photo.save() перезаписывает
+        # его из EXIF при создании.
+        public_a = PhotoFactory(album=album, public=True)
+        private_b = PhotoFactory(album=album, public=False)
+        public_c = PhotoFactory(album=album, public=True)
+        taken = {
+            public_a.pk: datetime.datetime(2022, 1, 1, tzinfo=datetime.timezone.utc),
+            private_b.pk: datetime.datetime(2022, 1, 2, tzinfo=datetime.timezone.utc),
+            public_c.pk: datetime.datetime(2022, 1, 3, tzinfo=datetime.timezone.utc),
+        }
+        for pk, value in taken.items():
+            Photo.objects.filter(pk=pk).update(taken_at=value)
+
+        first = Photo.objects.get(pk=public_a.pk)
+        self.assertEqual(first.get_neighbor_ids(), (None, public_c.pk))
+
+        hidden = Photo.objects.get(pk=private_b.pk)
+        self.assertEqual(hidden.get_neighbor_ids(), (public_a.pk, public_c.pk))
+
+        last = Photo.objects.get(pk=public_c.pk)
+        self.assertEqual(last.get_neighbor_ids(), (public_a.pk, None))
+
     def test_album_get_absolute_url(self) -> None:
         """Проверить корректность определения абсолютной ссылки для просмотра альбома."""
         album = Album.objects.first()

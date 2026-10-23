@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "isolatedModules": true,
+    "allowJs": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "paths": {
+      "@components/*": ["./src/components/*"],
+      "@services/*": ["./src/services/*"],
+      "@services": ["./src/services/index"],
+      "@hooks/*": ["./src/hooks/*"],
+      "@hooks": ["./src/hooks/index"],
+      "@utils/*": ["./src/utils/*"],
+      "@test-utils": ["./src/test-utils/index"]
+    }
+  },
+  "include": ["src/**/*"]
+}

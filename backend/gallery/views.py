@@ -31,16 +31,14 @@ class GalleryHomeView(TemplateView):
     template_name = "gallery/gallery_home.html"
 
     def get_context_data(self, **kwargs) -> dict:
-        """Добавить поисковый запрос, альбомы и тэги в контекст.
+        """Добавить поисковый запрос и альбомы в контекст.
 
         Поисковый запрос попадает в пропы SearchForm и AlbumList; набор
-        альбомов фильтруется на клиенте через API (?search=), тэги
-        не фильтруются.
+        альбомов фильтруется на клиенте через API (?search=).
         """
         context = super().get_context_data(**kwargs)
         context["search"] = self.request.GET.get("search", "")
         context["albums"] = Album.published.all()
-        context["tags"] = Tag.objects.all()
         return context
 
 
@@ -52,9 +50,8 @@ class AlbumListView(ListView):
     queryset = Album.published.all()
 
     def get_context_data(self, **kwargs) -> dict[str, Any]:
-        """Добавить все тэги и поисковый запрос в контекст ответа."""
+        """Добавить поисковый запрос в контекст ответа."""
         context = super().get_context_data(**kwargs)
-        context["tags"] = Tag.objects.all()
         context["search"] = self.request.GET.get("search", "")
         return context
 
@@ -75,12 +72,6 @@ class AlbumDetailView(DetailView):
         """
         return Album.objects.all()
 
-    def get_context_data(self, **kwargs) -> dict[str, Any]:
-        """Добавить URL API альбома в контекст."""
-        context = super().get_context_data(**kwargs)
-        context["album_api_url"] = f"/api/gallery/albums/{self.object.pk}/"
-        return context
-
 
 class PhotoListView(ListView):
     """Отображение списка фотографий."""
@@ -94,9 +85,8 @@ class PhotoListView(ListView):
         return Photo.published.all().order_by("-taken_at")
 
     def get_context_data(self, **kwargs) -> dict[str, Any]:
-        """Добавить в контекст набор всех тэгов и поисковый запрос фотографии."""
+        """Добавить поисковый запрос фотографии в контекст."""
         context = super().get_context_data(**kwargs)
-        context["tags"] = Tag.objects.all()
         context["search"] = self.request.GET.get("search", "")
         return context
 
@@ -118,24 +108,13 @@ class PhotoDetailView(DetailView):
         return Photo.objects.all()
 
     def get_context_data(self, **kwargs) -> dict[str, Any]:
-        """Добавить ID предыдущей и следующей фотографий и размеры превью для вставок."""
+        """Добавляет размеры превью для вставок.
+
+        Соседние фотографии приходят фронтенду полями previous_id и next_id
+        детального ответа API (PhotoDetailSerializer).
+        """
         context: dict[str, Any] = super().get_context_data(**kwargs)
-        photo: Photo = self.object
-        album: Album = photo.album
         context["embed_sizes"] = list(settings.GALLERY_EMBED_SIZES)
-
-        # Навигация prev/next только по публичным фотографиям альбома:
-        # скрытые не предлагаются соседями ни при прямом заходе, ни из списков.
-        all_photos_qs: QuerySet[Photo] = album.photos.filter(public=True).order_by("taken_at")
-
-        previous_photo = all_photos_qs.filter(taken_at__lt=photo.taken_at).order_by("-taken_at").first()
-        if previous_photo:
-            context["previous_photo_id"] = previous_photo.pk
-
-        next_photo = all_photos_qs.filter(taken_at__gt=photo.taken_at).order_by("taken_at").first()
-        if next_photo:
-            context["next_photo_id"] = next_photo.pk
-
         return context
 
 
@@ -191,12 +170,6 @@ class UploadFormView(FormView):
     template_name = "gallery/upload.html"
     form_class = UploadForm
     success_url = reverse_lazy("gallery:gallery")
-
-    def get_context_data(self, **kwargs) -> dict[str, Any]:
-        """Добавить тэги в контекст."""
-        context = super().get_context_data(**kwargs)
-        context["tags"] = Tag.objects.all()
-        return context
 
     def post(self, request: HttpRequest, *args: tuple, **kwargs: dict) -> HttpResponse:  # noqa: ARG002
         """Проверить форму на валидность после отправки."""

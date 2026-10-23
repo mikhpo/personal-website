@@ -1,7 +1,7 @@
 /**
  * Конфигурационный файл Webpack для сборки фронтенд-ресурсов.
  *
- * Этот файл настраивает сборку JavaScript и CSS файлов для проекта,
+ * Этот файл настраивает сборку JavaScript, TypeScript и CSS файлов для проекта,
  * включая транспиляцию кода, обработку модулей, создание карты кода
  * и генерацию статистики сборки.
  *
@@ -27,7 +27,7 @@ module.exports = {
    * Определяет начальные файлы для сборки.
    */
   entry: {
-    main: path.resolve(__dirname, 'src/index.js'),
+    main: path.resolve(__dirname, 'src/index.tsx'),
   },
 
   /**
@@ -46,17 +46,17 @@ module.exports = {
 
   /**
    * Правила обработки различных типов файлов.
-   * Определяет, как Webpack должен обрабатывать JavaScript, JSX и CSS файлы.
+   * Определяет, как Webpack должен обрабатывать JavaScript, TypeScript и CSS файлы.
    */
   module: {
     rules: [
       {
-        test: /\.(js|jsx)$/,
+        test: /\.(js|jsx|ts|tsx)$/,
         exclude: /node_modules/,
         use: {
           loader: 'babel-loader',
           options: {
-            presets: ['@babel/preset-env', '@babel/preset-react'],
+            presets: ['@babel/preset-env', '@babel/preset-react', '@babel/preset-typescript'],
           },
         },
       },
@@ -79,12 +79,13 @@ module.exports = {
    * Определяет расширения файлов и алиасы для импортов.
    */
   resolve: {
-    extensions: ['.js', '.jsx'],
+    extensions: ['.ts', '.tsx', '.js', '.jsx'],
     alias: {
       '@components': path.resolve(__dirname, 'src/components'),
       '@services': path.resolve(__dirname, 'src/services'),
       '@utils': path.resolve(__dirname, 'src/utils'),
       '@hooks': path.resolve(__dirname, 'src/hooks'),
+      '@test-utils': path.resolve(__dirname, 'src/test-utils'),
     },
   },
 

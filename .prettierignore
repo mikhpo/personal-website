@@ -1,6 +1,8 @@
 frontend/dist/
 frontend/coverage/
 frontend/webpack-stats.json
+frontend/src/types/api-schema.ts
+frontend/src/types/schema.yaml
 staticfiles/
 node_modules/
 package-lock.json

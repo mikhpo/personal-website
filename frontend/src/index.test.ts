@@ -1,0 +1,115 @@
+/**
+ * @file Тесты для функции mountReactComponent из index.js
+ *
+ * Этот файл содержит тесты для основной функции монтирования React компонентов,
+ * которая используется для интеграции React компонентов в Django шаблоны.
+ */
+
+// Импорт тестируемой функции
+import './index';
+import { createRoot } from 'react-dom/client';
+
+// Замена react-dom/client на мок для изоляции тестов от реального DOM
+jest.mock('react-dom/client', () => {
+  const mockRender = jest.fn();
+  const mockCreateRoot = jest.fn((): { render: typeof mockRender } => ({
+    render: mockRender,
+  }));
+  return { createRoot: mockCreateRoot };
+});
+
+/**
+ * Набор тестов для функции mountReactComponent
+ * @module index.test
+ */
+describe('mountReactComponent', () => {
+  let mockElement: HTMLDivElement;
+
+  /**
+   * Подготовка тестового окружения перед каждым тестом:
+   * - Создание тестового DOM элемента
+   * - Добавление элемента в document.body
+   * - Очистка всех моков
+   */
+  beforeEach(() => {
+    // Создание тестового DOM элемента с ID 'test-container'
+    mockElement = document.createElement('div');
+    mockElement.id = 'test-container';
+    document.body.appendChild(mockElement);
+
+    // Очистка всех моков перед каждым тестом
+    jest.clearAllMocks();
+  });
+
+  /**
+   * Очистка тестового окружения после каждого теста:
+   * - Удаление тестового элемента из document.body
+   */
+  afterEach(() => {
+    document.body.removeChild(mockElement);
+  });
+
+  /**
+   * Тест успешного монтирования компонента
+   * Проверяет, что функция правильно вызывает createRoot и рендерит компонент
+   */
+  test('должен успешно монтировать компонент при наличии элемента', async () => {
+    // Реестр содержит все компоненты, доступные шаблонам Django:
+    // имя берется из componentRegistry, динамический импорт не выполняется
+    window.mountReactComponent('Main/HomePage', 'test-container', { testProp: 'test' });
+
+    // Ожидание завершения синхронного монтирования
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    // Проверка вызова createRoot с правильным DOM элементом
+    const mockedCreateRoot = jest.mocked(createRoot);
+    expect(mockedCreateRoot).toHaveBeenCalledWith(mockElement);
+
+    // Проверка, что компонент из реестра отрендерен в созданный корень
+    const rootInstance = mockedCreateRoot.mock.results[0]?.value;
+    expect(rootInstance?.render).toHaveBeenCalledTimes(1);
+  });
+
+  /**
+   * Тест обработки отсутствующего DOM элемента
+   * Проверяет, что функция корректно обрабатывает ситуацию, когда элемент не найден
+   */
+  test('должен выводить ошибку в консоль при отсутствии элемента', () => {
+    // Настройка шпиона для console.error
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+
+    // Вызов функции с несуществующим ID элемента
+    window.mountReactComponent('TestComponent', 'non-existent-id');
+
+    // Проверка вывода ошибки в консоль с правильным сообщением
+    expect(consoleSpy).toHaveBeenCalledWith('Element with id "non-existent-id" not found');
+
+    // Восстановление оригинальной реализации console.error
+    consoleSpy.mockRestore();
+  });
+
+  /**
+   * Тест обработки ошибки загрузки компонента
+   * Проверяет, что функция корректно обрабатывает ошибки при загрузке компонента
+   */
+  test('должен выводить ошибку в консоль при неудачной загрузке компонента', async () => {
+    // Сохранение оригинальной функции console.error
+    const originalConsoleError = console.error;
+
+    // Создание мока для console.error
+    const mockConsoleError = jest.fn();
+    console.error = mockConsoleError;
+
+    // Вызов функции с несуществующим компонентом
+    window.mountReactComponent('NonExistentComponent', 'test-container');
+
+    // Ожидание разрешения асинхронного динамического импорта и обработки ошибки
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    // Проверка вывода ошибки в консоль
+    expect(mockConsoleError).toHaveBeenCalled();
+
+    // Восстановление оригинальной функции console.error
+    console.error = originalConsoleError;
+  });
+});
