@@ -1527,9 +1527,8 @@ components:
           description: Альбом публичный
         order:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 2147483647
           minimum: 0
-          format: int64
           title: Порядок
         cover:
           type: integer
@@ -1596,9 +1595,8 @@ components:
           description: Альбом публичный
         order:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 2147483647
           minimum: 0
-          format: int64
           title: Порядок
         cover:
           type: integer

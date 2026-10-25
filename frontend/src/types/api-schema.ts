@@ -483,10 +483,7 @@ export interface components {
              * @description Альбом публичный
              */
             public?: boolean;
-            /**
-             * Порядок
-             * Format: int64
-             */
+            /** Порядок */
             order?: number;
             /**
              * Обложка
@@ -533,10 +530,7 @@ export interface components {
              * @description Альбом публичный
              */
             public?: boolean;
-            /**
-             * Порядок
-             * Format: int64
-             */
+            /** Порядок */
             order?: number;
             /**
              * Обложка
