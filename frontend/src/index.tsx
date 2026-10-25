@@ -32,9 +32,7 @@ import PhotoUploadForm from '@components/Gallery/Upload/PhotoUploadForm';
 // Импорт Main компонентов
 import HomePage from '@components/Main/HomePage';
 import CategoryCard from '@components/Main/CategoryCard';
-import CategoryGrid from '@components/Main/CategoryGrid';
 import SeriesCard from '@components/Main/SeriesCard';
-import SeriesGrid from '@components/Main/SeriesGrid';
 
 // Импорт About компонентов
 import About from '@components/About/AboutPage';
@@ -88,9 +86,7 @@ const componentRegistry: Record<string, ComponentType<any>> = {
   // Компоненты Main
   'Main/HomePage': HomePage,
   'Main/CategoryCard': CategoryCard,
-  'Main/CategoryGrid': CategoryGrid,
   'Main/SeriesCard': SeriesCard,
-  'Main/SeriesGrid': SeriesGrid,
 
   // Компоненты About
   'About/AboutPage': About,

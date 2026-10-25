@@ -1,6 +1,6 @@
 import React from 'react';
 import Comment from '@components/Blog/Comment/Comment';
-import type { components } from '../../../types/api-schema';
+import type { components } from '@api-types/api-schema';
 
 type CommentData = components['schemas']['Comment'];
 

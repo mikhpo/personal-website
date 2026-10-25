@@ -3,10 +3,10 @@ import { render, screen, fireEvent, act, waitFor } from '@testing-library/react'
 import Navbar from '@components/Navbar/Navbar';
 import type { NavbarProps } from '@components/Navbar/Navbar';
 import UserAuthSection from './UserAuthSection';
-import { navigateTo } from '../../utils/navigate';
-
 // Переход подменяется моком: jsdom не реализует навигацию
-jest.mock('../../utils/navigate');
+jest.mock('@services/navigation');
+
+import { navigateTo } from '@services';
 
 /**
  * Тесты для компонента навигационной панели

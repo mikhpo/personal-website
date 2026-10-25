@@ -5,6 +5,8 @@ import AlertList from '@components/Alert/AlertList';
 import { blogService } from '@services';
 import { useHtmlTheme } from '@hooks';
 import { getEditorInit } from '@utils/tinymce';
+import { getErrorMessage } from '@utils/errors';
+import { stripHtml } from '@utils/html';
 
 /** Свойства формы добавления комментария. */
 export interface CommentFormProps {
@@ -74,9 +76,7 @@ const CommentForm = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Удаляем HTML-теги для проверки пустого содержимого
-    const plainText = content.replace(/<[^>]*>/g, '').trim();
-    if (!plainText) {
+    if (!stripHtml(content)) {
       setError('Комментарий не может быть пустым');
       return;
     }
@@ -87,9 +87,9 @@ const CommentForm = ({
     try {
       await blogService.createComment(articleId, { content });
       setContent('');
-      if (onSuccess) onSuccess();
+      onSuccess?.();
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      setError(getErrorMessage(err));
     } finally {
       setSubmitting(false);
     }
@@ -111,7 +111,7 @@ const CommentForm = ({
         <div className="d-flex align-items-center">
           <Button type="submit" variant="outline-dark" disabled={submitting}>
             {submitting ? 'Отправка...' : 'Добавить комментарий'}
-            {!submitting && <i className="fas fa-comments ms-1" />}
+            {!submitting && <i className="bi bi-chat-dots ms-1" />}
           </Button>
           {asideActions && <div className="ms-auto">{asideActions}</div>}
         </div>

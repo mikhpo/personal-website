@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback } from 'react';
 import { Button, Col, Row } from 'react-bootstrap';
 import ArticleCard from '@components/Blog/Article/ArticleCard';
 import AlbumCard from '@components/Gallery/Album/AlbumCard';
@@ -6,10 +6,17 @@ import Spinner from '@components/Spinner/Spinner';
 import AlertList from '@components/Alert/AlertList';
 import { blogService, galleryService } from '@services';
 import { parseListResponse } from '@utils/pagination';
-import type { components } from '../../types/api-schema';
+import { useApiData } from '@hooks';
+import type { components } from '@api-types/api-schema';
 
 type Article = components['schemas']['Article'];
 type AlbumList = components['schemas']['AlbumList'];
+
+/** Результат поиска: топ выборки статей и альбомов. */
+interface SearchData {
+  articles: Article[];
+  albums: AlbumList[];
+}
 
 /** Количество статей в секции результатов общего поиска. */
 const ARTICLES_PAGE_SIZE = 5;
@@ -35,48 +42,25 @@ export interface SearchResultsProps {
  * <SearchResults search="django" />
  */
 const SearchResults = ({ search = '' }: SearchResultsProps) => {
-  /** Найденные статьи (топ выборки). */
-  const [articles, setArticles] = useState<Article[]>([]);
-
-  /** Найденные альбомы (топ выборки). */
-  const [albums, setAlbums] = useState<AlbumList[]>([]);
-
-  /** Состояние загрузки данных. */
-  const [loading, setLoading] = useState(Boolean(search));
-
-  /** Состояние ошибки при загрузке данных. */
-  const [error, setError] = useState<string | null>(null);
-
-  /** Счётчик повторных попыток загрузки. */
-  const [retryCount, setRetryCount] = useState(0);
-
-  /** Загружает статьи и альбомы параллельно с одинаковым поисковым запросом. */
-  const loadResults = useCallback(async () => {
+  /** Загружает статьи и альбомы параллельно; пустой запрос возвращает пустые секции без сети. */
+  const loadResults = useCallback(async (): Promise<SearchData> => {
     if (!search) {
-      return;
+      return { articles: [], albums: [] };
     }
 
-    setLoading(true);
-    setError(null);
-
-    try {
-      const [articlesData, albumsData] = await Promise.all([
-        blogService.getArticles({ search, page_size: ARTICLES_PAGE_SIZE }),
-        galleryService.getAlbums({ search, page_size: ALBUMS_PAGE_SIZE }),
-      ]);
-      setArticles(parseListResponse(articlesData).items);
-      setAlbums(parseListResponse(albumsData).items);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setLoading(false);
-    }
+    const [articlesData, albumsData] = await Promise.all([
+      blogService.getArticles({ search, page_size: ARTICLES_PAGE_SIZE }),
+      galleryService.getAlbums({ search, page_size: ALBUMS_PAGE_SIZE }),
+    ]);
+    return {
+      articles: parseListResponse(articlesData).items,
+      albums: parseListResponse(albumsData).items,
+    };
   }, [search]);
 
-  // Эффект загрузки результатов при изменении запроса или повторной попытке
-  useEffect(() => {
-    loadResults();
-  }, [loadResults, retryCount]);
+  const { data, loading, error, refetch } = useApiData(loadResults);
+  const articles = data?.articles ?? [];
+  const albums = data?.albums ?? [];
 
   // Пустой запрос: подсказка без обращения к API
   if (!search) {
@@ -95,7 +79,7 @@ const SearchResults = ({ search = '' }: SearchResultsProps) => {
             message: error,
             level: 'error',
             actions: (
-              <Button variant="outline-primary" size="sm" onClick={() => setRetryCount((count) => count + 1)}>
+              <Button variant="outline-primary" size="sm" onClick={refetch}>
                 Повторить
               </Button>
             ),

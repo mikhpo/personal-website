@@ -156,11 +156,8 @@ describe('useApiData', () => {
   });
 
   /**
-   * Проверяет повторную загрузку при изменении источника данных.
-   *
-   * После рефакторинга параметр deps удалён: хук полагается на стабильность
-   * ссылки fetchFunction. При смене функции загрузки (например, при изменении
-   * параметров запроса через useCallback) срабатывает повторная загрузка.
+   * Проверяет повторную загрузку при изменении источника данных
+   * и защиту от устаревших ответов.
    */
   describe('зависимости', () => {
     test('перезагружает данные при изменении функции загрузки', async () => {
@@ -185,6 +182,41 @@ describe('useApiData', () => {
       await waitFor(() => {
         expect(secondFetch).toHaveBeenCalledTimes(1);
       });
+    });
+
+    test('игнорирует устаревший ответ при смене функции загрузки', async () => {
+      type FetchData = typeof mockData;
+      const secondData: FetchData = { results: [{ id: 2, name: 'Fresh' }] };
+
+      // Первый запрос "висит": разрешаем его вручную после монтирования второго
+      let resolveFirst: (value: FetchData) => void = () => {};
+      const firstFetch = jest.fn(
+        () =>
+          new Promise<FetchData>((resolve) => {
+            resolveFirst = resolve;
+          }),
+      );
+      const secondFetch = jest.fn(() => Promise.resolve(secondData));
+
+      const { result, rerender } = renderHook(({ fetchFn }) => useApiData(fetchFn, { immediate: true }), {
+        initialProps: { fetchFn: firstFetch },
+      });
+
+      // Второй запрос стартует, пока первый еще выполняется
+      rerender({ fetchFn: secondFetch });
+
+      await waitFor(() => {
+        expect(result.current.data).toEqual(secondData);
+      });
+
+      // Ответ первого запроса приходит последним и не перезаписывает свежие данные
+      await act(async () => {
+        resolveFirst(mockData);
+      });
+
+      expect(result.current.data).toEqual(secondData);
+      expect(firstFetch).toHaveBeenCalledTimes(1);
+      expect(secondFetch).toHaveBeenCalledTimes(1);
     });
   });
 

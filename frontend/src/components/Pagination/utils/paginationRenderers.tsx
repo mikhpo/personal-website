@@ -91,12 +91,7 @@ export const renderNavigationButton = (
     const targetPage =
       type === 'first' ? 1 : type === 'prev' ? currentPage - 1 : type === 'next' ? currentPage + 1 : totalPages;
     return (
-      <button
-        className={finalClassName}
-        onClick={() => onPageChange(targetPage)}
-        disabled={disabled}
-        style={{ marginLeft: '4px', marginRight: '4px' }}
-      >
+      <button className={finalClassName} onClick={() => onPageChange(targetPage)} disabled={disabled}>
         {text}
       </button>
     );
@@ -123,7 +118,6 @@ export const renderNavigationButton = (
 export const createFirstPageElements = (
   startPage: number,
   totalPages: number,
-  baseUrl: string,
   createElement: CreatePaginationElement,
 ): React.ReactNode[] => {
   const items: React.ReactNode[] = [];
@@ -146,7 +140,6 @@ export const createMainPageElements = (
   startPage: number,
   endPage: number,
   currentPage: number,
-  baseUrl: string,
   createElement: CreatePaginationElement,
 ): React.ReactNode[] => {
   const items: React.ReactNode[] = [];
@@ -164,7 +157,6 @@ export const createMainPageElements = (
 export const createLastPageElements = (
   endPage: number,
   totalPages: number,
-  baseUrl: string,
   createElement: CreatePaginationElement,
 ): React.ReactNode[] => {
   const items: React.ReactNode[] = [];

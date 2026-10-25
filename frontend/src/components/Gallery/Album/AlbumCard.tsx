@@ -1,6 +1,6 @@
 import React from 'react';
 import BaseCard from '@components/Card/BaseCard';
-import type { components } from '../../../types/api-schema';
+import type { components } from '@api-types/api-schema';
 
 type AlbumList = components['schemas']['AlbumList'];
 

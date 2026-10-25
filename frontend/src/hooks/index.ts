@@ -10,13 +10,16 @@
 // Общие хуки
 export { default as useApiData } from './useApiData';
 export { default as usePagination } from './usePagination';
-export { default as useToggle } from './useToggle';
 export { default as useLocalStorage } from './useLocalStorage';
 export { default as useTheme } from './useTheme';
 export type { ThemeName } from './useTheme';
 export { default as useHtmlTheme } from './useHtmlTheme';
 
+// Специализированные хуки статьи
+export { default as useArticleAutosave } from './useArticleAutosave';
+
 // Специализированные хуки галереи
 export { default as usePhotoData } from './usePhotoData';
 export { default as usePhotoNavigation } from './usePhotoNavigation';
 export { default as useMasonry } from './useMasonry';
+export { default as usePhotoUpload } from './usePhotoUpload';

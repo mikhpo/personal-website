@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, waitFor, fireEvent, act } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import PhotoUploadForm from './PhotoUploadForm';
 import { galleryService as realGalleryService } from '@services';
@@ -30,7 +30,7 @@ describe('PhotoUploadForm', () => {
   // Настройка mock перед каждым тестом
   beforeEach(() => {
     galleryService.getAlbums.mockClear();
-    galleryService.uploadPhotos.mockClear();
+    galleryService.uploadPhoto.mockClear();
   });
 
   // Восстановление всех моков после каждого теста
@@ -163,7 +163,7 @@ describe('PhotoUploadForm', () => {
     const user = userEvent.setup();
 
     galleryService.getAlbums.mockResolvedValue(paginate(mockAlbums));
-    galleryService.uploadPhotos.mockResolvedValue([{ file: 'test.jpg', success: true }]);
+    galleryService.uploadPhoto.mockResolvedValue({ results: [{ success: true, filename: 'test.jpg' }] });
 
     render(<PhotoUploadForm />);
 
@@ -191,19 +191,15 @@ describe('PhotoUploadForm', () => {
     });
   });
 
-  // Проверяет отображение прогресса во время загрузки файлов
+  // Проверяет отображение прогресса во время загрузки файлов:
+  // завершившийся файл виден со статусом "Загружено", пока идет загрузка следующего
   test('отображает прогресс загрузки', async () => {
     const user = userEvent.setup();
 
     galleryService.getAlbums.mockResolvedValue(paginate(mockAlbums));
-
-    // Mock uploadPhotos with callback support - use a promise to control timing
-    let resolveUpload: ((value: Awaited<ReturnType<typeof galleryService.uploadPhotos>>) => void) | undefined;
-    galleryService.uploadPhotos.mockImplementation(() => {
-      return new Promise((resolve) => {
-        resolveUpload = resolve;
-      });
-    });
+    galleryService.uploadPhoto
+      .mockResolvedValueOnce({ results: [{ success: true, filename: 'test1.jpg' }] })
+      .mockImplementationOnce(() => new Promise(() => {}));
 
     render(<PhotoUploadForm />);
 
@@ -214,41 +210,23 @@ describe('PhotoUploadForm', () => {
     const select = screen.getByRole('combobox');
     await user.selectOptions(select, '1');
 
-    const file = new File(['content'], 'test.jpg', { type: 'image/jpeg' });
+    const file1 = new File(['content'], 'test1.jpg', { type: 'image/jpeg' });
+    const file2 = new File(['content'], 'test2.jpg', { type: 'image/jpeg' });
     const input = document.querySelector('input[type="file"]') as HTMLInputElement;
 
-    fireEvent.change(input, { target: { files: [file] } });
+    fireEvent.change(input, { target: { files: [file1, file2] } });
 
     await waitFor(() => {
-      expect(screen.getByText('test.jpg')).toBeInTheDocument();
+      expect(screen.getByText('test1.jpg')).toBeInTheDocument();
     });
 
-    const uploadButton = screen.getByText('Загрузить');
-    await user.click(uploadButton);
+    await user.click(screen.getByText('Загрузить'));
 
-    // Wait a bit for the upload to start
-    await waitFor(() => {
-      expect(galleryService.uploadPhotos).toHaveBeenCalled();
-    });
-
-    // Now check that we can see the progress section
-    // The component should have set some progress state
-    // Since we're mocking the service, we need to manually trigger the progress callback
-    const uploadCall = galleryService.uploadPhotos.mock.calls[0];
-    const onProgress = uploadCall?.[2];
-    act(() => {
-      onProgress?.('test.jpg', { progress: 50, status: 'uploading' });
-    });
-
+    // Первый файл загружен и отображается в списке прогресса со статусом "Загружено",
+    // второй еще загружается
     await waitFor(() => {
       expect(screen.getByText('Прогресс загрузки:')).toBeInTheDocument();
-    });
-
-    // Now resolve the upload
-    resolveUpload?.([{ file: 'test.jpg', success: true }]);
-
-    await waitFor(() => {
-      expect(screen.getByText('Фотографии успешно загружены!')).toBeInTheDocument();
+      expect(screen.getAllByText('Загружено')).toHaveLength(1);
     });
   });
 
@@ -257,7 +235,7 @@ describe('PhotoUploadForm', () => {
     const user = userEvent.setup();
 
     galleryService.getAlbums.mockResolvedValue(paginate(mockAlbums));
-    galleryService.uploadPhotos.mockResolvedValue([{ file: 'test.jpg', success: false, error: 'Upload failed' }]);
+    galleryService.uploadPhoto.mockRejectedValue(new Error('Upload failed'));
 
     render(<PhotoUploadForm />);
 
@@ -282,6 +260,7 @@ describe('PhotoUploadForm', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Ошибки загрузки')).toBeInTheDocument();
+      expect(screen.getByText('test.jpg: Upload failed')).toBeInTheDocument();
     });
   });
 
@@ -290,7 +269,7 @@ describe('PhotoUploadForm', () => {
     const user = userEvent.setup();
 
     galleryService.getAlbums.mockResolvedValue(paginate(mockAlbums));
-    galleryService.uploadPhotos.mockImplementation(() => new Promise(() => {}));
+    galleryService.uploadPhoto.mockImplementation(() => new Promise(() => {}));
 
     render(<PhotoUploadForm />);
 
@@ -322,7 +301,7 @@ describe('PhotoUploadForm', () => {
     const user = userEvent.setup();
 
     galleryService.getAlbums.mockResolvedValue(paginate(mockAlbums));
-    galleryService.uploadPhotos.mockResolvedValue([{ file: 'test.jpg', success: true }]);
+    galleryService.uploadPhoto.mockResolvedValue({ results: [{ success: true, filename: 'test.jpg' }] });
 
     render(<PhotoUploadForm />);
 
@@ -346,7 +325,7 @@ describe('PhotoUploadForm', () => {
     await user.click(uploadButton);
 
     await waitFor(() => {
-      expect(galleryService.uploadPhotos).toHaveBeenCalledWith(1, [file], expect.any(Function));
+      expect(galleryService.uploadPhoto).toHaveBeenCalledWith(1, file);
     });
   });
 
@@ -366,7 +345,7 @@ describe('PhotoUploadForm', () => {
     const user = userEvent.setup();
 
     galleryService.getAlbums.mockResolvedValue(paginate(mockAlbums));
-    galleryService.uploadPhotos.mockResolvedValue([{ file: 'test.jpg', success: true }]);
+    galleryService.uploadPhoto.mockResolvedValue({ results: [{ success: true, filename: 'test.jpg' }] });
 
     render(<PhotoUploadForm />);
 

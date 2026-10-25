@@ -17,6 +17,8 @@ export interface BaseCardProps {
   variant?: 'centered' | 'left';
   /** Дополнительные CSS классы. */
   className?: string;
+  /** Дополнительные CSS классы заголовка. */
+  titleClassName?: string;
   /** Разрешено ли проявление карточки. */
   revealed?: boolean;
   /** Дополнительные пропсы для Card.Img. */
@@ -31,7 +33,7 @@ export interface BaseCardProps {
  * может быть использован для категорий, серий, альбомов и других сущностей.
  *
  * Проп revealed управляет плавным проявлением карточки: masonry-сетка
- * разрешает проявление только после пересчета, учтяшего высоту изображения,
+ * разрешает проявление только после пересчета, учитывающего высоту изображения,
  * поэтому снимки не наваливаются друг на друга в начале загрузки. Без пропа
  * карточка видима сразу.
  *
@@ -51,6 +53,7 @@ const BaseCard = ({
   imageAlt,
   variant = 'centered',
   className = '',
+  titleClassName = '',
   revealed = true,
   cardImgProps = {},
 }: BaseCardProps) => {
@@ -67,7 +70,7 @@ const BaseCard = ({
         </a>
       )}
       <Card.Body className="d-flex flex-column">
-        <Card.Title as="h3" className={`fs-5 ${isCentered ? 'mt-auto' : ''}`}>
+        <Card.Title as="h3" className={`fs-5 ${isCentered ? 'mt-auto' : ''} ${titleClassName}`}>
           <a href={url} className="text-decoration-none text-body">
             {title}
           </a>

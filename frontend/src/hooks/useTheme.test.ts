@@ -79,6 +79,7 @@ describe('useTheme', () => {
       const { result } = renderHook(() => useTheme());
 
       expect(result.current.theme).toBe('dark');
+      expect(result.current.storedTheme).toBeNull();
       expect(document.documentElement).toHaveAttribute('data-bs-theme', 'dark');
     });
   });

@@ -1,13 +1,11 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback } from 'react';
 import { Offcanvas } from 'react-bootstrap';
 import TagButton from '@components/Gallery/Tags/TagButton';
-import SpinnerComponent from '@components/Spinner/Spinner';
+import Spinner from '@components/Spinner/Spinner';
 import AlertList from '@components/Alert/AlertList';
 import { galleryService } from '@services';
 import { parseListResponse } from '@utils/pagination';
-import type { components } from '../../../types/api-schema';
-
-type Tag = components['schemas']['Tag'];
+import { useApiData } from '@hooks';
 
 /** Свойства компонента боковой панели с тегами. */
 export interface TagsOffcanvasProps {
@@ -21,42 +19,27 @@ export interface TagsOffcanvasProps {
  * Компонент боковой панели с тегами.
  *
  * Загружает и отображает полный список тегов галереи в боковой панели.
+ * Пока панель закрыта, список не запрашивается: первая загрузка выполняется
+ * при открытии панели, последующие - при каждом повторном открытии.
  */
 const TagsOffcanvas = ({ show, onHide }: TagsOffcanvasProps) => {
-  const [tags, setTags] = useState<Tag[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  /**
-   * Загружает список тегов из API и обновляет состояние компонента.
-   *
-   * Стабильность ссылки критична для корректной работы useEffect: функция
-   * не меняется все время жизни компонента.
-   */
+  // При закрытой панели fetchFunction отдает пустой массив без сетевого запроса;
+  // смена ссылки при переключении show запускает загрузку хуком
   const loadTags = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const data = await galleryService.getTags();
-      const { items } = parseListResponse(data);
-
-      setTags(items);
-      setLoading(false);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-      setLoading(false);
+    if (!show) {
+      return [];
     }
-  }, []);
+    const data = await galleryService.getTags();
+    return parseListResponse(data).items;
+  }, [show]);
 
-  useEffect(() => {
-    if (show) {
-      loadTags();
-    }
-  }, [show, loadTags]);
+  const { data, loading, error, refetch } = useApiData(loadTags);
+  const tags = data ?? [];
 
   /** Повторная загрузка тегов после ошибки. */
-  const handleRetry = () => loadTags();
+  const handleRetry = () => {
+    refetch();
+  };
 
   return (
     <Offcanvas show={show} onHide={onHide} placement="start">
@@ -64,7 +47,7 @@ const TagsOffcanvas = ({ show, onHide }: TagsOffcanvasProps) => {
         <Offcanvas.Title>Тэги</Offcanvas.Title>
       </Offcanvas.Header>
       <Offcanvas.Body>
-        {loading && <SpinnerComponent message="Загрузка тегов..." />}
+        {loading && <Spinner message="Загрузка тегов..." />}
         {error && (
           <AlertList
             messages={[

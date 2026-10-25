@@ -2,7 +2,7 @@
  * Сервис для работы с API страницы "Обо мне".
  */
 
-import type { components } from '../types/api-schema';
+import type { components } from '@api-types/api-schema';
 import api from './api';
 
 type About = components['schemas']['About'];

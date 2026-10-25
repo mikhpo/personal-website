@@ -3,7 +3,7 @@ import { render, screen, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import TagsOffcanvas from './TagsOffcanvas';
-import type { components } from '../../../types/api-schema';
+import type { components } from '@api-types/api-schema';
 import { galleryService as galleryServiceModule } from '@services';
 
 type Tag = components['schemas']['Tag'];

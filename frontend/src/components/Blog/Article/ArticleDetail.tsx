@@ -2,10 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { Card, Button } from 'react-bootstrap';
 import CommentList from '@components/Blog/Comment/CommentList';
 import CommentForm from '@components/Blog/Comment/CommentForm';
-import SpinnerComponent from '@components/Spinner/Spinner';
+import Spinner from '@components/Spinner/Spinner';
 import AlertList from '@components/Alert/AlertList';
 import { blogService } from '@services';
-import type { components } from '../../../types/api-schema';
+import type { components } from '@api-types/api-schema';
 
 type Article = components['schemas']['Article'];
 
@@ -109,7 +109,7 @@ const ArticleDetail = ({
 
   // Отображение индикатора загрузки
   if (loading) {
-    return <SpinnerComponent message="Загрузка статьи..." />;
+    return <Spinner message="Загрузка статьи..." />;
   }
 
   // Отображение сообщения об ошибке с кнопкой повтора
@@ -159,7 +159,7 @@ const ArticleDetail = ({
             asideActions={
               isStaff ? (
                 <a className="btn btn-outline-dark btn-sm" href={`${article.url}edit/`}>
-                  <i className="fas fa-edit me-1" />
+                  <i className="bi bi-pencil me-1" />
                   Редактировать
                 </a>
               ) : null

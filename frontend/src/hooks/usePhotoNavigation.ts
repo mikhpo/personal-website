@@ -4,7 +4,7 @@ import { navigateTo } from '@services';
 /** Минимальное горизонтальное смещение (в пикселях), распознаваемое как свайп. */
 const SWIPE_THRESHOLD_PX = 50;
 
-/** Опции хока usePhotoNavigation. */
+/** Опции хука usePhotoNavigation. */
 export interface UsePhotoNavigationOptions {
   /** URL предыдущей фотографии или null. */
   previousUrl: string | null;

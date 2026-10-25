@@ -32,15 +32,16 @@ export interface AlertListProps {
  * />
  */
 const AlertList = ({ messages = [] }: AlertListProps) => {
-  if (!messages || messages.length === 0) {
+  if (messages.length === 0) {
     return null;
   }
 
   return (
     <div className="container mt-3">
-      {messages.map((msg) => (
+      {messages.map((msg, index) => (
         <Alert
-          key={`${msg.level}-${msg.message}`}
+          // eslint-disable-next-line react-x/no-array-index-key -- сообщения могут дублироваться, и content-ключ дал бы дубли; идентичность алертов между рендерами не требуется
+          key={index}
           message={msg.message}
           level={msg.level}
           dismissible={msg.dismissible !== false}

@@ -1,25 +1,14 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { Container, Button } from 'react-bootstrap';
+import React, { useCallback, useEffect, useRef } from 'react';
+import { Container } from 'react-bootstrap';
 import PhotoCard from '@components/Gallery/Photo/PhotoCard';
-import SpinnerComponent from '@components/Spinner/Spinner';
+import Spinner from '@components/Spinner/Spinner';
+import LoadingError from '@components/Alert/LoadingError';
 import AlertList from '@components/Alert/AlertList';
 import Pagination from '@components/Pagination/Pagination';
-import useMasonry from '@hooks/useMasonry';
-import { galleryService, api } from '@services';
+import { galleryService } from '@services';
 import { parseListResponse } from '@utils/pagination';
-import type { components } from '../../../types/api-schema';
-import type { Paginated } from '../../../types/pagination';
-
-type Photo = components['schemas']['Photo'];
-
-/** Состояние данных пагинации списка фотографий. */
-interface PaginationState {
-  count: number;
-  next: string | null;
-  previous: string | null;
-  currentPage: number;
-  totalPages: number;
-}
+import { searchEmptyMessage } from '@utils/messages';
+import { useApiData, useMasonry, usePagination } from '@hooks';
 
 /** Свойства компонента списка фотографий. */
 export interface PhotoListProps {
@@ -30,20 +19,6 @@ export interface PhotoListProps {
   /** Поисковый запрос для фильтрации (search). */
   search?: string;
 }
-
-const EMPTY_PAGINATION: PaginationState = {
-  count: 0,
-  next: null,
-  previous: null,
-  currentPage: 1,
-  totalPages: 0,
-};
-
-/** Вычисляет номер страницы из параметра page ссылки пагинации. */
-const currentPageFromUrl = (pageUrl: string): number => {
-  const url = new URL(pageUrl);
-  return parseInt(url.searchParams.get('page') || '1', 10);
-};
 
 /**
  * Компонент списка фотографий галереи.
@@ -63,166 +38,65 @@ const currentPageFromUrl = (pageUrl: string): number => {
  * <PhotoList search="закат" />
  */
 const PhotoList = ({ albumId = null, tagSlug, search }: PhotoListProps) => {
-  /** Состояние фотографий. */
-  const [photos, setPhotos] = useState<Photo[]>([]);
+  const { currentPage, totalPages, hasNext, hasPrevious, nextPage, previousPage, goToPage, setTotalPages } =
+    usePagination({ initialPage: 1 });
 
-  /** Состояние загрузки данных. */
-  const [loading, setLoading] = useState(true);
-
-  /** Состояние ошибки при загрузке данных. */
-  const [error, setError] = useState<string | null>(null);
-
-  /** Состояние данных пагинации. */
-  const [pagination, setPagination] = useState<PaginationState>(EMPTY_PAGINATION);
-
-  /**
-   * Загружает первую страницу списка или полный список альбома.
-   */
-  const loadPhotos = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      if (albumId !== null) {
-        const album = await galleryService.getAlbum(albumId);
-        // Фотографии альбома приходят готовым массивом без пагинации
-        const parsed = parseListResponse(album.photos);
-        setPhotos(parsed.items);
-        setPagination({ ...EMPTY_PAGINATION, count: parsed.count });
-      } else {
-        const data = await galleryService.getPhotos({
-          ...(tagSlug ? { tags__slug: tagSlug } : {}),
-          ...(search ? { search } : {}),
-          page: 1,
-        });
-        const parsed = parseListResponse(data);
-        setPhotos(parsed.items);
-        setPagination({
-          count: parsed.count,
-          next: parsed.next,
-          previous: parsed.previous,
-          currentPage: 1,
-          totalPages: parsed.totalPages,
-        });
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setLoading(false);
-    }
-  }, [albumId, tagSlug, search]);
-
-  // Эффект для загрузки фотографий при монтировании и изменении источника данных
+  // Смена фильтров сбрасывает пагинацию на первую страницу; ссылка на goToPage
+  // держится в ref: идентичность функции меняется при каждом переходе страницы
+  const goToPageRef = useRef(goToPage);
   useEffect(() => {
-    loadPhotos();
-  }, [loadPhotos]);
+    goToPageRef.current = goToPage;
+  });
 
-  /** Применяет ответ страницы к состоянию компонента. */
-  const applyPage = (data: Paginated<Photo>, currentPage: number) => {
+  useEffect(() => {
+    goToPageRef.current(1);
+  }, [tagSlug, search]);
+
+  const loadPhotos = useCallback(async () => {
+    if (albumId !== null) {
+      const album = await galleryService.getAlbum(albumId);
+      // Фотографии альбома приходят готовым массивом без пагинации
+      return parseListResponse(album.photos).items;
+    }
+    const data = await galleryService.getPhotos({ tags__slug: tagSlug, search, page: currentPage });
     const parsed = parseListResponse(data);
-    setPhotos(parsed.items);
-    setPagination({
-      count: parsed.count,
-      next: parsed.next,
-      previous: parsed.previous,
-      currentPage,
-      totalPages: parsed.totalPages,
-    });
-  };
+    setTotalPages(parsed.totalPages);
+    return parsed.items;
+  }, [albumId, tagSlug, search, currentPage, setTotalPages]);
 
-  /** Обработчик изменения страницы пагинации. */
-  const handlePageChange = async (page: number) => {
-    if (page < 1 || !pagination.totalPages || page > pagination.totalPages) {
-      return;
-    }
+  const { data, loading, error, refetch } = useApiData(loadPhotos);
+  const photos = data ?? [];
 
-    setLoading(true);
-    setError(null);
-
-    try {
-      const data = await galleryService.getPhotos({
-        ...(tagSlug ? { tags__slug: tagSlug } : {}),
-        ...(search ? { search } : {}),
-        page,
-      });
-      applyPage(data, page);
-
-      // Прокрутить страницу вверх
+  // Прокрутка страницы вверх при смене страницы пагинации
+  const previousPageRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (previousPageRef.current !== null && previousPageRef.current !== currentPage) {
       window.scrollTo({ top: 0, behavior: 'smooth' });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setLoading(false);
     }
-  };
-
-  /** Загружает страницу по ссылке пагинации (next или previous). */
-  const loadByLink = async (pageUrl: string) => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const data = await api.get<Paginated<Photo>>(pageUrl);
-      const page = currentPageFromUrl(pageUrl);
-      applyPage(data, page);
-
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  /** Обработчик перехода на следующую страницу. */
-  const handleNext = async () => {
-    if (pagination.next) {
-      await loadByLink(pagination.next);
-    }
-  };
-
-  /** Обработчик перехода на предыдущую страницу. */
-  const handlePrevious = async () => {
-    if (pagination.previous) {
-      await loadByLink(pagination.previous);
-    }
-  };
+    previousPageRef.current = currentPage;
+  }, [currentPage]);
 
   // Хук вызывается безусловно до ранних выходов; без отрисованной сетки он бездействует
   const { containerRef, markImageReady, revealedIds } = useMasonry(photos);
 
   // Отображение индикатора загрузки
   if (loading) {
-    return <SpinnerComponent message="Загрузка фотографий..." />;
+    return <Spinner message="Загрузка фотографий..." />;
   }
 
-  // Отображение сообщения об ошибке с кнопкой повтора
+  // Отображение ошибки с кнопкой повтора
   if (error) {
-    return (
-      <AlertList
-        messages={[
-          {
-            message: error,
-            level: 'error',
-            actions: (
-              <Button variant="outline-primary" size="sm" onClick={() => loadPhotos()}>
-                Повторить
-              </Button>
-            ),
-          },
-        ]}
-      />
-    );
+    return <LoadingError message={error} onRetry={refetch} />;
   }
 
   // Отображение сообщения о пустом списке фотографий;
   // при активном поиске сообщение включает запрос пользователя
   if (photos.length === 0) {
-    const emptyMessage = search ? `По запросу "${search}" ничего не найдено` : 'Нет доступных фотографий';
+    const emptyMessage = searchEmptyMessage(search, 'Нет доступных фотографий');
     return <AlertList messages={[{ message: emptyMessage, level: 'info' }]} />;
   }
 
-  // Отображение списка фотографий с пагинацией
+  // Отображение списка фотографий; в режиме альбома пагинации нет
   return (
     <Container>
       <div ref={containerRef} className="masonry-grid">
@@ -237,15 +111,17 @@ const PhotoList = ({ albumId = null, tagSlug, search }: PhotoListProps) => {
           </div>
         ))}
       </div>
-      <Pagination
-        currentPage={pagination.currentPage}
-        totalPages={pagination.totalPages}
-        hasNext={!!pagination.next}
-        hasPrevious={!!pagination.previous}
-        onPageChange={handlePageChange}
-        onNext={handleNext}
-        onPrevious={handlePrevious}
-      />
+      {albumId === null && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          hasNext={hasNext}
+          hasPrevious={hasPrevious}
+          onPageChange={goToPage}
+          onNext={nextPage}
+          onPrevious={previousPage}
+        />
+      )}
     </Container>
   );
 };

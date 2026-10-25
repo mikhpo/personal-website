@@ -13,7 +13,7 @@ import type { ArticleCardProps } from '@components/Blog/Article/ArticleCard';
 import type { PaginationProps } from '@components/Pagination/Pagination';
 import type { SpinnerProps } from '@components/Spinner/Spinner';
 import type { AlertListProps } from '@components/Alert/AlertList';
-import type { Paginated } from '../../../types/pagination';
+import type { Paginated } from '@api-types/pagination';
 import { makeArticle, paginate } from '@test-utils';
 import { blogService } from '@services';
 
@@ -56,9 +56,9 @@ jest.mock('@components/Pagination/Pagination', () => {
   };
 });
 
-// Мок для компонента SpinnerComponent
+// Мок для компонента Spinner
 jest.mock('@components/Spinner/Spinner', () => {
-  return function MockSpinnerComponent({ message }: SpinnerProps) {
+  return function MockSpinner({ message }: SpinnerProps) {
     return <div data-testid="spinner">{message}</div>;
   };
 });
@@ -88,7 +88,7 @@ describe('ArticleList', () => {
       makeArticle({ id: 1, slug: 'article-1', title: 'Статья 1', content: 'Контент 1' }),
       makeArticle({ id: 2, slug: 'article-2', title: 'Статья 2', content: 'Контент 2' }),
     ],
-    { count: 25, next: '/api/blog/articles/?page=2' },
+    { count: 25, total_pages: 2, next: '/api/blog/articles/?page=2' },
   );
 
   /**
@@ -272,7 +272,10 @@ describe('ArticleList', () => {
       next: null,
     };
 
-    mockedBlogService.getArticles.mockResolvedValueOnce(responseWithPrevious).mockResolvedValueOnce(mockApiResponse);
+    mockedBlogService.getArticles
+      .mockResolvedValueOnce(mockApiResponse)
+      .mockResolvedValueOnce(responseWithPrevious)
+      .mockResolvedValueOnce(mockApiResponse);
 
     render(<ArticleList />);
 
@@ -280,10 +283,17 @@ describe('ArticleList', () => {
       expect(screen.getByTestId('pagination')).toBeInTheDocument();
     });
 
+    // Переход на вторую страницу, затем назад на первую
+    fireEvent.click(screen.getByText('След.'));
+
+    await waitFor(() => {
+      expect(mockedBlogService.getArticles).toHaveBeenCalledTimes(2);
+    });
+
     fireEvent.click(screen.getByText('Пред.'));
 
     await waitFor(() => {
-      expect(mockedBlogService.getArticles).toHaveBeenCalled();
+      expect(mockedBlogService.getArticles).toHaveBeenCalledTimes(3);
     });
   });
 

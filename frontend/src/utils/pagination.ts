@@ -6,7 +6,7 @@
  * реальные формы к одному виду, который потребляют компоненты.
  */
 
-import type { Paginated } from '../types/pagination';
+import type { Paginated } from '@api-types/pagination';
 
 /** Результат разбора списочного ответа. */
 export interface ParsedList<T> {
@@ -35,4 +35,23 @@ export function parseListResponse<T>(data: Paginated<T> | T[]): ParsedList<T> {
     next: data.next ?? null,
     previous: data.previous ?? null,
   };
+}
+
+/**
+ * Загружает список целиком, проходя все страницы пагинации.
+ *
+ * @example
+ * const categories = await fetchAllPages(blogService.getCategories);
+ */
+export async function fetchAllPages<T>(fetchPage: (params: { page: number }) => Promise<Paginated<T>>): Promise<T[]> {
+  const items: T[] = [];
+  // Ограничение итераций защищает от зацикливания при некорректном API
+  for (let page = 1; page <= 100; page += 1) {
+    const { items: pageItems, next } = parseListResponse(await fetchPage({ page }));
+    items.push(...pageItems);
+    if (!next) {
+      return items;
+    }
+  }
+  return items;
 }

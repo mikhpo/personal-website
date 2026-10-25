@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button, Form } from 'react-bootstrap';
-import { navigateTo } from '../../utils/navigate';
+import { navigateTo } from '@services';
 
 /** Свойства формы поиска. */
 export interface SearchFormProps {

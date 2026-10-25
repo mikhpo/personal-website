@@ -28,6 +28,7 @@ module.exports = {
     '^@utils/(.*)$': '<rootDir>/src/utils/$1',
     '^@hooks/(.*)$': '<rootDir>/src/hooks/$1',
     '^@hooks$': '<rootDir>/src/hooks/index.ts',
+    '^@api-types/(.*)$': '<rootDir>/src/types/$1',
     '^@test-utils$': '<rootDir>/src/test-utils/index.ts',
   },
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],

@@ -1,6 +1,6 @@
 import React from 'react';
-import { Card } from 'react-bootstrap';
-import type { components } from '../../types/api-schema';
+import BaseCard from '@components/Card/BaseCard';
+import type { components } from '@api-types/api-schema';
 
 type Series = components['schemas']['Series'];
 
@@ -25,33 +25,15 @@ export interface SeriesCardProps {
  *   }}
  * />
  */
-const SeriesCard = ({ series }: SeriesCardProps) => {
-  const seriesUrl = `/blog/series/${series.slug}/`;
-
-  return (
-    <Card className="shadow rounded text-center h-100">
-      {series.image && (
-        <a href={seriesUrl}>
-          <Card.Img variant="top" src={series.image} alt={series.name} loading="lazy" />
-        </a>
-      )}
-      <Card.Body className="d-flex flex-column">
-        <Card.Title className="mt-auto fs-6" as="h3">
-          <a href={seriesUrl} className="text-decoration-none text-body">
-            {series.name}
-          </a>
-        </Card.Title>
-        {series.description && (
-          <Card.Text>
-            {/* Описание кликабельно, как и название, но без подчеркивания - карточка не должна выглядеть как набор ссылок */}
-            <a href={seriesUrl} className="text-decoration-none text-body">
-              {series.description}
-            </a>
-          </Card.Text>
-        )}
-      </Card.Body>
-    </Card>
-  );
-};
+const SeriesCard = ({ series }: SeriesCardProps) => (
+  <BaseCard
+    title={series.name}
+    url={`/blog/series/${series.slug}/`}
+    image={series.image}
+    description={series.description}
+    imageAlt={series.name}
+    titleClassName="fs-6"
+  />
+);
 
 export default SeriesCard;

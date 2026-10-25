@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 /** Свойства компонента постоянных ссылок на превью. */
 export interface EmbedLinksModalProps {
@@ -22,12 +22,24 @@ export interface EmbedLinksModalProps {
 const EmbedLinksModal = ({ photoId, sizes, ext }: EmbedLinksModalProps) => {
   const [copiedSize, setCopiedSize] = useState<number | null>(null);
 
+  // Таймер сброса подписи "Скопировано"; хранится, чтобы не пережить размонтирование
+  const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(
+    () => () => {
+      if (resetTimerRef.current !== null) {
+        clearTimeout(resetTimerRef.current);
+      }
+    },
+    [],
+  );
+
   const buildEmbedUrl = (size: number): string => `${window.location.origin}/gallery/embed/${photoId}/${size}.${ext}`;
 
   const copyEmbedUrl = async (size: number) => {
     await navigator.clipboard.writeText(buildEmbedUrl(size));
     setCopiedSize(size);
-    setTimeout(() => setCopiedSize((current) => (current === size ? null : current)), 2000);
+    resetTimerRef.current = setTimeout(() => setCopiedSize((current) => (current === size ? null : current)), 2000);
   };
 
   return (

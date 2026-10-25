@@ -28,7 +28,7 @@ const NavigationPagination = ({
   baseUrl = '',
 }: PaginationCoreProps) => {
   return (
-    <span className="step-links">
+    <div className="step-links">
       <div>
         {(currentPage > 1 || hasPrevious) && (
           <>
@@ -58,7 +58,7 @@ const NavigationPagination = ({
           </>
         )}
       </div>
-    </span>
+    </div>
   );
 };
 

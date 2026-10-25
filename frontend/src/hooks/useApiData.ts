@@ -26,10 +26,17 @@ const DEFAULT_ERROR_MESSAGE = 'Произошла ошибка при загру
  * обработки ошибок и управления состоянием загрузки. Заменяет дублирующийся паттерн
  * загрузки данных в компонентах.
  *
+ * Ссылка на fetchFunction обязана быть стабильной между рендерами, поэтому функция
+ * оборачивается в useCallback: смена ссылки запускает повторную загрузку, а
+ * инлайн-стрелка в теле компонента устроила бы бесконечный цикл загрузки.
+ *
+ * Устаревшие ответы отбрасываются: если во время выполнения запроса сменился
+ * fetchFunction или сработал refetch, ответ отмененного запроса не перезаписывает
+ * свежие данные.
+ *
  * @example
- * const { data, loading, error, refetch } = useApiData(
- *   () => blogService.getArticles({ page: 1 }),
- * );
+ * const loadArticles = useCallback(() => blogService.getArticles({ page }), [page]);
+ * const { data, loading, error, refetch } = useApiData(loadArticles);
  */
 const useApiData = <T>(fetchFunction: () => Promise<T>, options: UseApiDataOptions<T> = {}): UseApiDataResult<T> => {
   const { immediate = true, initialData = null } = options;
@@ -38,29 +45,47 @@ const useApiData = <T>(fetchFunction: () => Promise<T>, options: UseApiDataOptio
   const [loading, setLoading] = useState(immediate);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const result = await fetchFunction();
-      setData(result);
-    } catch (err) {
-      setError(err instanceof Error && err.message ? err.message : DEFAULT_ERROR_MESSAGE);
-    } finally {
-      setLoading(false);
-    }
-  }, [fetchFunction]);
-
-  const refetch = useCallback(() => {
-    fetchData();
-  }, [fetchData]);
+  /** Счетчик вызовов refetch: смена значения перезапускает эффект загрузки. */
+  const [fetchKey, setFetchKey] = useState(0);
 
   useEffect(() => {
-    if (immediate) {
-      fetchData();
+    if (!immediate && fetchKey === 0) {
+      return undefined;
     }
-  }, [immediate, fetchData]);
+
+    // Флаг активности: после cleanup ответ устаревшего запроса не применяется
+    let active = true;
+
+    const load = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const result = await fetchFunction();
+        if (active) {
+          setData(result);
+        }
+      } catch (err) {
+        if (active) {
+          setError(err instanceof Error && err.message ? err.message : DEFAULT_ERROR_MESSAGE);
+        }
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    };
+
+    load();
+
+    return () => {
+      active = false;
+    };
+  }, [fetchFunction, immediate, fetchKey]);
+
+  const refetch = useCallback(() => {
+    setFetchKey((key) => key + 1);
+  }, []);
 
   return {
     data,

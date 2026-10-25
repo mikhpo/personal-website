@@ -5,7 +5,7 @@ import '@testing-library/jest-dom';
 import PhotoList from './PhotoList';
 import type { PhotoCardProps } from './PhotoCard';
 import { makePhoto, makeAlbumDetail, paginate } from '@test-utils';
-import { galleryService as galleryServiceModule, api as apiModule } from '@services';
+import { galleryService as galleryServiceModule } from '@services';
 
 jest.mock('@services');
 
@@ -30,14 +30,11 @@ describe('PhotoList', () => {
   ];
 
   let galleryService: jest.Mocked<typeof galleryServiceModule>;
-  let api: jest.Mocked<typeof apiModule>;
 
   beforeEach(() => {
     galleryService = jest.mocked(galleryServiceModule);
-    api = jest.mocked(apiModule);
     galleryService.getPhotos.mockReset();
     galleryService.getAlbum.mockReset();
-    api.get.mockReset();
   });
 
   /**
@@ -198,22 +195,13 @@ describe('PhotoList', () => {
   });
 
   /**
-   * Проверяет переход по ссылке следующей страницы пагинации
+   * Проверяет переход на следующую страницу по номеру страницы
    */
-  test('переходит на следующую страницу по ссылке пагинации', async () => {
+  test('переходит на следующую страницу по номеру страницы', async () => {
     const user = userEvent.setup();
-    const firstPage = paginate(mockPhotos.slice(0, 2), {
-      count: 3,
-      total_pages: 2,
-      next: 'http://localhost/api/gallery/photos/?page=2',
-    });
-    const secondPage = paginate(mockPhotos.slice(2), {
-      count: 3,
-      total_pages: 2,
-      previous: 'http://localhost/api/gallery/photos/?page=1',
-    });
-    galleryService.getPhotos.mockResolvedValueOnce(firstPage);
-    api.get.mockResolvedValueOnce(secondPage);
+    const firstPage = paginate(mockPhotos.slice(0, 2), { count: 3, total_pages: 2 });
+    const secondPage = paginate(mockPhotos.slice(2), { count: 3, total_pages: 2 });
+    galleryService.getPhotos.mockResolvedValueOnce(firstPage).mockResolvedValueOnce(secondPage);
     render(<PhotoList />);
     await waitFor(() => {
       expect(screen.getByText('Фото 1')).toBeInTheDocument();
@@ -222,8 +210,39 @@ describe('PhotoList', () => {
     await user.click(screen.getByText('следующая'));
 
     await waitFor(() => {
-      expect(api.get).toHaveBeenCalledWith('http://localhost/api/gallery/photos/?page=2');
+      expect(galleryService.getPhotos).toHaveBeenCalledWith({ page: 2 });
       expect(screen.getByText('Фото 3')).toBeInTheDocument();
+    });
+  });
+
+  /**
+   * Проверяет сброс пагинации на первую страницу при смене фильтра
+   */
+  test('сбрасывает страницу на первую при смене фильтра', async () => {
+    const user = userEvent.setup();
+    const firstPage = paginate(mockPhotos.slice(0, 2), { count: 6, total_pages: 3 });
+    const secondPage = paginate(mockPhotos.slice(2), { count: 6, total_pages: 3 });
+    const filteredPage = paginate(mockPhotos.slice(0, 1), { count: 1, total_pages: 1 });
+    galleryService.getPhotos
+      .mockResolvedValueOnce(firstPage)
+      .mockResolvedValueOnce(secondPage)
+      .mockResolvedValueOnce(filteredPage);
+    const { rerender } = render(<PhotoList />);
+    await waitFor(() => {
+      expect(screen.getByText('Фото 1')).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByText('следующая'));
+
+    await waitFor(() => {
+      expect(galleryService.getPhotos).toHaveBeenCalledWith({ page: 2 });
+    });
+
+    rerender(<PhotoList tagSlug="new-tag" />);
+
+    // После смены фильтра список запрашивается с первой страницы
+    await waitFor(() => {
+      expect(galleryService.getPhotos).toHaveBeenCalledWith({ tags__slug: 'new-tag', page: 1 });
     });
   });
 

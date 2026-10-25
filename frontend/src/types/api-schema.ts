@@ -483,7 +483,10 @@ export interface components {
              * @description Альбом публичный
              */
             public?: boolean;
-            /** Порядок */
+            /**
+             * Порядок
+             * Format: int64
+             */
             order?: number;
             /**
              * Обложка
@@ -530,7 +533,10 @@ export interface components {
              * @description Альбом публичный
              */
             public?: boolean;
-            /** Порядок */
+            /**
+             * Порядок
+             * Format: int64
+             */
             order?: number;
             /**
              * Обложка
@@ -865,7 +871,14 @@ export interface components {
             username?: string;
             password?: string;
         };
-        /** @description Сериализатор для модели фотографии. */
+        /**
+         * @description Сериализатор для модели фотографии.
+         *
+         *     Поля соседей по альбому отсутствуют намеренно: их вычисление требует
+         *     двух запросов на фотографию, а списочные данные эти поля не показывают.
+         *     Соседи нужны только детальному просмотру с его навигацией, там их
+         *     добавляет PhotoDetailSerializer.
+         */
         Photo: {
             readonly id: number;
             readonly tags: components["schemas"]["Tag"][];

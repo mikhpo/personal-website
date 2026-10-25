@@ -1,11 +1,13 @@
-/* eslint-disable react-x/set-state-in-effect -- повторное чтение localStorage в effect синхронизирует состояние между вкладками; перестройка меняла бы рантайм и вне рамок миграции */
-import { useCallback, useEffect, useState } from 'react';
+/* eslint-disable react-x/set-state-in-effect -- чтение хранилища в effect перечитывает значение при смене key/initialValue; без синхронизации перестройка меняла бы рантайм */
+import { useCallback, useEffect, useState, type SetStateAction } from 'react';
 
 /**
  * Хук для синхронизации состояния с localStorage.
  *
  * Позволяет сохранять и считывать состояние в/из localStorage браузера.
- * Поддерживает сериализацию JSON и автоматическую синхронизацию при изменениях.
+ * Поддерживает сериализацию JSON; при смене key или initialValue значение
+ * перечитывается из хранилища. Межвкладочная синхронизация не выполняется:
+ * изменение хранилища в другой вкладке не отражается в открытых вкладках.
  * Запись null или undefined удаляет ключ из localStorage.
  *
  * @example
@@ -35,9 +37,12 @@ const useLocalStorage = <T>(key: string, initialValue: T | null) => {
   /**
    * Сохраняет значение в localStorage и обновляет состояние; null и undefined
    * удаляют ключ, а состояние принимает переданное значение как есть.
+   *
+   * Приведение при сужении необходимо: T не ограничен и сам может быть функцией,
+   * поэтому typeof-проверка не сужает тип до обновляющей функции.
    */
   const setValue = useCallback(
-    (value: T | null | undefined | ((prev: T | null | undefined) => T | null | undefined)) => {
+    (value: SetStateAction<T | null | undefined>) => {
       try {
         const valueToStore =
           typeof value === 'function'

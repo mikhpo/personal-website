@@ -29,9 +29,9 @@ const NumbersPagination = ({ currentPage, totalPages, baseUrl }: NumbersPaginati
   const createElement = (elementType: PageElementType, page?: number): React.ReactNode =>
     renderPaginationItem(elementType, page, currentPage, totalPages, baseUrl);
 
-  const firstPageElements = createFirstPageElements(startPage, totalPages, baseUrl, createElement);
-  const mainPageElements = createMainPageElements(startPage, endPage, currentPage, baseUrl, createElement);
-  const lastPageElements = createLastPageElements(endPage, totalPages, baseUrl, createElement);
+  const firstPageElements = createFirstPageElements(startPage, totalPages, createElement);
+  const mainPageElements = createMainPageElements(startPage, endPage, currentPage, createElement);
+  const lastPageElements = createLastPageElements(endPage, totalPages, createElement);
 
   const items = [...firstPageElements, ...mainPageElements, ...lastPageElements];
 

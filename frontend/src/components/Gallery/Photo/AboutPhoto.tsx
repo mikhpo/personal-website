@@ -1,6 +1,6 @@
 import React from 'react';
 import ExifData from '@components/Gallery/Photo/ExifData';
-import type { components } from '../../../types/api-schema';
+import type { components } from '@api-types/api-schema';
 
 type Photo = components['schemas']['Photo'];
 

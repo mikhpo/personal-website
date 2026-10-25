@@ -16,7 +16,7 @@ export interface LoadingErrorProps {
  * Компонент для отображения ошибки загрузки с кнопкой повтора.
  *
  * Объединяет паттерн отображения ошибки с возможностью перезапроса данных,
- * который используется в AlbumList, SeriesGrid и CategoryGrid.
+ * который используется в AlbumList и сетках справочников TaxonomyGrid.
  *
  * @example
  * <LoadingError

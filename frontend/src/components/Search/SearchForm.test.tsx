@@ -10,9 +10,9 @@ import React from 'react';
 import '@testing-library/jest-dom';
 import { render, screen, fireEvent } from '@testing-library/react';
 import SearchForm from './SearchForm';
-import { navigateTo } from '../../utils/navigate';
+jest.mock('@services/navigation');
 
-jest.mock('../../utils/navigate');
+import { navigateTo } from '@services';
 
 describe('SearchForm', () => {
   afterEach(() => {

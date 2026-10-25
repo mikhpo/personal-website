@@ -1,6 +1,6 @@
 import React from 'react';
 import { Form } from 'react-bootstrap';
-import type { components } from '../../../types/api-schema';
+import type { components } from '@api-types/api-schema';
 
 type AlbumList = components['schemas']['AlbumList'];
 

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card } from 'react-bootstrap';
-import type { components } from '../../../types/api-schema';
+import { stripHtml } from '@utils/html';
+import type { components } from '@api-types/api-schema';
 
 type Article = components['schemas']['Article'];
 
@@ -28,11 +29,15 @@ export interface ArticleCardProps {
 const ArticleCard = ({ article }: ArticleCardProps) => {
   const articleUrl = article.url || `/blog/${article.id}/`;
 
-  /** Признак длинного контента (более 200 слов). */
-  const isLong = article.content && article.content.split(' ').length > 200;
+  // Превью строится по очищенному тексту: обрезка сырого HTML могла
+  // разрезать тег и отдать карточке битую разметку
+  const plainContent = stripHtml(article.content);
 
-  /** Усечённый HTML-контент для длинных статей (первые 50 слов). */
-  const truncatedContent = isLong ? article.content.split(' ').slice(0, 50).join(' ') : article.content;
+  /** Признак длинного контента (более 200 слов). */
+  const isLong = plainContent.split(' ').length > 200;
+
+  /** Усечённый текст для длинных статей (первые 50 слов). */
+  const truncatedContent = isLong ? plainContent.split(' ').slice(0, 50).join(' ') : plainContent;
 
   return (
     <div className="container mb-3 pb-3">
@@ -41,7 +46,7 @@ const ArticleCard = ({ article }: ArticleCardProps) => {
           <h2 className="card-title fs-4">
             <a href={articleUrl}>{article.title}</a>
           </h2>
-          <p className="card-text" dangerouslySetInnerHTML={{ __html: truncatedContent }} />
+          <p className="card-text">{truncatedContent}</p>
           {isLong && <a href={articleUrl}>Читать дальше</a>}
         </Card.Body>
       </Card>

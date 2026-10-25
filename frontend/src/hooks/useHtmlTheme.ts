@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { ThemeName } from './useTheme';
 
-const THEME_ATTRIBUTE = 'data-bs-theme';
+export const THEME_ATTRIBUTE = 'data-bs-theme';
 const FALLBACK_THEME: ThemeName = 'light';
 
 /** Читает действующую тему из атрибута на элементе <html>; не-'dark' читается как светлая. */

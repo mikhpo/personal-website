@@ -137,6 +137,20 @@ describe('api', () => {
         name: 'ApiError',
       });
     });
+
+    test('выбрасывает ApiError при 204 без тела', async () => {
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        status: 204,
+        json: async () => null,
+      });
+
+      await expect(api.get('/api/empty/')).rejects.toMatchObject({
+        status: 204,
+        name: 'ApiError',
+      });
+      await expect(api.get('/api/empty/')).rejects.toThrow('сервер вернул пустой ответ');
+    });
   });
 
   /**

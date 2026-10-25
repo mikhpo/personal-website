@@ -1,21 +1,13 @@
-/* eslint-disable react-x/set-state-in-effect -- установка состояния загрузки в effect при монтировании - установленный паттерн компонента; перестройка меняла бы рантайм */
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Card, Button, Alert } from 'react-bootstrap';
 import AlbumSelector from '@components/Gallery/Upload/AlbumSelector';
 import FileDropzone from '@components/Gallery/Upload/FileDropzone';
-import UploadProgress, { type UploadStatus } from '@components/Gallery/Upload/UploadProgress';
-import SpinnerComponent from '@components/Spinner/Spinner';
+import UploadProgress from '@components/Gallery/Upload/UploadProgress';
+import Spinner from '@components/Spinner/Spinner';
+import LoadingError from '@components/Alert/LoadingError';
 import { galleryService } from '@services';
 import { parseListResponse } from '@utils/pagination';
-import type { components } from '../../../types/api-schema';
-
-type AlbumList = components['schemas']['AlbumList'];
-
-/** Прогресс загрузки одного файла. */
-interface FileProgress {
-  progress: number;
-  status: UploadStatus;
-}
+import { useApiData, usePhotoUpload } from '@hooks';
 
 /**
  * Компонент формы загрузки фотографий.
@@ -24,36 +16,33 @@ interface FileProgress {
  * или file input.
  */
 const PhotoUploadForm = () => {
-  const [albums, setAlbums] = useState<AlbumList[]>([]);
   const [selectedAlbum, setSelectedAlbum] = useState<number | null>(null);
   const [files, setFiles] = useState<File[]>([]);
-  const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState<Record<string, FileProgress>>({});
   const [errors, setErrors] = useState<string[]>([]);
   const [success, setSuccess] = useState(false);
-  const [loadingAlbums, setLoadingAlbums] = useState(true);
-  const [albumsError, setAlbumsError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchAlbums = () => {
-      setLoadingAlbums(true);
-      setAlbumsError(null);
-
-      galleryService
-        .getAlbums()
-        .then((data) => {
-          const { items } = parseListResponse(data);
-          setAlbums(items);
-          setLoadingAlbums(false);
-        })
-        .catch((err: Error) => {
-          setAlbumsError(err.message);
-          setLoadingAlbums(false);
-        });
-    };
-
-    fetchAlbums();
+  const loadAlbums = useCallback(async () => {
+    const data = await galleryService.getAlbums();
+    return parseListResponse(data).items;
   }, []);
+
+  const {
+    data: albumsData,
+    loading: loadingAlbums,
+    error: albumsError,
+    refetch: refetchAlbums,
+  } = useApiData(loadAlbums);
+  const albums = albumsData ?? [];
+
+  /** Прогресс и оркестрация загрузки файлов. */
+  const { uploadProgress, uploading, upload, resetProgress } = usePhotoUpload();
+
+  /**
+   * Повторно запрашивает список альбомов с сервера по кнопке "Повторить".
+   */
+  const handleRetryAlbums = () => {
+    refetchAlbums();
+  };
 
   /**
    * Устанавливает выбранные файлы в состояние и очищает сообщения
@@ -84,19 +73,7 @@ const PhotoUploadForm = () => {
       return;
     }
 
-    setUploading(true);
-
-    // Колбэк для обновления прогресса загрузки
-    const onProgress = (fileName: string, progressData: { progress: number; status: UploadStatus }) => {
-      setUploadProgress((prev) => ({
-        ...prev,
-        [fileName]: progressData,
-      }));
-    };
-
-    const uploadResults = await galleryService.uploadPhotos(selectedAlbum, files, onProgress);
-
-    setUploading(false);
+    const uploadResults = await upload(selectedAlbum, files);
 
     const failedUploads = uploadResults.filter((r) => !r.success);
     if (failedUploads.length > 0) {
@@ -109,50 +86,17 @@ const PhotoUploadForm = () => {
       if (failedUploads.length === 0) {
         // Сбросить форму только если все файлы загружены успешно
         setFiles([]);
-        setUploadProgress({});
+        resetProgress();
       }
     }
   };
 
-  /**
-   * Сбрасывает состояние ошибки и повторно запрашивает список альбомов
-   * с сервера по кнопке "Повторить".
-   */
-  const handleRetryAlbums = () => {
-    setLoadingAlbums(true);
-    setAlbumsError(null);
-
-    galleryService
-      .getAlbums()
-      .then((data) => {
-        const { items } = parseListResponse(data);
-        setAlbums(items);
-        setLoadingAlbums(false);
-      })
-      .catch((err: Error) => {
-        setAlbumsError(err.message);
-        setLoadingAlbums(false);
-      });
-  };
-
   if (loadingAlbums) {
-    return <SpinnerComponent message="Загрузка альбомов..." />;
+    return <Spinner message="Загрузка альбомов..." />;
   }
 
   if (albumsError) {
-    return (
-      <div className="container mt-3">
-        <div className="alert alert-danger alert-dismissible fade show" role="alert">
-          <div>
-            {albumsError}
-            <button className="btn btn-sm btn-primary ms-2" onClick={handleRetryAlbums}>
-              Повторить
-            </button>
-          </div>
-          <button type="button" className="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-      </div>
-    );
+    return <LoadingError message={albumsError} onRetry={handleRetryAlbums} />;
   }
 
   return (

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Spinner } from 'react-bootstrap';
+import { Spinner as BootstrapSpinner } from 'react-bootstrap';
 
 /** Свойства компонента индикатора загрузки. */
 export interface SpinnerProps {
@@ -12,15 +12,15 @@ export interface SpinnerProps {
  *
  * Отображает спиннер Bootstrap с настраиваемым сообщением.
  */
-const SpinnerComponent = ({ message = 'Загрузка...' }: SpinnerProps) => {
+const Spinner = ({ message = 'Загрузка...' }: SpinnerProps) => {
   return (
     <div className="text-center my-5">
-      <Spinner animation="border" role="status">
+      <BootstrapSpinner animation="border" role="status">
         <span className="visually-hidden">{message}</span>
-      </Spinner>
+      </BootstrapSpinner>
       <p className="mt-3">{message}</p>
     </div>
   );
 };
 
-export default SpinnerComponent;
+export default Spinner;

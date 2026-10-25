@@ -50,9 +50,9 @@ jest.mock('@components/Blog/Comment/CommentForm', () => {
   };
 });
 
-// Мок для компонента SpinnerComponent
+// Мок для компонента Spinner
 jest.mock('@components/Spinner/Spinner', () => {
-  return function MockSpinnerComponent({ message }: SpinnerProps) {
+  return function MockSpinner({ message }: SpinnerProps) {
     return <div data-testid="spinner">{message}</div>;
   };
 });

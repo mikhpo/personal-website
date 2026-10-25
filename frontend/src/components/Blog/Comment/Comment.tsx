@@ -1,5 +1,5 @@
 import React from 'react';
-import type { components } from '../../../types/api-schema';
+import type { components } from '@api-types/api-schema';
 
 type CommentData = components['schemas']['Comment'];
 

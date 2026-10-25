@@ -74,12 +74,16 @@ class ApiClient {
   };
 
   /**
-   * Выполняет запрос и разбираывает ответ с единой обработкой ошибок.
+   * Выполняет запрос и разбирает ответ с единой обработкой ошибок.
    *
    * errorLabel подставляется в сообщение ("загрузки", "отправки" и т.д.),
    * чтобы сообщения методов клиента остались прежними.
+   *
+   * allowEmpty разрешает пустой ответ (204) для методов, чей контракт
+   * допускает отсутствие тела; без него 204 выбрасывает ApiError - методы
+   * с обязательным телом не возвращают тихий null.
    */
-  private async request<T>(url: string, init: RequestInit, errorLabel: string): Promise<T | null> {
+  private async request<T>(url: string, init: RequestInit, errorLabel: string, allowEmpty = false): Promise<T> {
     const response = await fetch(url, init);
 
     if (!response.ok) {
@@ -88,7 +92,10 @@ class ApiClient {
 
     // 204 No Content не имеет тела
     if (response.status === 204) {
-      return null;
+      if (!allowEmpty) {
+        throw new ApiError(response.status, `Ошибка ${errorLabel}: сервер вернул пустой ответ`);
+      }
+      return null as T;
     }
 
     return response.json();
@@ -114,7 +121,7 @@ class ApiClient {
    */
   async get<T>(url: string, options: RequestOptions = {}): Promise<T> {
     const headers = { ...this.baseHeaders, ...options.headers };
-    return this.request<T>(url, { method: 'GET', headers, ...options }, 'загрузки') as Promise<T>;
+    return this.request<T>(url, { method: 'GET', headers, ...options }, 'загрузки');
   }
 
   /**
@@ -136,7 +143,7 @@ class ApiClient {
         ...requestOptions,
       },
       'отправки',
-    ) as Promise<T>;
+    );
   }
 
   /**
@@ -160,7 +167,7 @@ class ApiClient {
         ...requestOptions,
       },
       'отправки',
-    ) as Promise<T>;
+    );
   }
 
   /**
@@ -184,7 +191,7 @@ class ApiClient {
         ...requestOptions,
       },
       'обновления',
-    ) as Promise<T>;
+    );
   }
 
   /**
@@ -203,7 +210,7 @@ class ApiClient {
         ...requestOptions,
       },
       'обновления',
-    ) as Promise<T>;
+    );
   }
 
   /**
@@ -222,7 +229,7 @@ class ApiClient {
         ...requestOptions,
       },
       'частичного обновления',
-    ) as Promise<T>;
+    );
   }
 
   /**
@@ -242,6 +249,7 @@ class ApiClient {
         ...requestOptions,
       },
       'удаления',
+      true,
     );
   }
 }

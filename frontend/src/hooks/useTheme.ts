@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import useLocalStorage from './useLocalStorage';
+import { THEME_ATTRIBUTE } from './useHtmlTheme';
 
 /** Действующая тема сайта (Bootstrap color modes). */
 export type ThemeName = 'light' | 'dark';
@@ -9,14 +10,14 @@ const LIGHT_THEME: ThemeName = 'light';
 const DARK_THEME: ThemeName = 'dark';
 const MEDIA_QUERY = '(prefers-color-scheme: dark)';
 
-/** Результат хока useTheme. */
+/** Результат хука useTheme. */
 export interface UseThemeResult {
   /** Действующая тема. */
   theme: ThemeName;
   /** Системная тема браузера. */
   systemTheme: ThemeName;
   /** Явный выбор пользователя: 'light', 'dark' или null (следовать системе). */
-  storedTheme: string | null;
+  storedTheme: ThemeName | null;
   /** Устанавливает тему: 'light', 'dark' или null для возврата к системной. */
   setTheme: (value: ThemeName | null) => void;
   /** Переключает между 'light' и 'dark' (записывает явный выбор). */
@@ -35,6 +36,11 @@ const getSystemTheme = (): ThemeName => {
 };
 
 /**
+ * Проверяет, что значение является валидным названием темы.
+ */
+const isThemeName = (value: unknown): value is ThemeName => value === LIGHT_THEME || value === DARK_THEME;
+
+/**
  * Хук для управления темой сайта (Bootstrap color modes).
  *
  * Приоритет темы: явный выбор пользователя в localStorage под ключом 'theme',
@@ -51,7 +57,7 @@ const getSystemTheme = (): ThemeName => {
  * setTheme(null); // снова следовать системной теме
  */
 const useTheme = (): UseThemeResult => {
-  const [storedTheme, setStoredTheme] = useLocalStorage<string>(STORAGE_KEY, null);
+  const [storedTheme, setStoredTheme] = useLocalStorage<ThemeName>(STORAGE_KEY, null);
   const [systemTheme, setSystemTheme] = useState<ThemeName>(getSystemTheme);
 
   // Отслеживание смены системной темы: действует до явного выбора пользователя
@@ -69,17 +75,18 @@ const useTheme = (): UseThemeResult => {
 
   // Явный выбор учитывается только для валидных значений:
   // мусор в localStorage обрабатывается так же, как его отсутствие
-  const theme: ThemeName = storedTheme === LIGHT_THEME || storedTheme === DARK_THEME ? storedTheme : systemTheme;
+  const validatedStoredTheme: ThemeName | null = isThemeName(storedTheme) ? storedTheme : null;
+  const theme: ThemeName = validatedStoredTheme ?? systemTheme;
 
   useEffect(() => {
     if (typeof document !== 'undefined') {
-      document.documentElement.setAttribute('data-bs-theme', theme);
+      document.documentElement.setAttribute(THEME_ATTRIBUTE, theme);
     }
   }, [theme]);
 
   const setTheme = useCallback(
     (value: ThemeName | null) => {
-      setStoredTheme(value === LIGHT_THEME || value === DARK_THEME ? value : null);
+      setStoredTheme(isThemeName(value) ? value : null);
     },
     [setStoredTheme],
   );
@@ -90,7 +97,7 @@ const useTheme = (): UseThemeResult => {
 
   // storedTheme хранилища не бывает undefined (чтение возвращает значение
   // или начальное), поэтому публичный контракт сужается обратно до null
-  return { theme, systemTheme, storedTheme: storedTheme ?? null, setTheme, toggleTheme };
+  return { theme, systemTheme, storedTheme: validatedStoredTheme, setTheme, toggleTheme };
 };
 
 export default useTheme;

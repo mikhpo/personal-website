@@ -5,7 +5,7 @@ import '@testing-library/jest-dom';
 import PhotoDetail from './PhotoDetail';
 import type { UsePhotoDataResult } from '@hooks/usePhotoData';
 import { makePhotoDetail } from '@test-utils';
-import type { components } from '../../../types/api-schema';
+import type { components } from '@api-types/api-schema';
 
 jest.mock('@hooks/usePhotoData');
 jest.mock('@services/navigation');

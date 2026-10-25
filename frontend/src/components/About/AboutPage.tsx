@@ -1,7 +1,8 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback } from 'react';
 import Spinner from '@components/Spinner/Spinner';
 import LoadingError from '@components/Alert/LoadingError';
 import { aboutService } from '@services';
+import { useApiData } from '@hooks';
 
 /**
  * Компонент страницы "Обо мне".
@@ -10,34 +11,15 @@ import { aboutService } from '@services';
  * Пустой контент не выводит ничего - на странице остается только заголовок.
  */
 const About = () => {
-  // Состояния компонента: content - текст страницы, loading - идет загрузка, error - текст ошибки
-  const [content, setContent] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  /** Загружает содержимое страницы при монтировании и по кнопке "Повторить". */
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const data = await aboutService.getAbout();
-      setContent(data.content || '');
-      setLoading(false);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    load();
-  }, [load]);
+  const loadAbout = useCallback(() => aboutService.getAbout(), []);
+  const { data, loading, error, refetch } = useApiData(loadAbout);
 
   /** Повторяет загрузку содержимого страницы по кнопке "Повторить". */
   const handleRetry = () => {
-    load();
+    refetch();
   };
+
+  const content = data?.content ?? '';
 
   if (loading) {
     return <Spinner message="Загрузка страницы..." />;

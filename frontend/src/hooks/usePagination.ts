@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 
-/** Опции хока usePagination. */
+/** Опции хука usePagination. */
 export interface UsePaginationOptions {
   /** Начальный номер страницы. */
   initialPage?: number;
@@ -10,7 +10,7 @@ export interface UsePaginationOptions {
   onPageChange?: (page: number) => void;
 }
 
-/** Результат хока usePagination. */
+/** Результат хука usePagination. */
 export interface UsePaginationResult {
   currentPage: number;
   totalPages: number;

@@ -8,8 +8,8 @@
  * пустые значения), счетчики нулевые, даты фиксированные.
  */
 
-import type { components } from '../types/api-schema';
-import type { Paginated } from '../types/pagination';
+import type { components } from '@api-types/api-schema';
+import type { Paginated } from '@api-types/pagination';
 
 type AlbumDetail = components['schemas']['AlbumDetail'];
 type AlbumList = components['schemas']['AlbumList'];

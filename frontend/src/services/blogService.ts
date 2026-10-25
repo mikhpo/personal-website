@@ -11,8 +11,8 @@
  * списочные методы возвращают пагинированный ответ.
  */
 
-import type { components, operations } from '../types/api-schema';
-import type { Paginated } from '../types/pagination';
+import type { components, operations } from '@api-types/api-schema';
+import type { Paginated } from '@api-types/pagination';
 import api from './api';
 import { buildApiUrl } from '../utils/apiUrl';
 
@@ -49,7 +49,7 @@ export const blogService = {
    * @example
    * const article = await blogService.getArticle(1);
    */
-  async getArticle(id: number | string): Promise<Article> {
+  async getArticle(id: number): Promise<Article> {
     return api.get(`${BASE_URL}/articles/${id}/`);
   },
 
@@ -86,16 +86,6 @@ export const blogService = {
   },
 
   /**
-   * Получает список комментариев к статье.
-   *
-   * @example
-   * const comments = await blogService.getComments(1);
-   */
-  async getComments(articleId: number): Promise<Paginated<Comment>> {
-    return api.get(buildApiUrl(`${BASE_URL}/comments/`, { article: articleId }));
-  },
-
-  /**
    * Получает список категорий.
    *
    * @example
@@ -103,16 +93,6 @@ export const blogService = {
    */
   async getCategories(params: CategoryListQuery = {}): Promise<Paginated<Category>> {
     return api.get(buildApiUrl(`${BASE_URL}/categories/`, params));
-  },
-
-  /**
-   * Получает детальную информацию о категории.
-   *
-   * @example
-   * const category = await blogService.getCategory('react');
-   */
-  async getCategory(slug: string): Promise<Category> {
-    return api.get(`${BASE_URL}/categories/${slug}/`);
   },
 
   /**
@@ -126,16 +106,6 @@ export const blogService = {
   },
 
   /**
-   * Получает детальную информацию о серии.
-   *
-   * @example
-   * const series = await blogService.getSerie('django-best-practices');
-   */
-  async getSerie(slug: string): Promise<Series> {
-    return api.get(`${BASE_URL}/series/${slug}/`);
-  },
-
-  /**
    * Получает список тем.
    *
    * @example
@@ -143,16 +113,6 @@ export const blogService = {
    */
   async getTopics(params: TopicListQuery = {}): Promise<Paginated<Topic>> {
     return api.get(buildApiUrl(`${BASE_URL}/topics/`, params));
-  },
-
-  /**
-   * Получает детальную информацию о теме.
-   *
-   * @example
-   * const topic = await blogService.getTopic('frontend');
-   */
-  async getTopic(slug: string): Promise<Topic> {
-    return api.get(`${BASE_URL}/topics/${slug}/`);
   },
 };
 
