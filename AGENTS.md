@@ -40,6 +40,7 @@
 - `task check` - выполнить статический анализ и проверки Django
 - `task migrate` - создать и применить миграции
 - `task pre-commit` - выполнить pre-commit хуки
+- `task api-types-generate` - перегенерировать OpenAPI-схему и типы API фронтенда
 
 Комплексные операции объединены в одну команду, Docker-контейнеры запускаются автоматически.
 
@@ -51,7 +52,8 @@
 - `npm run test:watch` - тесты в режиме наблюдения
 - `npm run eslint` - проверка ESLint
 - `npm run typecheck` - проверка типов TypeScript
-- `npm run api-types:generate` - перегенерация типов API из OpenAPI-схемы (при изменении сериализаторов)
+
+Перегенерация схемы API и типов фронтенда выполняется задачами Task (см. `task api-types-generate`).
 
 ## Структура проекта
 
