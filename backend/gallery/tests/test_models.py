@@ -5,7 +5,6 @@ from http import HTTPStatus
 from typing import TYPE_CHECKING
 from unittest.mock import patch
 
-from django.core.exceptions import ValidationError
 from django.test import TestCase
 from faker import Faker
 
@@ -58,16 +57,6 @@ class GalleryModelsTests(TestCase):
                 album=cls.langtang_album,
                 name=f"Langtang Photo {i + 1}",
             )
-
-    def test_album_order_rejects_values_beyond_int4(self) -> None:
-        """Верхняя граница order - диапазон int4 Postgres, а не весь 64-битный диапазон SQLite."""
-        album = Album(name="Граница порядка", order=2147483647)
-
-        album.full_clean(exclude=["cover"])  # Граница диапазона допустима
-
-        album.order = 2147483648
-        with self.assertRaises(ValidationError):
-            album.full_clean(exclude=["cover"])
 
     def test_objects_created(self) -> None:
         """Проверить, что все объекты для тестирования созданы."""

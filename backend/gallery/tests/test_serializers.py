@@ -6,7 +6,7 @@ from django.test import TestCase
 
 from gallery.factories import AlbumFactory, PhotoFactory
 from gallery.models import Photo
-from gallery.serializers import AlbumDetailSerializer, AlbumListSerializer, PhotoDetailSerializer, PhotoSerializer
+from gallery.serializers import AlbumDetailSerializer, PhotoDetailSerializer, PhotoSerializer
 
 
 class TestPhotoSerializer(TestCase):
@@ -85,9 +85,3 @@ class TestAlbumDetailSerializer(TestCase):
         data = AlbumDetailSerializer(self.album).data
         self.assertIn("photos", data)
         self.assertEqual(len(data["photos"]), 2)
-
-    def test_order_field_bound_is_independent_of_database(self) -> None:
-        """Верхняя граница order зафиксирована диапазоном int4 и не зависит от базы данных генерации схемы."""
-        field = AlbumListSerializer().fields["order"]
-        self.assertEqual(field.max_value, 2147483647)
-        self.assertEqual(field.min_value, 0)

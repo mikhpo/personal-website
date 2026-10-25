@@ -8,7 +8,6 @@ from pathlib import Path
 from typing import ClassVar, Self
 
 from django.conf import settings
-from django.core.validators import MaxValueValidator
 from django.db import models
 from django.urls import reverse
 from django.utils.functional import cached_property
@@ -94,15 +93,11 @@ class Album(models.Model):
         related_name="tag_albums",
         help_text="Тэги альбома",
     )
-    order = models.PositiveIntegerField(
+    order = models.PositiveBigIntegerField(
         verbose_name="Порядок",
         default=0,
         blank=False,
         null=False,
-        # Верхняя граница из схемы Postgres без валидатора зависит от базы данных
-        # подключения (int4 у Postgres, 64 бита у SQLite), из-за чего генерация
-        # OpenAPI-схемы дает разные контракты в разных окружениях
-        validators=[MaxValueValidator(2147483647)],
     )
 
     objects = models.Manager()
