@@ -101,3 +101,17 @@ repos:
         language: system
         pass_filenames: false
         files: ^(.*/)?poetry\.lock$
+      - id: schema-export
+        name: schema-export
+        description: Проверка свежести OpenAPI-схемы бэкенда
+        entry: bash tools/check_api_schema.sh export
+        language: system
+        pass_filenames: false
+        files: ^backend/
+      - id: api-types
+        name: api-types
+        description: Проверка свежести сгенерированных типов API фронтенда
+        entry: bash tools/check_api_schema.sh types
+        language: system
+        pass_filenames: false
+        files: ^docs/schemas/
