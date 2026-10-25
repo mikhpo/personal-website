@@ -17,9 +17,7 @@
     "test:watch": "jest --config frontend/jest.config.js --watch",
     "eslint": "eslint . --max-warnings 0",
     "typecheck": "tsc --noEmit -p frontend/tsconfig.json",
-    "schema:export": "poetry run python backend/manage.py spectacular --file frontend/src/types/schema.yaml",
-    "api-types": "openapi-typescript frontend/src/types/schema.yaml -o frontend/src/types/api-schema.ts",
-    "api-types:generate": "npm run schema:export && npm run api-types",
+    "api-types": "openapi-typescript docs/schemas/schema.yaml -o frontend/src/types/api-schema.ts",
     "format": "prettier --write frontend",
     "format:check": "prettier --check frontend",
     "markdownlint": "markdownlint '**/*.md' --ignore-path .gitignore"
