@@ -102,9 +102,9 @@ workflows:
               # Если перегенерацию забыть, TypeScript проверяет код против устаревшей
               # схемы; --exit-code превращает расхождение в ошибку сборки.
               - echo "Проверка свежести сгенерированных типов API"
-              - poetry run python backend/manage.py spectacular --file docs/schemas/schema.yaml
-              - npx openapi-typescript docs/schemas/schema.yaml -o frontend/src/types/api-schema.ts
-              - git diff --exit-code docs/schemas/schema.yaml frontend/src/types/api-schema.ts
+              - poetry run python backend/manage.py spectacular --file docs/schemas/openapi.yaml
+              - npx openapi-typescript docs/schemas/openapi.yaml -o frontend/src/types/api-schema.ts
+              - git diff --exit-code docs/schemas/openapi.yaml frontend/src/types/api-schema.ts
               - echo "Компиляция каталогов переводов"
               - cd backend && poetry run python manage.py compilemessages && cd ..
               - echo "Запуск тестов Python с помощью Pytest"

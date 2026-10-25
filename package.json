@@ -17,7 +17,7 @@
     "test:watch": "jest --config frontend/jest.config.js --watch",
     "eslint": "eslint . --max-warnings 0",
     "typecheck": "tsc --noEmit -p frontend/tsconfig.json",
-    "api-types": "openapi-typescript docs/schemas/schema.yaml -o frontend/src/types/api-schema.ts",
+    "api-types": "openapi-typescript docs/schemas/openapi.yaml -o frontend/src/types/api-schema.ts",
     "format": "prettier --write frontend",
     "format:check": "prettier --check frontend",
     "markdownlint": "markdownlint '**/*.md' --ignore-path .gitignore"
