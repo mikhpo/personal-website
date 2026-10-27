@@ -11,7 +11,7 @@ import { render, screen, fireEvent, act } from '@testing-library/react';
 import ArticleForm from './ArticleForm';
 import { blogService as realBlogService, navigateTo } from '@services';
 import type { AlertMessage } from '@components/Alert/AlertList';
-import { makeArticle, makeCategory, makeSeries, makeTopic, paginate } from '@test-utils';
+import { makeArticle, makeCategory, makeSeries, makeTopic } from '@test-utils';
 
 // Мок для blogService и navigateTo
 jest.mock('@services');
@@ -110,9 +110,9 @@ describe('ArticleForm', () => {
   });
 
   beforeEach(() => {
-    blogService.getCategories.mockResolvedValue(paginate(taxonomies.categories, { count: 2 }));
-    blogService.getSeries.mockResolvedValue(paginate(taxonomies.series, { count: 1 }));
-    blogService.getTopics.mockResolvedValue(paginate(taxonomies.topics, { count: 1 }));
+    blogService.getCategories.mockResolvedValue(taxonomies.categories);
+    blogService.getSeries.mockResolvedValue(taxonomies.series);
+    blogService.getTopics.mockResolvedValue(taxonomies.topics);
     Object.defineProperty(document, 'cookie', {
       writable: true,
       value: 'csrftoken=test-csrf-token-12345',
@@ -161,20 +161,6 @@ describe('ArticleForm', () => {
       expect(screen.getByText('Путешествия')).toBeInTheDocument();
       expect(screen.getByText('Серия А')).toBeInTheDocument();
       expect(screen.getByText('Тема Б')).toBeInTheDocument();
-    });
-
-    /**
-     * Проверяет прохождение всех страниц пагинации справочника.
-     */
-    test('загружает все страницы справочника', async () => {
-      blogService.getCategories
-        .mockResolvedValueOnce(paginate([taxonomies.categories[0]!], { next: '/api/blog/categories/?page=2' }))
-        .mockResolvedValueOnce(paginate([taxonomies.categories[1]!], { next: null }));
-      await renderForm();
-      expect(blogService.getCategories).toHaveBeenCalledTimes(2);
-      expect(blogService.getCategories).toHaveBeenLastCalledWith({ page: 2 });
-      expect(screen.getByText('Разработка')).toBeInTheDocument();
-      expect(screen.getByText('Путешествия')).toBeInTheDocument();
     });
 
     /**

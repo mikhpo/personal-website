@@ -95,21 +95,13 @@ describe('TaxonomyGrid', () => {
     { id: 3, name: 'Серия без изображения', slug: 'no-image', description: 'Не должна отображаться' },
   ] as Series[];
 
-  const envelope = <T,>(results: T[]) => ({
-    count: results.length,
-    total_pages: 1,
-    next: null,
-    previous: null,
-    results,
-  });
-
   const blogService = jest.mocked(realBlogService);
 
   describe('сетка категорий', () => {
     // Стабильная ссылка функции загрузки: контракт хука useApiData
     const fetchCategories = jest.fn(async () => {
-      const data = await blogService.getCategories();
-      return data.results.filter((category) => category.image);
+      const categories = await blogService.getCategories();
+      return categories.filter((category) => category.image);
     });
 
     /** Полные свойства сетки категорий. */
@@ -134,9 +126,7 @@ describe('TaxonomyGrid', () => {
     });
 
     test('отображает состояние ошибки и повторяет загрузку', async () => {
-      blogService.getCategories
-        .mockRejectedValueOnce(new Error('Network error'))
-        .mockResolvedValueOnce(envelope(mockCategories));
+      blogService.getCategories.mockRejectedValueOnce(new Error('Network error')).mockResolvedValueOnce(mockCategories);
 
       render(<TaxonomyGrid<Category> {...props} />);
 
@@ -155,7 +145,7 @@ describe('TaxonomyGrid', () => {
     });
 
     test('отображает пустое состояние', async () => {
-      blogService.getCategories.mockResolvedValue(envelope([]));
+      blogService.getCategories.mockResolvedValue([]);
 
       render(<TaxonomyGrid<Category> {...props} />);
 
@@ -165,7 +155,7 @@ describe('TaxonomyGrid', () => {
     });
 
     test('отображает список категорий без элементов без изображений', async () => {
-      blogService.getCategories.mockResolvedValue(envelope(mockCategories));
+      blogService.getCategories.mockResolvedValue(mockCategories);
 
       render(<TaxonomyGrid<Category> {...props} />);
 
@@ -182,7 +172,7 @@ describe('TaxonomyGrid', () => {
     });
 
     test('отображает заголовок сетки', async () => {
-      blogService.getCategories.mockResolvedValue(envelope(mockCategories.slice(0, 1)));
+      blogService.getCategories.mockResolvedValue(mockCategories.slice(0, 1));
 
       render(<TaxonomyGrid<Category> {...props} />);
 
@@ -192,7 +182,7 @@ describe('TaxonomyGrid', () => {
     });
 
     test('использует правильную структуру сетки Bootstrap', async () => {
-      blogService.getCategories.mockResolvedValue(envelope(mockCategories.slice(0, 2)));
+      blogService.getCategories.mockResolvedValue(mockCategories.slice(0, 2));
 
       const renderResult = render(<TaxonomyGrid<Category> {...props} />);
 
@@ -216,8 +206,8 @@ describe('TaxonomyGrid', () => {
   describe('сетка серий', () => {
     // Стабильная ссылка функции загрузки: контракт хука useApiData
     const fetchSeries = jest.fn(async () => {
-      const data = await blogService.getSeries();
-      return data.results.filter((series) => series.image);
+      const series = await blogService.getSeries();
+      return series.filter((series) => series.image);
     });
 
     /** Полные свойства сетки серий. */
@@ -242,9 +232,7 @@ describe('TaxonomyGrid', () => {
     });
 
     test('отображает состояние ошибки и повторяет загрузку', async () => {
-      blogService.getSeries
-        .mockRejectedValueOnce(new Error('Network error'))
-        .mockResolvedValueOnce(envelope(mockSeries));
+      blogService.getSeries.mockRejectedValueOnce(new Error('Network error')).mockResolvedValueOnce(mockSeries);
 
       render(<TaxonomyGrid<Series> {...props} />);
 
@@ -263,7 +251,7 @@ describe('TaxonomyGrid', () => {
     });
 
     test('отображает список серий без элементов без изображений', async () => {
-      blogService.getSeries.mockResolvedValue(envelope(mockSeries));
+      blogService.getSeries.mockResolvedValue(mockSeries);
 
       render(<TaxonomyGrid<Series> {...props} />);
 
@@ -280,7 +268,7 @@ describe('TaxonomyGrid', () => {
     });
 
     test('отображает заголовок сетки', async () => {
-      blogService.getSeries.mockResolvedValue(envelope(mockSeries.slice(0, 1)));
+      blogService.getSeries.mockResolvedValue(mockSeries.slice(0, 1));
 
       render(<TaxonomyGrid<Series> {...props} />);
 

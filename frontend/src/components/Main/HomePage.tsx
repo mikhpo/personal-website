@@ -3,7 +3,6 @@ import TaxonomyGrid from '@components/Main/TaxonomyGrid';
 import CategoryCard from '@components/Main/CategoryCard';
 import SeriesCard from '@components/Main/SeriesCard';
 import { blogService } from '@services';
-import { parseListResponse } from '@utils/pagination';
 
 /**
  * Компонент главной страницы сайта.
@@ -13,15 +12,13 @@ import { parseListResponse } from '@utils/pagination';
  */
 const HomePage = () => {
   const loadCategories = useCallback(async () => {
-    const data = await blogService.getCategories();
-    const { items } = parseListResponse(data);
-    return items.filter((category) => category.image);
+    const categories = await blogService.getCategories();
+    return categories.filter((category) => category.image);
   }, []);
 
   const loadSeries = useCallback(async () => {
-    const data = await blogService.getSeries();
-    const { items } = parseListResponse(data);
-    return items.filter((series) => series.image);
+    const series = await blogService.getSeries();
+    return series.filter((series) => series.image);
   }, []);
 
   return (

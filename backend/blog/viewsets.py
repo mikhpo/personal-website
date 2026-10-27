@@ -31,6 +31,7 @@ class CategoryViewSet(AuditlogActorMixin, viewsets.ModelViewSet):
     serializer_class = CategorySerializer
     permission_classes: ClassVar[list[type[BasePermission]]] = [IsPublicOrAuthor]
     lookup_field = "pk"
+    pagination_class = None
     filter_backends: ClassVar[list[type[filters.BaseFilterBackend]]] = [filters.SearchFilter, filters.OrderingFilter]
     search_fields: ClassVar[list[str]] = ["name", "description"]
     ordering_fields: ClassVar[list[str]] = ["name"]
@@ -57,6 +58,7 @@ class TopicViewSet(AuditlogActorMixin, viewsets.ModelViewSet):
     serializer_class = TopicSerializer
     permission_classes: ClassVar[list[type[BasePermission]]] = [IsPublicOrAuthor]
     lookup_field = "pk"
+    pagination_class = None
     filter_backends: ClassVar[list[type[filters.BaseFilterBackend]]] = [filters.SearchFilter, filters.OrderingFilter]
     search_fields: ClassVar[list[str]] = ["name", "description"]
     ordering_fields: ClassVar[list[str]] = ["name"]
@@ -79,6 +81,7 @@ class SeriesViewSet(AuditlogActorMixin, viewsets.ModelViewSet):
     serializer_class = SeriesSerializer
     permission_classes: ClassVar[list[type[BasePermission]]] = [IsPublicOrAuthor]
     lookup_field = "pk"
+    pagination_class = None
     filter_backends: ClassVar[list[type[filters.BaseFilterBackend]]] = [filters.SearchFilter, filters.OrderingFilter]
     search_fields: ClassVar[list[str]] = ["name", "description"]
     ordering_fields: ClassVar[list[str]] = ["name"]

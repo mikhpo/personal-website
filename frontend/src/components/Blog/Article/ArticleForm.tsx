@@ -7,7 +7,6 @@ import TaxonomyMultiSelect from '@components/Blog/Article/TaxonomyMultiSelect';
 import { blogService, navigateTo } from '@services';
 import { useApiData, useArticleAutosave, useHtmlTheme } from '@hooks';
 import { getEditorInit } from '@utils/tinymce';
-import { fetchAllPages } from '@utils/pagination';
 import { getErrorMessage } from '@utils/errors';
 import { stripHtml } from '@utils/html';
 import type { components } from '@api-types/api-schema';
@@ -142,9 +141,9 @@ const ArticleForm = ({ articleId = null, tinymceScriptSrc = '/static/tinymce/tin
    */
   const loadFormData = useCallback(async (): Promise<ArticleFormData> => {
     const [categories, series, topics] = await Promise.all([
-      fetchAllPages(blogService.getCategories),
-      fetchAllPages(blogService.getSeries),
-      fetchAllPages(blogService.getTopics),
+      blogService.getCategories(),
+      blogService.getSeries(),
+      blogService.getTopics(),
     ]);
     const article = articleId ? await blogService.getArticle(articleId) : null;
     return { categories, series, topics, article };

@@ -499,18 +499,6 @@ paths:
         description: Which field to use when ordering the results.
         schema:
           type: string
-      - name: page
-        required: false
-        in: query
-        description: A page number within the paginated result set.
-        schema:
-          type: integer
-      - name: page_size
-        required: false
-        in: query
-        description: Number of results to return per page.
-        schema:
-          type: integer
       - name: search
         required: false
         in: query
@@ -528,7 +516,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PaginatedCategoryList'
+                type: array
+                items:
+                  $ref: '#/components/schemas/Category'
           description: ''
     post:
       operationId: blog_categories_create
@@ -871,18 +861,6 @@ paths:
         description: Which field to use when ordering the results.
         schema:
           type: string
-      - name: page
-        required: false
-        in: query
-        description: A page number within the paginated result set.
-        schema:
-          type: integer
-      - name: page_size
-        required: false
-        in: query
-        description: Number of results to return per page.
-        schema:
-          type: integer
       - name: search
         required: false
         in: query
@@ -900,7 +878,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PaginatedSeriesList'
+                type: array
+                items:
+                  $ref: '#/components/schemas/Series'
           description: ''
     post:
       operationId: blog_series_create
@@ -1053,18 +1033,6 @@ paths:
         description: Which field to use when ordering the results.
         schema:
           type: string
-      - name: page
-        required: false
-        in: query
-        description: A page number within the paginated result set.
-        schema:
-          type: integer
-      - name: page_size
-        required: false
-        in: query
-        description: Number of results to return per page.
-        schema:
-          type: integer
       - name: search
         required: false
         in: query
@@ -1082,7 +1050,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PaginatedTopicList'
+                type: array
+                items:
+                  $ref: '#/components/schemas/Topic'
           description: ''
     post:
       operationId: blog_topics_create
@@ -1853,33 +1823,6 @@ components:
         total_pages:
           type: integer
           example: 7
-    PaginatedCategoryList:
-      type: object
-      required:
-      - count
-      - results
-      - total_pages
-      properties:
-        count:
-          type: integer
-          example: 123
-        next:
-          type: string
-          nullable: true
-          format: uri
-          example: http://api.example.org/accounts/?page=4
-        previous:
-          type: string
-          nullable: true
-          format: uri
-          example: http://api.example.org/accounts/?page=2
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/Category'
-        total_pages:
-          type: integer
-          example: 7
     PaginatedCommentList:
       type: object
       required:
@@ -1931,60 +1874,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Photo'
-        total_pages:
-          type: integer
-          example: 7
-    PaginatedSeriesList:
-      type: object
-      required:
-      - count
-      - results
-      - total_pages
-      properties:
-        count:
-          type: integer
-          example: 123
-        next:
-          type: string
-          nullable: true
-          format: uri
-          example: http://api.example.org/accounts/?page=4
-        previous:
-          type: string
-          nullable: true
-          format: uri
-          example: http://api.example.org/accounts/?page=2
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/Series'
-        total_pages:
-          type: integer
-          example: 7
-    PaginatedTopicList:
-      type: object
-      required:
-      - count
-      - results
-      - total_pages
-      properties:
-        count:
-          type: integer
-          example: 123
-        next:
-          type: string
-          nullable: true
-          format: uri
-          example: http://api.example.org/accounts/?page=4
-        previous:
-          type: string
-          nullable: true
-          format: uri
-          example: http://api.example.org/accounts/?page=2
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/Topic'
         total_pages:
           type: integer
           example: 7
