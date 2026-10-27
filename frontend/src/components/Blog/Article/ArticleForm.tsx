@@ -6,9 +6,9 @@ import AlertList from '@components/Alert/AlertList';
 import MultiSelect from '@components/Blog/Article/MultiSelect';
 import { blogService, navigateTo } from '@services';
 import { useApiData, useArticleAutosave, useHtmlTheme } from '@hooks';
-import { getEditorInit } from '@utils/tinymce';
+import { getEditorInit } from '@components/Blog/utils/tinymce';
 import { getErrorMessage } from '@utils/errors';
-import { stripHtml } from '@utils/html';
+import { stripHtml } from '@components/Blog/utils/html';
 import type { components } from '@api-types/api-schema';
 
 type Article = components['schemas']['Article'];

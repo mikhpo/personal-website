@@ -87,7 +87,7 @@
 - `src/hooks/` - кастомные хуки (useApiData, useMasonry, usePagination, usePhotoData, usePhotoNavigation, useToggle)
 - `src/services/` - API сервисы (api.ts, blogService.ts, galleryService.ts, aboutService.ts); все HTTP-запросы идут через ApiClient
 - `src/types/` - типы API: OpenAPI-схема, сгенерированный api-schema.ts, типы пагинированных ответов
-- `src/utils/` - утилиты (apiUrl, cookies, navigate, photoNavigation, tinymce, pagination)
+- `src/utils/` - утилиты (apiUrl, cookies, errors, messages, pagination)
 - `dist/` - production бандл
 
 ## Frontend стек
