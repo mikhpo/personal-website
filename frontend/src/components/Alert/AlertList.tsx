@@ -40,7 +40,12 @@ const AlertList = ({ messages = [] }: AlertListProps) => {
     <div className="container mt-3">
       {messages.map((msg, index) => (
         <Alert
-          // eslint-disable-next-line react-x/no-array-index-key -- сообщения могут дублироваться, и content-ключ дал бы дубли; идентичность алертов между рендерами не требуется
+          // Индексный ключ вместо content-ключа (level + message): одинаковые сообщения
+          // давали бы дубли ключей, а стабильного id у сообщений нет - генерировать его
+          // в рендере нельзя, ключ менялся бы каждый рендер и размонтировал алерты,
+          // сбрасывая autoClose-таймеры. Индекс безопасен: список - снимок для показа,
+          // не переупорядочивается, состояние между рендерами элементу не нужно.
+          // eslint-disable-next-line react-x/no-array-index-key
           key={index}
           message={msg.message}
           level={msg.level}
