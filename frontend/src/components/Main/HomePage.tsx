@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import TaxonomyGrid from '@components/Main/TaxonomyGrid';
+import CardGrid from '@components/Main/CardGrid';
 import CategoryCard from '@components/Main/CategoryCard';
 import SeriesCard from '@components/Main/SeriesCard';
 import { blogService } from '@services';
@@ -8,7 +8,7 @@ import { blogService } from '@services';
  * Компонент главной страницы сайта.
  *
  * Объединяет сетки категорий и серий блога: обе строятся общим компонентом
- * TaxonomyGrid с разными справочниками и карточками.
+ * CardGrid с разными справочниками и карточками.
  */
 const HomePage = () => {
   const loadCategories = useCallback(async () => {
@@ -23,7 +23,7 @@ const HomePage = () => {
 
   return (
     <>
-      <TaxonomyGrid
+      <CardGrid
         testId="category-grid-container"
         title="Выберите категорию"
         loadingMessage="Загрузка категорий..."
@@ -33,7 +33,7 @@ const HomePage = () => {
       />
       <br />
       <br />
-      <TaxonomyGrid
+      <CardGrid
         testId="series-grid-container"
         title="Или серию"
         loadingMessage="Загрузка серий..."

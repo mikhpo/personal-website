@@ -3,7 +3,7 @@ import { Button, Card, Form } from 'react-bootstrap';
 import { Editor } from '@tinymce/tinymce-react';
 import Spinner from '@components/Spinner/Spinner';
 import AlertList from '@components/Alert/AlertList';
-import TaxonomyMultiSelect from '@components/Blog/Article/TaxonomyMultiSelect';
+import MultiSelect from '@components/Blog/Article/MultiSelect';
 import { blogService, navigateTo } from '@services';
 import { useApiData, useArticleAutosave, useHtmlTheme } from '@hooks';
 import { getEditorInit } from '@utils/tinymce';
@@ -356,7 +356,7 @@ const ArticleForm = ({ articleId = null, tinymceScriptSrc = '/static/tinymce/tin
               />
             </Form.Group>
 
-            <TaxonomyMultiSelect
+            <MultiSelect
               controlId="article-categories"
               label="Категории"
               options={categories}
@@ -364,7 +364,7 @@ const ArticleForm = ({ articleId = null, tinymceScriptSrc = '/static/tinymce/tin
               onChange={(selected) => updateForm({ categories: selected })}
             />
 
-            <TaxonomyMultiSelect
+            <MultiSelect
               controlId="article-series"
               label="Серии"
               options={series}
@@ -372,7 +372,7 @@ const ArticleForm = ({ articleId = null, tinymceScriptSrc = '/static/tinymce/tin
               onChange={(selected) => updateForm({ series: selected })}
             />
 
-            <TaxonomyMultiSelect
+            <MultiSelect
               controlId="article-topics"
               label="Темы"
               options={topics}

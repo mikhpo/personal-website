@@ -9,13 +9,13 @@ import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import HomePage from '@components/Main/HomePage';
 
-// Мокировать компонент TaxonomyGrid для изоляции тестов
-jest.mock('@components/Main/TaxonomyGrid', () => {
-  const MockTaxonomyGrid = ({ testId }: { testId: string }) => <div data-testid={testId}>TaxonomyGrid</div>;
-  MockTaxonomyGrid.displayName = 'TaxonomyGrid';
+// Мокировать компонент CardGrid для изоляции тестов
+jest.mock('@components/Main/CardGrid', () => {
+  const MockCardGrid = ({ testId }: { testId: string }) => <div data-testid={testId}>CardGrid</div>;
+  MockCardGrid.displayName = 'CardGrid';
   return {
     __esModule: true,
-    default: MockTaxonomyGrid,
+    default: MockCardGrid,
   };
 });
 

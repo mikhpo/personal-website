@@ -1,5 +1,5 @@
 /**
- * Тесты для компонента TaxonomyGrid.
+ * Тесты для компонента CardGrid.
  *
  * Проверяют отображение сеток справочников блога (категорий и серий)
  * во всех состояниях: загрузка, ошибка с повтором, пустое состояние,
@@ -10,7 +10,7 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import TaxonomyGrid from '@components/Main/TaxonomyGrid';
+import CardGrid from '@components/Main/CardGrid';
 import type { AlertMessage } from '@components/Alert/AlertList';
 import type { components } from '@api-types/api-schema';
 
@@ -57,7 +57,7 @@ const seriesGridProps = {
   emptyMessage: 'Нет доступных серий',
 };
 
-describe('TaxonomyGrid', () => {
+describe('CardGrid', () => {
   // Тестовые данные: третий элемент без изображения не должен отображаться
   const mockCategories = [
     {
@@ -119,7 +119,7 @@ describe('TaxonomyGrid', () => {
     test('отображает состояние загрузки', () => {
       blogService.getCategories.mockImplementation(() => new Promise(() => {}));
 
-      render(<TaxonomyGrid<Category> {...props} />);
+      render(<CardGrid<Category> {...props} />);
 
       const visibleText = screen.getByText('Загрузка категорий...', { selector: 'p' });
       expect(visibleText).toBeInTheDocument();
@@ -128,7 +128,7 @@ describe('TaxonomyGrid', () => {
     test('отображает состояние ошибки и повторяет загрузку', async () => {
       blogService.getCategories.mockRejectedValueOnce(new Error('Network error')).mockResolvedValueOnce(mockCategories);
 
-      render(<TaxonomyGrid<Category> {...props} />);
+      render(<CardGrid<Category> {...props} />);
 
       await waitFor(() => {
         expect(screen.getByText('Network error')).toBeInTheDocument();
@@ -147,7 +147,7 @@ describe('TaxonomyGrid', () => {
     test('отображает пустое состояние', async () => {
       blogService.getCategories.mockResolvedValue([]);
 
-      render(<TaxonomyGrid<Category> {...props} />);
+      render(<CardGrid<Category> {...props} />);
 
       await waitFor(() => {
         expect(screen.getByText('Нет доступных категорий')).toBeInTheDocument();
@@ -157,7 +157,7 @@ describe('TaxonomyGrid', () => {
     test('отображает список категорий без элементов без изображений', async () => {
       blogService.getCategories.mockResolvedValue(mockCategories);
 
-      render(<TaxonomyGrid<Category> {...props} />);
+      render(<CardGrid<Category> {...props} />);
 
       await waitFor(() => {
         expect(screen.getByTestId('category-grid-container')).toBeInTheDocument();
@@ -174,7 +174,7 @@ describe('TaxonomyGrid', () => {
     test('отображает заголовок сетки', async () => {
       blogService.getCategories.mockResolvedValue(mockCategories.slice(0, 1));
 
-      render(<TaxonomyGrid<Category> {...props} />);
+      render(<CardGrid<Category> {...props} />);
 
       await waitFor(() => {
         expect(screen.getByText('Выберите категорию')).toBeInTheDocument();
@@ -184,7 +184,7 @@ describe('TaxonomyGrid', () => {
     test('использует правильную структуру сетки Bootstrap', async () => {
       blogService.getCategories.mockResolvedValue(mockCategories.slice(0, 2));
 
-      const renderResult = render(<TaxonomyGrid<Category> {...props} />);
+      const renderResult = render(<CardGrid<Category> {...props} />);
 
       await waitFor(() => {
         expect(screen.getByTestId('category-grid-container')).toBeInTheDocument();
@@ -225,7 +225,7 @@ describe('TaxonomyGrid', () => {
     test('отображает состояние загрузки', () => {
       blogService.getSeries.mockImplementation(() => new Promise(() => {}));
 
-      render(<TaxonomyGrid<Series> {...props} />);
+      render(<CardGrid<Series> {...props} />);
 
       const visibleText = screen.getByText('Загрузка серий...', { selector: 'p' });
       expect(visibleText).toBeInTheDocument();
@@ -234,7 +234,7 @@ describe('TaxonomyGrid', () => {
     test('отображает состояние ошибки и повторяет загрузку', async () => {
       blogService.getSeries.mockRejectedValueOnce(new Error('Network error')).mockResolvedValueOnce(mockSeries);
 
-      render(<TaxonomyGrid<Series> {...props} />);
+      render(<CardGrid<Series> {...props} />);
 
       await waitFor(() => {
         expect(screen.getByText('Network error')).toBeInTheDocument();
@@ -253,7 +253,7 @@ describe('TaxonomyGrid', () => {
     test('отображает список серий без элементов без изображений', async () => {
       blogService.getSeries.mockResolvedValue(mockSeries);
 
-      render(<TaxonomyGrid<Series> {...props} />);
+      render(<CardGrid<Series> {...props} />);
 
       await waitFor(() => {
         expect(screen.getByTestId('series-grid-container')).toBeInTheDocument();
@@ -270,7 +270,7 @@ describe('TaxonomyGrid', () => {
     test('отображает заголовок сетки', async () => {
       blogService.getSeries.mockResolvedValue(mockSeries.slice(0, 1));
 
-      render(<TaxonomyGrid<Series> {...props} />);
+      render(<CardGrid<Series> {...props} />);
 
       await waitFor(() => {
         expect(screen.getByText('Или серию')).toBeInTheDocument();

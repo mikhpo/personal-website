@@ -6,7 +6,7 @@ import LoadingError from '@components/Alert/LoadingError';
 import { useApiData } from '@hooks';
 
 /** Свойства сетки карточек справочника блога. */
-export interface TaxonomyGridProps<T extends { id: number }> {
+export interface CardGridProps<T extends { id: number }> {
   /** data-testid контейнера для тестов. */
   testId: string;
   /** Заголовок сетки. */
@@ -28,7 +28,7 @@ export interface TaxonomyGridProps<T extends { id: number }> {
  * ошибки и пустого списка; различия передаются пропами.
  *
  * @example
- * <TaxonomyGrid
+ * <CardGrid
  *   testId="category-grid-container"
  *   title="Выберите категорию"
  *   loadingMessage="Загрузка категорий..."
@@ -37,14 +37,14 @@ export interface TaxonomyGridProps<T extends { id: number }> {
  *   renderItem={(category) => <CategoryCard category={category} />}
  * />
  */
-function TaxonomyGrid<T extends { id: number }>({
+function CardGrid<T extends { id: number }>({
   testId,
   title,
   loadingMessage,
   emptyMessage,
   fetchFunction,
   renderItem,
-}: TaxonomyGridProps<T>) {
+}: CardGridProps<T>) {
   const { data, loading, error, refetch } = useApiData(fetchFunction);
   const items = data ?? [];
 
@@ -81,4 +81,4 @@ function TaxonomyGrid<T extends { id: number }>({
   );
 }
 
-export default TaxonomyGrid;
+export default CardGrid;

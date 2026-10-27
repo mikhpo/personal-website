@@ -66,7 +66,7 @@ describe('ArticleForm', () => {
 
   /** FormData первого вызова updateArticle. */
   const getUpdateFormData = (): FormData => blogService.updateArticle.mock.calls.at(0)?.at(1) as FormData;
-  const taxonomies = {
+  const references = {
     categories: [makeCategory({ id: 1, name: 'Разработка' }), makeCategory({ id: 2, name: 'Путешествия' })],
     series: [makeSeries({ id: 3, name: 'Серия А' })],
     topics: [makeTopic({ id: 4, name: 'Тема Б' })],
@@ -110,9 +110,9 @@ describe('ArticleForm', () => {
   });
 
   beforeEach(() => {
-    blogService.getCategories.mockResolvedValue(taxonomies.categories);
-    blogService.getSeries.mockResolvedValue(taxonomies.series);
-    blogService.getTopics.mockResolvedValue(taxonomies.topics);
+    blogService.getCategories.mockResolvedValue(references.categories);
+    blogService.getSeries.mockResolvedValue(references.series);
+    blogService.getTopics.mockResolvedValue(references.topics);
     Object.defineProperty(document, 'cookie', {
       writable: true,
       value: 'csrftoken=test-csrf-token-12345',
