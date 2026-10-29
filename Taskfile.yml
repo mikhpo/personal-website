@@ -236,11 +236,7 @@ tasks:
     preconditions:
       - test -f compose.yaml
     cmds:
-      - mkdir -p nginx/letsencrypt/live/{{.DOMAIN_NAME | default "localhost"}}
-      - openssl req -x509 -newkey rsa:2048 -nodes -days 365
-        -subj "/CN={{.DOMAIN_NAME | default "localhost"}}"
-        -keyout nginx/letsencrypt/live/{{.DOMAIN_NAME | default "localhost"}}/privkey.pem
-        -out nginx/letsencrypt/live/{{.DOMAIN_NAME | default "localhost"}}/fullchain.pem
+      - bash ./tools/dev-cert.sh
 
   test-integration:
     desc: Выполнить интеграционные тесты

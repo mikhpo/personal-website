@@ -48,20 +48,11 @@ def _compose_command_and_wait() -> tuple[list[str], tuple[str, ...]]:
 def _ensure_nginx_certificate() -> None:
     """Выпустить self-signed сертификат nginx, если он еще не выпущен.
 
-    До первого выпуска сертификата nginx не стартует; выпуск повторяет задачу
-    task dev-cert и выполняется той же командой.
+    До первого выпуска сертификата nginx не стартует. Выпуск выполняет
+    скрипт tools/dev-cert.sh; при готовом сертификате скрипт завершается
+    без перевыпуска.
     """
-    domain = os.getenv("DOMAIN_NAME", default="localhost")
-    certificate = PROJECT_ROOT / "nginx" / "letsencrypt" / "live" / domain / "fullchain.pem"
-    if certificate.exists():
-        return
-    try:
-        subprocess.run(["task", "dev-cert"], cwd=PROJECT_ROOT, check=True)
-    except FileNotFoundError as error:
-        message = (
-            "Сертификат nginx не найден и утилита task недоступна: выпустите сертификат командой task dev-cert вручную"
-        )
-        raise RuntimeError(message) from error
+    subprocess.run(["bash", "tools/dev-cert.sh"], cwd=PROJECT_ROOT, check=True)
 
 
 @pytest.fixture(scope="session", autouse=True)
