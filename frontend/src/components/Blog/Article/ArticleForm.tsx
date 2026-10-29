@@ -3,13 +3,12 @@ import { Button, Card, Form } from 'react-bootstrap';
 import { Editor } from '@tinymce/tinymce-react';
 import Spinner from '@components/Spinner/Spinner';
 import AlertList from '@components/Alert/AlertList';
-import TaxonomyMultiSelect from '@components/Blog/Article/TaxonomyMultiSelect';
+import MultiSelect from '@components/Blog/Article/MultiSelect';
 import { blogService, navigateTo } from '@services';
 import { useApiData, useArticleAutosave, useHtmlTheme } from '@hooks';
-import { getEditorInit } from '@utils/tinymce';
-import { fetchAllPages } from '@utils/pagination';
+import { getEditorInit } from '@components/Blog/utils/tinymce';
 import { getErrorMessage } from '@utils/errors';
-import { stripHtml } from '@utils/html';
+import { stripHtml } from '@components/Blog/utils/html';
 import type { components } from '@api-types/api-schema';
 
 type Article = components['schemas']['Article'];
@@ -142,9 +141,9 @@ const ArticleForm = ({ articleId = null, tinymceScriptSrc = '/static/tinymce/tin
    */
   const loadFormData = useCallback(async (): Promise<ArticleFormData> => {
     const [categories, series, topics] = await Promise.all([
-      fetchAllPages(blogService.getCategories),
-      fetchAllPages(blogService.getSeries),
-      fetchAllPages(blogService.getTopics),
+      blogService.getCategories(),
+      blogService.getSeries(),
+      blogService.getTopics(),
     ]);
     const article = articleId ? await blogService.getArticle(articleId) : null;
     return { categories, series, topics, article };
@@ -357,7 +356,7 @@ const ArticleForm = ({ articleId = null, tinymceScriptSrc = '/static/tinymce/tin
               />
             </Form.Group>
 
-            <TaxonomyMultiSelect
+            <MultiSelect
               controlId="article-categories"
               label="Категории"
               options={categories}
@@ -365,7 +364,7 @@ const ArticleForm = ({ articleId = null, tinymceScriptSrc = '/static/tinymce/tin
               onChange={(selected) => updateForm({ categories: selected })}
             />
 
-            <TaxonomyMultiSelect
+            <MultiSelect
               controlId="article-series"
               label="Серии"
               options={series}
@@ -373,7 +372,7 @@ const ArticleForm = ({ articleId = null, tinymceScriptSrc = '/static/tinymce/tin
               onChange={(selected) => updateForm({ series: selected })}
             />
 
-            <TaxonomyMultiSelect
+            <MultiSelect
               controlId="article-topics"
               label="Темы"
               options={topics}

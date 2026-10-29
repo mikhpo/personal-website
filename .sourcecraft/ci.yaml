@@ -97,14 +97,18 @@ workflows:
               - echo "Сборка React фронтенда"
               - npm install
               - npm run build
-              # schema.yaml и api-schema.ts хранятся в репозитории и обновляются
-              # задачей task api-types-generate вместе с изменениями сериализаторов.
-              # Если перегенерацию забыть, TypeScript проверяет код против устаревшей
-              # схемы; --exit-code превращает расхождение в ошибку сборки.
-              - echo "Проверка свежести сгенерированных типов API"
-              - poetry run python backend/manage.py spectacular --file docs/schemas/schema.yaml
-              - npx openapi-typescript docs/schemas/schema.yaml -o frontend/src/types/api-schema.ts
-              - git diff --exit-code docs/schemas/schema.yaml frontend/src/types/api-schema.ts
+              # openapi.yaml хранится в репозитории и обновляется вместе
+              # с изменениями сериализаторов; --exit-code превращает
+              # расхождение в ошибку сборки.
+              - echo "Проверка актуальности OpenAPI-схемы бэкенда"
+              - poetry run python backend/manage.py spectacular --file docs/schemas/openapi.yaml
+              - git diff --exit-code -- docs/schemas/openapi.yaml
+              # api-schema.ts хранится в репозитории и обновляется вместе со схемой;
+              # если перегенерацию забыть, TypeScript проверяет код против
+              # устаревшей схемы, а --exit-code превращает расхождение в ошибку сборки.
+              - echo "Проверка актуальности типов API фронтенда"
+              - npm run api-types
+              - git diff --exit-code -- frontend/src/types/api-schema.ts
               - echo "Компиляция каталогов переводов"
               - cd backend && poetry run python manage.py compilemessages && cd ..
               - echo "Запуск тестов Python с помощью Pytest"

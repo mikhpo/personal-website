@@ -31,8 +31,7 @@ class TestCategoryViewSet(APITestCase):
         url = "/api/blog/categories/"
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data["count"], 2)  # Только публичные категории
-        self.assertEqual(len(response.data["results"]), 2)
+        self.assertEqual(len(response.data), 2)  # Только публичные категории
 
     def test_retrieve_category(self) -> None:
         """Детальный просмотр категории."""
@@ -48,16 +47,15 @@ class TestCategoryViewSet(APITestCase):
         url = "/api/blog/categories/"
         response = self.client.get(url, {"search": "Разработка"})
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data["count"], 1)
-        self.assertEqual(response.data["results"][0]["name"], "Разработка")
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["name"], "Разработка")
 
     def test_ordering_categories(self) -> None:
         """Сортировка категорий по имени."""
         url = "/api/blog/categories/"
         response = self.client.get(url, {"ordering": "name"})
         self.assertEqual(response.status_code, 200)
-        results = response.data["results"]
-        names = [cat["name"] for cat in results]
+        names = [cat["name"] for cat in response.data]
         self.assertEqual(names, sorted(names))
 
     def test_list_categories_unauthenticated(self) -> None:
@@ -65,7 +63,7 @@ class TestCategoryViewSet(APITestCase):
         url = "/api/blog/categories/"
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data["count"], 2)  # Только публичные
+        self.assertEqual(len(response.data), 2)  # Только публичные
 
     def test_list_categories_staff_sees_all(self) -> None:
         """В списке категорий для staff видны и публичные, и непубличные."""
@@ -74,7 +72,7 @@ class TestCategoryViewSet(APITestCase):
         url = "/api/blog/categories/"
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data["count"], 3)  # Публичные и непубличная
+        self.assertEqual(len(response.data), 3)  # Публичные и непубличная
 
     def test_retrieve_private_category_accessible_by_link(self) -> None:
         """Приватная категория доступна по прямой ссылке."""
@@ -107,7 +105,7 @@ class TestTopicViewSet(APITestCase):
         url = "/api/blog/topics/"
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data["count"], 2)  # Только публичные темы
+        self.assertEqual(len(response.data), 2)  # Только публичные темы
 
     def test_retrieve_topic(self) -> None:
         """Детальный просмотр темы."""
@@ -121,15 +119,15 @@ class TestTopicViewSet(APITestCase):
         url = "/api/blog/topics/"
         response = self.client.get(url, {"search": "Горы"})
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data["count"], 1)
-        self.assertEqual(response.data["results"][0]["name"], "Горы")
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["name"], "Горы")
 
     def test_list_topics_unauthenticated(self) -> None:
         """Неаутентифицированные видят только публичные темы."""
         url = "/api/blog/topics/"
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data["count"], 2)
+        self.assertEqual(len(response.data), 2)
 
     def test_list_topics_staff_sees_all(self) -> None:
         """В списке тем для staff видны и публичные, и непубличные."""
@@ -138,7 +136,7 @@ class TestTopicViewSet(APITestCase):
         url = "/api/blog/topics/"
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data["count"], 3)
+        self.assertEqual(len(response.data), 3)
 
     def test_retrieve_private_topic_accessible_by_link(self) -> None:
         """Приватная тема доступна по прямой ссылке."""
@@ -164,7 +162,7 @@ class TestSeriesViewSet(APITestCase):
         url = "/api/blog/series/"
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data["count"], 2)  # Только публичные серии
+        self.assertEqual(len(response.data), 2)  # Только публичные серии
 
     def test_retrieve_series(self) -> None:
         """Детальный просмотр серии."""
@@ -178,15 +176,15 @@ class TestSeriesViewSet(APITestCase):
         url = "/api/blog/series/"
         response = self.client.get(url, {"search": "Лангтанг"})
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data["count"], 1)
-        self.assertEqual(response.data["results"][0]["name"], "Лангтанг-трек")
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["name"], "Лангтанг-трек")
 
     def test_list_series_unauthenticated(self) -> None:
         """Неаутентифицированные видят только публичные серии."""
         url = "/api/blog/series/"
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data["count"], 2)
+        self.assertEqual(len(response.data), 2)
 
     def test_list_series_staff_sees_all(self) -> None:
         """В списке серий для staff видны и публичные, и непубличные."""
@@ -195,7 +193,7 @@ class TestSeriesViewSet(APITestCase):
         url = "/api/blog/series/"
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data["count"], 3)
+        self.assertEqual(len(response.data), 3)
 
     def test_retrieve_private_series_accessible_by_link(self) -> None:
         """Приватная серия доступна по прямой ссылке."""

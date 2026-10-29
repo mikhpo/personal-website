@@ -93,7 +93,7 @@ class Album(models.Model):
         related_name="tag_albums",
         help_text="Тэги альбома",
     )
-    order = models.PositiveIntegerField(
+    order = models.PositiveBigIntegerField(
         verbose_name="Порядок",
         default=0,
         blank=False,

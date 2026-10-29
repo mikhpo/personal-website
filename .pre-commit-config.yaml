@@ -101,3 +101,31 @@ repos:
         language: system
         pass_filenames: false
         files: ^(.*/)?poetry\.lock$
+      - id: schema-export
+        name: schema-export
+        description: Перегенерация OpenAPI-схемы бэкенда
+        entry: poetry run python backend/manage.py spectacular --file docs/schemas/openapi.yaml
+        language: system
+        pass_filenames: false
+        files: ^backend/
+      - id: schema-export-check
+        name: schema-export-check
+        description: Проверка актуальности OpenAPI-схемы бэкенда
+        entry: git diff --exit-code -- docs/schemas/openapi.yaml
+        language: system
+        pass_filenames: false
+        files: ^backend/
+      - id: api-types
+        name: api-types
+        description: Перегенерация типов API фронтенда
+        entry: npm run api-types
+        language: system
+        pass_filenames: false
+        files: ^docs/schemas/openapi\.yaml$
+      - id: api-types-check
+        name: api-types-check
+        description: Проверка актуальности типов API фронтенда
+        entry: git diff --exit-code -- frontend/src/types/api-schema.ts
+        language: system
+        pass_filenames: false
+        files: ^docs/schemas/openapi\.yaml$

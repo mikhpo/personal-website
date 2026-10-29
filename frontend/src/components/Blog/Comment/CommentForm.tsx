@@ -4,9 +4,9 @@ import { Editor } from '@tinymce/tinymce-react';
 import AlertList from '@components/Alert/AlertList';
 import { blogService } from '@services';
 import { useHtmlTheme } from '@hooks';
-import { getEditorInit } from '@utils/tinymce';
+import { getEditorInit } from '@components/Blog/utils/tinymce';
 import { getErrorMessage } from '@utils/errors';
-import { stripHtml } from '@utils/html';
+import { stripHtml } from '@components/Blog/utils/html';
 
 /** Свойства формы добавления комментария. */
 export interface CommentFormProps {

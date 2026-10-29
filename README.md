@@ -125,7 +125,7 @@
 * Production сборка: `npm run build`
 * Проверка типов TypeScript: `npm run typecheck`
 * Линтинг: `npm run eslint`
-* Перегенерация типов API из OpenAPI-схемы (при изменении сериализаторов): `npm run api-types:generate`
+* Перегенерация OpenAPI-схемы и типов API (при изменении сериализаторов): `task api-types-generate`
 
 ### Остановка режима разработки
 
@@ -266,7 +266,7 @@
 | `npm run test:watch`         | Тесты в режиме наблюдения                |
 | `npm run typecheck`          | Проверка типов TypeScript                |
 | `npm run eslint`             | Проверка кода ESLint                     |
-| `npm run api-types:generate` | Перегенерация типов API из OpenAPI-схемы |
+| `task api-types-generate`    | Перегенерация OpenAPI-схемы и типов API  |
 
 ### Интеграция с Django
 

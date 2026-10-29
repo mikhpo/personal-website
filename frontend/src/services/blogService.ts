@@ -8,7 +8,8 @@
  * - Получение категорий, серий и тем
  *
  * Типы ответов и параметров берутся из сгенерированной OpenAPI-схемы;
- * списочные методы возвращают пагинированный ответ.
+ * список статей возвращает пагинированный ответ, списки категорий,
+ * серий и тем - готовые массивы без пагинации.
  */
 
 import type { components, operations } from '@api-types/api-schema';
@@ -86,32 +87,32 @@ export const blogService = {
   },
 
   /**
-   * Получает список категорий.
+   * Получает полный список категорий без пагинации.
    *
    * @example
    * const categories = await blogService.getCategories();
    */
-  async getCategories(params: CategoryListQuery = {}): Promise<Paginated<Category>> {
+  async getCategories(params: CategoryListQuery = {}): Promise<Category[]> {
     return api.get(buildApiUrl(`${BASE_URL}/categories/`, params));
   },
 
   /**
-   * Получает список серий.
+   * Получает полный список серий без пагинации.
    *
    * @example
    * const series = await blogService.getSeries();
    */
-  async getSeries(params: SeriesListQuery = {}): Promise<Paginated<Series>> {
+  async getSeries(params: SeriesListQuery = {}): Promise<Series[]> {
     return api.get(buildApiUrl(`${BASE_URL}/series/`, params));
   },
 
   /**
-   * Получает список тем.
+   * Получает полный список тем без пагинации.
    *
    * @example
    * const topics = await blogService.getTopics();
    */
-  async getTopics(params: TopicListQuery = {}): Promise<Paginated<Topic>> {
+  async getTopics(params: TopicListQuery = {}): Promise<Topic[]> {
     return api.get(buildApiUrl(`${BASE_URL}/topics/`, params));
   },
 };

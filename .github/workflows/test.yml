@@ -288,15 +288,21 @@ jobs:
       - name: Build React frontend
         run: npm run build
 
-      # schema.yaml и api-schema.ts хранятся в репозитории и обновляются
-      # задачей task api-types-generate вместе с изменениями сериализаторов.
-      # Если перегенерацию забыть, TypeScript проверяет код против устаревшей
-      # схемы; --exit-code превращает расхождение в ошибку сборки.
-      - name: Проверка свежести сгенерированных типов API
+      # openapi.yaml хранится в репозитории и обновляется вместе
+      # с изменениями сериализаторов; --exit-code превращает
+      # расхождение в ошибку сборки.
+      - name: Check API schema is up to date
         run: |
-          poetry run python backend/manage.py spectacular --file docs/schemas/schema.yaml
-          npx openapi-typescript docs/schemas/schema.yaml -o frontend/src/types/api-schema.ts
-          git diff --exit-code docs/schemas/schema.yaml frontend/src/types/api-schema.ts
+          poetry run python backend/manage.py spectacular --file docs/schemas/openapi.yaml
+          git diff --exit-code -- docs/schemas/openapi.yaml
+
+      # api-schema.ts хранится в репозитории и обновляется вместе со схемой;
+      # если перегенерацию забыть, TypeScript проверяет код против
+      # устаревшей схемы, а --exit-code превращает расхождение в ошибку сборки.
+      - name: Check API types are up to date
+        run: |
+          npm run api-types
+          git diff --exit-code -- frontend/src/types/api-schema.ts
 
       - name: Check Django migrations
         run: poetry run python backend/manage.py makemigrations --dry-run --check

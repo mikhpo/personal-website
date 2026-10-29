@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card } from 'react-bootstrap';
-import { stripHtml } from '@utils/html';
+import { stripHtml } from '@components/Blog/utils/html';
 import type { components } from '@api-types/api-schema';
 
 type Article = components['schemas']['Article'];

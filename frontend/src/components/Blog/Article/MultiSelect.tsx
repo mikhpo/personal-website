@@ -2,19 +2,19 @@ import React from 'react';
 import { Form } from 'react-bootstrap';
 
 /** Элемент справочника для мультивыбора. */
-interface TaxonomyOption {
+interface MultiSelectOption {
   id: number;
   name: string;
 }
 
 /** Свойства мультивыбора справочника статьи. */
-export interface TaxonomyMultiSelectProps {
+export interface MultiSelectProps {
   /** controlId группы форм. */
   controlId: string;
   /** Подпись поля. */
   label: string;
   /** Элементы справочника. */
-  options: TaxonomyOption[];
+  options: MultiSelectOption[];
   /** Выбранные идентификаторы. */
   selected: number[];
   /** Обработчик изменения выбора. */
@@ -25,7 +25,7 @@ export interface TaxonomyMultiSelectProps {
  * Мультивыбор справочника статьи: категории, серии и темы используют
  * одинаковый элемент формы с множественным выбором.
  */
-const TaxonomyMultiSelect = ({ controlId, label, options, selected, onChange }: TaxonomyMultiSelectProps) => {
+const MultiSelect = ({ controlId, label, options, selected, onChange }: MultiSelectProps) => {
   /** Обработчик мультивыбора. */
   const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     onChange(Array.from(event.target.selectedOptions, (option) => Number(option.value)));
@@ -53,4 +53,4 @@ const TaxonomyMultiSelect = ({ controlId, label, options, selected, onChange }: 
   );
 };
 
-export default TaxonomyMultiSelect;
+export default MultiSelect;

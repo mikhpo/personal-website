@@ -670,23 +670,6 @@ export interface components {
             /** @example 7 */
             total_pages: number;
         };
-        PaginatedCategoryList: {
-            /** @example 123 */
-            count: number;
-            /**
-             * Format: uri
-             * @example http://api.example.org/accounts/?page=4
-             */
-            next?: string | null;
-            /**
-             * Format: uri
-             * @example http://api.example.org/accounts/?page=2
-             */
-            previous?: string | null;
-            results: components["schemas"]["Category"][];
-            /** @example 7 */
-            total_pages: number;
-        };
         PaginatedCommentList: {
             /** @example 123 */
             count: number;
@@ -718,40 +701,6 @@ export interface components {
              */
             previous?: string | null;
             results: components["schemas"]["Photo"][];
-            /** @example 7 */
-            total_pages: number;
-        };
-        PaginatedSeriesList: {
-            /** @example 123 */
-            count: number;
-            /**
-             * Format: uri
-             * @example http://api.example.org/accounts/?page=4
-             */
-            next?: string | null;
-            /**
-             * Format: uri
-             * @example http://api.example.org/accounts/?page=2
-             */
-            previous?: string | null;
-            results: components["schemas"]["Series"][];
-            /** @example 7 */
-            total_pages: number;
-        };
-        PaginatedTopicList: {
-            /** @example 123 */
-            count: number;
-            /**
-             * Format: uri
-             * @example http://api.example.org/accounts/?page=4
-             */
-            next?: string | null;
-            /**
-             * Format: uri
-             * @example http://api.example.org/accounts/?page=2
-             */
-            previous?: string | null;
-            results: components["schemas"]["Topic"][];
             /** @example 7 */
             total_pages: number;
         };
@@ -1541,10 +1490,6 @@ export interface operations {
             query?: {
                 /** @description Which field to use when ordering the results. */
                 ordering?: string;
-                /** @description A page number within the paginated result set. */
-                page?: number;
-                /** @description Number of results to return per page. */
-                page_size?: number;
                 /** @description A search term. */
                 search?: string;
             };
@@ -1559,7 +1504,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PaginatedCategoryList"];
+                    "application/json": components["schemas"]["Category"][];
                 };
             };
         };
@@ -1846,10 +1791,6 @@ export interface operations {
             query?: {
                 /** @description Which field to use when ordering the results. */
                 ordering?: string;
-                /** @description A page number within the paginated result set. */
-                page?: number;
-                /** @description Number of results to return per page. */
-                page_size?: number;
                 /** @description A search term. */
                 search?: string;
             };
@@ -1864,7 +1805,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PaginatedSeriesList"];
+                    "application/json": components["schemas"]["Series"][];
                 };
             };
         };
@@ -1998,10 +1939,6 @@ export interface operations {
             query?: {
                 /** @description Which field to use when ordering the results. */
                 ordering?: string;
-                /** @description A page number within the paginated result set. */
-                page?: number;
-                /** @description Number of results to return per page. */
-                page_size?: number;
                 /** @description A search term. */
                 search?: string;
             };
@@ -2016,7 +1953,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PaginatedTopicList"];
+                    "application/json": components["schemas"]["Topic"][];
                 };
             };
         };

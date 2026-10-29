@@ -123,6 +123,43 @@ tasks:
       - npm ci
       - npm run build
 
+  schema-export:
+    desc: Экспортировать OpenAPI-схему API бэкенда
+    summary: |
+      Генерирует OpenAPI-спецификацию REST API из кода бэкенда при помощи
+      drf-spectacular и сохраняет ее в docs/schemas/openapi.yaml.
+      Схема - единый источник правды о контракте API для бэкенда и фронтенда;
+      перегенерация нужна после изменений сериализаторов и представлений.
+    preconditions:
+      - test -f pyproject.toml
+    cmds:
+      - poetry run python backend/manage.py spectacular --file docs/schemas/openapi.yaml
+
+  api-types:
+    desc: Сгенерировать типы API фронтенда из OpenAPI-схемы
+    summary: |
+      Генерирует TypeScript-декларации frontend/src/types/api-schema.ts
+      из OpenAPI-спецификации docs/schemas/openapi.yaml при помощи openapi-typescript.
+    preconditions:
+      - test -f package.json
+      - test -f docs/schemas/openapi.yaml
+    cmds:
+      - npm run api-types
+
+  api-types-generate:
+    desc: Перегенерировать схему API и типы фронтенда
+    summary: |
+      Полный цикл обновления контракта API: экспорт OpenAPI-схемы бэкенда
+      и генерация TypeScript-типов фронтенда. Запускать после изменений
+      сериализаторов; расхождение закоммиченных файлов с результатом
+      перегенерации блокирует pre-commit хуки и CI.
+    preconditions:
+      - test -f pyproject.toml
+      - test -f package.json
+    cmds:
+      - task: schema-export
+      - task: api-types
+
   test-backend:
     desc: Выполнить тесты Django с использованием собранного React фронтенда
     summary: |
