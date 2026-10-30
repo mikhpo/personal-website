@@ -2,6 +2,7 @@
 
 import io
 import logging
+from math import isnan
 
 from django.db import migrations
 from PIL import Image as pImage
@@ -17,10 +18,9 @@ def _exif_value_to_json(value: object) -> object:
     Копия функции gallery.utils.exif_value_to_json для самодостаточности миграции.
     """
     if isinstance(value, IFDRational):
-        try:
-            return float(value)
-        except ZeroDivisionError:
-            return None
+        number = float(value)
+        # Pillow при нулевом знаменателе возвращает nan вместо числа
+        return None if isnan(number) else number
     if isinstance(value, bytes):
         return None
     if isinstance(value, tuple):
@@ -55,7 +55,7 @@ def extract_exif(image_field: object) -> dict:
                         json_value = _exif_value_to_json(value)
                         if json_value is not None:
                             exif_data[decoded] = json_value
-    except (FileNotFoundError, PermissionError, OSError):
+    except FileNotFoundError, PermissionError, OSError:
         logger.exception("Ошибка чтения файла %s при миграции EXIF", name)
     return exif_data
 

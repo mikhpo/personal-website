@@ -33,7 +33,7 @@ class About(models.Model):
         return (0, {})
 
     @classmethod
-    def get_solo(cls) -> "About":
+    def get_solo(cls) -> About:
         """Возвращает единственную запись, создавая пустую при отсутствии."""
         obj, _ = cls.objects.get_or_create(pk=1)
         return obj

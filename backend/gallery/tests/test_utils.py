@@ -1,6 +1,6 @@
 """Тесты вспомогательных утилит галереи."""
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -157,7 +157,7 @@ class TestComputeDateTimeTaken(SimpleTestCase):
         photo.image.name = "test.jpg"
         photo.exif = {"DateTimeOriginal": "2024:07:21 15:30:45"}
 
-        file_time = datetime.now(timezone.utc).replace(microsecond=0, tzinfo=None) - timedelta(hours=1)
+        file_time = datetime.now(UTC).replace(microsecond=0, tzinfo=None) - timedelta(hours=1)
 
         with (
             patch("gallery.utils.storage.exists", return_value=True),
@@ -178,7 +178,7 @@ class TestComputeDateTimeTaken(SimpleTestCase):
         photo.image.name = "test.jpg"
         photo.exif = {}
 
-        file_time = datetime.now(timezone.utc).replace(microsecond=0, tzinfo=None) - timedelta(hours=1)
+        file_time = datetime.now(UTC).replace(microsecond=0, tzinfo=None) - timedelta(hours=1)
 
         with (
             patch("gallery.utils.storage.exists", return_value=True),
@@ -215,7 +215,7 @@ class TestComputeDateTimeTaken(SimpleTestCase):
         photo.image.name = "test.jpg"
         photo.exif = {"DateTimeOriginal": "invalid_format"}
 
-        file_time = datetime.now(timezone.utc).replace(microsecond=0, tzinfo=None) - timedelta(hours=1)
+        file_time = datetime.now(UTC).replace(microsecond=0, tzinfo=None) - timedelta(hours=1)
 
         with (
             patch("gallery.utils.storage.exists", return_value=True),
@@ -236,7 +236,7 @@ class TestComputeDateTimeTaken(SimpleTestCase):
         photo.exif = {}
 
         # timezone-aware datetime
-        file_time = datetime.now(timezone.utc).replace(microsecond=0, tzinfo=None) - timedelta(hours=1)
+        file_time = datetime.now(UTC).replace(microsecond=0, tzinfo=None) - timedelta(hours=1)
 
         with (
             patch("gallery.utils.storage.exists", return_value=True),

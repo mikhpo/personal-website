@@ -2,6 +2,7 @@
 
 from datetime import datetime
 from io import BytesIO
+from math import isnan
 
 from django.db.models import Model
 from django.utils.timezone import is_aware, make_naive, now
@@ -31,10 +32,9 @@ def exif_value_to_json(value: object) -> object:
         JSON-совместимое значение (int, float, str, list) или None для пропуска.
     """
     if isinstance(value, IFDRational):
-        try:
-            return float(value)
-        except ZeroDivisionError:
-            return None
+        number = float(value)
+        # Pillow при нулевом знаменателе возвращает nan вместо числа
+        return None if isnan(number) else number
     if isinstance(value, bytes):
         return None
     if isinstance(value, tuple):

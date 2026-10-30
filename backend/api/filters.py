@@ -31,7 +31,7 @@ class DatabaseSearchFilter(filters.SearchFilter):
 
     search_config: ClassVar[str] = "russian"
 
-    def filter_queryset(self, request: Request, queryset: "QuerySet", view: APIView) -> "QuerySet":
+    def filter_queryset(self, request: Request, queryset: QuerySet, view: APIView) -> QuerySet:
         """
         Отфильтровать queryset по поисковому запросу с сортировкой по релевантности.
 

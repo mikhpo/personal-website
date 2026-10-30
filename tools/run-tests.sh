@@ -70,8 +70,8 @@ function run_javascript_tests() {
 function run_python_tests() {
     print_line
     echo "Выполнение тестов Python/Django"
-    poetry run coverage run -m pytest
-    poetry run coverage html
+    uv run coverage run -m pytest
+    uv run coverage html
 }
 
 #######################################

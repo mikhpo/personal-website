@@ -21,6 +21,8 @@ readonly nginx_template="$project_root/scripts/server/nginx/personal-website.con
 readonly service_file="/etc/systemd/system/personal-website.service"
 readonly worker_service_file="/etc/systemd/system/personal-website-worker.service"
 readonly sites_available="/etc/nginx/sites-available/personal-website"
+# Версия совпадает с закрепленной в Dockerfile и CI.
+readonly UV_VERSION=0.13.6
 cd "$project_root" || exit
 
 #######################################
@@ -57,8 +59,15 @@ function pull_repository() {
 function build_project() {
     npm install
     npm run build
-    poetry install
-    (cd backend && poetry run python manage.py compilemessages)
+    # Путь проверяется явно: в неинтерактивной среде .local/bin
+    # может отсутствовать в PATH даже при установленном uv.
+    if [ ! -x "$HOME/.local/bin/uv" ]; then
+        echo "uv не найден, установка версии $UV_VERSION..."
+        curl -LsSf "https://astral.sh/uv/$UV_VERSION/install.sh" | sh
+    fi
+    export PATH="$HOME/.local/bin:$PATH"
+    uv sync --frozen --no-dev
+    (cd backend && uv run --no-sync python manage.py compilemessages)
 }
 
 #######################################

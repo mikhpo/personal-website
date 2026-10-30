@@ -23,7 +23,7 @@ class ArticleDetailView(DetailView):
 
     model = Article
 
-    def get_queryset(self) -> "QuerySet[Article]":
+    def get_queryset(self) -> QuerySet[Article]:
         """Возвращает все статьи.
 
         Фильтрация по public выполняется в списке (см. ArticleViewSet);

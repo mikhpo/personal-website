@@ -21,7 +21,7 @@ User = get_user_model()
 class MockRequest(Request):
     """Мock объект для запроса."""
 
-    def __init__(self, user: "AbstractUser | None" = None, method: str = "GET") -> None:
+    def __init__(self, user: AbstractUser | None = None, method: str = "GET") -> None:
         """Инициализация mock объекта для запроса."""
         self.method = method
         django_request = HttpRequest()
@@ -41,7 +41,7 @@ class MockModel(Model):
         """Возвращает строковое представление объекта."""
         return f"MockModel(public={self.public})"
 
-    def __init__(self, public: bool = False, author: "AbstractUser | None" = None) -> None:  # noqa: FBT001, FBT002
+    def __init__(self, public: bool = False, author: AbstractUser | None = None) -> None:  # noqa: FBT001, FBT002
         """Инициализация mock модели."""
         self.public = public
         self.author = author

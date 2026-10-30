@@ -2,39 +2,35 @@
 
 ## Управление зависимостями Python
 
-Для управления зависимостями в проекте используется [Poetry](https://python-poetry.org/).
+Для управления зависимостями в проекте используется [uv](https://docs.astral.sh/uv/).
 
-Файлы Poetry:
+Файлы uv:
 
-* `pyproject.toml` - описание проекта и список основных зависимостей.
-* `poetry.toml` - конфигурация использования Poetry в проекте.
-* `poetry.lock` - расширенный список зависимостей.
+* `pyproject.toml` - описание проекта, список основных зависимостей в формате PEP 621 и dev-группа в формате PEP 735.
+* `uv.lock` - зафиксированный список зависимостей.
+* `.python-version` - версия Python, используемая uv по умолчанию.
 
-Зависимости также зафиксированы в `requirements.txt`.
+Зависимости также зафиксированы в `requirements.txt`. Файл включает dev-зависимости и носит справочный характер: установка выполняется через `uv sync` из `uv.lock`, на сервер ставится только рантайм (`uv sync --frozen --no-dev`).
+
+Для установки uv необходимо воспользоваться официальным установщиком:
+
+    curl -LsSf https://astral.sh/uv/install.sh | sh
 
 Для установки зависимостей необходимо использовать команду:
 
-    poetry install
+    uv sync
 
-Для обновления зависимостей можно воспользоваться пакетом `poetry-plugin-up`. Его необходимо установить при помощи команды `poetry self add poetry-plugin-up`. Запустить обновление зависимостей проекта можно следующей командой:
+Если подходящей версии Python в системе нет, uv скачает управляемую версию самостоятельно - файл `.python-version` определяет требуемый релиз. Виртуальное окружение создается в каталоге проекта в папке `.venv`; активировать его вручную не нужно, команда `uv run` выполняет программы в окружении автоматически.
 
-    poetry up --latest
+Для обновления зависимостей в рамках ограничений, указанных в `pyproject.toml`, используется команда:
 
-Отличие этой команды от команды `poetry update` заключается в том, что она также приводит к обновлению версий пакетов в файле `pyproject.toml`.
+    uv lock --upgrade
 
-Poetry сконфигурирован таким образом, чтобы виртуальное окружение создавалось в каталоге проекта. Если витуальное окружение ещё не создано, то после команды `poetry install` оно будет создано автоматически в папке `.venv`.
+Поднятие самих ограничений версий в `pyproject.toml` при этом выполняется вручную.
 
 Для фиксации зависимостей в файле `requirements.txt` необходимо воспользоваться следующей командой:
 
-    poetry export -f requirements.txt --output requirements.txt --without-hashes --with dev
-
-В случае обновления релиза Python для обновления виртуального окружения необходимо после установки новой версии Python в систему использовать команду `poetry env use` с указанием версии Python. Например, чтобы переключиться на Python 3.12:
-
-    poetry env use 3.12
-
-Для обновления релиза Poetry необходимо использовать команду:
-
-    poetry self update
+    uv export --format requirements-txt --no-hashes --output-file requirements.txt
 
 ## Секреты и переменные окружения
 
@@ -45,9 +41,9 @@ Poetry сконфигурирован таким образом, чтобы ви
 Последовательность команд для запуска сервера базы данных PostgreSQL, выполнения миграций БД, сбора статический файлов и запуска приложения.
 
     docker compose up -d postgres
-    poetry run python backend/manage.py migrate
-    poetry run python backend/manage.py collectstatic --noinput
-    poetry run python backend/manage.py runserver
+    uv run python backend/manage.py migrate
+    uv run python backend/manage.py collectstatic --noinput
+    uv run python backend/manage.py runserver
 
 Каждый инфраструктурный сервис относится к собственному профилю: postgres, s3, nginx. Явное указание имени сервиса в команде активирует профиль автоматически, поэтому флаг для запуска отдельных сервисов не требуется. Для типичной локальной разработки достаточно профиля postgres с файловым хранилищем: `docker compose up -d postgres` или переменная `COMPOSE_PROFILES='postgres'` в файле `.env`. Профиль s3 подключается при разработке с S3-хранилищем, nginx - при отладке прокси-слоя. Без активных профилей поднимается только приложение (сервис application) - этот режим подходит для окружений, где используются внешний PostgreSQL, внешнее объектное хранилище и хостовый обратный прокси.
 
@@ -109,7 +105,7 @@ Poetry сконфигурирован таким образом, чтобы ви
 
 Для запуска pytest в контейнере используется команда:
 
-    docker compose exec application poetry run pytest
+    docker compose exec application uv run --no-sync pytest
 
 ## Статический анализ
 
@@ -488,7 +484,7 @@ Docker Compose выполняет интерполяцию переменных 
 
 Пример генерации схемы моделей всех приложений проекта в формате PNG:
 
-    poetry run python backend/manage.py graph_models -a -g -o docs/images/project_models.png
+    uv run python backend/manage.py graph_models -a -g -o docs/images/project_models.png
 
 В связи с тем, что имеет смысл создавать диаграммы разного уровня детализации (для проекта, приложений, каждого приложения), целесообразнее запускать скрипт [graph-models.sh](../tools/graph-models.sh) для генерации диаграмм моделей:
 
@@ -524,7 +520,7 @@ Docker Compose выполняет интерполяцию переменных 
 
 Экспорт схемы выполняется командой:
 
-    poetry run python backend/manage.py spectacular --file docs/schemas/openapi.yaml
+    uv run python backend/manage.py spectacular --file docs/schemas/openapi.yaml
 
 Генерация типов из схемы выполняется командой:
 

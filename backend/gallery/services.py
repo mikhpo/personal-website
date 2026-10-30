@@ -48,7 +48,7 @@ class PhotoUploadResult:
         return self.photo is not None and self.error is None
 
 
-def upload_photos_to_album(album: Album, files: "Sequence[UploadedFile]") -> list[PhotoUploadResult]:
+def upload_photos_to_album(album: Album, files: Sequence[UploadedFile]) -> list[PhotoUploadResult]:
     """Верифицировать и создать фотографию для каждого загруженного файла.
 
     Невалидный файл или сбой сохранения не прерывают обработку остальных
@@ -63,7 +63,7 @@ def upload_photos_to_album(album: Album, files: "Sequence[UploadedFile]") -> lis
             photo = Photo.objects.create(image=file, album=album)
             results.append(PhotoUploadResult(filename=file.name or "", photo=photo))
             logger.debug(f"Загружена фотография {file} в альбом {album}")
-        except UnidentifiedImageError as error:  # noqa: PERF203
+        except UnidentifiedImageError as error:
             logger.exception(f'Загруженный файл "{file}" не является изображением')
             results.append(PhotoUploadResult(filename=file.name or "", error=error))
         except Exception as error:

@@ -17,13 +17,12 @@ import time
 from collections.abc import Callable
 from contextlib import redirect_stderr
 from datetime import datetime
-from typing import Any, TextIO
+from typing import Any, Self, TextIO
 
 from django.conf import settings
 from django.core.mail import send_mail
 from django.core.management.base import CommandError
 from django.template.loader import render_to_string
-from typing_extensions import Self
 
 from backup.utils import BYTES_PER_KIB, now_local
 

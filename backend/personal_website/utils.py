@@ -85,7 +85,7 @@ def list_file_paths(files_dir: str) -> list[str]:
     # Получаем список файлов и подкаталогов
     try:
         files, _ = storage.listdir(files_dir)
-    except (OSError, FileNotFoundError, ClientError):
+    except OSError, FileNotFoundError, ClientError:
         # Если возникла ошибка при получении списка файлов, возвращаем пустой список
         return []
 

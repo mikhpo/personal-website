@@ -18,7 +18,7 @@
 
 - Docker Compose - сервис `worker` в compose.yaml. Тот же образ и entrypoint.sh, но переменная `RUN_MODE=worker` переключает запуск с веб-сервера на run_huey после ожидания инфраструктуры. Зависимость `depends_on: application: condition: service_healthy` запускает воркер после того, как веб-сервис применил миграции и создал таблицы очереди. Порты и healthcheck воркеру не нужны - HTTP он не обслуживает, супервизию выполняет `restart: always`.
 - systemd - юнит personal-website-worker.service, рендерится setup.sh из шаблона scripts/server/systemd/personal-website-worker.service.template по тем же переменным WORK_DIR и SERVICE_USER. Директива After=personal-website.service задает старт после веб-юнита, в чьих ExecStartPre выполняются миграции и создание таблиц очереди; перезапуск при сбое - Restart=on-failure.
-- Локальная разработка - `task worker` (Taskfile) либо вручную `poetry run python ./backend/manage.py run_huey`; задача сама создает таблицы очереди командой create_huey_tables. При `DEBUG=True` задачи исполняются синхронно в процессе сервера разработки (режим immediate huey), и отдельный воркер не нужен.
+- Локальная разработка - `task worker` (Taskfile) либо вручную `uv run python ./backend/manage.py run_huey`; задача сама создает таблицы очереди командой create_huey_tables. При `DEBUG=True` задачи исполняются синхронно в процессе сервера разработки (режим immediate huey), и отдельный воркер не нужен.
 
 Число и тип потребителей настраиваются переменными `HUEY_WORKERS` (по умолчанию 2) и `HUEY_WORKER_TYPE` (по умолчанию `process` - ресайзы нагружают процессор, для них выгоднее процессы, а не потоки).
 

@@ -30,7 +30,7 @@ class TestAlbumAuditLog(APITestCase):
         cls.photo2 = PhotoFactory(name="Фото 2", album=cls.album)
         super().setUpTestData()
 
-    def _entries(self, model: type, object_id: int) -> "QuerySet[LogEntry]":
+    def _entries(self, model: type, object_id: int) -> QuerySet[LogEntry]:
         """Записи аудита для объекта модели."""
         content_type = ContentType.objects.get_for_model(model)
         return LogEntry.objects.filter(content_type=content_type, object_id=object_id)

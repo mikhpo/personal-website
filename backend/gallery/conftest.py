@@ -13,7 +13,7 @@ from personal_website.storages import StorageType, select_storage
 
 
 @pytest.fixture(scope="session", autouse=True)
-def manage_test_images() -> Generator[str, Any, None]:
+def manage_test_images() -> Generator[str, Any]:
     """Управление тестовыми изображениями для запуска тестов галереи.
 
     Создает тестовые изображения перед выполнением тестов.

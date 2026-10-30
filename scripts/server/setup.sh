@@ -28,6 +28,8 @@ cd "$project_root" || exit
 
 readonly POSTGRES_VERSION=17
 readonly NODE_VERSION=22
+# Версия совпадает с закрепленной в Dockerfile и CI.
+readonly UV_VERSION=0.13.6
 
 #######################################
 # Запросить подтверждение готовности
@@ -89,7 +91,6 @@ function install_packages() {
         gettext \
         python3 \
         python3-venv \
-        pipx \
         "postgresql-client-${POSTGRES_VERSION}" \
         nginx \
         certbot \
@@ -111,11 +112,14 @@ function enable_ufw() {
 }
 
 #######################################
-# Установить Poetry через pipx.
+# Установить uv закрепленной версии официальным установщиком.
+# uv сам устанавливает нужную версию Python
+# при синхронизации окружения, если системная
+# версия не удовлетворяет requires-python.
 #######################################
-function install_poetry() {
-    pipx ensurepath
-    pipx install poetry
+function install_uv() {
+    curl -LsSf "https://astral.sh/uv/$UV_VERSION/install.sh" | sh
+    export PATH="$HOME/.local/bin:$PATH"
 }
 
 #######################################
@@ -171,7 +175,8 @@ function create_data_directories() {
 
 #######################################
 # Установить зависимости проекта и собрать фронтенд.
-# Poetry создает виртуальное окружение в каталоге проекта (.venv).
+# uv создает виртуальное окружение в каталоге проекта (.venv);
+# dev-зависимости на сервер не устанавливаются.
 #######################################
 function install_project_dependencies() {
     echo "Установка зависимостей Node.js и сборка фронтенда..."
@@ -179,7 +184,7 @@ function install_project_dependencies() {
     npm run build
 
     echo "Установка зависимостей Python..."
-    poetry install
+    uv sync --frozen --no-dev
 }
 
 #######################################
@@ -299,7 +304,7 @@ function main() {
     check_deploy_mode
     install_packages
     enable_ufw
-    install_poetry
+    install_uv
     install_node
     setup_locale
     setup_timezone

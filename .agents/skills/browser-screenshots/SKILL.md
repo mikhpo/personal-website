@@ -18,7 +18,7 @@ description: Скриншоты страниц сайта - dev-сервер и 
 1. Проверить, что сервер запущен: lsof -nP -iTCP:8000 -sTCP:LISTEN; если нет - task runserver (поднимает postgres-контейнер, применяет миграции, собирает статику)
 2. Поднять postgres-контейнер, если он остановлен: task test-backend останавливает его в конце прогона -> docker compose up -d postgres
 3. После правок фронтенда пересобрать бандл: npm run build - autoreload runserver перезагружает только backend-код
-4. При пустой базе сгенерировать демо-данные: poetry run python backend/manage.py generate_blog_objects и generate_gallery_objects
+4. При пустой базе сгенерировать демо-данные: uv run python backend/manage.py generate_blog_objects и generate_gallery_objects
 
 ## Адрес прода
 
@@ -36,7 +36,7 @@ description: Скриншоты страниц сайта - dev-сервер и 
 
 ## Python + Playwright
 
-Playwright и pytest-playwright установлены в poetry-окружении проекта, браузеры скачаны в ~/Library/Caches/ms-playwright. Скрипты запускать из каталога проекта: poetry run python <скрипт>.py.
+Playwright и pytest-playwright установлены в venv-окружении проекта (.venv, управляется uv), браузеры скачаны в ~/Library/Caches/ms-playwright. Скрипты запускать из каталога проекта: uv run python <скрипт>.py.
 
 Эталонный скрипт мобильной съемки с раскрытием гамбургер-меню:
 
@@ -66,7 +66,7 @@ with sync_playwright() as p:
 Рассмотреть фрагмент кадра крупнее (измерение зазоров, проверка деталей):
 
 ```bash
-poetry run python -c "
+uv run python -c "
 from PIL import Image
 img = Image.open('<кадр>.png')
 crop = img.crop((x1, y1, x2, y2)).resize(((x2 - x1) * 4, (y2 - y1) * 4), Image.NEAREST)

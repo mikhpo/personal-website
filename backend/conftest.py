@@ -10,7 +10,7 @@ from personal_website.utils import setup_test_environment, teardown_test_environ
 
 
 @pytest.fixture(scope="session", autouse=True)
-def manage_temp_dir() -> Generator[str, Any, None]:
+def manage_temp_dir() -> Generator[str, Any]:
     """Управление каталогом для временных файлов.
 
     Создать каталог для временных файлов тестовой сессией и

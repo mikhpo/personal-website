@@ -329,7 +329,7 @@ class Photo(models.Model):
                                 json_value = exif_value_to_json(value)
                                 if json_value is not None:
                                     exif_data[decoded] = json_value
-            except (FileNotFoundError, PermissionError, OSError):
+            except FileNotFoundError, PermissionError, OSError:
                 logger.exception("Ошибка чтения файла %s", self.image.name)
         return exif_data
 

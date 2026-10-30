@@ -8,7 +8,7 @@ import uuid
 from collections.abc import Callable
 from io import BytesIO
 from pathlib import Path
-from typing import IO, Any, TypeAlias
+from typing import IO, Any
 
 from botocore.exceptions import ClientError  # type: ignore[import-untyped]
 from django.conf import settings
@@ -1134,7 +1134,7 @@ class FakerFileStorageAdapter(FakerFileSystemStorage):
 
 StorageType = CustomFileSystemStorage | CustomS3Storage
 
-StaticStorageType: TypeAlias = CompressedStaticFilesStorage | CustomS3StaticStorage
+type StaticStorageType = CompressedStaticFilesStorage | CustomS3StaticStorage
 
 
 def select_storage() -> StorageType:

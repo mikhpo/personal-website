@@ -26,7 +26,7 @@ class TestArticleAuditLog(APITestCase):
         cls.article = ArticleFactory(title="Тестовая статья", author=cls.staff_user)
         super().setUpTestData()
 
-    def _entries(self, article: Article) -> "QuerySet[LogEntry]":
+    def _entries(self, article: Article) -> QuerySet[LogEntry]:
         """Записи аудита для статьи."""
         content_type = ContentType.objects.get_for_model(Article)
         return LogEntry.objects.filter(content_type=content_type, object_id=article.pk)
