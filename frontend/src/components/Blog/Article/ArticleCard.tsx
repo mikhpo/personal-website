@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card } from 'react-bootstrap';
-import { stripHtml } from '@components/Blog/utils/html';
+import { countHtmlWords, truncateHtmlWords } from '@components/Blog/utils/html';
 import type { components } from '@api-types/api-schema';
 
 type Article = components['schemas']['Article'];
@@ -13,9 +13,10 @@ export interface ArticleCardProps {
 /**
  * Компонент карточки статьи.
  *
- * Отображает превью статьи с заголовком и содержимым.
- * При длинном содержимом (более 200 слов) обрезает текст до 50 слов
- * и добавляет ссылку "Читать дальше".
+ * Отображает превью статьи с заголовком и содержимым в виде HTML: фотографии
+ * и форматирование статьи видны прямо в карточке. При длинном содержимом
+ * (более 200 слов) обрезает текст до 50 слов, не разрывая теги, и добавляет
+ * ссылку "Читать дальше".
  *
  * @example
  * <ArticleCard
@@ -29,15 +30,13 @@ export interface ArticleCardProps {
 const ArticleCard = ({ article }: ArticleCardProps) => {
   const articleUrl = article.url || `/blog/${article.id}/`;
 
-  // Превью строится по очищенному тексту: обрезка сырого HTML могла
-  // разрезать тег и отдать карточке битую разметку
-  const plainContent = stripHtml(article.content);
+  // Порог длины считается по сырому HTML, как в прежнем серверном шаблоне:
+  // словом считается любая группа символов между пробелами, включая атрибуты
+  const isLong = countHtmlWords(article.content) > 200;
 
-  /** Признак длинного контента (более 200 слов). */
-  const isLong = plainContent.split(' ').length > 200;
-
-  /** Усечённый текст для длинных статей (первые 50 слов). */
-  const truncatedContent = isLong ? plainContent.split(' ').slice(0, 50).join(' ') : plainContent;
+  // Обрезка не разрывает теги: закрывает открытые элементы и сохраняет
+  // фотографии, встретившиеся до точки обрезки
+  const preview = isLong ? truncateHtmlWords(article.content, 50) : article.content;
 
   return (
     <div className="container mb-3 pb-3">
@@ -46,7 +45,7 @@ const ArticleCard = ({ article }: ArticleCardProps) => {
           <h2 className="card-title fs-4">
             <a href={articleUrl}>{article.title}</a>
           </h2>
-          <p className="card-text">{truncatedContent}</p>
+          <div className="card-text" dangerouslySetInnerHTML={{ __html: preview }} />
           {isLong && <a href={articleUrl}>Читать дальше</a>}
         </Card.Body>
       </Card>

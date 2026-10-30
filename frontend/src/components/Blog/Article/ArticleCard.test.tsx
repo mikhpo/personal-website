@@ -38,6 +38,17 @@ describe('ArticleCard', () => {
   });
 
   /**
+   * Длинная статья с фотографией в начале: изображение находится до точки
+   * обрезки и должно попасть в превью.
+   */
+  const articleWithPhotoAndLongContent = makeArticle({
+    id: 7,
+    title: 'Статья с фотографией',
+    content: '<p><img src="/media/photo.jpg" alt="Фотография" /></p><p>' + generateLongContent() + '</p>',
+    url: undefined,
+  });
+
+  /**
    * Проверяет, что компонент корректно рендерится с минимальным набором свойств.
    * Должен отображаться заголовок статьи.
    */
@@ -114,6 +125,50 @@ describe('ArticleCard', () => {
     });
     render(<ArticleCard article={articleWithEmptyContent} />);
     expect(screen.queryByText('Читать дальше')).not.toBeInTheDocument();
+  });
+
+  /**
+   * Проверяет, что фотография из начала статьи видна в превью длинной статьи.
+   * Изображение находится до точки обрезки и попадает в карточку.
+   */
+  test('отображает фотографию в превью длинной статьи', () => {
+    render(<ArticleCard article={articleWithPhotoAndLongContent} />);
+    const photo = screen.getByRole('img', { name: 'Фотография' });
+    expect(photo).toHaveAttribute('src', '/media/photo.jpg');
+  });
+
+  /**
+   * Проверяет, что HTML-форматирование короткой статьи сохраняется в превью:
+   * контент рендерится как разметка, а не как текст.
+   */
+  test('отображает HTML-форматирование в превью короткой статьи', () => {
+    const articleWithFormattedContent = makeArticle({
+      id: 8,
+      title: 'Форматированная статья',
+      content: '<p>Это <b>жирный</b> текст статьи.</p>',
+    });
+    const { container } = render(<ArticleCard article={articleWithFormattedContent} />);
+    expect(container.querySelector('.card-text b')).toHaveTextContent('жирный');
+  });
+
+  /**
+   * Проверяет, что длинная статья обрезается до 50 слов: начало текста в
+   * превью есть, хвост - нет, разметка замкнута.
+   */
+  test('обрезает длинную статью до 50 слов с замкнутой разметкой', () => {
+    const numberedWords = Array.from({ length: 250 }, (_, index) => `слово${index + 1}`).join(' ');
+    const article = makeArticle({
+      id: 9,
+      title: 'Нумерованная статья',
+      content: `<p>${numberedWords}</p>`,
+      url: undefined,
+    });
+    const { container } = render(<ArticleCard article={article} />);
+    const preview = container.querySelector('.card-text');
+    expect(preview).toHaveTextContent('слово1');
+    expect(preview).toHaveTextContent('слово50');
+    expect(preview).not.toHaveTextContent('слово51');
+    expect(preview?.innerHTML.endsWith('</p>')).toBe(true);
   });
 
   /**
