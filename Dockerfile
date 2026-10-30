@@ -42,8 +42,8 @@ RUN apt-get update && \
     rsync && \
     rm -rf /var/lib/apt/lists/*
 
-# Установить Poetry через pip.
-RUN pip install --no-cache-dir poetry
+# Установить uv (двоичные файлы из официального образа, версия закреплена).
+COPY --from=ghcr.io/astral-sh/uv:0.13.6 /uv /uvx /bin/
 
 # Установить локаль.
 RUN localedef -i ru_RU -c -f UTF-8 -A /usr/share/locale/locale.alias ru_RU.UTF-8
@@ -57,10 +57,10 @@ WORKDIR $WORK_DIR
 # образами этого проекта, не затрагивая образы других проектов хоста.
 LABEL org.opencontainers.image.title="personal-website"
 
-# Установить зависимости Python через Poetry.
-COPY pyproject.toml poetry.toml poetry.lock ./
-RUN poetry install --no-interaction && \
-    poetry cache clear pypi --all
+# Установить зависимости Python через uv вместе с dev-зависимостями:
+# тесты выполняются внутри контейнера на этапе CI.
+COPY pyproject.toml uv.lock .python-version ./
+RUN --mount=type=cache,target=/root/.cache/uv uv sync --frozen
 
 # Скопировать в контейнер основное содержимое проекта.
 COPY . .
@@ -70,7 +70,7 @@ COPY --from=node-builder /app/frontend/dist $WORK_DIR/frontend/dist
 COPY --from=node-builder /app/frontend/webpack-stats.json $WORK_DIR/frontend/webpack-stats.json
 
 # Компиляция каталогов переводов проекта (backend/locale).
-RUN cd backend && poetry run python manage.py compilemessages
+RUN cd backend && uv run --no-sync python manage.py compilemessages
 
 # Выполнить скрипт, запускающий сервер.
 ENV PYTHONPATH=.

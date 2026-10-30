@@ -35,6 +35,6 @@
       "source.fixAll.eslint": "explicit"
     }
   },
-  "python-envs.defaultEnvManager": "ms-python.python:poetry",
-  "python-envs.defaultPackageManager": "ms-python.python:poetry"
+  "python-envs.defaultEnvManager": "ms-python.python:uv",
+  "python-envs.defaultPackageManager": "ms-python.python:uv"
 }

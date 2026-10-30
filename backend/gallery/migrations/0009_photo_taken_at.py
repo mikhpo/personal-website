@@ -2,8 +2,7 @@
 
 import contextlib
 import io
-from datetime import datetime
-from datetime import timezone as dt_timezone
+from datetime import UTC, datetime
 
 from django.db import migrations, models
 from django.db.models.fields.files import FieldFile
@@ -52,7 +51,7 @@ def get_fallback_datetime(image_field: FieldFile) -> datetime:
             return make_naive(modified_time) if is_aware(modified_time) else modified_time
         except (FileNotFoundError, OSError):
             pass
-    return datetime.now(dt_timezone.utc)
+    return datetime.now(UTC)
 
 
 def populate_taken_at(apps, schema_editor):

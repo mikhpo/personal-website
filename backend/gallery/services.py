@@ -63,7 +63,7 @@ def upload_photos_to_album(album: Album, files: "Sequence[UploadedFile]") -> lis
             photo = Photo.objects.create(image=file, album=album)
             results.append(PhotoUploadResult(filename=file.name or "", photo=photo))
             logger.debug(f"Загружена фотография {file} в альбом {album}")
-        except UnidentifiedImageError as error:  # noqa: PERF203
+        except UnidentifiedImageError as error:
             logger.exception(f'Загруженный файл "{file}" не является изображением')
             results.append(PhotoUploadResult(filename=file.name or "", error=error))
         except Exception as error:

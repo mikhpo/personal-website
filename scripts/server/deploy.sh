@@ -57,8 +57,13 @@ function pull_repository() {
 function build_project() {
     npm install
     npm run build
-    poetry install
-    (cd backend && poetry run python manage.py compilemessages)
+    if ! command -v uv >/dev/null 2>&1; then
+        echo "uv не найден, установка..."
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+    fi
+    export PATH="$HOME/.local/bin:$PATH"
+    uv sync --frozen --no-dev
+    (cd backend && uv run --no-sync python manage.py compilemessages)
 }
 
 #######################################

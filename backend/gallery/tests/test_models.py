@@ -272,9 +272,9 @@ class GalleryModelsTests(TestCase):
         private_b = PhotoFactory(album=album, public=False)
         public_c = PhotoFactory(album=album, public=True)
         taken = {
-            public_a.pk: datetime.datetime(2022, 1, 1, tzinfo=datetime.timezone.utc),
-            private_b.pk: datetime.datetime(2022, 1, 2, tzinfo=datetime.timezone.utc),
-            public_c.pk: datetime.datetime(2022, 1, 3, tzinfo=datetime.timezone.utc),
+            public_a.pk: datetime.datetime(2022, 1, 1, tzinfo=datetime.UTC),
+            private_b.pk: datetime.datetime(2022, 1, 2, tzinfo=datetime.UTC),
+            public_c.pk: datetime.datetime(2022, 1, 3, tzinfo=datetime.UTC),
         }
         for pk, value in taken.items():
             Photo.objects.filter(pk=pk).update(taken_at=value)

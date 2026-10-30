@@ -35,7 +35,7 @@ tasks:
     desc: Запустить сервер приложения
     summary: |
       Запускает сервер приложения Django. Альтернатива команде `python manage.py runserver`.
-      Интерпретатор Python запускается через Poetry из виртуального окружения проекта.
+      Интерпретатор Python запускается через uv из виртуального окружения проекта.
       Перед запуском сервера применяются миграции базы данных и собираются статические файлы.
       Сервер PostgreSQL запускается в контейнере через Docker Compose.
       Повторный запуск завершает зависший экземпляр сервера,
@@ -49,10 +49,10 @@ tasks:
       - defer: "{{.COMPOSE_CMD}} down"
       - "{{.COMPOSE_CMD}} up -d postgres"
       - "{{.COMPOSE_CMD}} ps"
-      - poetry run python ./backend/manage.py migrate
-      - poetry run python ./backend/manage.py collectstatic --noinput
+      - uv run python ./backend/manage.py migrate
+      - uv run python ./backend/manage.py collectstatic --noinput
       - lsof -t -i :${DJANGO_PORT:-8000} -sTCP:LISTEN | xargs kill 2>/dev/null || true
-      - poetry run python ./backend/manage.py runserver ${DJANGO_PORT:-8000}
+      - uv run python ./backend/manage.py runserver ${DJANGO_PORT:-8000}
 
   worker:
     desc: Запустить потребитель фоновых задач huey
@@ -76,8 +76,8 @@ tasks:
           *)
             {{.COMPOSE_CMD}} up -d postgres
             {{.COMPOSE_CMD}} ps
-            poetry run python ./backend/manage.py create_huey_tables
-            poetry run python ./backend/manage.py run_huey
+            uv run python ./backend/manage.py create_huey_tables
+            uv run python ./backend/manage.py run_huey
             ;;
         esac
 
@@ -95,8 +95,8 @@ tasks:
       - defer: "{{.COMPOSE_CMD}} down"
       - "{{.COMPOSE_CMD}} up -d postgres"
       - "{{.COMPOSE_CMD}} ps"
-      - poetry run python ./backend/manage.py makemigrations
-      - poetry run python ./backend/manage.py migrate
+      - uv run python ./backend/manage.py makemigrations
+      - uv run python ./backend/manage.py migrate
       - task: graph-models
 
   test-frontend:
@@ -133,7 +133,7 @@ tasks:
     preconditions:
       - test -f pyproject.toml
     cmds:
-      - poetry run python backend/manage.py spectacular --file docs/schemas/openapi.yaml
+      - uv run python backend/manage.py spectacular --file docs/schemas/openapi.yaml
 
   api-types:
     desc: Сгенерировать типы API фронтенда из OpenAPI-схемы
@@ -182,7 +182,7 @@ tasks:
         {{.COMPOSE_CMD}} up -d $services
       - "{{.COMPOSE_CMD}} ps"
       - task: build-frontend
-      - poetry run pytest {{.CLI_ARGS}}
+      - uv run pytest {{.CLI_ARGS}}
 
   test:
     desc: Выполнить полный цикл тестирования приложения (фронтенд + бэкенд)
@@ -223,7 +223,7 @@ tasks:
       - "{{.COMPOSE_CMD}} up -d application postgres"
       - "{{.COMPOSE_CMD}} ps"
       - "{{.COMPOSE_CMD}} exec application npm test"
-      - "{{.COMPOSE_CMD}} exec application poetry run pytest {{.CLI_ARGS}}"
+      - "{{.COMPOSE_CMD}} exec application uv run --no-sync pytest {{.CLI_ARGS}}"
 
   dev-cert:
     desc: Выпустить self-signed сертификат локального стека nginx
@@ -242,7 +242,7 @@ tasks:
     desc: Выполнить интеграционные тесты
     summary: |
       Команда выполняет только интеграционные тесты из папки tests в корневом каталоге
-      проекта через Pytest. Интерпретатор Python запускается через Poetry из виртуального
+      проекта через Pytest. Интерпретатор Python запускается через uv из виртуального
       окружения проекта. Сервисы поднимаются в контейнерах Docker через Compose;
       флаг --wait дожидается прохождения healthcheck всех сервисов (применяется
       при использовании Docker Compose V2), чтобы тесты не стартовали раньше
@@ -261,7 +261,7 @@ tasks:
       - defer: "{{.COMPOSE_CMD}} down"
       - "{{.COMPOSE_CMD}} up -d {{.COMPOSE_WAIT}} application postgres nginx s3"
       - "{{.COMPOSE_CMD}} ps"
-      - poetry run pytest ./tests {{.CLI_ARGS}}
+      - uv run pytest ./tests {{.CLI_ARGS}}
 
   ruff:
     desc: Выполнить статический анализ кода при помощи утилиты Ruff
@@ -269,7 +269,7 @@ tasks:
     preconditions:
       - test -f pyproject.toml
     cmds:
-      - poetry run ruff check --fix
+      - uv run ruff check --fix
 
   mypy:
     desc: Выполнить статический анализ кода при помощи утилиты Mypy
@@ -277,7 +277,7 @@ tasks:
     preconditions:
       - test -f pyproject.toml
     cmds:
-      - poetry run mypy .
+      - uv run mypy .
 
   eslint:
     desc: Выполнить статический анализ кода TypeScript/React при помощи ESLint
@@ -347,31 +347,32 @@ tasks:
       - task: eslint
       - task: typecheck
       - task: markdownlint
-      - poetry run python backend/manage.py check
+      - uv run python backend/manage.py check
 
   install:
     desc: Установить зависимости Python и Node.js
     summary: |
-      Выполняет установку зависимостей Python при помощи Poetry и зависимостей Node.js при помощи npm.
-      Списки зависимостей считываются из файлов pyproject.toml и package.json.
+      Выполняет установку зависимостей Python при помощи uv и зависимостей Node.js при помощи npm.
+      Списки зависимостей считываются из файлов pyproject.toml, uv.lock и package.json.
     preconditions:
       - test -f pyproject.toml
       - test -f package.json
     cmds:
-      - poetry install
+      - uv sync
       - npm install
 
   update:
     desc: Обновить версии зависимостей Python и Node.js
     summary: |
       Обновляет до последних допустимых версий пакеты Python
-      при помощи плагина poetry-plugin-up и
+      при помощи uv (обновление uv.lock в рамках ограничений pyproject.toml;
+      поднятие самих ограничений выполняется вручную) и
       зависимости Node.js при помощи npm.
     preconditions:
         - test -f pyproject.toml
         - test -f package.json
     cmds:
-      - poetry up --latest
+      - uv lock --upgrade
       - npm update
 
   build:
@@ -478,7 +479,7 @@ tasks:
       Пример использования с аргументом: `task sync-mirrors -- "branch-name"`
       Пример использования без аргумента: `task sync-mirrors`
     cmds:
-      - poetry run python tools/sync_mirrors.py {{.CLI_ARGS}}
+      - uv run python tools/sync_mirrors.py {{.CLI_ARGS}}
 
   graph-models:
     desc: Экспортировать диаграммы моделей проекта
@@ -513,7 +514,7 @@ tasks:
       - defer: "{{.COMPOSE_CMD}} down"
       - "{{.COMPOSE_CMD}} up -d postgres"
       - "{{.COMPOSE_CMD}} ps"
-      - poetry run python backend/manage.py makemigrations --dry-run --check
+      - uv run python backend/manage.py makemigrations --dry-run --check
 
   clean-cache:
     desc: Удалить файлы кэша

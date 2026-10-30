@@ -2,7 +2,7 @@
 
 import json
 import re
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from html import unescape
 from http import HTTPStatus
 from io import BytesIO
@@ -160,7 +160,7 @@ class TestPhotoListView(TestCase):
         album = AlbumFactory()
 
         # Создать фотографии с явным указанием времени съемки
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         photo1 = PhotoFactory(album=album, public=True)
         photo1.taken_at = now - timedelta(hours=3)
         photo1.save()
@@ -592,7 +592,7 @@ class TestAlbumDetailView(TestCase):
         album = AlbumFactory()
 
         # Создать фотографии с явным указанием времени съемки
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         # photo1 - самая старая
         photo1 = PhotoFactory(album=album, public=True)
         photo1.taken_at = now - timedelta(hours=4)
