@@ -22,12 +22,28 @@ else
 fi
 
 readonly mode="${DEPLOY_MODE:-compose}"
+
+# Версия совпадает с закрепленной в Dockerfile и CI.
+readonly UV_VERSION=0.13.6
+
+# Синхронизировать окружение с uv.lock: интерпретатор .venv должен
+# удовлетворять requires-python, uv скачает нужную версию Python сам.
+function ensure_uv_environment() {
+    if [ ! -x "$HOME/.local/bin/uv" ]; then
+        echo "uv не найден, установка версии $UV_VERSION..."
+        curl -LsSf "https://astral.sh/uv/$UV_VERSION/install.sh" | sh
+    fi
+    export PATH="$HOME/.local/bin:$PATH"
+    uv sync --frozen --no-dev --directory "$project_root"
+}
+
 case "$mode" in
     compose)
         docker compose exec -T application /srv/website/.venv/bin/python backend/manage.py "$@"
         ;;
     systemd)
-        "$project_root/.venv/bin/python" "$project_root/backend/manage.py" "$@"
+        ensure_uv_environment
+        uv run --no-sync --directory "$project_root" python "$project_root/backend/manage.py" "$@"
         ;;
     *)
         echo "Ошибка: неизвестный механизм развертывания DEPLOY_MODE=\"$mode\"." >&2
