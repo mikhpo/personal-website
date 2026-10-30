@@ -54,4 +54,4 @@ description: Проверка и правка текстов проекта по
 
 - `npm run markdownlint` - все markdown-файлы репозитория
 - `task render-diagrams` - при правке файлов .puml
-- `poetry run ruff check . --fix` и `poetry run mypy .` - при правке комментариев и докстрингов в коде
+- `uv run ruff check . --fix` и `uv run mypy .` - при правке комментариев и докстрингов в коде

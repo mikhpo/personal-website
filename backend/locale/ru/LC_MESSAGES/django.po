@@ -1,5 +1,5 @@
 # Локализация строк сторонних пакетов, не имеющих собственной русской локали.
-# Компиляция: poetry run python backend/manage.py compilemessages
+# Компиляция: uv run python backend/manage.py compilemessages
 msgid ""
 msgstr ""
 "Project-Id-Version: personal-website\n"

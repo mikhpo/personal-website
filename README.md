@@ -42,8 +42,10 @@
     ├── .git/
     ├── .venv/
     ├── .gitignore
+    ├── .python-version         # версия Python для uv
     ├── requirements.txt
     ├── pyproject.toml
+    ├── uv.lock                 # зафиксированные зависимости Python
     ├── package.json
     ├── compose.yaml           # сервисы Docker Compose (профили postgres, s3, nginx)
     ├── scripts/               # скрипты деплоя, бэкапов и первичной настройки сервера
@@ -109,10 +111,10 @@
 ### Ручной запуск режима разработки
 
 * Запустить базу данных PostgreSQL через Docker Compose: `docker compose up -d postgres`
-* Применить миграции базы данных: `poetry run python backend/manage.py migrate`
-* Собрать статические файлы: `poetry run python backend/manage.py collectstatic --noinput`
+* Применить миграции базы данных: `uv run python backend/manage.py migrate`
+* Собрать статические файлы: `uv run python backend/manage.py collectstatic --noinput`
 * Запустить сборку фронтенда в режиме наблюдения (в первом терминале): `npm run dev`
-* Запустить сервер разработки Django (во втором терминале): `poetry run python backend/manage.py runserver`
+* Запустить сервер разработки Django (во втором терминале): `uv run python backend/manage.py runserver`
 * Открыть сайт в браузере: <http://localhost:8000> (админ-панель: <http://localhost:8000/admin/>)
 
 Явное указание имени сервиса в команде активирует профиль автоматически, поэтому для запуска отдельных инфраструктурных сервисов флаг не требуется.

@@ -119,7 +119,7 @@ docker compose exec application curl -sS -o /dev/null -w "%{http_code}\n" -H "Ac
 Когда лог не пишет полный traceback (например, при `DEBUG=False`), получить точную причину in-process (GET-запрос, без записи в БД):
 
 ```bash
-docker compose exec application bash -c 'cd /srv/website/backend && poetry run python manage.py shell' << 'PYEOF'
+docker compose exec application bash -c 'cd /srv/website/backend && uv run --no-sync python manage.py shell' << 'PYEOF'
 from django.test import Client
 import traceback
 c = Client()

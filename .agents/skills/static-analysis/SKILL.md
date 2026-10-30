@@ -8,20 +8,19 @@ description: Статический анализ кода с Ruff и MyPy для
 ### 1. Подготовка окружения
 
 ```bash
-poetry shell
-poetry install
+uv sync
 ```
 
 ### 2. Проверка Ruff
 
 ```bash
-poetry run ruff check . --fix
+uv run ruff check . --fix
 ```
 
 ### 3. Проверка MyPy
 
 ```bash
-poetry run mypy .
+uv run mypy .
 ```
 
 ## Обработка ошибок
@@ -53,8 +52,8 @@ poetry run mypy .
 ## Верификация
 
 ```bash
-poetry run ruff check .
-poetry run mypy .
+uv run ruff check .
+uv run mypy .
 ```
 
 ## Пример

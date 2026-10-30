@@ -137,7 +137,7 @@ Cron бэкапов (cronjobs.sh) добавлять только на осно�
 
 1. Шаги 1 (без Docker), 3 (клонирование) - как выше; файрволу достаточно портов 22/80/443 (приложение и БД слушают только локальный интерфейс).
 2. .env в корне рабочей копии: абсолютные пути каталогов данных (STORAGE_ROOT и остальные) на хосте, `DEPLOY_MODE=systemd`, экранирование `$$` не требуется (systemd читает значения буквально).
-3. Запуск `bash scripts/server/setup.sh`: пакеты (python3, poetry, node, postgresql-client, nginx, certbot, rclone, mc), зависимости проекта, systemd-юнит personal-website.service, конфигурация сайта nginx (с раздачей медиа из STORAGE_ROOT) и сертификат certbot (двухфазно, webroot), cron бэкапов; финальная проверка сервиса и /health/ выполняется скриптом.
+3. Запуск `bash scripts/server/setup.sh`: пакеты (python3, uv, node, postgresql-client, nginx, certbot, rclone, mc), зависимости проекта, systemd-юнит personal-website.service, конфигурация сайта nginx (с раздачей медиа из STORAGE_ROOT) и сертификат certbot (двухфазно, webroot), cron бэкапов; финальная проверка сервиса и /health/ выполняется скриптом.
 
 Проверка после установки:
 

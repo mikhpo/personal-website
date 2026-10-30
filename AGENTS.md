@@ -8,12 +8,13 @@
 
 ### Установка и запуск
 
-- Установить зависимости Python: `poetry install`
+- Установить uv: официальный установщик `curl -LsSf https://astral.sh/uv/install.sh | sh` или `brew install uv`
+- Установить зависимости Python: `uv sync`
 - Установить зависимости Node.js: `npm install`
-- Применить миграции: `poetry run python backend/manage.py migrate`
-- Собрать статические файлы: `poetry run python backend/manage.py collectstatic --no-input`
-- Запустить сервер разработки: `poetry run python backend/manage.py runserver`
-- Запустить тесты: `poetry run pytest`
+- Применить миграции: `uv run python backend/manage.py migrate`
+- Собрать статические файлы: `uv run python backend/manage.py collectstatic --no-input`
+- Запустить сервер разработки: `uv run python backend/manage.py runserver`
+- Запустить тесты: `uv run pytest`
 
 ### Docker Compose
 
@@ -180,7 +181,7 @@
 
 ## Тестирование
 
-- Тесты backend - pytest с pytest-django: `poetry run pytest`
+- Тесты backend - pytest с pytest-django: `uv run pytest`
 - Тесты фронтенда - Jest: `npm test`
 - Unit-тесты бизнес-логики
 - Интеграционные тесты представлений
@@ -251,8 +252,8 @@
 
 ## Линтинг и проверки
 
-- Ruff: `poetry run ruff check . --fix`
-- Mypy: `poetry run mypy .`
+- Ruff: `uv run ruff check . --fix`
+- Mypy: `uv run mypy .`
 - TypeScript: `npm run typecheck` (tsc --noEmit)
 - ESLint: `npm run eslint`
 - Markdown: `npx markdownlint-cli '**/*.md' --ignore-path .gitignore`
