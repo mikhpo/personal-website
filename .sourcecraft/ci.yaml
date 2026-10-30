@@ -36,19 +36,32 @@ workflows:
   # Статический анализ и линтинг
   lint-workflow:
     tasks:
-      # Выполнить проверки утилитами Python
+      # Выполнить проверки утилитами Python.
+      # Способ установки определяется по наличию uv.lock:
+      # основная ветка может использовать Poetry или uv, конфигурация
+      # должна проверять обе ситуации, поскольку выполняется из целевой ветки.
       - name: "python-check"
         cubes:
           - name: "ruff-mypy"
             image: docker.io/library/python:3.13-bookworm
             script:
-              - echo "Установка Poetry и зависимостей проекта"
-              - pip install poetry
-              - poetry install
-              - echo "Запуск статического анализа с помощью Ruff"
-              - poetry run ruff check
-              - echo "Запуск проверки типов с помощью MyPy"
-              - poetry run mypy .
+              - echo "Установка зависимостей проекта"
+              - |
+                if [ -f uv.lock ]; then
+                  pip install uv
+                  uv sync --frozen
+                  PKG_MANAGER=uv
+                else
+                  pip install poetry
+                  poetry install
+                  PKG_MANAGER=poetry
+                fi
+              - |
+                if [ "$PKG_MANAGER" = "uv" ]; then RUN="uv run --no-sync"; else RUN="poetry run"; fi
+                echo "Запуск статического анализа с помощью Ruff"
+                $RUN ruff check
+                echo "Запуск проверки типов с помощью MyPy"
+                $RUN mypy .
 
       # Выполнить проверки утилитами Node.js
       - name: "node-check"
@@ -91,18 +104,29 @@ workflows:
               - apt-get install -y locales gettext
               - echo "Настройка локали ru_RU.UTF-8"
               - localedef -i ru_RU -c -f UTF-8 -A /usr/share/locale/locale.alias ru_RU.UTF-8
-              - echo "Установка Poetry и зависимостей проекта"
-              - pip install poetry
-              - poetry install
+              # Способ установки определяется по наличию uv.lock (см. python-check).
+              - echo "Установка зависимостей проекта"
+              - |
+                if [ -f uv.lock ]; then
+                  pip install uv
+                  uv sync --frozen
+                  PKG_MANAGER=uv
+                else
+                  pip install poetry
+                  poetry install
+                  PKG_MANAGER=poetry
+                fi
               - echo "Сборка React фронтенда"
               - npm install
               - npm run build
               # openapi.yaml хранится в репозитории и обновляется вместе
               # с изменениями сериализаторов; --exit-code превращает
               # расхождение в ошибку сборки.
-              - echo "Проверка актуальности OpenAPI-схемы бэкенда"
-              - poetry run python backend/manage.py spectacular --file docs/schemas/openapi.yaml
-              - git diff --exit-code -- docs/schemas/openapi.yaml
+              - |
+                if [ "$PKG_MANAGER" = "uv" ]; then RUN="uv run --no-sync"; else RUN="poetry run"; fi
+                echo "Проверка актуальности OpenAPI-схемы бэкенда"
+                $RUN python backend/manage.py spectacular --file docs/schemas/openapi.yaml
+                git diff --exit-code -- docs/schemas/openapi.yaml
               # api-schema.ts хранится в репозитории и обновляется вместе со схемой;
               # если перегенерацию забыть, TypeScript проверяет код против
               # устаревшей схемы, а --exit-code превращает расхождение в ошибку сборки.
@@ -110,9 +134,9 @@ workflows:
               - npm run api-types
               - git diff --exit-code -- frontend/src/types/api-schema.ts
               - echo "Компиляция каталогов переводов"
-              - cd backend && poetry run python manage.py compilemessages && cd ..
+              - cd backend && $RUN python manage.py compilemessages && cd ..
               - echo "Запуск тестов Python с помощью Pytest"
-              - poetry run pytest
+              - $RUN pytest
 
       # Тестирование кода JavaScript
       - name: "node-test"
@@ -206,7 +230,9 @@ workflows:
                 docker pull \
                   cr.yandex/$YC_CONTAINER_REGISTRY_ID/$PROJECT_NAME:$TEST_TAG
 
-              # Запуск тестов внутри контейнера (на образе из Yandex Cloud)
+              # Запуск тестов внутри контейнера (на образе из Yandex Cloud).
+              # Способ запуска определяется по наличию uv в образе: образы,
+              # собранные до миграции на uv, используют Poetry.
               - |
                 echo "Запуск тестов внутри Docker-контейнера"
                 docker run --rm \
@@ -215,7 +241,7 @@ workflows:
                   --env DEBUG="True" \
                   --entrypoint "" \
                   cr.yandex/$YC_CONTAINER_REGISTRY_ID/$PROJECT_NAME:$TEST_TAG \
-                  bash -c "poetry run pytest"
+                  bash -c 'if command -v uv >/dev/null 2>&1; then uv run --no-sync pytest; else poetry run pytest; fi'
 
               # Присвоение тега "tested" образу после успешного прохождения тестов (Docker Hub)
               - |
