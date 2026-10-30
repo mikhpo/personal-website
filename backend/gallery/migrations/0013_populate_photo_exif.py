@@ -18,12 +18,8 @@ def _exif_value_to_json(value: object) -> object:
     Копия функции gallery.utils.exif_value_to_json для самодостаточности миграции.
     """
     if isinstance(value, IFDRational):
-        try:
-            number = float(value)
-        except ZeroDivisionError:
-            return None
-        # Pillow до 12.3 бросает ZeroDivisionError при нулевом знаменателе,
-        # начиная с 12.3 - возвращает nan
+        number = float(value)
+        # Pillow при нулевом знаменателе возвращает nan вместо числа
         return None if isnan(number) else number
     if isinstance(value, bytes):
         return None

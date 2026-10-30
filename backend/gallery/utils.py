@@ -32,12 +32,8 @@ def exif_value_to_json(value: object) -> object:
         JSON-совместимое значение (int, float, str, list) или None для пропуска.
     """
     if isinstance(value, IFDRational):
-        try:
-            number = float(value)
-        except ZeroDivisionError:
-            return None
-        # Pillow до 12.3 бросает ZeroDivisionError при нулевом знаменателе,
-        # начиная с 12.3 - возвращает nan
+        number = float(value)
+        # Pillow при нулевом знаменателе возвращает nan вместо числа
         return None if isnan(number) else number
     if isinstance(value, bytes):
         return None
