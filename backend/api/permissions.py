@@ -47,7 +47,7 @@ class IsPublicOrAuthor(permissions.BasePermission):
         user = request.user
         return bool(isinstance(user, AbstractBaseUser) and user.is_staff)
 
-    def has_object_permission(self, request: Request, view: View, obj: "Model") -> bool:  # noqa: ARG002
+    def has_object_permission(self, request: Request, view: View, obj: Model) -> bool:  # noqa: ARG002
         """
         Проверка прав доступа к конкретному объекту.
 
@@ -124,7 +124,7 @@ class IsAuthorOrReadOnly(permissions.BasePermission):
         # Для операций модификации/удаления требуется аутентификация
         return bool(request.user and request.user.is_authenticated)
 
-    def has_object_permission(self, request: Request, view: View, obj: "Model") -> bool:  # noqa: ARG002
+    def has_object_permission(self, request: Request, view: View, obj: Model) -> bool:  # noqa: ARG002
         """
         Проверка прав доступа к конкретному объекту.
 

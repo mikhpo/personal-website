@@ -23,7 +23,7 @@ class CategoryFactory(factory.django.DjangoModelFactory):
     image = factory.django.ImageField()
     public = factory.LazyAttribute(lambda _: True)
 
-    def __new__(cls, *args, **kwargs) -> "Category":
+    def __new__(cls, *args, **kwargs) -> Category:
         """Возвращается объект Category."""
         return super().__new__(*args, **kwargs)
 
@@ -41,7 +41,7 @@ class TopicFactory(factory.django.DjangoModelFactory):
     image = factory.django.ImageField()
     public = factory.LazyAttribute(lambda _: True)
 
-    def __new__(cls, *args, **kwargs) -> "Topic":
+    def __new__(cls, *args, **kwargs) -> Topic:
         """Возвращается объект Topic."""
         return super().__new__(*args, **kwargs)
 
@@ -59,7 +59,7 @@ class SeriesFactory(factory.django.DjangoModelFactory):
     image = factory.django.ImageField()
     public = factory.LazyAttribute(lambda _: True)
 
-    def __new__(cls, *args, **kwargs) -> "Series":
+    def __new__(cls, *args, **kwargs) -> Series:
         """Возвращается объект Series."""
         return super().__new__(*args, **kwargs)
 
@@ -118,7 +118,7 @@ class ArticleFactory(factory.django.DjangoModelFactory):
             return
         self.categories.add(*extracted)
 
-    def __new__(cls, *args, **kwargs) -> "Article":
+    def __new__(cls, *args, **kwargs) -> Article:
         """Возвращается объект Article."""
         return super().__new__(*args, **kwargs)
 
@@ -169,6 +169,6 @@ class CommentFactory(factory.django.DjangoModelFactory):
     content = factory.Faker("text")
     posted = factory.LazyAttribute(lambda _: now())
 
-    def __new__(cls, *args, **kwargs) -> "Comment":
+    def __new__(cls, *args, **kwargs) -> Comment:
         """Возвращается объект Comment."""
         return super().__new__(*args, **kwargs)

@@ -37,7 +37,7 @@ class CategoryViewSet(AuditlogActorMixin, viewsets.ModelViewSet):
     ordering_fields: ClassVar[list[str]] = ["name"]
     ordering: ClassVar[list[str]] = ["name"]
 
-    def get_queryset(self) -> "QuerySet[Category]":
+    def get_queryset(self) -> QuerySet[Category]:
         """В list отдаёт публичные категории, а администратору - все.
 
         Полный справочник нужен staff в форме статьи: привязанные
@@ -64,7 +64,7 @@ class TopicViewSet(AuditlogActorMixin, viewsets.ModelViewSet):
     ordering_fields: ClassVar[list[str]] = ["name"]
     ordering: ClassVar[list[str]] = ["name"]
 
-    def get_queryset(self) -> "QuerySet[Topic]":
+    def get_queryset(self) -> QuerySet[Topic]:
         """В list отдаёт публичные темы, а администратору - все."""
         queryset = Topic.objects.all()
         if self.action == "list":
@@ -87,7 +87,7 @@ class SeriesViewSet(AuditlogActorMixin, viewsets.ModelViewSet):
     ordering_fields: ClassVar[list[str]] = ["name"]
     ordering: ClassVar[list[str]] = ["name"]
 
-    def get_queryset(self) -> "QuerySet[Series]":
+    def get_queryset(self) -> QuerySet[Series]:
         """В list отдаёт публичные серии, а администратору - все."""
         queryset = Series.objects.all()
         if self.action == "list":
@@ -106,7 +106,7 @@ class ArticleViewSet(AuditlogActorMixin, viewsets.ModelViewSet):
     lookup_field = "pk"
     # DatabaseSearchFilter после OrderingFilter: сортировка по релевантности
     # (-rank) не должна перезаписываться дефолтным ordering вьюхи.
-    filter_backends: ClassVar[list[type[filters.BaseFilterBackend] | type[DjangoFilterBackend]]] = [
+    filter_backends: ClassVar[list[type[filters.BaseFilterBackend | DjangoFilterBackend]]] = [
         DjangoFilterBackend,
         filters.OrderingFilter,
         DatabaseSearchFilter,
@@ -122,7 +122,7 @@ class ArticleViewSet(AuditlogActorMixin, viewsets.ModelViewSet):
             return ArticleWriteSerializer
         return ArticleSerializer
 
-    def get_queryset(self) -> "QuerySet[Article]":
+    def get_queryset(self) -> QuerySet[Article]:
         """В list отдаёт публичные статьи, а администраторам - все, включая черновики.
 
         select_related/prefetch_related оптимизируют сериализацию вложенных
@@ -153,14 +153,14 @@ class CommentViewSet(AuditlogActorMixin, viewsets.ModelViewSet):
 
     serializer_class = CommentSerializer
     permission_classes: ClassVar[list[type[BasePermission]]] = [IsAuthenticatedOrReadOnly]
-    filter_backends: ClassVar[list[type[filters.BaseFilterBackend] | type[DjangoFilterBackend]]] = [
+    filter_backends: ClassVar[list[type[filters.BaseFilterBackend | DjangoFilterBackend]]] = [
         DjangoFilterBackend,
         filters.OrderingFilter,
     ]
     filterset_fields: ClassVar[list[str]] = ["article__slug", "author__username", "article"]
     ordering: ClassVar[list[str]] = ["posted"]
 
-    def get_queryset(self) -> "QuerySet[Comment]":
+    def get_queryset(self) -> QuerySet[Comment]:
         """Возвращать все комментарии с оптимизированными запросами к базе данных."""
         return Comment.objects.select_related("author", "article")
 

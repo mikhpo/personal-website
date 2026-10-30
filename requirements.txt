@@ -288,13 +288,10 @@ typing-extensions==4.16.0
     #   django-stubs
     #   django-stubs-ext
     #   djangorestframework-stubs
-    #   djlint
     #   mypy
-    #   psycopg
     #   pydantic
     #   pydantic-core
     #   pyee
-    #   referencing
     #   typing-inspection
 typing-inspection==0.4.4
     # via pydantic

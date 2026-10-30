@@ -79,7 +79,7 @@ class TagFactory(factory.django.DjangoModelFactory):
     slug = factory.LazyAttribute(lambda _: None)
     description = factory.Faker("sentence")
 
-    def __new__(cls, *args, **kwargs) -> "Tag":
+    def __new__(cls, *args, **kwargs) -> Tag:
         """Возвращается объект Tag."""
         return super().__new__(*args, **kwargs)
 
@@ -113,7 +113,7 @@ class AlbumFactory(factory.django.DjangoModelFactory):
             return
         self.tags.add(*extracted)
 
-    def __new__(cls, *args, **kwargs) -> "Album":
+    def __new__(cls, *args, **kwargs) -> Album:
         """Возвращается объект Album."""
         return super().__new__(*args, **kwargs)
 
@@ -147,7 +147,7 @@ class PhotoFactory(factory.django.DjangoModelFactory):
             return
         self.tags.add(*extracted)
 
-    def __new__(cls, *args, **kwargs) -> "Photo":
+    def __new__(cls, *args, **kwargs) -> Photo:
         """Возвращается объект Photo."""
         return super().__new__(*args, **kwargs)
 

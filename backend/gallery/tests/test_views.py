@@ -875,13 +875,13 @@ class TestUploadFormView(TestCase):
         self.assertContains(response, "Alert/AlertList")
         self.assertContains(response, "alerts-root")
 
-    def _check_alerts_data(self, alerts_data: "AlertsData") -> None:
+    def _check_alerts_data(self, alerts_data: AlertsData) -> None:
         """Проверить данные оповещений."""
         self.assertIsNotNone(alerts_data)
         self.assertIn("messages", alerts_data)
         self.assertTrue(len(alerts_data["messages"]) > 0)
 
-    def _extract_alerts_props(self, response_content: str) -> "AlertsData":
+    def _extract_alerts_props(self, response_content: str) -> AlertsData:
         """Извлечь свойства оповещений из ответа."""
         props_match = re.search(r'id="alerts-root"\s+data-props="([^"]*)"', response_content)
         self.assertIsNotNone(props_match, "Не найден атрибут data-props у alerts-root")
@@ -899,7 +899,7 @@ class TestUploadFormView(TestCase):
         result: AlertsData = json.loads(props_json)
         return result
 
-    def _check_alert_structure(self, alert: "AlertMessage") -> None:
+    def _check_alert_structure(self, alert: AlertMessage) -> None:
         """Проверить структуру оповещения."""
         self.assertIn("message", alert)
         self.assertIn("level", alert)
@@ -908,7 +908,7 @@ class TestUploadFormView(TestCase):
         self.assertTrue(alert["autoClose"])
         self.assertEqual(alert["autoCloseDelay"], 60000)
 
-    def _check_alert_content(self, alert: "AlertMessage") -> None:
+    def _check_alert_content(self, alert: AlertMessage) -> None:
         """Проверить содержимое оповещения."""
         message = str(alert["message"])
         self.assertIn("Загружено", message)

@@ -64,7 +64,7 @@ class AlbumDetailView(DetailView):
     context_object_name = "album"
     pk_url_kwarg = "pk"
 
-    def get_queryset(self) -> "QuerySet[Album]":
+    def get_queryset(self) -> QuerySet[Album]:
         """Возвращает все альбомы.
 
         Фильтрация по public выполняется в списках (см. AlbumViewSet);
@@ -80,7 +80,7 @@ class PhotoListView(ListView):
     template_name = "gallery/photo_list.html"
     paginate_by = 40
 
-    def get_queryset(self) -> "QuerySet[Photo]":  # type: ignore[override]
+    def get_queryset(self) -> QuerySet[Photo]:  # type: ignore[override]
         """Отсортировать набор фотографий по дате съемки."""
         return Photo.published.all().order_by("-taken_at")
 
@@ -99,7 +99,7 @@ class PhotoDetailView(DetailView):
     context_object_name = "photo"
     pk_url_kwarg = "pk"
 
-    def get_queryset(self) -> "QuerySet[Photo]":
+    def get_queryset(self) -> QuerySet[Photo]:
         """Возвращает все фотографии.
 
         Фильтрация по public выполняется в списках (см. PhotoViewSet);
@@ -156,7 +156,7 @@ class EmbedPhotoView(View):
         photo = get_object_or_404(Photo.objects.all(), pk=photo_pk)
         try:
             embed_name = ensure_embed_preview(photo, preview_size)
-        except (FileNotFoundError, OSError):
+        except FileNotFoundError, OSError:
             logger.exception("Не удалось подготовить превью для вставки фотографии %s", photo_pk)
             msg = "Файл изображения недоступен"
             raise Http404(msg) from None

@@ -3,7 +3,7 @@ name = "personal-website"
 version = "0.1.0"
 description = "My personal website"
 authors = [{ name = "Mikhail Polyakov", email = "mikhpo@outlook.com" }]
-requires-python = ">=3.12"
+requires-python = ">=3.14"
 dependencies = [
     "Django>=6.0.2,<7.0",
     "django-tinymce>=5.0.0,<6.0",
@@ -99,6 +99,8 @@ ignore = [
     "RUF002",
     "RUF003",
     "S308",
+    "TC002",
+    "TC003",
     "W191",
 ]
 

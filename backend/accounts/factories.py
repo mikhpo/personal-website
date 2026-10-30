@@ -18,6 +18,6 @@ class UserFactory(factory.django.DjangoModelFactory):
     password = factory.Faker("password")
     email = factory.Faker("email")
 
-    def __new__(cls, *args, **kwargs) -> "User":
+    def __new__(cls, *args, **kwargs) -> User:
         """Возвращается объект User."""
         return super().__new__(*args, **kwargs)

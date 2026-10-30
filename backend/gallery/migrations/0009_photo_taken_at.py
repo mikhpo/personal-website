@@ -49,7 +49,7 @@ def get_fallback_datetime(image_field: FieldFile) -> datetime:
             storage = image_field.storage
             modified_time = storage.get_modified_time(image_field.name)
             return make_naive(modified_time) if is_aware(modified_time) else modified_time
-        except (FileNotFoundError, OSError):
+        except FileNotFoundError, OSError:
             pass
     return datetime.now(UTC)
 

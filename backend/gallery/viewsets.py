@@ -37,7 +37,7 @@ class AlbumViewSet(viewsets.ReadOnlyModelViewSet):
     lookup_field = "pk"
     # DatabaseSearchFilter после OrderingFilter: сортировка по релевантности
     # (-rank) не должна перезаписываться дефолтным ordering вьюхи.
-    filter_backends: ClassVar[list[type[filters.BaseFilterBackend] | type[DjangoFilterBackend]]] = [
+    filter_backends: ClassVar[list[type[filters.BaseFilterBackend | DjangoFilterBackend]]] = [
         DjangoFilterBackend,
         filters.OrderingFilter,
         DatabaseSearchFilter,
@@ -53,7 +53,7 @@ class AlbumViewSet(viewsets.ReadOnlyModelViewSet):
             return AlbumDetailSerializer
         return AlbumListSerializer
 
-    def get_queryset(self) -> "QuerySet[Album]":
+    def get_queryset(self) -> QuerySet[Album]:
         """QuerySet альбомов с prefetch обложки, тегов и фотографий.
 
         В list отдаёт только public=True; retrieve возвращает любой альбом.
@@ -79,7 +79,7 @@ class PhotoViewSet(viewsets.ReadOnlyModelViewSet):
     # DatabaseSearchFilter после OrderingFilter: сортировка по релевантности
     # (-rank) не должна перезаписываться дефолтным ordering вьюхи.
     # Теги не входят в search_fields: M2M-связь не ложится на SearchVector.
-    filter_backends: ClassVar[list[type[filters.BaseFilterBackend] | type[DjangoFilterBackend]]] = [
+    filter_backends: ClassVar[list[type[filters.BaseFilterBackend | DjangoFilterBackend]]] = [
         DjangoFilterBackend,
         filters.OrderingFilter,
         DatabaseSearchFilter,
@@ -96,7 +96,7 @@ class PhotoViewSet(viewsets.ReadOnlyModelViewSet):
     ordering_fields: ClassVar[list[str]] = ["taken_at", "uploaded_at", "name"]
     ordering: ClassVar[list[str]] = ["-taken_at"]
 
-    def get_queryset(self) -> "QuerySet[Photo]":
+    def get_queryset(self) -> QuerySet[Photo]:
         """В list отдаёт только public=True, в retrieve - любую фотографию."""
         queryset = Photo.objects.select_related("album").prefetch_related("tags")
         if self.action == "list":

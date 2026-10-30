@@ -55,7 +55,7 @@ def extract_exif(image_field: object) -> dict:
                         json_value = _exif_value_to_json(value)
                         if json_value is not None:
                             exif_data[decoded] = json_value
-    except (FileNotFoundError, PermissionError, OSError):
+    except FileNotFoundError, PermissionError, OSError:
         logger.exception("Ошибка чтения файла %s при миграции EXIF", name)
     return exif_data
 
