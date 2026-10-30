@@ -28,6 +28,8 @@ cd "$project_root" || exit
 
 readonly POSTGRES_VERSION=17
 readonly NODE_VERSION=22
+# Версия совпадает с закрепленной в Dockerfile и CI.
+readonly UV_VERSION=0.13.6
 
 #######################################
 # Запросить подтверждение готовности
@@ -110,13 +112,13 @@ function enable_ufw() {
 }
 
 #######################################
-# Установить uv официальным установщиком.
+# Установить uv закрепленной версии официальным установщиком.
 # uv сам устанавливает нужную версию Python
 # при синхронизации окружения, если системная
 # версия не удовлетворяет requires-python.
 #######################################
 function install_uv() {
-    curl -LsSf https://astral.sh/uv/install.sh | sh
+    curl -LsSf "https://astral.sh/uv/$UV_VERSION/install.sh" | sh
     export PATH="$HOME/.local/bin:$PATH"
 }
 
