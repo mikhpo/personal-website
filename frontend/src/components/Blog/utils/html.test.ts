@@ -2,8 +2,7 @@
  * Тесты для утилит работы с HTML-строками.
  *
  * Проверяет подсчет слов в сыром HTML и обрезку HTML до заданного числа слов
- * с сохранением целостности разметки. Ожидаемые результаты обрезки сверены
- * с django.utils.text.Truncator.words(html=True) версии Django 6.1.
+ * с сохранением целостности разметки.
  */
 
 import { countHtmlWords, truncateHtmlWords } from './html';
