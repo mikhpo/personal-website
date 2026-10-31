@@ -30,8 +30,8 @@ export interface ArticleCardProps {
 const ArticleCard = ({ article }: ArticleCardProps) => {
   const articleUrl = article.url || `/blog/${article.id}/`;
 
-  // Порог длины считается по сырому HTML, как в прежнем серверном шаблоне:
-  // словом считается любая группа символов между пробелами, включая атрибуты
+  // Порог длины считается по сырому HTML: словом считается любая группа
+  // символов между пробелами, включая атрибуты тегов
   const isLong = countHtmlWords(article.content) > 200;
 
   // Обрезка не разрывает теги: закрывает открытые элементы и сохраняет

@@ -12,7 +12,7 @@ describe('countHtmlWords', () => {
     expect(countHtmlWords('<p>один два три</p>')).toBe(3);
   });
 
-  test('учитывает содержимое тегов и атрибуты, как Django wordcount', () => {
+  test('учитывает содержимое тегов и атрибуты', () => {
     expect(countHtmlWords('<p style="text-align: justify;">один два</p>')).toBe(4);
   });
 
@@ -55,12 +55,12 @@ describe('truncateHtmlWords', () => {
     expect(truncateHtmlWords('<p>один</p><p>два</p>', 1)).toBe('<p>один</p><p>…</p>');
   });
 
-  test('пробельный узел между абзацами считается словом, как в Django', () => {
+  test('пробельный узел между абзацами считается одним словом', () => {
     const html = '<p>раз</p>\r\n<p style="text-align: justify;">два три четыре</p>';
     expect(truncateHtmlWords(html, 3)).toBe('<p>раз</p>\r\n<p style="text-align: justify;">два…</p>');
   });
 
-  test('выбрасывает комментарии, как в Django', () => {
+  test('выбрасывает комментарии из результата', () => {
     expect(truncateHtmlWords('<!-- комментарий --><p>один два три</p>', 1)).toBe('<p>один…</p>');
   });
 
