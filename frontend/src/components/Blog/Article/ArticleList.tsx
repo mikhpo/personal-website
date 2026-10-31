@@ -19,6 +19,8 @@ export interface ArticleListProps {
   topicSlug?: string;
   /** Поисковый запрос для фильтрации (search). */
   search?: string;
+  /** Размер выборки без пагинации: уходит в API как page_size, навигация по страницам не отображается. */
+  pageSize?: number;
 }
 
 /**
@@ -34,7 +36,7 @@ export interface ArticleListProps {
  * @example
  * <ArticleList search="django" />
  */
-const ArticleList = ({ categorySlug, seriesSlug, topicSlug, search }: ArticleListProps) => {
+const ArticleList = ({ categorySlug, seriesSlug, topicSlug, search, pageSize }: ArticleListProps) => {
   const { currentPage, totalPages, hasNext, hasPrevious, nextPage, previousPage, goToPage, setTotalPages } =
     usePagination({ initialPage: 1 });
 
@@ -50,11 +52,12 @@ const ArticleList = ({ categorySlug, seriesSlug, topicSlug, search }: ArticleLis
       topics__slug: topicSlug,
       search,
       page: currentPage,
+      page_size: pageSize,
     });
     const parsed = parseListResponse(data);
     setTotalPages(parsed.totalPages);
     return parsed.items;
-  }, [categorySlug, seriesSlug, topicSlug, search, currentPage, setTotalPages]);
+  }, [categorySlug, seriesSlug, topicSlug, search, currentPage, pageSize, setTotalPages]);
 
   const { data, loading, error, refetch } = useApiData(fetchArticles);
   const articles = data ?? [];
@@ -105,16 +108,18 @@ const ArticleList = ({ categorySlug, seriesSlug, topicSlug, search }: ArticleLis
       {articles.map((article) => (
         <ArticleCard key={article.id} article={article} />
       ))}
-      <Pagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        hasNext={hasNext}
-        hasPrevious={hasPrevious}
-        onPageChange={goToPage}
-        onNext={nextPage}
-        onPrevious={previousPage}
-        type="navigation"
-      />
+      {!pageSize && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          hasNext={hasNext}
+          hasPrevious={hasPrevious}
+          onPageChange={goToPage}
+          onNext={nextPage}
+          onPrevious={previousPage}
+          type="navigation"
+        />
+      )}
     </div>
   );
 };

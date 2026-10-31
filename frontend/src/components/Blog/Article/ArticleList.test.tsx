@@ -332,6 +332,22 @@ describe('ArticleList', () => {
   });
 
   /**
+   * Проверяет запрос выборки без пагинации в режиме pageSize.
+   * Размер выборки уходит в API как page_size, навигация по страницам не отображается.
+   */
+  test('в режиме pageSize запрашивает выборку без пагинации', async () => {
+    mockedBlogService.getArticles.mockResolvedValue(mockApiResponse);
+
+    render(<ArticleList pageSize={5} />);
+
+    await waitFor(() => {
+      expect(mockedBlogService.getArticles).toHaveBeenCalledWith(expect.objectContaining({ page_size: 5 }));
+    });
+
+    expect(screen.queryByTestId('pagination')).not.toBeInTheDocument();
+  });
+
+  /**
    * Проверяет сообщение о пустом результате при активном поиске.
    * Сообщение должно включать поисковый запрос пользователя.
    */

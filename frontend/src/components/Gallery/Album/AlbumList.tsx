@@ -16,6 +16,8 @@ export interface AlbumListProps {
   tagSlug?: string;
   /** Поисковый запрос для фильтрации (search). */
   search?: string;
+  /** Размер выборки без пагинации: уходит в API как page_size, навигация по страницам не отображается. */
+  pageSize?: number;
 }
 
 /**
@@ -31,7 +33,7 @@ export interface AlbumListProps {
  * @example
  * <AlbumList search="горы" />
  */
-const AlbumList = ({ tagSlug, search }: AlbumListProps) => {
+const AlbumList = ({ tagSlug, search, pageSize }: AlbumListProps) => {
   const { currentPage, totalPages, hasNext, hasPrevious, nextPage, previousPage, goToPage, setTotalPages } =
     usePagination({ initialPage: 1 });
 
@@ -41,11 +43,16 @@ const AlbumList = ({ tagSlug, search }: AlbumListProps) => {
    * Смена ссылки функции (фильтры, номер страницы) запускает загрузку хуком.
    */
   const loadAlbums = useCallback(async () => {
-    const data = await galleryService.getAlbums({ tags__slug: tagSlug, search, page: currentPage });
+    const data = await galleryService.getAlbums({
+      tags__slug: tagSlug,
+      search,
+      page: currentPage,
+      page_size: pageSize,
+    });
     const parsed = parseListResponse(data);
     setTotalPages(parsed.totalPages);
     return parsed.items;
-  }, [tagSlug, search, currentPage, setTotalPages]);
+  }, [tagSlug, search, currentPage, pageSize, setTotalPages]);
 
   const { data, loading, error, refetch } = useApiData(loadAlbums);
   const albums = data ?? [];
@@ -80,7 +87,7 @@ const AlbumList = ({ tagSlug, search }: AlbumListProps) => {
           </div>
         ))}
       </div>
-      {totalPages > 1 && (
+      {!pageSize && totalPages > 1 && (
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}

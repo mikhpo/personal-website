@@ -65,7 +65,9 @@ jest.mock('@hooks/usePagination', () => ({
 
 jest.mock('@components/Pagination/Pagination', () => ({
   __esModule: true,
-  default: () => null,
+  // Маркер вместо null: отсутствие или наличие пагинации в нужном режиме
+  // должно быть наблюдаемо в ассертах
+  default: () => <div data-testid="pagination" />,
 }));
 
 describe('AlbumList', () => {
@@ -95,6 +97,7 @@ describe('AlbumList', () => {
   const galleryService = jest.mocked(realGalleryService);
 
   beforeEach(() => {
+    mockPaginationState.totalPages = 1;
     galleryService.getAlbums.mockReset();
   });
 
@@ -289,5 +292,35 @@ describe('AlbumList', () => {
     // При одной странице пагинация не отображается
     const pagination = screen.queryByText('Pagination');
     expect(pagination).not.toBeInTheDocument();
+  });
+
+  /**
+   * Проверить запрос выборки без пагинации в режиме pageSize.
+   */
+  test('в режиме pageSize запрашивает выборку без пагинации', async () => {
+    mockPaginationState.totalPages = 5;
+    galleryService.getAlbums.mockResolvedValueOnce(paginate(mockAlbums, { count: 100, total_pages: 5 }));
+
+    render(<AlbumList pageSize={6} />);
+
+    await waitFor(() => {
+      expect(galleryService.getAlbums).toHaveBeenCalledWith(expect.objectContaining({ page_size: 6 }));
+    });
+
+    expect(screen.queryByTestId('pagination')).not.toBeInTheDocument();
+  });
+
+  /**
+   * Проверить отображение пагинации при нескольких страницах без pageSize.
+   */
+  test('отображает пагинацию при нескольких страницах без pageSize', async () => {
+    mockPaginationState.totalPages = 5;
+    galleryService.getAlbums.mockResolvedValueOnce(paginate(mockAlbums, { count: 100, total_pages: 5 }));
+
+    render(<AlbumList />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('pagination')).toBeInTheDocument();
+    });
   });
 });
