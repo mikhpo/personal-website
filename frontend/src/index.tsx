@@ -37,7 +37,7 @@ import SeriesCard from '@components/Main/SeriesCard';
 import About from '@components/About/AboutPage';
 
 // Импорт общих компонентов
-import SearchForm from '@components/Search/SearchForm';
+import SearchForm from '@components/SearchForm/SearchForm';
 
 declare global {
   interface Window {
@@ -89,7 +89,7 @@ const componentRegistry: Record<string, ComponentType<any>> = {
   'About/AboutPage': About,
 
   // Общие компоненты
-  'Search/SearchForm': SearchForm,
+  'SearchForm/SearchForm': SearchForm,
 };
 
 /**

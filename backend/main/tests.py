@@ -83,7 +83,7 @@ class TestSearchPage(TestCase):
     def test_search_page_components(self) -> None:
         """Проверяет монтирование формы поиска и списков статей и альбомов при запросе."""
         response = self.client.get(self.search_url, {"search": "react"})
-        self.assertContains(response, 'data-component-name="Search/SearchForm"')
+        self.assertContains(response, 'data-component-name="SearchForm/SearchForm"')
         self.assertContains(response, '"targetUrl": "/main/search/"')
         self.assertContains(response, 'data-component-name="Blog/ArticleList"')
         self.assertContains(response, '"pageSize": 5')
