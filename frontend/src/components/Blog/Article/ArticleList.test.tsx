@@ -2,17 +2,15 @@
  * Тесты для компонента ArticleList.
  *
  * Проверяет корректность отображения списка статей с загрузкой из API,
- * включая обработку состояний загрузки, ошибок, пагинацию и пустого списка.
+ * включая обработку состояний загрузки, ошибок, пагинацию и пустого списка,
+ * а также контракт превью: разметка статьи, обрезка длинных текстов,
+ * фотографии и ссылка "Читать дальше".
  */
 
 import React from 'react';
 import '@testing-library/jest-dom';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import ArticleList from './ArticleList';
-import type { ArticleCardProps } from '@components/Blog/Article/ArticleCard';
-import type { PaginationProps } from '@components/Pagination/Pagination';
-import type { SpinnerProps } from '@components/Spinner/Spinner';
-import type { AlertListProps } from '@components/Alert/AlertList';
 import type { Paginated } from '@api-types/pagination';
 import { makeArticle, paginate } from '@test-utils';
 import { blogService } from '@services';
@@ -22,62 +20,6 @@ jest.mock('@services');
 
 // Автомок @services: обертка jest.mocked открывает mock-методы сервиса
 const mockedBlogService = jest.mocked(blogService);
-
-// Мок для компонента ArticleCard
-jest.mock('@components/Blog/Article/ArticleCard', () => {
-  return function MockArticleCard({ article }: ArticleCardProps) {
-    return <div data-testid="article-card">{article.title}</div>;
-  };
-});
-
-// Мок для компонента Pagination
-jest.mock('@components/Pagination/Pagination', () => {
-  return function MockPagination({
-    currentPage,
-    totalPages,
-    hasNext,
-    hasPrevious,
-    onNext,
-    onPrevious,
-  }: PaginationProps) {
-    return (
-      <div data-testid="pagination">
-        <button onClick={onPrevious} disabled={!hasPrevious}>
-          Пред.
-        </button>
-        <span>
-          Стр. {currentPage} из {totalPages}
-        </span>
-        <button onClick={onNext} disabled={!hasNext}>
-          След.
-        </button>
-      </div>
-    );
-  };
-});
-
-// Мок для компонента Spinner
-jest.mock('@components/Spinner/Spinner', () => {
-  return function MockSpinner({ message }: SpinnerProps) {
-    return <div data-testid="spinner">{message}</div>;
-  };
-});
-
-// Мок для компонента AlertList
-jest.mock('@components/Alert/AlertList', () => {
-  return function MockAlertList({ messages = [] }: AlertListProps) {
-    return (
-      <div data-testid="alert-list">
-        {messages.map((msg) => (
-          <div key={`${msg.level}-${msg.message}`} data-testid={`alert-${msg.level}`}>
-            {msg.message}
-            {msg.actions}
-          </div>
-        ))}
-      </div>
-    );
-  };
-});
 
 describe('ArticleList', () => {
   /**
@@ -105,6 +47,19 @@ describe('ArticleList', () => {
    */
   const mockEmptyApiResponse = paginate([], { count: 0 });
 
+  /** Длинный текст: заведомо больше порога в 200 слов. */
+  const generateLongContent = () => Array(250).fill('слово').join(' ');
+
+  /** Рендерит список с одной статьей из мока сервиса и дожидается вывода. */
+  const renderWithArticle = async (article: ReturnType<typeof makeArticle>) => {
+    mockedBlogService.getArticles.mockResolvedValue(paginate([article]));
+    const view = render(<ArticleList />);
+    await waitFor(() => {
+      expect(screen.getByText(article.title)).toBeInTheDocument();
+    });
+    return view;
+  };
+
   beforeEach(() => {
     mockedBlogService.getArticles.mockClear();
   });
@@ -120,13 +75,12 @@ describe('ArticleList', () => {
   test('отображает индикатор загрузки при монтировании', () => {
     mockedBlogService.getArticles.mockImplementation(() => new Promise(() => {}));
     render(<ArticleList />);
-    expect(screen.getByTestId('spinner')).toBeInTheDocument();
-    expect(screen.getByText('Загрузка статей...')).toBeInTheDocument();
+    expect(screen.getByText('Загрузка статей...', { selector: 'p' })).toBeInTheDocument();
   });
 
   /**
    * Проверяет отображение списка статей при успешной загрузке.
-   * Данные должны корректно отображаться после получения от API.
+   * Заголовки статей становятся ссылками на страницы статей.
    */
   test('отображает список статей при успешной загрузке', async () => {
     mockedBlogService.getArticles.mockResolvedValue(mockApiResponse);
@@ -134,10 +88,9 @@ describe('ArticleList', () => {
     render(<ArticleList />);
 
     await waitFor(() => {
-      expect(screen.getAllByTestId('article-card')).toHaveLength(2);
+      expect(screen.getByText('Статья 1')).toBeInTheDocument();
     });
 
-    expect(screen.getByText('Статья 1')).toBeInTheDocument();
     expect(screen.getByText('Статья 2')).toBeInTheDocument();
   });
 
@@ -151,7 +104,7 @@ describe('ArticleList', () => {
     render(<ArticleList />);
 
     await waitFor(() => {
-      expect(screen.getByTestId('pagination')).toBeInTheDocument();
+      expect(screen.getByRole('navigation', { name: 'Навигация по страницам' })).toBeInTheDocument();
     });
   });
 
@@ -165,7 +118,7 @@ describe('ArticleList', () => {
     render(<ArticleList />);
 
     await waitFor(() => {
-      expect(screen.getByTestId('article-card')).toBeInTheDocument();
+      expect(screen.getByText('Статья 1')).toBeInTheDocument();
     });
   });
 
@@ -179,10 +132,8 @@ describe('ArticleList', () => {
     render(<ArticleList />);
 
     await waitFor(() => {
-      expect(screen.getByTestId('alert-list')).toBeInTheDocument();
+      expect(screen.getByText('Ошибка сети')).toBeInTheDocument();
     });
-
-    expect(screen.getByTestId('alert-error')).toBeInTheDocument();
   });
 
   /**
@@ -195,8 +146,10 @@ describe('ArticleList', () => {
     render(<ArticleList />);
 
     await waitFor(() => {
-      expect(screen.getByText('Повторить')).toBeInTheDocument();
+      expect(screen.getByTestId('retry-button')).toBeInTheDocument();
     });
+
+    expect(screen.getByText('Повторить')).toBeInTheDocument();
   });
 
   /**
@@ -211,13 +164,13 @@ describe('ArticleList', () => {
     render(<ArticleList />);
 
     await waitFor(() => {
-      expect(screen.getByText('Повторить')).toBeInTheDocument();
+      expect(screen.getByTestId('retry-button')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByText('Повторить'));
+    fireEvent.click(screen.getByTestId('retry-button'));
 
     await waitFor(() => {
-      expect(screen.getAllByTestId('article-card')).toHaveLength(2);
+      expect(screen.getByText('Статья 1')).toBeInTheDocument();
     });
   });
 
@@ -231,10 +184,8 @@ describe('ArticleList', () => {
     render(<ArticleList />);
 
     await waitFor(() => {
-      expect(screen.getByTestId('alert-list')).toBeInTheDocument();
+      expect(screen.getByText('Статьи не найдены')).toBeInTheDocument();
     });
-
-    expect(screen.getByText('Статьи не найдены')).toBeInTheDocument();
   });
 
   /**
@@ -251,10 +202,10 @@ describe('ArticleList', () => {
     render(<ArticleList />);
 
     await waitFor(() => {
-      expect(screen.getByTestId('pagination')).toBeInTheDocument();
+      expect(screen.getByText('следующая')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByText('След.'));
+    fireEvent.click(screen.getByText('следующая'));
 
     await waitFor(() => {
       expect(mockedBlogService.getArticles).toHaveBeenCalledTimes(2);
@@ -280,17 +231,17 @@ describe('ArticleList', () => {
     render(<ArticleList />);
 
     await waitFor(() => {
-      expect(screen.getByTestId('pagination')).toBeInTheDocument();
+      expect(screen.getByText('следующая')).toBeInTheDocument();
     });
 
     // Переход на вторую страницу, затем назад на первую
-    fireEvent.click(screen.getByText('След.'));
+    fireEvent.click(screen.getByText('следующая'));
 
     await waitFor(() => {
       expect(mockedBlogService.getArticles).toHaveBeenCalledTimes(2);
     });
 
-    fireEvent.click(screen.getByText('Пред.'));
+    fireEvent.click(screen.getByText('предыдущая'));
 
     await waitFor(() => {
       expect(mockedBlogService.getArticles).toHaveBeenCalledTimes(3);
@@ -344,7 +295,7 @@ describe('ArticleList', () => {
       expect(mockedBlogService.getArticles).toHaveBeenCalledWith(expect.objectContaining({ page_size: 5 }));
     });
 
-    expect(screen.queryByTestId('pagination')).not.toBeInTheDocument();
+    expect(screen.queryByRole('navigation', { name: 'Навигация по страницам' })).not.toBeInTheDocument();
   });
 
   /**
@@ -357,10 +308,8 @@ describe('ArticleList', () => {
     render(<ArticleList search="react" />);
 
     await waitFor(() => {
-      expect(screen.getByTestId('alert-list')).toBeInTheDocument();
+      expect(screen.getByText('По запросу "react" ничего не найдено')).toBeInTheDocument();
     });
-
-    expect(screen.getByText('По запросу "react" ничего не найдено')).toBeInTheDocument();
   });
 
   /**
@@ -373,9 +322,104 @@ describe('ArticleList', () => {
     render(<ArticleList />);
 
     await waitFor(() => {
-      expect(screen.getByTestId('alert-list')).toBeInTheDocument();
+      expect(screen.getByText('Статьи не найдены')).toBeInTheDocument();
     });
+  });
 
-    expect(screen.getByText('Статьи не найдены')).toBeInTheDocument();
+  /**
+   * Проверяет ссылку заголовка при отсутствии url статьи: срабатывает
+   * fallback на страницу статьи по идентификатору.
+   */
+  test('ведет ссылку заголовка на страницу статьи при отсутствии url', async () => {
+    await renderWithArticle(makeArticle({ id: 1, title: 'Тестовая статья', url: undefined }));
+
+    expect(screen.getByText('Тестовая статья').closest('a')).toHaveAttribute('href', '/blog/1/');
+  });
+
+  /**
+   * Проверяет, что фотография из начала статьи видна в превью длинной статьи.
+   * Изображение находится до точки обрезки и попадает в карточку.
+   */
+  test('отображает фотографию в превью длинной статьи', async () => {
+    await renderWithArticle(
+      makeArticle({
+        id: 7,
+        title: 'Статья с фотографией',
+        content: '<p><img src="/media/photo.jpg" alt="Фотография" /></p><p>' + generateLongContent() + '</p>',
+      }),
+    );
+
+    const photo = screen.getByRole('img', { name: 'Фотография' });
+    expect(photo).toHaveAttribute('src', '/media/photo.jpg');
+  });
+
+  /**
+   * Проверяет, что HTML-форматирование короткой статьи сохраняется в превью:
+   * контент рендерится как разметка, а не как текст.
+   */
+  test('отображает HTML-форматирование в превью короткой статьи', async () => {
+    const { container } = await renderWithArticle(
+      makeArticle({
+        id: 8,
+        title: 'Форматированная статья',
+        content: '<p>Это <b>жирный</b> текст.</p>',
+      }),
+    );
+
+    expect(container.querySelector('.card-text b')).toHaveTextContent('жирный');
+  });
+
+  /**
+   * Проверяет, что длинная статья обрезается до 50 слов: начало текста в
+   * превью есть, хвост - нет, разметка замкнута.
+   */
+  test('обрезает длинную статью до 50 слов с замкнутой разметкой', async () => {
+    const numberedWords = Array.from({ length: 250 }, (_, index) => `слово${index + 1}`).join(' ');
+    const { container } = await renderWithArticle(
+      makeArticle({
+        id: 9,
+        title: 'Нумерованная статья',
+        content: `<p>${numberedWords}</p>`,
+      }),
+    );
+
+    const preview = container.querySelector('.card-text');
+    expect(preview).toHaveTextContent('слово1');
+    expect(preview).toHaveTextContent('слово50');
+    expect(preview).not.toHaveTextContent('слово51');
+    expect(preview?.innerHTML.endsWith('</p>')).toBe(true);
+  });
+
+  /**
+   * Проверяет, что для длинной статьи отображается ссылка "Читать дальше"
+   * со ссылкой на страницу статьи.
+   */
+  test('отображает ссылку "Читать дальше" для длинной статьи', async () => {
+    await renderWithArticle(
+      makeArticle({
+        id: 3,
+        title: 'Длинная статья',
+        content: generateLongContent(),
+        url: undefined,
+      }),
+    );
+
+    expect(screen.getByText('Читать дальше')).toHaveAttribute('href', '/blog/3/');
+  });
+
+  /**
+   * Проверяет, что для короткой статьи ссылка "Читать дальше" не отображается:
+   * при количестве слов не более 200 усечение не применяется.
+   */
+  test('не отображает ссылку "Читать дальше" для короткой статьи', async () => {
+    await renderWithArticle(
+      makeArticle({
+        id: 2,
+        title: 'Короткая статья',
+        content: '<p>Это короткий текст статьи.</p>',
+      }),
+    );
+
+    expect(screen.queryByText('Читать дальше')).not.toBeInTheDocument();
   });
 });

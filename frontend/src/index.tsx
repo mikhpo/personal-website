@@ -8,7 +8,6 @@ import AlertList from '@components/Alert/AlertList';
 import LoadingError from '@components/Alert/LoadingError';
 
 // Импорт Blog компонентов
-import ArticleCard from '@components/Blog/Article/ArticleCard';
 import ArticleList from '@components/Blog/Article/ArticleList';
 import ArticleForm from '@components/Blog/Article/ArticleForm';
 import Comment from '@components/Blog/Comment/Comment';
@@ -61,7 +60,6 @@ const componentRegistry: Record<string, ComponentType<any>> = {
   'Alert/LoadingError': LoadingError,
 
   // Компоненты блога
-  'Blog/ArticleCard': ArticleCard,
   'Blog/ArticleList': ArticleList,
   'Blog/ArticleForm': ArticleForm,
   'Blog/Comment': Comment,
