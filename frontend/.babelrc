@@ -6,7 +6,12 @@
         "targets": "> 0.25%, not dead"
       }
     ],
-    "@babel/preset-react",
     "@babel/preset-typescript"
+  ],
+  "overrides": [
+    {
+      "test": ["**/*.js", "**/*.jsx", "**/*.tsx"],
+      "presets": ["@babel/preset-react"]
+    }
   ]
 }

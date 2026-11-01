@@ -28,7 +28,7 @@ class TokenObtainPairLoggingView(TokenObtainPairView):
         """Выдать пару токенов и записать событие в журнал."""
         response = super().post(request, *args, **kwargs)
         if response.status_code == HTTPStatus.OK:
-            username = request.data.get("username")
+            username = request.data.get("username") if isinstance(request.data, dict) else None
             ip = request.META.get("HTTP_X_REAL_IP")
             logger.info(f"Выдан JWT-токен пользователю {username} с IP-адреса {ip}")
         return response

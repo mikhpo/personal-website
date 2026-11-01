@@ -1,6 +1,6 @@
 """Тесты моделей галереи."""
 
-import datetime
+import datetime as dt
 from http import HTTPStatus
 from typing import TYPE_CHECKING
 from unittest.mock import patch
@@ -272,9 +272,9 @@ class GalleryModelsTests(TestCase):
         private_b = PhotoFactory(album=album, public=False)
         public_c = PhotoFactory(album=album, public=True)
         taken = {
-            public_a.pk: datetime.datetime(2022, 1, 1, tzinfo=datetime.UTC),
-            private_b.pk: datetime.datetime(2022, 1, 2, tzinfo=datetime.UTC),
-            public_c.pk: datetime.datetime(2022, 1, 3, tzinfo=datetime.UTC),
+            public_a.pk: dt.datetime(2022, 1, 1, tzinfo=dt.UTC),
+            private_b.pk: dt.datetime(2022, 1, 2, tzinfo=dt.UTC),
+            public_c.pk: dt.datetime(2022, 1, 3, tzinfo=dt.UTC),
         }
         for pk, value in taken.items():
             Photo.objects.filter(pk=pk).update(taken_at=value)
@@ -313,7 +313,7 @@ class GalleryModelsTests(TestCase):
         self.assertIsInstance(first_photo, Photo)
         if first_photo:
             self.assertIsNotNone(first_photo.taken_at)
-            self.assertIsInstance(first_photo.taken_at, datetime.datetime)
+            self.assertIsInstance(first_photo.taken_at, dt.datetime)
 
     def test_should_update_taken_at_new_instance(self) -> None:
         """Метод should_update_taken_at возвращает True для нового экземпляра."""

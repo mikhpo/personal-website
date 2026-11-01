@@ -1,6 +1,6 @@
 """Коллекция вспомогательных фукнций и классов."""
 
-import datetime
+import datetime as dt
 import json
 import locale
 import logging
@@ -42,7 +42,7 @@ def is_running_in_container() -> bool:
     return bool(Path("/proc/1/cgroup").exists())
 
 
-def format_local_datetime(date_time: datetime.datetime) -> str:
+def format_local_datetime(date_time: dt.datetime) -> str:
     """Преобразует дату-время в строку с учетом локализации и временной зоны."""
     locale.setlocale(locale.LC_ALL, "ru_RU.UTF-8")
     if timezone.is_aware(date_time):

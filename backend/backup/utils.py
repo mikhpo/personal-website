@@ -131,7 +131,7 @@ def latest_dump(names: list[str]) -> str:
     if not names:
         msg = "список дампов пуст"
         raise CommandError(msg)
-    return sorted(names)[-1]
+    return max(names)
 
 
 def pg_env() -> dict[str, str]:

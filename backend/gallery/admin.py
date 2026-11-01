@@ -91,7 +91,7 @@ class PhotoAdmin(admin.ModelAdmin):
         в любом окружении без настройки. Расширение в ссылке отражает формат
         исходного изображения; превью отдается в этом же формате.
         """
-        if not obj.pk or not obj.image:
+        if not obj.pk or not obj.image.name:
             return ""
         extension = Path(obj.image.name).suffix.lstrip(".").lower() or "jpg"
         links = [

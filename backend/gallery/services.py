@@ -142,7 +142,7 @@ def generate_embed_preview(photo: Photo, size: int, previous_name: str | None = 
         embed_name = f"{photo.embed_preview_dir()}/{size}.{extension}"
         with BytesIO() as buffer:
             resized.save(buffer, format=source_format, **options)
-            storage.save(embed_name, buffer.getvalue())
+            storage.save(embed_name, buffer)
     if previous_name and previous_name != embed_name:
         storage.delete(previous_name)
     return embed_name

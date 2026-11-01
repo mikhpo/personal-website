@@ -242,7 +242,7 @@ class Photo(models.Model):
             previous = Photo.objects.get(pk=self.pk)
             if previous.album != self.album:
                 self.change_album_photo_image_path(previous)
-        if not self.name:
+        if not self.name and self.image.name:
             self.name = storage.stem(self.image.name)
         if not self.slug:
             self.slug = get_unique_slug(self, self.name)
@@ -292,13 +292,18 @@ class Photo(models.Model):
         try:
             prev = Photo.objects.get(pk=self.pk)
 
+            name = self.image.name
+            previous_name = prev.image.name
+
             # Разные файлы - нужно обновить
-            if prev.image.name != self.image.name:
+            if previous_name != name:
                 return True
 
             # То же имя файла - проверяем modification time
-            current_mtime = storage.get_modified_time(self.image.name)
-            previous_mtime = storage.get_modified_time(prev.image.name)
+            if not name or not previous_name:
+                return False
+            current_mtime = storage.get_modified_time(name)
+            previous_mtime = storage.get_modified_time(previous_name)
             return current_mtime != previous_mtime
 
         except Photo.DoesNotExist:

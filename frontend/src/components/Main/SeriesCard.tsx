@@ -29,7 +29,7 @@ const SeriesCard = ({ series }: SeriesCardProps) => (
   <BaseCard
     title={series.name}
     url={`/blog/series/${series.slug}/`}
-    image={series.image}
+    image={series.image ?? undefined}
     description={series.description}
     imageAlt={series.name}
     titleClassName="fs-6"
