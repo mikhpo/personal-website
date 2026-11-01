@@ -4,7 +4,7 @@ import NavItems, { type NavLink } from '@components/Navbar/NavItems';
 import UserAuthSection from '@components/Navbar/UserAuthSection';
 import ThemeToggle from '@components/Navbar/ThemeToggle';
 import TagsOffcanvas from '@components/Gallery/Tags/TagsOffcanvas';
-import SearchForm from '@components/Search/SearchForm';
+import SearchForm from '@components/SearchForm/SearchForm';
 
 /** Свойства компонента навигационной панели. */
 export interface NavbarProps {

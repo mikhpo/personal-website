@@ -81,18 +81,26 @@ class TestSearchPage(TestCase):
         self.assertTemplateUsed(response, self.base_template)
 
     def test_search_page_components(self) -> None:
-        """Проверяет монтирование формы поиска и компонента результатов."""
-        response = self.client.get(self.search_url)
-        self.assertContains(response, 'data-component-name="Search/SearchForm"')
+        """Проверяет монтирование формы поиска и списков статей и альбомов при запросе."""
+        response = self.client.get(self.search_url, {"search": "react"})
+        self.assertContains(response, 'data-component-name="SearchForm/SearchForm"')
         self.assertContains(response, '"targetUrl": "/main/search/"')
-        self.assertContains(response, 'data-component-name="Search/SearchResults"')
+        self.assertContains(response, 'data-component-name="Blog/ArticleList"')
+        self.assertContains(response, 'data-component-name="Gallery/AlbumList"')
 
     def test_search_page_search_parameter(self) -> None:
         """Тестирование передачи поискового запроса в React компоненты страницы."""
         response = self.client.get(self.search_url, {"search": "react"})
 
-        # Поисковый запрос попадает в пропы SearchForm и SearchResults
+        # Поисковый запрос попадает в пропы формы и списков результатов
         self.assertContains(response, '"search": "react"')
+
+    def test_search_page_hint_without_query(self) -> None:
+        """Проверяет подсказку вместо списков результатов при пустом запросе."""
+        response = self.client.get(self.search_url)
+        self.assertContains(response, "Введите поисковый запрос, чтобы найти статьи и альбомы.")
+        self.assertNotContains(response, 'data-component-name="Blog/ArticleList"')
+        self.assertNotContains(response, 'data-component-name="Gallery/AlbumList"')
 
 
 class TestSitemap(TestCase):

@@ -131,7 +131,7 @@ class TestGalleryHomeView(TestCase):
         self.assertContains(response, '"search": "sunset"')
 
         # Форма поиска смонтирована с targetUrl страницы результатов
-        self.assertContains(response, 'data-component-name="Search/SearchForm"')
+        self.assertContains(response, 'data-component-name="SearchForm/SearchForm"')
 
 
 class TestPhotoListView(TestCase):
@@ -228,7 +228,7 @@ class TestPhotoListView(TestCase):
         self.assertContains(response, '"search": "sunset"')
 
         # Форма поиска смонтирована с targetUrl страницы результатов
-        self.assertContains(response, 'data-component-name="Search/SearchForm"')
+        self.assertContains(response, 'data-component-name="SearchForm/SearchForm"')
         self.assertContains(response, '"targetUrl": "/gallery/photos/"')
 
 
@@ -562,7 +562,7 @@ class TestAlbumListView(TestCase):
         self.assertContains(response, '"search": "mountains"')
 
         # Форма поиска смонтирована с targetUrl страницы результатов
-        self.assertContains(response, 'data-component-name="Search/SearchForm"')
+        self.assertContains(response, 'data-component-name="SearchForm/SearchForm"')
         self.assertContains(response, '"targetUrl": "/gallery/albums/"')
 
 

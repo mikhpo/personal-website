@@ -1,9 +1,10 @@
 import React, { useCallback } from 'react';
-import { Button } from 'react-bootstrap';
-import ArticleCard from '@components/Blog/Article/ArticleCard';
+import { Card } from 'react-bootstrap';
 import Spinner from '@components/Spinner/Spinner';
 import AlertList from '@components/Alert/AlertList';
+import LoadingError from '@components/Alert/LoadingError';
 import Pagination from '@components/Pagination/Pagination';
+import { countHtmlWords, truncateHtmlWords } from '@components/Blog/utils/html';
 import { blogService } from '@services';
 import { parseListResponse } from '@utils/pagination';
 import { searchEmptyMessage } from '@utils/messages';
@@ -25,8 +26,11 @@ export interface ArticleListProps {
  * Компонент списка статей блога.
  *
  * Загружает и отображает список статей из API блога с поддержкой пагинации.
- * Обрабатывает состояния загрузки, ошибки и пустого списка.
- * Предоставляет возможность повторной попытки загрузки при ошибке.
+ * Каждая статья выводится карточкой с заголовком и превью содержимого в виде
+ * HTML: фотографии и форматирование статьи видны прямо в списке. При длинном
+ * содержимом (более 200 слов) превью обрезается до 50 слов с добавлением
+ * ссылки "Читать дальше". Обрабатывает состояния загрузки, ошибки и пустого
+ * списка, предоставляет возможность повторной попытки загрузки при ошибке.
  *
  * @example
  * <ArticleList categorySlug="react" />
@@ -75,21 +79,7 @@ const ArticleList = ({ categorySlug, seriesSlug, topicSlug, search }: ArticleLis
 
   // Отображение сообщения об ошибке с кнопкой повтора
   if (error) {
-    return (
-      <AlertList
-        messages={[
-          {
-            message: error,
-            level: 'error',
-            actions: (
-              <Button variant="outline-primary" size="sm" onClick={handleRetry}>
-                Повторить
-              </Button>
-            ),
-          },
-        ]}
-      />
-    );
+    return <LoadingError message={error} onRetry={handleRetry} />;
   }
 
   // Отображение сообщения о пустом списке статей;
@@ -102,9 +92,31 @@ const ArticleList = ({ categorySlug, seriesSlug, topicSlug, search }: ArticleLis
   // Отображение списка статей
   return (
     <div className="mb-3 pb-3">
-      {articles.map((article) => (
-        <ArticleCard key={article.id} article={article} />
-      ))}
+      {articles.map((article) => {
+        const articleUrl = article.url || `/blog/${article.id}/`;
+
+        // Порог длины считается по сырому HTML: словом считается любая группа
+        // символов между пробелами, включая атрибуты тегов
+        const isLong = countHtmlWords(article.content) > 200;
+
+        // Обрезка не разрывает теги: закрывает открытые элементы и сохраняет
+        // фотографии, встретившиеся до точки обрезки
+        const preview = isLong ? truncateHtmlWords(article.content, 50) : article.content;
+
+        return (
+          <div key={article.id} className="container mb-3 pb-3">
+            <Card className="shadow mb-4 rounded justify-content">
+              <Card.Body>
+                <h2 className="card-title fs-4">
+                  <a href={articleUrl}>{article.title}</a>
+                </h2>
+                <div className="card-text" dangerouslySetInnerHTML={{ __html: preview }} />
+                {isLong && <a href={articleUrl}>Читать дальше</a>}
+              </Card.Body>
+            </Card>
+          </div>
+        );
+      })}
       <Pagination
         currentPage={currentPage}
         totalPages={totalPages}

@@ -8,7 +8,6 @@ import AlertList from '@components/Alert/AlertList';
 import LoadingError from '@components/Alert/LoadingError';
 
 // Импорт Blog компонентов
-import ArticleCard from '@components/Blog/Article/ArticleCard';
 import ArticleList from '@components/Blog/Article/ArticleList';
 import ArticleForm from '@components/Blog/Article/ArticleForm';
 import Comment from '@components/Blog/Comment/Comment';
@@ -38,8 +37,7 @@ import SeriesCard from '@components/Main/SeriesCard';
 import About from '@components/About/AboutPage';
 
 // Импорт общих компонентов
-import SearchForm from '@components/Search/SearchForm';
-import SearchResults from '@components/Search/SearchResults';
+import SearchForm from '@components/SearchForm/SearchForm';
 
 declare global {
   interface Window {
@@ -62,7 +60,6 @@ const componentRegistry: Record<string, ComponentType<any>> = {
   'Alert/LoadingError': LoadingError,
 
   // Компоненты блога
-  'Blog/ArticleCard': ArticleCard,
   'Blog/ArticleList': ArticleList,
   'Blog/ArticleForm': ArticleForm,
   'Blog/Comment': Comment,
@@ -92,8 +89,7 @@ const componentRegistry: Record<string, ComponentType<any>> = {
   'About/AboutPage': About,
 
   // Общие компоненты
-  'Search/SearchForm': SearchForm,
-  'Search/SearchResults': SearchResults,
+  'SearchForm/SearchForm': SearchForm,
 };
 
 /**
