@@ -39,7 +39,6 @@ import About from '@components/About/AboutPage';
 
 // Импорт общих компонентов
 import SearchForm from '@components/Search/SearchForm';
-import SearchResults from '@components/Search/SearchResults';
 
 declare global {
   interface Window {
@@ -93,7 +92,6 @@ const componentRegistry: Record<string, ComponentType<any>> = {
 
   // Общие компоненты
   'Search/SearchForm': SearchForm,
-  'Search/SearchResults': SearchResults,
 };
 
 /**

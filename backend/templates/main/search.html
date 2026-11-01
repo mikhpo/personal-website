@@ -2,7 +2,7 @@
 {% load react_tags %}
 <!--
     Страница общего поиска по сайту.
-    Форма поиска и результаты (статьи и альбомы)
+    Форма поиска и списки статей и альбомов
     рендерятся React компонентами.
 -->
 {% block content %}
@@ -11,6 +11,15 @@
         <div class="mb-3">
             {% react_component "Search/SearchForm" search=search targetUrl="/main/search/" placeholder="Поиск по сайту..." %}
         </div>
-        {% react_component "Search/SearchResults" search=search %}
+        {% if search %}
+            <h2 class="h4 mt-4">Статьи</h2>
+            {% react_component "Blog/ArticleList" search=search pageSize=5 %}
+            <a href="{% url 'blog:blog' %}?search={{ search }}">Все статьи</a>
+            <h2 class="h4 mt-4">Альбомы</h2>
+            {% react_component "Gallery/AlbumList" search=search pageSize=6 %}
+            <a href="{% url 'gallery:album-list' %}?search={{ search }}">Все альбомы</a>
+        {% else %}
+            <p class="text-muted">Введите поисковый запрос, чтобы найти статьи и альбомы.</p>
+        {% endif %}
     </div>
 {% endblock content %}
