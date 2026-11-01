@@ -5,7 +5,7 @@ description: Работа с GitHub через CLI gh - создание и за
 
 ## Предназначение
 
-Скилл описывает типовой цикл работы с репозиторием на GitHub через утилиту `gh`: задача -> ветка -> фикс -> PR -> проверка CI -> merge -> деплой. Все заголовки и описания задач и PR - на русском языке.
+Скилл описывает типовой цикл работы с репозиторием на GitHub через утилиту `gh`: задача -> ветка -> фикс -> PR -> проверка CI -> merge. Все заголовки и описания задач и PR - на русском языке.
 
 ## Подготовка
 
@@ -63,6 +63,8 @@ EOF
 Пользователя сразу указывать исполнителем: `--assignee @me` в каждом создаваемом PR.
 
 Ключевое слово `Closes #N` (также `Fixes #N`, `Resolves #N`) в теле PR автоматически закрывает задачу при merge - отдельный шаг закрытия не нужен.
+
+Связанную работу при открытом PR не выносить в отдельный PR молча: спросить пользователя, продолжать в текущем PR или завести отдельную задачу - решение о дроблении работы на несколько PR принадлежит пользователю. Правки по замечаниям ревью самого PR всегда идут в него.
 
 ### Прикрепить скриншоты к PR или задаче
 
@@ -135,23 +137,21 @@ gh pr merge <N> --merge --delete-branch
 
 Стратегия по умолчанию - merge commit (`--merge`); альтернативы: `--squash`, `--rebase`.
 
-Флаг `--delete-branch` переключает на main и удаляет локальную ветку; удаленная ветка удаляется автоматически настройкой репо (delete branch on merge).
+Флаг `--delete-branch` переключает на main и удаляет локальную ветку; удаленная ветка удаляется автоматически настройкой репо (delete branch on merge), если она включена.
 
 После merge задача из `Closes #N` закрывается сама.
 
 ## Workflows (CI/CD)
 
-### Типовые workflows
+### Состав workflows репозитория
 
-- `Test code` - на открытие и обновление PR: линтеры, тесты, сборка Docker-образа
-- `Release image` - на merge PR в main или вручную: публикация образа latest в GHCR и Docker Hub
-- `Deploy to VPS` - вручную (workflow_dispatch): `gh workflow run deploy.yml --ref main`; автоматический запуск после `Release image` отключен
+Список workflows, их имена и события запуска определяются конфигурацией `.github/workflows/` репозитория. Общая картина: проверки PR (линтеры, тесты, сборка), release-workflow при merge в main и ручные workflows (workflow_dispatch, например деплой). Имена запрашивать из репозитория: `gh workflow list`.
 
 ### Просмотр runs
 
 ```bash
 gh run list                          # последние runs: STATUS, NAME, WORKFLOW, EVENT
-gh run list --workflow "Test code"   # runs одного workflow
+gh run list --workflow "<имя>"       # runs одного workflow
 gh run view <id>                     # детали: jobs и шаги
 gh run view <id> --log-failed        # логи упавших шагов
 ```
@@ -161,12 +161,12 @@ gh run view <id> --log-failed        # логи упавших шагов
 ### Запустить workflow вручную
 
 ```bash
-gh workflow run release.yml --ref main
+gh workflow run <файл>.yml --ref main
 ```
 
-Команда не печатает id созданного run - узнать его: `gh run list --workflow "Release image" --limit 1`.
+Команда не печатает id созданного run - узнать его: `gh run list --workflow "<имя>" --limit 1`.
 
-Перезапуск упавшего деплоя без пересборки образа: `gh run rerun <id>` на run деплоя.
+Перезапуск упавшего деплоя без пересборки артефакта: `gh run rerun <id>` на run деплоя.
 
 ## Мониторинг завершения
 
@@ -197,5 +197,5 @@ gh run watch <id> --exit-status --compact
 5. Дождаться CI: `gh pr checks <N> --watch --fail-fast`
 6. (Опционально) Разобрать комментарии ревью: см. "Обработка комментариев ревью (опционально)"
 7. Смержить (только после явного подтверждения пользователя и зеленого CI из шага 5; при незавершенных checks - дождаться, при падении - не мержить): `gh pr merge <N> --merge --delete-branch`; задача закроется сама
-8. Дождаться `Release image` (auto на merge в main): `gh run list --workflow "Release image"` -> `gh run watch <id> --exit-status`
-9. При готовности доставить изменения запустить деплой вручную: `gh workflow run deploy.yml --ref main` -> найти run: `gh run list --workflow "Deploy to VPS" --limit 1` -> `gh run watch <id> --exit-status --compact`
+8. Дождаться release-workflow, если он настроен в репозитории (auto на merge в main): `gh run list --workflow "<имя>"` -> `gh run watch <id> --exit-status`
+9. При готовности доставить изменения запустить деплой, если он настроен как workflow_dispatch: `gh workflow run <файл>.yml --ref main` -> найти run: `gh run list --workflow "<имя>" --limit 1` -> `gh run watch <id> --exit-status --compact`

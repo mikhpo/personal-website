@@ -250,6 +250,12 @@
 - Вносить аккуратные точечные правки поверх существующих коммитов: коммит-исправление либо amend, если коммит еще не запушен
 - Сброс к main допустим, только когда неверна вся совокупность изменений и перерабатывать нечего
 
+## Скиллы
+
+- Общие скиллы (github-workflow, sourcecraft-workflow, yc-postgresql, postgresql-dump, postgresql-restore, browser-screenshots) установлены из репозитория mikhpo/skills командой `npx skills add mikhpo/skills`; обновление - `npx skills update`; локально не редактировать - правки вносить в общем репозитории
+- Остальные скиллы в `.agents/skills/` - проектные: бэкапы, сервер, диагностика прода, методики документации и планирования
+- Подготовка к скриншотам страниц (скилл browser-screenshots): dev-сервер - `task runserver`; контейнер postgres, остановленный прогоном тестов, - `docker compose up -d postgres`; после правок фронтенда пересобрать бандл - `npm run build`; демо-данные - `uv run python backend/manage.py generate_blog_objects` и `generate_gallery_objects`. Имена CI workflows - в docs/CONTRIBUTING.md
+
 ## Линтинг и проверки
 
 - Ruff: `uv run ruff check . --fix`

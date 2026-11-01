@@ -31,17 +31,17 @@ description: Управление кластером Managed PostgreSQL в Yande
 yc managed-postgresql cluster list
 
 # Полная конфигурация кластера
-yc managed-postgresql cluster get postgresql --full
+yc managed-postgresql cluster get <имя> --full
 
 # Хосты: FQDN, роль, зона, наличие публичного IP
-yc managed-postgresql host list --cluster-name postgresql
+yc managed-postgresql host list --cluster-name <имя>
 
 # Пользователи и базы
-yc managed-postgresql user list --cluster-name postgresql
-yc managed-postgresql database list --cluster-name postgresql
+yc managed-postgresql user list --cluster-name <имя>
+yc managed-postgresql database list --cluster-name <имя>
 
 # Группы безопасности кластера (None - используются default-SG сети)
-yc managed-postgresql cluster get postgresql --format json | \
+yc managed-postgresql cluster get <имя> --format json | \
   python3 -c "import sys,json; print('security_group_ids:', json.load(sys.stdin).get('security_group_ids'))"
 
 # Сеть и default-SG
@@ -56,7 +56,7 @@ yc vpc security-group get <default-sg-id>
 1. Публичный IP у хоста (ключевой блокер). Проверить:
 
    ```bash
-   yc managed-postgresql host list --cluster-name postgresql
+   yc managed-postgresql host list --cluster-name <имя>
    ```
 
    Колонка `PUBLIC IP` должна быть `true`.
@@ -65,7 +65,7 @@ yc vpc security-group get <default-sg-id>
 
    ```bash
    yc managed-postgresql host update <FQDN> \
-     --cluster-name postgresql --assign-public-ip
+     --cluster-name <имя> --assign-public-ip
    ```
 
    После этого FQDN начинает резолвиться в публичный адрес:
@@ -74,12 +74,12 @@ yc vpc security-group get <default-sg-id>
    dig +short <FQDN>
    ```
 
-3. Группы безопасности. Если к кластеру не привязаны SG (`security_group_ids: None`), действует default-SG сети. Проверить, что default-SG разрешает входящий TCP на 6432 из нужного диапазона (например, `0.0.0.0/0`). Для текущего проекта default-SG уже открыта (`INGRESS ANY из 0.0.0.0/0`) - дополнительно менять ничего не нужно.
+3. Группы безопасности. Если к кластеру не привязаны SG (`security_group_ids: None`), действует default-SG сети - проверить, что она разрешает входящий TCP на 6432 из нужного диапазона; у части проектов default-SG уже открыта, у части - нет, состояние смотреть выводом выше.
 
 Если нужно ограничить доступ конкретными IP, привязать к кластеру отдельную SG правилом `INGRESS TCP 6432 из <CIDR>`:
 
 ```bash
-yc managed-postgresql cluster update postgresql --security-group-ids <sg-id>
+yc managed-postgresql cluster update <имя> --security-group-ids <sg-id>
 ```
 
 ## Проверка подключения
@@ -126,9 +126,9 @@ PGPASSWORD=<пароль> psql \
 ```bash
 PW=$(openssl rand -base64 48 | tr -dc 'A-Za-z0-9' | head -c 24) && \
 echo "NEW_PASSWORD=$PW" && \
-yc managed-postgresql user update <user> --cluster-name postgresql --password "$PW" && \
+yc managed-postgresql user update <user> --cluster-name <имя> --password "$PW" && \
 PGPASSWORD="$PW" psql \
-  "host=<fqdn> port=6432 dbname=db1 user=<user> sslmode=verify-full sslrootcert=$HOME/.postgresql/root.crt" \
+  "host=<fqdn> port=6432 dbname=<dbname> user=<user> sslmode=verify-full sslrootcert=$HOME/.postgresql/root.crt" \
   -c "SELECT 1;"
 ```
 
@@ -150,19 +150,19 @@ printf 'len=%s\n' "${#PW}"
 
 ```bash
 # Список бэкапов
-yc managed-postgresql cluster list-backups postgresql
+yc managed-postgresql cluster list-backups <имя>
 
 # Создать бэкап
-yc managed-postgresql cluster backup postgresql
+yc managed-postgresql cluster backup <имя>
 
 # Операции над кластером (история изменений)
-yc managed-postgresql cluster list-operations postgresql --limit 10
+yc managed-postgresql cluster list-operations <имя> --limit 10
 
 # Перезапуск хоста / failover
-yc managed-postgresql cluster start-failover postgresql --host <FQDN>
+yc managed-postgresql cluster start-failover <имя> --host <FQDN>
 
 # Обновить конфигурацию PostgreSQL
-yc managed-postgresql cluster update-config postgresql ...
+yc managed-postgresql cluster update-config <имя> ...
 
 # Секреты Lockbox (где хранится пароль connection manager)
 yc lockbox secret list --folder-id <folder-id>
@@ -173,7 +173,7 @@ yc lockbox secret get --id <secret-id>
 
 - Перед изменениями анализировать кластер read-only: `cluster get/host list/user list`.
 - Для внешнего доступа назначать публичный IP через `host update --assign-public-ip`.
-- Группы безопасности: по умолчанию default-SG открыта из `0.0.0.0/0`; при необходимости ограничивать привязкой отдельной SG с правилом на 6432 для конкретных CIDR.
+- Группы безопасности: проверять фактическое состояние default-SG; при необходимости ограничивать привязкой отдельной SG с правилом на 6432 для конкретных CIDR.
 - Все команды yc выполняются в рамках folder-id из `yc config list`; ключи `--cluster-name`/`--cluster-id` взаимозаменяемы.
 
 ## Ограничения

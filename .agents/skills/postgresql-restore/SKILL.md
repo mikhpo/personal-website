@@ -5,7 +5,7 @@ description: Восстановление базы данных PostgreSQL из 
 
 ## Предназначение
 
-Восстановление БД из дампа (созданного скиллом postgresql-dump) на целевом кластере PostgreSQL. Штатное восстановление из целей системы бэкапов выполняется командой `bash scripts/backup.sh restore db <адрес>` (скилл backup-restore); данный скилл - разовые операции с файлом дампа.
+Восстановление БД из дампа (созданного скиллом postgresql-dump) на целевом кластере PostgreSQL. Если в проекте есть система бэкапов со своим механизмом восстановления - штатным считается он; данный скилл - разовые операции с файлом дампа.
 
 ## Совместимость версий
 
@@ -20,7 +20,7 @@ psql … -c "SELECT version();"           # версия сервера
 
 ## Параметры подключения и аутентификация
 
-Те же, что использует приложение (см. [docs/deployment/database.md](../../../docs/deployment/database.md), раздел 1). Флаги:
+Те же, что использует приложение: хост, порт, пользователь, база. Флаги:
 
 * `-h <хост>` - имя хоста или путь к каталогу unix-сокета;
 * `-p <порт>` - порт сервера;
@@ -36,7 +36,7 @@ psql … -c "SELECT version();"           # версия сервера
 ```bash
 export PGPASSWORD='<пароль>'
 pg_restore -h <хост> -p <порт> -U <пользователь> -d <база> \
-    -Fc --no-owner --no-privileges personal_website_2026-08-13.dump
+    -Fc --no-owner --no-privileges <файл>.dump
 ```
 
 Если база не пуста - добавить `--clean --if-exists`, чтобы пересоздать объекты идемпотентно.
@@ -46,7 +46,7 @@ pg_restore -h <хост> -p <порт> -U <пользователь> -d <баз�
 ```bash
 export PGPASSWORD='<пароль>'
 pg_restore -h <хост> -p <порт> -U <пользователь> \
-    -Fc --no-owner --no-privileges --create personal_website_2026-08-13.dump
+    -Fc --no-owner --no-privileges --create <файл>.dump
 ```
 
 ## Назначение флагов
@@ -61,8 +61,8 @@ pg_restore -h <хост> -p <порт> -U <пользователь> \
 
 ```bash
 psql … -c "SELECT count(*) FROM information_schema.tables WHERE table_schema='public';"
-psql … -c "SELECT count(*) FROM blog_article;"
-psql … -c "SELECT app, name FROM django_migrations ORDER BY app, name;"
+psql … -c "SELECT count(*) FROM <ключевая таблица>;"
+psql … -c "SELECT app, name FROM django_migrations ORDER BY app, name;"   # для Django
 ```
 
 Сравнить счётчики ключевых таблиц и набор применённых миграций с источником.
@@ -70,5 +70,4 @@ psql … -c "SELECT app, name FROM django_migrations ORDER BY app, name;"
 ## Рекомендации
 
 * Перед восстановлением в рабочую базу снять свежий дамп (скилл postgresql-dump) как точку отката.
-* Если кластер требует SSL, использовать параметры подключения приложения ([docs/deployment/database.md](../../../docs/deployment/database.md)).
-* Дампы системы бэкапов лежат в `${BACKUP_ROOT}/db/` (имена `<база>_<дата>_<время>.dump`) и в `db/` целей бэкапов ([docs/deployment/backups.md](../../../docs/deployment/backups.md)).
+* Если кластер требует SSL, использовать параметры подключения, которые использует приложение.

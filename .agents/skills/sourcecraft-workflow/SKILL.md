@@ -5,7 +5,7 @@ description: Работа с SourceCraft через CLI src - создание �
 
 ## Предназначение
 
-Скилл описывает типовой цикл работы с репозиторием на SourceCraft через утилиту `src`: задача -> ветка -> фикс -> PR -> проверка CI -> merge -> деплой. Все заголовки и описания задач и PR - на русском языке.
+Скилл описывает типовой цикл работы с репозиторием на SourceCraft через утилиту `src`: задача -> ветка -> фикс -> PR -> проверка CI -> merge. Все заголовки и описания задач и PR - на русском языке.
 
 ## Подготовка
 
@@ -73,9 +73,9 @@ EOF
 
 Параметры: `--base` (целевая ветка, по умолчанию main), `--head` (исходная ветка, по умолчанию текущая), `--draft`, `--reviewer`, `--web`.
 
-Опции автоудаления исходной ветки при создании PR в CLI нет - особенности удаления ветки см. в разделе "Смержить PR".
+Опции автоудаления исходной ветки при создании PR в CLI нет - ветка удаляется вручную после merge (см. "Смержить PR").
 
-Новая связанная работа при открытом PR не выносится в отдельный PR молча: спросить пользователя, продолжать в текущем PR или завести отдельную задачу - решение о дроблении работы на несколько PR принадлежит пользователю. Правки по замечаниям ревью самого PR всегда идут в него.
+Связанную работу при открытом PR не выносить в отдельный PR молча: спросить пользователя, продолжать в текущем PR или завести отдельную задачу - решение о дроблении работы на несколько PR принадлежит пользователю. Правки по замечаниям ревью самого PR всегда идут в него.
 
 ### Проверить статус CI
 
@@ -84,7 +84,7 @@ src pr checks <N>   # сводные merge-checks: STATUS + CODE REVIEW + CONFLI
 src pr get <N>      # статус PR (open/merged/closed)
 ```
 
-`src pr checks` показывает итоговый `STATUS:` (success / in_progress / failed) и статусы отдельных workflows (lint/test/build).
+`src pr checks` показывает итоговый `STATUS:` (success / in_progress / failed) и статусы отдельных workflows.
 
 ### Обработка комментариев ревью (опционально)
 
@@ -134,11 +134,9 @@ src pr merge <N>
 
 ## Workflows (CI/CD)
 
-### Типовые workflows
+### Состав workflows репозитория
 
-- `lint-workflow`, `test-workflow`, `build-workflow` - запускаются автоматически на обновление PR (event `pr_update`)
-- `release-workflow` - запускается автоматически на push в main (после merge)
-- `deploy-workflow` - ручной запуск (event `manual`); деплоит указанный ref на сервер
+Список workflows, их имена и события запуска определяются конфигурацией `.sourcecraft/ci.yaml` репозитория. Общая картина: проверки PR (линтеры, тесты, сборка), release-workflow при пуше в main и ручные workflows (например, деплой). Имена запрашивать из конфига репозитория, а не предполагать.
 
 ### Конфиг CI выполняется из целевой ветки
 
@@ -154,7 +152,7 @@ src run get <N>     # детали конкретного run
 ### Запустить workflow вручную
 
 ```bash
-src run trigger deploy-workflow --ref main
+src run trigger <workflow-slug> --ref main
 ```
 
 Параметры: `--ref` (ветка), `--commit`, `--tag`. В выводе содержится `SLUG` созданного run.
@@ -171,22 +169,22 @@ GET /repos/{org}/{repo}/cicd/logs/{run}/{workflow}/{task}/{cube}
 
 Полный список endpoint-ов CI: `GET https://api.sourcecraft.tech/docs` (Redoc, спецификация `./sourcecraft.swagger.json`).
 
-Для многократного использования в репозитории есть готовая обёртка `tools/src-cube-logs.sh`, которая сама получает токен из keychain macOS (сервис `sourcecraft-cli`) и определяет `org/repo` по git remote:
+Для многократного использования в комплекте со скиллом идет обёртка `scripts/src-cube-logs.sh` (в установленном виде - `.agents/skills/sourcecraft-workflow/scripts/src-cube-logs.sh`), которая сама получает токен из keychain macOS (сервис `sourcecraft-cli`) и определяет `org/repo` по git remote:
 
 ```bash
-tools/src-cube-logs.sh <run> <workflow> <task> <cube>
+.agents/skills/sourcecraft-workflow/scripts/src-cube-logs.sh <run> <workflow> <task> <cube>
 ```
 
 Пример:
 
 ```bash
-tools/src-cube-logs.sh 144 test-workflow python-test pytest
+.agents/skills/sourcecraft-workflow/scripts/src-cube-logs.sh 144 test-workflow python-test pytest
 # => Установка Node.js для сборки фронтенда
 #    curl: (22) The requested URL returned error: 403
 #    ...
 ```
 
-Токен хранится в keychain macOS под сервисом `sourcecraft-cli` (base64-обёрнутый PAT). Если `tools/src-cube-logs.sh` недоступен (другая ОС или нет keyring), можно собрать запрос вручную:
+Токен хранится в keychain macOS под сервисом `sourcecraft-cli` (base64-обёрнутый PAT). Если обёртка недоступна (другая ОС или нет keyring), можно собрать запрос вручную:
 
 ```bash
 TOKEN=$(/usr/bin/security find-generic-password -s "sourcecraft-cli" -w \
@@ -200,14 +198,14 @@ REPO=$(git remote get-url origin \
 
 Порядок действий при падении CI:
 
-1. `src pr checks <PR>` -> определить упавший workflow (например `test-workflow`).
+1. `src pr checks <PR>` -> определить упавший workflow.
 2. `src run get <RUN>` -> убедиться, что нужный run известен (в выводе `src pr checks` он указан в строке workflow).
-3. По имени workflow/task/cube из `.sourcecraft/ci.yaml` взять slug-и и вызвать `tools/src-cube-logs.sh <RUN> <WF> <TASK> <CUBE>`.
+3. По имени workflow/task/cube из `.sourcecraft/ci.yaml` взять slug-и и вызвать обёртку `<run> <workflow> <task> <cube>`.
 4. Если ответ пустой, а в `src run get` куб помечен failed - куб упал рано, логи короткие.
 
 ## Мониторинг завершения (polling)
 
-В headless-режиме нет автодожидания, статус опрашивается циклом. Bash-команды выполняются с увеличенным `timeout` (например 420000–600000 мс).
+В headless-режиме нет автодожидания, статус опрашивается циклом. Bash-команды выполняются с увеличенным `timeout` (например 420000-600000 мс).
 
 ### Дождаться CI для PR
 
@@ -246,10 +244,10 @@ done
 ```bash
 OLD_SLUG=<slug_последнего_run>
 for i in $(seq 1 18); do
-  rel=$(src run list 2>&1 | grep "release-workflow" | head -1)
+  rel=$(src run list 2>&1 | grep "<workflow-slug>" | head -1)
   slug=$(echo "$rel" | awk '{print $1}')
   st=$(echo "$rel" | awk '{print $NF}')
-  echo "[$i] release-workflow run=$slug status=$st"
+  echo "[$i] run=$slug status=$st"
   [ "${slug:-0}" -gt "$OLD_SLUG" ] 2>/dev/null && {
     case "$st" in
       success) echo "SUCCESS"; break ;;
@@ -271,5 +269,5 @@ done
 7. Смержить (только после явного подтверждения пользователя): `src pr merge <N>`; убедиться через `src pr get <N>` -> `merged`
 8. Удалить слитую ветку: `git push origin --delete <ветка>`
 9. Закрыть задачу: `src issue edit <N> --status closed`
-10. Дождаться `release-workflow` (auto на push в main): poll `src run list` до success нового run
-11. Запустить деплой: `src run trigger deploy-workflow --ref main`; дождаться success через poll `src run get <N>`
+10. Дождаться release-workflow, если он настроен в репозитории (auto на push в main): poll `src run list` до success нового run
+11. Запустить деплой, если он настроен как ручной workflow: `src run trigger <workflow-slug> --ref main`; дождаться success через poll `src run get <N>`
