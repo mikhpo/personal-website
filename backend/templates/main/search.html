@@ -13,11 +13,9 @@
         </div>
         {% if search %}
             <h2 class="h4 mt-4">Статьи</h2>
-            {% react_component "Blog/ArticleList" search=search pageSize=5 %}
-            <a href="{% url 'blog:blog' %}?search={{ search }}">Все статьи</a>
+            {% react_component "Blog/ArticleList" search=search %}
             <h2 class="h4 mt-4">Альбомы</h2>
-            {% react_component "Gallery/AlbumList" search=search pageSize=6 %}
-            <a href="{% url 'gallery:album-list' %}?search={{ search }}">Все альбомы</a>
+            {% react_component "Gallery/AlbumList" search=search %}
         {% else %}
             <p class="text-muted">Введите поисковый запрос, чтобы найти статьи и альбомы.</p>
         {% endif %}
