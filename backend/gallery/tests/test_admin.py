@@ -288,7 +288,9 @@ class GalleryAdminTests(TestCase):
         url = ADMIN_URL + f"gallery/photo/{photo.pk}/change/"
         response = self.client.get(url)
         self.assertEqual(response.status_code, HTTPStatus.OK)
-        extension = Path(photo.image.name).suffix.lstrip(".").lower()
+        image_name = photo.image.name
+        assert image_name is not None
+        extension = Path(image_name).suffix.lstrip(".").lower()
         for size in settings.GALLERY_EMBED_SIZES:
             self.assertContains(response, f"/gallery/embed/{photo.pk}/{size}.{extension}")
             self.assertContains(response, f"embed-url-{size}")

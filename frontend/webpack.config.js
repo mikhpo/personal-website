@@ -12,9 +12,7 @@
 const path = require('path');
 const fs = require('fs');
 const BundleTracker = require('webpack-bundle-tracker');
-const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
-
 // backend/staticfiles стоит раньше frontend/dist в STATICFILES_DIRS:
 // случайно оставшиеся там tinymce и bootstrap затеняют свежие файлы.
 fs.rmSync(path.resolve(__dirname, '../backend/staticfiles/bootstrap'), { recursive: true, force: true });
@@ -42,6 +40,9 @@ module.exports = {
     // со STATIC_URL той среды, для которой выполняется сборка (локально '/static/',
     // в S3-режиме - адрес бакета или CDN с префиксом static/).
     publicPath: process.env.WEBPACK_PUBLIC_PATH || '/static/',
+    // Очищает папку dist/ перед каждой пересборкой, чтобы устаревшие файлы с прошлыми
+    // хешами в именах (например, main-abc123.js) не накапливались между сборками.
+    clean: true,
   },
 
   /**
@@ -56,7 +57,16 @@ module.exports = {
         use: {
           loader: 'babel-loader',
           options: {
-            presets: ['@babel/preset-env', '@babel/preset-react', '@babel/preset-typescript'],
+            presets: ['@babel/preset-env', '@babel/preset-typescript'],
+            // preset-react добавляет JSX-синтаксис во все файлы: в Babel 8 из-за
+            // этого .ts перестают парситься (дженерик-стрелки вида <T>...),
+            // поэтому JSX-пресет ограничен файлами, где JSX возможен.
+            overrides: [
+              {
+                test: ['**/*.js', '**/*.jsx', '**/*.tsx'],
+                presets: ['@babel/preset-react'],
+              },
+            ],
           },
         },
       },
@@ -93,9 +103,6 @@ module.exports = {
    * Плагины Webpack.
    */
   plugins: [
-    // Очищает папку dist/ перед каждой пересборкой, чтобы устаревшие файлы с прошлыми
-    // хешами в именах (например, main-abc123.js) не накапливались между сборками.
-    new CleanWebpackPlugin(),
     // Генерирует webpack-stats.json с информацией о собранных бандлах (имена, хеши, пути).
     // django-webpack-loader читает этот файл, чтобы подключать правильные файлы в шаблонах.
     new BundleTracker({

@@ -1474,11 +1474,14 @@ components:
           title: Описание
           description: Описание альбома
         slug:
-          type: string
           title: Слаг
           description: Слаг альбома
-          maxLength: 50
-          pattern: ^[-a-zA-Z0-9_]+$
+          oneOf:
+          - type: string
+            maxLength: 50
+            pattern: ^[-a-zA-Z0-9_]+$
+          - type: string
+            maxLength: 0
         created_at:
           type: string
           format: date-time
@@ -1543,11 +1546,14 @@ components:
           title: Описание
           description: Описание альбома
         slug:
-          type: string
           title: Слаг
           description: Слаг альбома
-          maxLength: 50
-          pattern: ^[-a-zA-Z0-9_]+$
+          oneOf:
+          - type: string
+            maxLength: 50
+            pattern: ^[-a-zA-Z0-9_]+$
+          - type: string
+            maxLength: 0
         created_at:
           type: string
           format: date-time
@@ -1639,13 +1645,17 @@ components:
           readOnly: true
           title: Дата последнего изменения
         slug:
-          type: string
           title: Слаг
-          maxLength: 50
-          pattern: ^[-a-zA-Z0-9_]+$
+          oneOf:
+          - type: string
+            maxLength: 50
+            pattern: ^[-a-zA-Z0-9_]+$
+          - type: string
+            maxLength: 0
         image:
           type: string
           format: uri
+          nullable: true
           title: Картинка
         public:
           type: boolean
@@ -1692,6 +1702,7 @@ components:
         image:
           type: string
           format: uri
+          nullable: true
           title: Картинка
         remove_image:
           type: boolean
@@ -1727,13 +1738,17 @@ components:
           title: Описание
           maxLength: 255
         slug:
-          type: string
           title: Слаг
-          maxLength: 50
-          pattern: ^[-a-zA-Z0-9_]+$
+          oneOf:
+          - type: string
+            maxLength: 50
+            pattern: ^[-a-zA-Z0-9_]+$
+          - type: string
+            maxLength: 0
         image:
           type: string
           format: uri
+          nullable: true
           title: Картинка
         public:
           type: boolean
@@ -1932,6 +1947,7 @@ components:
         image:
           type: string
           format: uri
+          nullable: true
           title: Картинка
         remove_image:
           type: boolean
@@ -1964,13 +1980,17 @@ components:
           title: Описание
           maxLength: 255
         slug:
-          type: string
           title: Слаг
-          maxLength: 50
-          pattern: ^[-a-zA-Z0-9_]+$
+          oneOf:
+          - type: string
+            maxLength: 50
+            pattern: ^[-a-zA-Z0-9_]+$
+          - type: string
+            maxLength: 0
         image:
           type: string
           format: uri
+          nullable: true
           title: Картинка
         public:
           type: boolean
@@ -2012,13 +2032,17 @@ components:
           title: Описание
           maxLength: 255
         slug:
-          type: string
           title: Слаг
-          maxLength: 50
-          pattern: ^[-a-zA-Z0-9_]+$
+          oneOf:
+          - type: string
+            maxLength: 50
+            pattern: ^[-a-zA-Z0-9_]+$
+          - type: string
+            maxLength: 0
         image:
           type: string
           format: uri
+          nullable: true
           title: Картинка
         public:
           type: boolean
@@ -2039,13 +2063,17 @@ components:
           title: Описание
           maxLength: 255
         slug:
-          type: string
           title: Слаг
-          maxLength: 50
-          pattern: ^[-a-zA-Z0-9_]+$
+          oneOf:
+          - type: string
+            maxLength: 50
+            pattern: ^[-a-zA-Z0-9_]+$
+          - type: string
+            maxLength: 0
         image:
           type: string
           format: uri
+          nullable: true
           title: Картинка
         public:
           type: boolean
@@ -2142,11 +2170,14 @@ components:
           title: Описание
           description: Описание фотографии
         slug:
-          type: string
           title: Слаг
           description: Слаг фотографии
-          maxLength: 50
-          pattern: ^[-a-zA-Z0-9_]+$
+          oneOf:
+          - type: string
+            maxLength: 50
+            pattern: ^[-a-zA-Z0-9_]+$
+          - type: string
+            maxLength: 0
         uploaded_at:
           type: string
           format: date-time
@@ -2279,11 +2310,14 @@ components:
           title: Описание
           description: Описание фотографии
         slug:
-          type: string
           title: Слаг
           description: Слаг фотографии
-          maxLength: 50
-          pattern: ^[-a-zA-Z0-9_]+$
+          oneOf:
+          - type: string
+            maxLength: 50
+            pattern: ^[-a-zA-Z0-9_]+$
+          - type: string
+            maxLength: 0
         uploaded_at:
           type: string
           format: date-time
@@ -2351,13 +2385,17 @@ components:
           title: Описание
           maxLength: 255
         slug:
-          type: string
           title: Слаг
-          maxLength: 50
-          pattern: ^[-a-zA-Z0-9_]+$
+          oneOf:
+          - type: string
+            maxLength: 50
+            pattern: ^[-a-zA-Z0-9_]+$
+          - type: string
+            maxLength: 0
         image:
           type: string
           format: uri
+          nullable: true
           title: Картинка
         public:
           type: boolean
@@ -2378,11 +2416,14 @@ components:
           description: Наименование тэга
           maxLength: 255
         slug:
-          type: string
           title: Слаг
           description: Слаг тэга
-          maxLength: 50
-          pattern: ^[-a-zA-Z0-9_]+$
+          oneOf:
+          - type: string
+            maxLength: 50
+            pattern: ^[-a-zA-Z0-9_]+$
+          - type: string
+            maxLength: 0
         description:
           type: string
           title: Описание
@@ -2445,13 +2486,17 @@ components:
           title: Описание
           maxLength: 255
         slug:
-          type: string
           title: Слаг
-          maxLength: 50
-          pattern: ^[-a-zA-Z0-9_]+$
+          oneOf:
+          - type: string
+            maxLength: 50
+            pattern: ^[-a-zA-Z0-9_]+$
+          - type: string
+            maxLength: 0
         image:
           type: string
           format: uri
+          nullable: true
           title: Картинка
         public:
           type: boolean

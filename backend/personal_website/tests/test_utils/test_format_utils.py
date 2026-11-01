@@ -1,6 +1,6 @@
 """Тесты вспомогательных функций для операций форматирования."""
 
-import datetime
+import datetime as dt
 
 from django.test import SimpleTestCase
 from django.utils.timezone import get_current_timezone
@@ -13,7 +13,7 @@ class FormatLocalDatetimeTests(SimpleTestCase):
 
     def test_date_time_displayed(self) -> None:
         """Должно бтыь возвращена дата и время в локализованном формате."""
-        date_time_value = datetime.datetime(2001, 1, 1, 1, 1, 1, tzinfo=get_current_timezone())
+        date_time_value = dt.datetime(2001, 1, 1, 1, 1, 1, tzinfo=get_current_timezone())
         target_format = "1 января 2001 г. 1:01"
         date_time_displayed = format_local_datetime(date_time_value)
         self.assertEqual(date_time_displayed, target_format)

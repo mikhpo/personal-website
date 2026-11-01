@@ -2,7 +2,7 @@
 {% load static %}
 {% load react_tags %}
 {% block gallery %}
-<div class="container-fluid">
+<div class="container-fluid mb-5">
     {% if tag_not_found %}
         <div class="alert alert-warning" role="alert">
             <h1 class="fs-4 alert-heading">Тэг не найден</h1>
@@ -31,6 +31,4 @@
         {% react_component "Gallery/PhotoList" tagSlug=tag.slug %}
     {% endif %}
 </div>
-<br>
-<br>
 {% endblock gallery %}

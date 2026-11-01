@@ -32,7 +32,7 @@ const CategoryCard = ({ category }: CategoryCardProps) => {
     <BaseCard
       title={category.name}
       url={categoryUrl}
-      image={category.image}
+      image={category.image ?? undefined}
       description={category.description}
       imageAlt={category.name}
     />

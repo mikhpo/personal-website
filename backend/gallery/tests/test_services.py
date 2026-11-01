@@ -45,8 +45,10 @@ class TestUploadPhotosToAlbum(TestCase):
         assert photo is not None
         self.assertEqual(photo.album, self.album)
         self.assertEqual(photo.name, "test_image")
-        self.assertTrue(photo.image.name.startswith(f"gallery/albums/{self.album.pk}/photos/"))
-        self.assertTrue(photo.image.storage.exists(photo.image.name))
+        image_name = photo.image.name
+        assert image_name is not None
+        self.assertTrue(image_name.startswith(f"gallery/albums/{self.album.pk}/photos/"))
+        self.assertTrue(photo.image.storage.exists(image_name))
 
     def test_invalid_file_not_created(self) -> None:
         """Невалидный файл не создает фотографию и дает результат с ошибкой."""

@@ -576,7 +576,7 @@ export interface components {
              * Картинка
              * Format: uri
              */
-            image?: string;
+            image?: string | null;
             /** Опубликовано */
             public?: boolean;
             author?: number | null;
@@ -603,7 +603,7 @@ export interface components {
              * Картинка
              * Format: uri
              */
-            image?: string;
+            image?: string | null;
             remove_image?: boolean;
             categories?: number[];
             topics?: number[];
@@ -622,7 +622,7 @@ export interface components {
              * Картинка
              * Format: uri
              */
-            image?: string;
+            image?: string | null;
             /** Опубликовано */
             public?: boolean;
         };
@@ -743,7 +743,7 @@ export interface components {
              * Картинка
              * Format: uri
              */
-            image?: string;
+            image?: string | null;
             remove_image?: boolean;
             categories?: number[];
             topics?: number[];
@@ -762,7 +762,7 @@ export interface components {
              * Картинка
              * Format: uri
              */
-            image?: string;
+            image?: string | null;
             /** Опубликовано */
             public?: boolean;
         };
@@ -789,7 +789,7 @@ export interface components {
              * Картинка
              * Format: uri
              */
-            image?: string;
+            image?: string | null;
             /** Опубликовано */
             public?: boolean;
         };
@@ -806,7 +806,7 @@ export interface components {
              * Картинка
              * Format: uri
              */
-            image?: string;
+            image?: string | null;
             /** Опубликовано */
             public?: boolean;
         };
@@ -1003,7 +1003,7 @@ export interface components {
              * Картинка
              * Format: uri
              */
-            image?: string;
+            image?: string | null;
             /** Опубликовано */
             public?: boolean;
         };
@@ -1052,7 +1052,7 @@ export interface components {
              * Картинка
              * Format: uri
              */
-            image?: string;
+            image?: string | null;
             /** Опубликовано */
             public?: boolean;
         };
