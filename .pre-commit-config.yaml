@@ -52,13 +52,13 @@ repos:
       - id: fix-typography
         name: fix-typography
         description: Автозамена длинного тире (U+2014) на дефис, стрелки (U+2192) на "->" и кавычек-ёлочек (U+00AB, U+00BB) на прямые кавычки
-        entry: tools/skill-hook.sh fix-typography fix_typography.py
+        entry: python3 .agents/skills/fix-typography/scripts/fix_typography.py
         language: system
         types: [text]
       - id: unwrap-markdown
         name: unwrap-markdown
         description: Развертывание жестких переносов строк в Markdown (абзац - одна строка)
-        entry: tools/skill-hook.sh unwrap-markdown unwrap_markdown.py
+        entry: python3 .agents/skills/unwrap-markdown/scripts/unwrap_markdown.py
         language: system
         types: [file]
         files: \.(md|markdown)$
