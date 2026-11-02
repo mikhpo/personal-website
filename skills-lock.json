@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "skills": {
+    "fix-typography": {
+      "source": "mikhpo/skills",
+      "sourceType": "github",
+      "skillPath": "skills/fix-typography/SKILL.md",
+      "computedHash": "5a99c00b4cecfc9cae621bd74523d582889c10f696446c29ea169fc5fe970ed5"
+    },
+    "unwrap-markdown": {
+      "source": "mikhpo/skills",
+      "sourceType": "github",
+      "skillPath": "skills/unwrap-markdown/SKILL.md",
+      "computedHash": "11542ab49d866d8d30a7cea5b9cdd15c15f5a5d6b04bb695cfc7f98bfe2181a1"
+    }
+  }
+}
