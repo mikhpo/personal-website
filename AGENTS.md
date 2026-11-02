@@ -253,7 +253,7 @@
 ## Скиллы
 
 - Общие скиллы двух типов: знания (github-workflow, sourcecraft-workflow, yc-postgresql, postgresql-dump, postgresql-restore, browser-screenshots, fix-documentation, spec-driven-development, static-analysis, update-changelog, pr-description) устанавливаются глобально - `npx skills add mikhpo/skills -g`, обновление - `npx skills update -g`; инструменты (fix-typography, unwrap-markdown) - в проект, поскольку их скрипты вызывают хуки pre-commit. Локально не редактировать - правки вносить в общем репозитории
-- Проектная установка версионируется: файлы `.agents/skills/` и skills-lock.json (источник, путь, хеш содержимого) коммитятся, свежий клон детерминирован; обновление проектных скиллов - `npx skills update -p`, изменения уходят через PR
+- Инструментальные скиллы в git не версионируются (каталоги исключены в .gitignore): после клона установить один раз - `npx skills add mikhpo/skills --skill fix-typography --skill unwrap-markdown -y`; обновление - `npx skills update -p`; skills-lock.json фиксирует источник и хеши
 - Остальные скиллы в `.agents/skills/` - проектные: бэкапы, сервер, диагностика прода, методика документации
 - Подготовка к скриншотам страниц (скилл browser-screenshots): dev-сервер - `task runserver`; контейнер postgres, остановленный прогоном тестов, - `docker compose up -d postgres`; после правок фронтенда пересобрать бандл - `npm run build`; демо-данные - `uv run python backend/manage.py generate_blog_objects` и `generate_gallery_objects`. Имена CI workflows - в [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md)
 
