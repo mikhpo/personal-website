@@ -252,7 +252,9 @@
 
 ## Скиллы
 
-- Общие скиллы (github-workflow, sourcecraft-workflow, yc-postgresql, postgresql-dump, postgresql-restore, browser-screenshots) установлены из репозитория mikhpo/skills командой `npx skills add mikhpo/skills`; обновление - `npx skills update`; локально не редактировать - правки вносить в общем репозитории
+- Общие скиллы двух типов: знания (github-workflow, sourcecraft-workflow, yc-postgresql, postgresql-dump, postgresql-restore, browser-screenshots) устанавливаются глобально - `npx skills add mikhpo/skills -g`, обновление - `npx skills update -g`; инструменты (fix-typography, unwrap-markdown) - в проект, поскольку их скрипты вызывают хуки pre-commit. Локально не редактировать - правки вносить в общем репозитории
+- Проектная установка версионируется: файлы `.agents/skills/` и skills-lock.json (источник, путь, хеш содержимого) коммитятся, свежий клон детерминирован; обновление проектных скиллов - `npx skills update -p`, изменения уходят через PR
+- При отсутствии скрипта скилла хук завершается ошибкой с командой восстановления: `npx skills add mikhpo/skills --skill <имя> -y`
 - Остальные скиллы в `.agents/skills/` - проектные: бэкапы, сервер, диагностика прода, методики документации и планирования
 - Подготовка к скриншотам страниц (скилл browser-screenshots): dev-сервер - `task runserver`; контейнер postgres, остановленный прогоном тестов, - `docker compose up -d postgres`; после правок фронтенда пересобрать бандл - `npm run build`; демо-данные - `uv run python backend/manage.py generate_blog_objects` и `generate_gallery_objects`. Имена CI workflows - в docs/CONTRIBUTING.md
 

@@ -1,41 +1,17 @@
 {
   "version": 1,
   "skills": {
-    "browser-screenshots": {
+    "fix-typography": {
       "source": "mikhpo/skills",
       "sourceType": "github",
-      "skillPath": "skills/browser-screenshots/SKILL.md",
-      "computedHash": "5e2864132bdac5111f489d8595d3946c9a4baa55a22601ad84b7965c78e79571"
+      "skillPath": "skills/fix-typography/SKILL.md",
+      "computedHash": "5cfd67527929e8cc98dfe3bf719ec7d9386b9920dddebbcaa99f64b0d0a7f7dc"
     },
-    "github-workflow": {
+    "unwrap-markdown": {
       "source": "mikhpo/skills",
       "sourceType": "github",
-      "skillPath": "skills/github-workflow/SKILL.md",
-      "computedHash": "68c31a5f7101d7bda4c674e3c55f599cae973fe72bd83fe5029e64bbbc2fd4b1"
-    },
-    "postgresql-dump": {
-      "source": "mikhpo/skills",
-      "sourceType": "github",
-      "skillPath": "skills/postgresql-dump/SKILL.md",
-      "computedHash": "c7b066888a6e64e462b451a0e31cc818540a002619af23f1ce82268e6ca1625d"
-    },
-    "postgresql-restore": {
-      "source": "mikhpo/skills",
-      "sourceType": "github",
-      "skillPath": "skills/postgresql-restore/SKILL.md",
-      "computedHash": "8a1aa192e239d4fc08291a31bcfdf257983462accb3012bbe69ca22cf3d5b4d8"
-    },
-    "sourcecraft-workflow": {
-      "source": "mikhpo/skills",
-      "sourceType": "github",
-      "skillPath": "skills/sourcecraft-workflow/SKILL.md",
-      "computedHash": "2b7dd1daa92838115bccca55c6abdde9bffc08df989fadc74e81c3b9b5937c93"
-    },
-    "yc-postgresql": {
-      "source": "mikhpo/skills",
-      "sourceType": "github",
-      "skillPath": "skills/yc-postgresql/SKILL.md",
-      "computedHash": "f4728046190082a0f394e994a1d4af209f27f6978d4cdf5267b2f6baf01495ee"
+      "skillPath": "skills/unwrap-markdown/SKILL.md",
+      "computedHash": "947709caa75565f8583f73f73512cf62e013c1b099fe8a722b351b9babd399c5"
     }
   }
 }

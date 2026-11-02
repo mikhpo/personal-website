@@ -1,0 +1,39 @@
+---
+name: unwrap-markdown
+description: "Развертывание жестких переносов строк в Markdown-файлах: абзац и пункт списка приводятся к одной строке"
+---
+
+## Предназначение
+
+Поддержание правила "абзац и пункт списка - одна строка без жестких переносов" в Markdown-файлах репозитория: строки, которые Markdown рендерит как единый блок, объединяются через одинарный пробел. Длина строки при этом не ограничена.
+
+## Что не изменяется
+
+Код-блоки, таблицы, заголовки, цитаты, HTML-блоки, тематические разделители и YAML-frontmatter сохраняются как есть.
+
+## Использование
+
+Скрипт входит в скилл; в установленном виде - `.agents/skills/unwrap-markdown/scripts/unwrap_markdown.py`.
+
+```bash
+# Без аргументов - все отслеживаемые git markdown-файлы
+python3 .agents/skills/unwrap-markdown/scripts/unwrap_markdown.py
+
+# С аргументами - только переданные файлы
+python3 .agents/skills/unwrap-markdown/scripts/unwrap_markdown.py README.md docs/guide.md
+```
+
+Код возврата: 0 - переносов развернуто не было, 1 - развернуты хотя бы в одном файле (измененные файлы добавляются в индекс и прогон повторяется).
+
+## Интеграция в pre-commit
+
+```yaml
+  - repo: local
+    hooks:
+      - id: unwrap-markdown
+        name: unwrap-markdown
+        entry: python3 .agents/skills/unwrap-markdown/scripts/unwrap_markdown.py
+        language: system
+        types: [file]
+        files: \.(md|markdown)$
+```

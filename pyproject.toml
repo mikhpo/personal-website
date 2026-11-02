@@ -130,6 +130,9 @@ ignore = [
 "tools/*.py" = [
     "S603", # утилиты вызывают системные команды (git) с литеральными аргументами
 ]
+".agents/skills/*/scripts/*.py" = [
+    "S603", # скрипты вендоренных скиллов вызывают git с литеральными аргументами
+]
 
 [tool.ruff.lint.pydocstyle]
 convention = "pep257" # Варианты: "google", "numpy", "pep257".
