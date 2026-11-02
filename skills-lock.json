@@ -5,13 +5,13 @@
       "source": "mikhpo/skills",
       "sourceType": "github",
       "skillPath": "skills/fix-typography/SKILL.md",
-      "computedHash": "5cfd67527929e8cc98dfe3bf719ec7d9386b9920dddebbcaa99f64b0d0a7f7dc"
+      "computedHash": "5a99c00b4cecfc9cae621bd74523d582889c10f696446c29ea169fc5fe970ed5"
     },
     "unwrap-markdown": {
       "source": "mikhpo/skills",
       "sourceType": "github",
       "skillPath": "skills/unwrap-markdown/SKILL.md",
-      "computedHash": "947709caa75565f8583f73f73512cf62e013c1b099fe8a722b351b9babd399c5"
+      "computedHash": "11542ab49d866d8d30a7cea5b9cdd15c15f5a5d6b04bb695cfc7f98bfe2181a1"
     }
   }
 }

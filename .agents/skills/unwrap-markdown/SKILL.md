@@ -13,27 +13,14 @@ description: "Развертывание жестких переносов ст�
 
 ## Использование
 
-Скрипт входит в скилл; в установленном виде - `.agents/skills/unwrap-markdown/scripts/unwrap_markdown.py`.
+Скрипт входит в скилл: `scripts/unwrap_markdown.py`.
 
 ```bash
-# Без аргументов - все отслеживаемые git markdown-файлы
-python3 .agents/skills/unwrap-markdown/scripts/unwrap_markdown.py
+# Без аргументов - все отслеживаемые git markdown-файлы (запуск из каталога скилла)
+python3 scripts/unwrap_markdown.py
 
 # С аргументами - только переданные файлы
-python3 .agents/skills/unwrap-markdown/scripts/unwrap_markdown.py README.md docs/guide.md
+python3 scripts/unwrap_markdown.py README.md docs/guide.md
 ```
 
 Код возврата: 0 - переносов развернуто не было, 1 - развернуты хотя бы в одном файле (измененные файлы добавляются в индекс и прогон повторяется).
-
-## Интеграция в pre-commit
-
-```yaml
-  - repo: local
-    hooks:
-      - id: unwrap-markdown
-        name: unwrap-markdown
-        entry: python3 .agents/skills/unwrap-markdown/scripts/unwrap_markdown.py
-        language: system
-        types: [file]
-        files: \.(md|markdown)$
-```

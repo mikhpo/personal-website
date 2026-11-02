@@ -17,26 +17,14 @@ description: "Автозамена запрещенных символов ти�
 
 ## Использование
 
-Скрипт входит в скилл; в установленном виде - `.agents/skills/fix-typography/scripts/fix_typography.py`.
+Скрипт входит в скилл: `scripts/fix_typography.py`.
 
 ```bash
-# Без аргументов - все файлы, отслеживаемые git
-python3 .agents/skills/fix-typography/scripts/fix_typography.py
+# Без аргументов - все файлы, отслеживаемые git (запуск из каталога скилла)
+python3 scripts/fix_typography.py
 
 # С аргументами - только переданные файлы
-python3 .agents/skills/fix-typography/scripts/fix_typography.py README.md docs/guide.md
+python3 scripts/fix_typography.py README.md docs/guide.md
 ```
 
 Код возврата: 0 - замен не было, 1 - выполнена хотя бы одна замена (измененные файлы добавляются в индекс и прогон повторяется).
-
-## Интеграция в pre-commit
-
-```yaml
-  - repo: local
-    hooks:
-      - id: fix-typography
-        name: fix-typography
-        entry: python3 .agents/skills/fix-typography/scripts/fix_typography.py
-        language: system
-        types: [text]
-```
