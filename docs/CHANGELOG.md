@@ -2,7 +2,7 @@
 
 ## 2026-11-02
 
-- Платформенные скиллы (github-workflow, sourcecraft-workflow, yc-postgresql, postgresql-dump, postgresql-restore, browser-screenshots) переехали в общий репозиторий mikhpo/skills и устанавливаются глобально командой npx skills; скиллы типографики fix-typography и unwrap-markdown установлены в проект и обслуживают хуки pre-commit
+- Платформенные скиллы (github-workflow, sourcecraft-workflow, yc-postgresql, postgresql-dump, postgresql-restore, browser-screenshots) и скиллы методик (spec-driven-development, static-analysis, update-changelog, pr-description) переехали в общий репозиторий mikhpo/skills и устанавливаются глобально командой npx skills; скиллы типографики fix-typography и unwrap-markdown установлены в проект и обслуживают хуки pre-commit
 - Состав и содержимое проектных скиллов зафиксированы skills-lock.json; обновление - npx skills update -p, изменения проходят через PR
 - AGENTS.md дополнен разделом "Скиллы" (гибридная схема общих скиллов и проектные команды подготовки к скриншотам страниц); механика скиллов описана в docs/CONTRIBUTING.md
 
