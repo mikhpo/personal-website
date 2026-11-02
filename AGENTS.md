@@ -256,7 +256,7 @@
 - Проектная установка версионируется: файлы `.agents/skills/` и skills-lock.json (источник, путь, хеш содержимого) коммитятся, свежий клон детерминирован; обновление проектных скиллов - `npx skills update -p`, изменения уходят через PR
 - При отсутствии скрипта скилла хук завершается ошибкой с командой восстановления: `npx skills add mikhpo/skills --skill <имя> -y`
 - Остальные скиллы в `.agents/skills/` - проектные: бэкапы, сервер, диагностика прода, методики документации и планирования
-- Подготовка к скриншотам страниц (скилл browser-screenshots): dev-сервер - `task runserver`; контейнер postgres, остановленный прогоном тестов, - `docker compose up -d postgres`; после правок фронтенда пересобрать бандл - `npm run build`; демо-данные - `uv run python backend/manage.py generate_blog_objects` и `generate_gallery_objects`. Имена CI workflows - в docs/CONTRIBUTING.md
+- Подготовка к скриншотам страниц (скилл browser-screenshots): dev-сервер - `task runserver`; контейнер postgres, остановленный прогоном тестов, - `docker compose up -d postgres`; после правок фронтенда пересобрать бандл - `npm run build`; демо-данные - `uv run python backend/manage.py generate_blog_objects` и `generate_gallery_objects`. Имена CI workflows - в [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md)
 
 ## Линтинг и проверки
 
