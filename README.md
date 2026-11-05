@@ -80,7 +80,7 @@
         ├── webpack.config.js   # конфигурация Webpack
         ├── jest.config.js      # конфигурация Jest
         ├── eslint.config.mjs   # конфигурация ESLint
-        ├── .babelrc            # конфигурация Babel
+        ├── babel.config.js     # конфигурация Babel (сборка webpack и Jest)
         └── package.json       # зависимости фронтенда (симлинк на корневой)
 
 ## Административные команды

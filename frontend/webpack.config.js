@@ -57,19 +57,8 @@ module.exports = {
         use: {
           loader: 'babel-loader',
           options: {
-            presets: ['@babel/preset-env', '@babel/preset-typescript'],
-            // preset-react добавляет JSX-синтаксис во все файлы: в Babel 8 из-за
-            // этого .ts перестают парситься (дженерик-стрелки вида <T>...),
-            // поэтому JSX-пресет ограничен файлами, где JSX возможен.
-            overrides: [
-              {
-                test: ['**/*.js', '**/*.jsx', '**/*.tsx'],
-                // Явные опции защищают сборку от дефолтов Babel 8: без них development
-                // включается от отсутствия NODE_ENV, JSX компилируется через jsxDEV,
-                // а production-runtime React его не экспортирует - бандл падает в браузере.
-                presets: [['@babel/preset-react', { runtime: 'automatic', development: false }]],
-              },
-            ],
+            // Единая конфигурация Babel для сборки и Jest (см. babel.config.js).
+            configFile: path.resolve(__dirname, 'babel.config.js'),
           },
         },
       },

@@ -32,6 +32,10 @@ module.exports = {
     '^@test-utils$': '<rootDir>/src/test-utils/index.ts',
   },
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+  // Единая конфигурация Babel для сборки и Jest (см. babel.config.js).
+  transform: {
+    '^.+\\.[jt]sx?$': ['babel-jest', { configFile: `${frontendDir}/babel.config.js` }],
+  },
   // Исключаем результат collectstatic: backend/static
   // содержит дубликаты пакетов из node_modules.
   modulePathIgnorePatterns: ['<rootDir>/../backend/static'],
