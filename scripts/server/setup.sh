@@ -268,6 +268,10 @@ EOF
 # и каталогами 755 по умолчанию.
 #######################################
 function install_nginx_site() {
+    # Стоковый конфиг удаляется: файлы sites-enabled читаются по алфавиту,
+    # и default загружается раньше personal-website - совпадающие server_name
+    # он перехватывает (в том числе исторические блоки certbot для www).
+    sudo rm -f /etc/nginx/sites-enabled/default
     export DOMAIN_NAME="$DOMAIN_NAME"
     export DJANGO_PORT="${DJANGO_PORT:-8000}"
     export STORAGE_ROOT="${STORAGE_ROOT:-$project_root/storage}"
