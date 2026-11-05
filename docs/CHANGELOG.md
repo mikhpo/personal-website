@@ -1,5 +1,10 @@
 # История изменений
 
+## 2026-11-05
+
+- Сайт снова открывается: после обновления зависимостей страницы оставались пустыми из-за конфликта режимов компиляции JSX в production-сборке; режим компиляции зафиксирован в конфигурации сборки и не зависит от переменных окружения
+- Сборка фронтенда падает с ошибкой, если в production-бандлы попадает код разработки, - такая регрессия обнаруживается при сборке, а не на работающем сайте
+
 ## 2026-11-02
 
 - Платформенные скиллы (github-workflow, sourcecraft-workflow, yc-postgresql, postgresql-dump, postgresql-restore, browser-screenshots) и скиллы методик (spec-driven-development, static-analysis, update-changelog, pr-description) переехали в общий репозиторий mikhpo/skills и устанавливаются глобально командой npx skills; скиллы типографики fix-typography и unwrap-markdown установлены в проект и обслуживают хуки pre-commit

@@ -64,7 +64,10 @@ module.exports = {
             overrides: [
               {
                 test: ['**/*.js', '**/*.jsx', '**/*.tsx'],
-                presets: ['@babel/preset-react'],
+                // Явные опции защищают сборку от дефолтов Babel 8: без них development
+                // включается от отсутствия NODE_ENV, JSX компилируется через jsxDEV,
+                // а production-runtime React его не экспортирует - бандл падает в браузере.
+                presets: [['@babel/preset-react', { runtime: 'automatic', development: false }]],
               },
             ],
           },

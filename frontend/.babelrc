@@ -11,7 +11,9 @@
   "overrides": [
     {
       "test": ["**/*.js", "**/*.jsx", "**/*.tsx"],
-      "presets": ["@babel/preset-react"]
+      "presets": [
+        ["@babel/preset-react", { "runtime": "automatic", "development": false }]
+      ]
     }
   ]
 }
