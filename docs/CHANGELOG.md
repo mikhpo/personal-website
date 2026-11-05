@@ -1,5 +1,10 @@
 # История изменений
 
+## 2026-11-05
+
+- Режим компиляции JSX закреплен в конфигурации сборки фронтенда: production-сборка не зависит от переменных окружения
+- Сборка фронтенда завершается ошибкой, если в собранные файлы попадает код разработки: проверка выполняется при каждой сборке
+
 ## 2026-11-02
 
 - Платформенные скиллы (github-workflow, sourcecraft-workflow, yc-postgresql, postgresql-dump, postgresql-restore, browser-screenshots) и скиллы методик (spec-driven-development, static-analysis, update-changelog, pr-description) переехали в общий репозиторий mikhpo/skills и устанавливаются глобально командой npx skills; скиллы типографики fix-typography и unwrap-markdown установлены в проект и обслуживают хуки pre-commit

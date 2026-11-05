@@ -57,16 +57,8 @@ module.exports = {
         use: {
           loader: 'babel-loader',
           options: {
-            presets: ['@babel/preset-env', '@babel/preset-typescript'],
-            // preset-react добавляет JSX-синтаксис во все файлы: в Babel 8 из-за
-            // этого .ts перестают парситься (дженерик-стрелки вида <T>...),
-            // поэтому JSX-пресет ограничен файлами, где JSX возможен.
-            overrides: [
-              {
-                test: ['**/*.js', '**/*.jsx', '**/*.tsx'],
-                presets: ['@babel/preset-react'],
-              },
-            ],
+            // Единая конфигурация Babel для сборки и Jest (см. babel.config.js).
+            configFile: path.resolve(__dirname, 'babel.config.js'),
           },
         },
       },
