@@ -5,7 +5,7 @@
 # 1. Вытягивание изменений из Git.
 # 2. Обновление зависимостей и сборка фронтенда.
 # 3. Переустановка systemd-юнита и конфигурации сайта nginx
-#    из шаблонов репозитория, удаление стокового конфига nginx.
+#    из шаблонов репозитория.
 # 4. Перезапуск приложения и nginx.
 # Миграции и collectstatic выполняются юнитом при старте (ExecStartPre).
 
@@ -59,9 +59,6 @@ function pull_repository() {
 function build_project() {
     npm install
     npm run build
-    # Явная проверка собранных бандлов на код разработки (npm run build
-    # включает ту же проверку): падение останавливает деплой (set -e).
-    npm run verify:bundle
     # Путь проверяется явно: в неинтерактивной среде .local/bin
     # может отсутствовать в PATH даже при установленном uv.
     if [ ! -x "$HOME/.local/bin/uv" ]; then
@@ -79,9 +76,6 @@ function build_project() {
 # в силу вместе с деплоем).
 #######################################
 function install_configs() {
-    # Стоковый конфиг удаляется при каждом деплое: гарантия, что запросы
-    # имен проекта не перехватываются чужими server_name (см. setup.sh).
-    sudo rm -f /etc/nginx/sites-enabled/default
     local user="${SUDO_USER:-$(id -un)}"
     export WORK_DIR="$project_root"
     export SERVICE_USER="$user"
